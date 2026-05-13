@@ -369,16 +369,23 @@ input, select, textarea { font-family: inherit; }
   border: 1px solid var(--border);
   border-radius: var(--r-lg); overflow: hidden;
   display: flex; flex-direction: column;
-  transition: transform var(--tr), box-shadow var(--tr), border-color var(--tr);
+  transition: transform .45s cubic-bezier(.43,.13,.23,.96),
+              box-shadow .45s cubic-bezier(.43,.13,.23,.96),
+              border-color .45s cubic-bezier(.43,.13,.23,.96);
+  will-change: transform;
 }
-.product-card:hover { transform: translateY(-5px); box-shadow: var(--sh-gold); border-color: rgba(201,168,76,.3); }
+.product-card:hover {
+  transform: translateY(-10px) scale(1.015);
+  box-shadow: 0 24px 60px rgba(201,168,76,.18), 0 8px 24px rgba(0,0,0,.5);
+  border-color: rgba(201,168,76,.45);
+}
 .product-card.out-of-stock { opacity: .55; }
 .product-card.featured { border-color: rgba(201,168,76,.2); }
 
 /* Imagen */
 .product-img-wrap { position: relative; aspect-ratio: 4/3; background: #ffffff; overflow: hidden; }
-.product-img { width: 100%; height: 100%; object-fit: contain; object-position: center; padding: .4rem; box-sizing: border-box; transition: transform .5s ease; }
-.product-card:hover .product-img { transform: scale(1.01); }
+.product-img { width: 100%; height: 100%; object-fit: contain; object-position: center; padding: .4rem; box-sizing: border-box; transition: transform .6s cubic-bezier(.43,.13,.23,.96); }
+.product-card:hover .product-img { transform: scale(1.07); }
 
 .product-img-placeholder {
   width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
@@ -989,7 +996,83 @@ input, select, textarea { font-family: inherit; }
   .products-grid { grid-template-columns: 1fr; }
 }
 
-/* ── Scroll Animations ────────────────────────────────── */
+/* ── Mobile: ocultar flechas del carousel ─────────────── */
+@media(max-width:640px) {
+  .carousel-prev, .carousel-next { display: none; }
+}
+
+/* ── Scroll progress line (barra dorada superior) ──────── */
+.scroll-progress-line {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--gold-d), var(--gold), var(--gold-l));
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* ── Nav underline animado ─────────────────────────────── */
+@media(min-width:768px) {
+  .nav a { position: relative; }
+  .nav a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0;
+    width: 0; height: 1px;
+    background: var(--gold);
+    transition: width .35s cubic-bezier(.43,.13,.23,.96);
+  }
+  .nav a:hover::after { width: 100%; }
+}
+
+/* ── Button shimmer (brillo al hover) ──────────────────── */
+.carousel-cta { position: relative; overflow: hidden; }
+.carousel-cta::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -80%;
+  width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.28), transparent);
+  transform: skewX(-20deg);
+  transition: none;
+}
+.carousel-cta:hover::before {
+  animation: btnShimmer .6s cubic-bezier(.43,.13,.23,.96) forwards;
+}
+@keyframes btnShimmer {
+  from { left: -80%; }
+  to   { left: 150%; }
+}
+
+/* ── Filter btn micro-interacción ──────────────────────── */
+.filter-btn, .filter-group-btn {
+  transition: all .25s cubic-bezier(.43,.13,.23,.96);
+}
+.filter-btn:active, .filter-group-btn:active { transform: scale(.93); }
+
+/* ── Logo + nav entrada suave ──────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .logo {
+    animation: logoSlideIn .7s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes logoSlideIn {
+    from { opacity: 0; transform: translateX(-18px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .nav a {
+    animation: navFadeIn .5s cubic-bezier(.22,1,.36,1) both;
+  }
+  .nav a:nth-child(1) { animation-delay: .1s; }
+  .nav a:nth-child(2) { animation-delay: .18s; }
+  .nav a:nth-child(3) { animation-delay: .26s; }
+  @keyframes navFadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* ── Scroll Animations ──────────────────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
   .anim-fade-up {
     opacity: 0;
