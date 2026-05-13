@@ -988,3 +988,27 @@ input, select, textarea { font-family: inherit; }
 @media (max-width: 380px) {
   .products-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Scroll Animations ────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .anim-fade-up {
+    opacity: 0;
+    transform: translateY(36px);
+    transition: opacity .7s cubic-bezier(.22,1,.36,1),
+                transform .7s cubic-bezier(.22,1,.36,1);
+  }
+  .anim-scale {
+    opacity: 0;
+    transform: translateY(22px) scale(.96);
+    transition: opacity .55s cubic-bezier(.22,1,.36,1),
+                transform .55s cubic-bezier(.22,1,.36,1);
+  }
+  .anim-fade-up.anim-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .anim-scale.anim-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
