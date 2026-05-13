@@ -4,7 +4,7 @@
 // PASO 2: Genera una API Key gratuita
 // PASO 3: Reemplaza el texto de abajo con tu clave
 //
-const GROQ_API_KEY = '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';
+const GROQ_API_KEY = window.GROQ_CONFIG?.apiKey || '';
 const GROQ_MODEL   = 'llama-3.1-8b-instant';
 const GROQ_URL     = 'https://api.groq.com/openai/v1/chat/completions';
 
