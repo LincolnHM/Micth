@@ -1,6 +1,6 @@
 // ─── MICHT Decants · Chatbot IA con Google Gemini ────────────────────────────
 const GEMINI_API_KEY = window.GROQ_CONFIG?.apiKey || '';
-const GEMINI_MODEL   = 'gemini-1.5-flash';
+const GEMINI_MODEL   = 'gemini-2.0-flash';
 
 let chatHistory     = [];
 let catalogReady    = false;
