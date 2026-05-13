@@ -90,7 +90,9 @@ const Checkout = {
     lines.push(`\n*Total: S/ ${Cart.total().toFixed(2)}*`);
 
     if (this.deliveryType === 'pickup') {
+      const pickupName = document.getElementById('pickupNameInput').value.trim();
       lines.push('\n📍 *Tipo de entrega:* Recojo en Tienda');
+      if (pickupName) lines.push(`*Nombre:* ${pickupName}`);
     } else {
       const dni        = document.getElementById('dniInput').value.trim();
       const name       = document.getElementById('nameInput').value.trim();
@@ -135,6 +137,11 @@ const Checkout = {
     if (Cart.items.length === 0) {
       alert('Tu carrito está vacío.');
       return;
+    }
+
+    if (this.deliveryType === 'pickup') {
+      const name = document.getElementById('pickupNameInput').value.trim();
+      if (name.length < 2) { alert('Por favor ingresa tu nombre para el recojo.'); return; }
     }
 
     if (this.deliveryType === 'shipping') {
@@ -190,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function _applyDeliveryType(value) {
     Checkout.deliveryType = value;
+    document.getElementById('pickupForm').classList.toggle('hidden', value !== 'pickup');
     const form = document.getElementById('shippingForm');
     const wasHidden = form.classList.contains('hidden');
     form.classList.toggle('hidden', value !== 'shipping');

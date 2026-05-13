@@ -311,7 +311,13 @@ function renderProducts() {
             ${occasionLbl ? `<span class="tag-occasion">${occasionLbl}</span>` : ''}
           </div>
 
-          <p class="product-desc">${sanitize(p.description)}</p>
+          <button class="desc-toggle" data-id="${p.id}" aria-expanded="false">
+            <span>Ver descripción</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron" aria-hidden="true">
+              <path stroke-linecap="round" d="M6 9l6 6 6-6"/>
+            </svg>
+          </button>
+          <p class="product-desc" id="desc-${p.id}">${sanitize(p.description)}</p>
 
           ${notesHtml ? `
           <button class="notes-toggle" data-id="${p.id}" aria-expanded="false">
@@ -330,6 +336,18 @@ function renderProducts() {
       </article>
     `;
   }).join('');
+
+  // Eventos: descripción toggle (solo móvil)
+  grid.querySelectorAll('.desc-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = document.getElementById(`desc-${btn.dataset.id}`);
+      const open  = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!open));
+      btn.querySelector('span').textContent = open ? 'Ver descripción' : 'Ocultar descripción';
+      btn.querySelector('.chevron').style.transform = open ? '' : 'rotate(180deg)';
+      panel.classList.toggle('desc-open', !open);
+    });
+  });
 
   // Eventos: notas olfativas toggle
   grid.querySelectorAll('.notes-toggle').forEach(btn => {
