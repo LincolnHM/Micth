@@ -17,33 +17,16 @@ function buildSystemPrompt(products) {
   const inStock = products.filter(p => p.inStock !== false);
   const catalogText = inStock.map(p => {
     const sizesRaw = p.sizes || {};
-    const sizes = Array.isArray(sizesRaw)
-      ? sizesRaw.map(s => `${s.ml}ml=S/${s.price}`).join(', ')
-      : Object.entries(sizesRaw).map(([ml, price]) => `${ml}=S/${price}`).join(', ') || 'consultar precio';
-    const notes = [
-      p.notes?.top   ? `Salida: ${p.notes.top}`    : '',
-      p.notes?.heart ? `Corazón: ${p.notes.heart}` : '',
-      p.notes?.base  ? `Fondo: ${p.notes.base}`    : '',
-    ].filter(Boolean).join(' | ');
-    return `• ${p.name} (${p.brand}) — tipo: ${p.type || 'N/A'}, género: ${p.gender || 'unisex'}, ocasión: ${p.occasion || 'cualquiera'}, familia: ${p.olfFamily || 'variada'}${notes ? ', ' + notes : ''}, precios: ${sizes}`;
+    const minPrice = Array.isArray(sizesRaw)
+      ? Math.min(...sizesRaw.map(s => s.price))
+      : Math.min(...Object.values(sizesRaw));
+    return `${p.name}|${p.gender || 'unisex'}|${p.type || ''}|${p.occasion || ''}|desde S/${minPrice}`;
   }).join('\n');
 
-  return `Eres el asistente virtual de MICHT Decants, una tienda peruana de decants de perfumes árabes y de diseñador ubicada en Soritor, Perú. Tu nombre es "Micht Bot".
-
-Tu misión: ayudar al cliente a encontrar su fragancia perfecta y animarlo a hacer su pedido por WhatsApp (+51 917 452 643).
-
-CATÁLOGO DISPONIBLE (${inStock.length} productos con stock):
+  return `Eres Micht Bot, asistente de MICHT Decants (Soritor, Perú). Ayuda a elegir decants y dirige al WhatsApp +51917452643.
+CATÁLOGO (${inStock.length} productos):
 ${catalogText}
-
-INSTRUCCIONES DE COMPORTAMIENTO:
-- Responde SIEMPRE en español, de forma amigable, entusiasta pero breve (máximo 4 oraciones)
-- Si el cliente no ha dicho qué busca, haz 1 o 2 preguntas clave: ¿para quién es?, ¿qué ocasión?, ¿qué tipo de aroma le gusta?
-- Con esa info, recomienda 1 a 3 productos del catálogo que mejor encajen
-- Menciona siempre el precio más bajo disponible de cada producto sugerido
-- No inventes productos que no estén en el catálogo
-- Si ningún producto encaja perfectamente, sugiere el más cercano y explica por qué
-- Al terminar, invita al cliente a escribir por WhatsApp para hacer su pedido
-- Puedes usar emojis con moderación para dar calidez`;
+REGLAS: Responde en español, breve (máx 3 oraciones). Pregunta género/ocasión/aroma si no lo dicen. Recomienda 1-3 productos con precio. No inventes productos. Invita a pedir por WhatsApp.`;
 }
 
 // ─── Llamada a la API de Groq ─────────────────────────────────────────────────
@@ -66,7 +49,7 @@ async function askGroq(userMessage) {
         { role: 'system', content: systemContent },
         ...chatHistory
       ],
-      max_tokens: 450,
+      max_tokens: 280,
       temperature: 0.75
     })
   });
