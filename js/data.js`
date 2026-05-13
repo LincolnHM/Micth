@@ -1,0 +1,322 @@
+// ─── MICHT Decants — Capa de datos ───────────────────────────────────────────
+
+const STORAGE_KEY  = 'micht_products';
+const ORDERS_KEY   = 'micht_orders';
+const AUTH_KEY     = 'micht_admin_hash';
+const SESSION_KEY  = 'micht_session';
+
+// ─── Catálogo Real extraído del PDF ─────────────────────────────────────────────
+
+const DEFAULT_PRODUCTS = [
+  {
+    id: 1,
+    name: 'Aventus',
+    brand: 'Creed',
+    type: 'nicho',
+    gender: 'hombre',
+    occasion: 'ambas',
+    olfFamily: 'Frutal Amaderado',
+    topNotes: 'Piña, Bergamota, Manzana',
+    heartNotes: 'Birch, Jazmín, Patchouli',
+    baseNotes: 'Ámbar gris, Musgo de roble, Vainilla',
+    description: 'El rey de los perfumes masculinos. Fresco, potente y extremadamente elegante.',
+    imageUrl: '',
+    sizes: { '3ml': 25, '5ml': 40, '10ml': 80 },
+    inStock: true,
+    featured: true,
+    bottleRemainingMl: 100,
+    bottleTotalMl: 100
+  },
+  {
+    id: 2,
+    name: 'Baccarat Rouge 540',
+    brand: 'Maison Francis Kurkdjian',
+    type: 'nicho',
+    gender: 'unisex',
+    occasion: 'noche',
+    olfFamily: 'Floral Amaderado',
+    topNotes: 'Azafrán, Jazmín',
+    heartNotes: 'Ambroxan, Resina de Abeto',
+    baseNotes: 'Cedro, Eritoxileno',
+    description: 'Aroma sofisticado, dulce y cristalino. Un icono de la perfumería moderna.',
+    imageUrl: '',
+    sizes: { '3ml': 30, '5ml': 50, '10ml': 100 },
+    inStock: true,
+    featured: true,
+    bottleRemainingMl: 50,
+    bottleTotalMl: 100
+  },
+  {
+    id: 3,
+    name: 'Layton',
+    brand: 'Parfums de Marly',
+    type: 'nicho',
+    gender: 'hombre',
+    occasion: 'noche',
+    olfFamily: 'Oriental Especiado',
+    topNotes: 'Manzana, Lavanda, Mandarina',
+    heartNotes: 'Vainilla, Jazmín, Violeta',
+    baseNotes: 'Sándalo, Pimienta, Guayaco',
+    description: 'Seductor, dulce y cremoso. Ideal para citas y climas fríos.',
+    imageUrl: '',
+    sizes: { '3ml': 20, '5ml': 35, '10ml': 70 },
+    inStock: true,
+    featured: true,
+    bottleRemainingMl: 80,
+    bottleTotalMl: 100
+  },
+  {
+    id: 4,
+    name: 'Sauvage Elixir',
+    brand: 'Dior',
+    type: 'diseñador',
+    gender: 'hombre',
+    occasion: 'noche',
+    olfFamily: 'Aromático Especiado',
+    topNotes: 'Canela, Cardamomo',
+    heartNotes: 'Sándalo, Jazmín',
+    baseNotes: 'Lavanda, Licorice, Ámbar',
+    description: 'Versión ultra concentrada y potente del clásico Sauvage.',
+    imageUrl: '',
+    sizes: { '3ml': 15, '5ml': 25, '10ml': 50 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 120,
+    bottleTotalMl: 100
+  },
+  {
+    id: 5,
+    name: 'La Vie Est Belle',
+    brand: 'Lancôme',
+    type: 'diseñador',
+    gender: 'mujer',
+    occasion: 'dia',
+    olfFamily: 'Gourmand Floral',
+    topNotes: 'Grosella negra, Pera',
+    heartNotes: 'Iris, Jazmín, Flor de naranja',
+    baseNotes: 'Praline, Vainilla, Patchouli',
+    description: 'La esencia de la felicidad. Dulce, floral y muy duradera.',
+    imageUrl: '',
+    sizes: { '3ml': 12, '5ml': 20, '10ml': 40 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 100,
+    bottleTotalMl: 100
+  },
+  {
+    id: 6,
+    name: 'Cloud',
+    brand: 'Ariana Grande',
+    type: 'diseñador',
+    gender: 'mujer',
+    occasion: 'dia',
+    olfFamily: 'Gourmand Floral',
+    topNotes: 'Lavanda, Pera, Bergamota',
+    heartNotes: 'Crema batida, Coco, Orquídea',
+    baseNotes: 'Almizcle, Vainilla, Madera',
+    description: 'Aroma dulce, esponjoso y moderno. Muy popular y juvenil.',
+    imageUrl: '',
+    sizes: { '3ml': 10, '5ml': 18, '10ml': 35 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 60,
+    bottleTotalMl: 100
+  },
+  {
+    id: 7,
+    name: 'Libre',
+    brand: 'Yves Saint Laurent',
+    type: 'diseñador',
+    gender: 'mujer',
+    occasion: 'ambas',
+    olfFamily: 'Ambar Floral',
+    topNotes: 'Lavanda, Mandarina, Grosella negra',
+    heartNotes: 'Jazmín, Flor de azahar',
+    baseNotes: 'Vainilla, Almizcle, Cedro',
+    description: 'Fragancia audaz y elegante que representa la libertad femenina.',
+    imageUrl: '',
+    sizes: { '3ml': 15, '5ml': 25, '10ml': 50 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 90,
+    bottleTotalMl: 100
+  },
+  {
+    id: 8,
+    name: 'Bleu de Chanel',
+    brand: 'Chanel',
+    type: 'diseñador',
+    gender: 'hombre',
+    occasion: 'ambas',
+    olfFamily: 'Amaderado Aromático',
+    topNotes: 'Pomelo, Menta, Limón',
+    heartNotes: 'Jengibre, Jazmín, Nutmeg',
+    baseNotes: 'Incienso, Sándalo, Cedro',
+    description: 'El estándar de la elegancia masculina. Versátil y sofisticado.',
+    imageUrl: '',
+    sizes: { '3ml': 20, '5ml': 30, '10ml': 60 },
+    inStock: true,
+    featured: true,
+    bottleRemainingMl: 110,
+    bottleTotalMl: 100
+  },
+  {
+    id: 9,
+    name: 'Tobacco Vanille',
+    brand: 'Tom Ford',
+    type: 'nicho',
+    gender: 'unisex',
+    occasion: 'noche',
+    olfFamily: 'Oriental Especiado',
+    topNotes: 'Hojas de tabaco, Especias',
+    heartNotes: 'Vainilla, Cacao, Flor de tabaco',
+    baseNotes: 'Frutas secas, Madera',
+    description: 'Una experiencia rica y cálida que evoca un club inglés clásico.',
+    imageUrl: '',
+    sizes: { '3ml': 25, '5ml': 40, '10ml': 80 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 70,
+    bottleTotalMl: 100
+  },
+  {
+    id: 10,
+    name: 'Good Girl',
+    brand: 'Carolina Herrera',
+    type: 'diseñador',
+    gender: 'mujer',
+    occasion: 'noche',
+    olfFamily: 'Oriental Floral',
+    topNotes: 'Almendras, Café, Bergamota',
+    heartNotes: 'Jazmín sambac, Azucena, Nardo',
+    baseNotes: 'Haba tonka, Cacao, Prunella',
+    description: 'Seductora y dual, combina notas dulces con un toque atrevido.',
+    imageUrl: '',
+    sizes: { '3ml': 12, '5ml': 20, '10ml': 40 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 100,
+    bottleTotalMl: 100
+  }
+];
+
+// ─── API de productos ─────────────────────────────────────────────────────────
+
+const Products = {
+  getAll() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) { this.save(DEFAULT_PRODUCTS); return DEFAULT_PRODUCTS; }
+      return JSON.parse(raw);
+    } catch { this.save(DEFAULT_PRODUCTS); return DEFAULT_PRODUCTS; }
+  },
+  save(products) { localStorage.setItem(STORAGE_KEY, JSON.stringify(products)); },
+  getById(id) { return this.getAll().find(p => p.id === id); },
+  add(product) {
+    const products = this.getAll();
+    const newId = products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
+    products.push({ ...product, id: newId });
+    this.save(products);
+    return newId;
+  },
+  update(id, data) { this.save(this.getAll().map(p => p.id === id ? { ...p, ...data } : p)); },
+  delete(id) { this.save(this.getAll().filter(p => p.id !== id)); }
+};
+
+// ─── API de pedidos ───────────────────────────────────────────────────────────
+
+const Orders = {
+  getAll() {
+    try { return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]'); }
+    catch { return []; }
+  },
+  save(orders) { localStorage.setItem(ORDERS_KEY, JSON.stringify(orders)); },
+  getById(id) { return this.getAll().find(o => o.id === id); },
+
+  create(order) {
+    const orders  = this.getAll();
+    const num     = orders.length + 1;
+    const newOrder = {
+      ...order,
+      id:        `ORD-${String(num).padStart(4, '0')}`,
+      date:      new Date().toISOString(),
+      status:    'pendiente'
+    };
+    orders.unshift(newOrder);
+    this.save(orders);
+    return newOrder.id;
+  },
+
+  updateStatus(id, status) {
+    const orders = this.getAll().map(o => {
+      if (o.id !== id) return o;
+      const updated = { ...o, status, updatedAt: new Date().toISOString() };
+
+      // Al marcar como "enviado": descontar ml del inventario
+      if (status === 'enviado' && o.status !== 'enviado') {
+        o.items.forEach(item => {
+          const product = Products.getById(item.productId);
+          if (!product) return;
+          const mlUsed   = parseInt(item.size) * item.quantity;
+          const newRemain = Math.max(0, product.bottleRemainingMl - mlUsed);
+          Products.update(item.productId, { bottleRemainingMl: newRemain });
+        });
+      }
+
+      return updated;
+    });
+    this.save(orders);
+  },
+
+  delete(id) { this.save(this.getAll().filter(o => o.id !== id)); },
+
+  getStats() {
+    const all = this.getAll();
+    return {
+      total:     all.length,
+      pendiente: all.filter(o => o.status === 'pendiente').length,
+      pagado:    all.filter(o => o.status === 'pagado').length,
+      enviado:   all.filter(o => o.status === 'enviado').length,
+      entregado: all.filter(o => o.status === 'entregado').length,
+      revenue:   all.filter(o => ['pagado','enviado','entregado'].includes(o.status))
+                    .reduce((s, o) => s + o.total, 0)
+    };
+  }
+};
+
+// ─── Autenticación de administrador ──────────────────────────────────────────
+
+const Auth = {
+  async hash(password) {
+    const enc = new TextEncoder().encode(password);
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  },
+  hasPassword()           { return !!localStorage.getItem(AUTH_KEY); },
+  async setPassword(pw)   { localStorage.setItem(AUTH_KEY, await this.hash(pw)); },
+  async verify(pw)        { const s = localStorage.getItem(AUTH_KEY); return !!s && s === await this.hash(pw); },
+  login()                 { sessionStorage.setItem(SESSION_KEY, '1'); },
+  logout()                { sessionStorage.removeItem(SESSION_KEY); },
+  isLoggedIn()            { return sessionStorage.getItem(SESSION_KEY) === '1'; }
+};
+
+// ─── Sanitización ─────────────────────────────────────────────────────────────
+
+function sanitize(str) {
+  const d = document.createElement('div');
+  d.textContent = String(str ?? '').trim().slice(0, 500);
+  return d.innerHTML;
+}
+
+function sanitizeNum(val, min = 0, max = 99999) {
+  const n = parseFloat(val);
+  return isNaN(n) ? 0 : Math.min(Math.max(n, min), max);
+}
+
+// ─── Familias olfativas disponibles ──────────────────────────────────────────
+
+const OLF_FAMILIES = [
+  'Floral', 'Amaderado', 'Oriental', 'Oriental Floral', 'Oriental Amaderado',
+  'Oriental Especiado', 'Floral Oriental', 'Floral Amaderado', 'Aromático Amaderado',
+  'Cítrico', 'Acuático', 'Gourmand', 'Gourmand Floral', 'Aromático', 'Cuero', 'Chypre'
+];

@@ -1,0 +1,377 @@
+// ─── MICHT Decants — Base de datos Supabase ───────────────────────────────────
+//
+// INSTRUCCIONES PARA CONFIGURAR SUPABASE (gratis):
+// 1. Ve a https://supabase.com y crea una cuenta gratuita
+// 2. Crea un nuevo proyecto (guarda tu contraseña de DB)
+// 3. Espera ~2 minutos a que se cree el proyecto
+// 4. Ve a Settings → API
+// 5. Copia tu "Project URL" y pégalo en SUPABASE_URL
+// 6. Copia tu "anon public" key y pégala en SUPABASE_ANON_KEY
+// 7. Ve a SQL Editor y ejecuta los siguientes SQL para crear las 2 tablas:
+//
+// CREATE TABLE pedidos (
+//   id             TEXT PRIMARY KEY,
+//   customer_name  TEXT,
+//   customer_phone TEXT,
+//   customer_dni   TEXT,
+//   delivery_type  TEXT DEFAULT 'recojo',
+//   department     TEXT,
+//   province       TEXT,
+//   shalom_office  TEXT,
+//   notes          TEXT,
+//   items          JSONB DEFAULT '[]',
+//   total          NUMERIC DEFAULT 0,
+//   status         TEXT DEFAULT 'pendiente',
+//   created_at     TIMESTAMPTZ DEFAULT NOW(),
+//   updated_at     TIMESTAMPTZ
+// );
+// ALTER TABLE pedidos DISABLE ROW LEVEL SECURITY;
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SUPABASE_URL      = 'https://nvttfrpbdrdtgxulkyln.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_2xUgHEI6yI1KjmQSZk3chg_ar98tDZf';
+
+
+
+// ─── Detectar si Supabase está configurado ────────────────────────────────────
+const SUPABASE_READY = (
+  !SUPABASE_URL.includes('TU-PROYECTO') &&
+  typeof supabase !== 'undefined'
+);
+
+const db = SUPABASE_READY
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+if (SUPABASE_READY) {
+  console.log('✅ Supabase conectado');
+} else {
+  console.warn('⚠️ Supabase no configurado — usando almacenamiento local');
+}
+
+// ─── Convertir formato Supabase ↔ JavaScript ──────────────────────────────────
+
+function orderFromDB(row) {
+  return {
+    id:            row.id,
+    customerName:  row.customer_name  || '',
+    customerPhone: row.customer_phone || '',
+    customerDni:   row.customer_dni   || '',
+    deliveryType:  row.delivery_type  || 'recojo',
+    department:    row.department     || '',
+    province:      row.province       || '',
+    shalomOffice:  row.shalom_office  || '',
+    notes:         row.notes          || '',
+    items:         row.items          || [],
+    total:         parseFloat(row.total) || 0,
+    status:        row.status         || 'pendiente',
+    date:          row.created_at,
+    updatedAt:     row.updated_at
+  };
+}
+
+function orderToDB(order) {
+  return {
+    id:             order.id,
+    customer_name:  order.customerName  || '',
+    customer_phone: order.customerPhone || '',
+    customer_dni:   order.customerDni   || '',
+    delivery_type:  order.deliveryType  || 'recojo',
+    department:     order.department    || '',
+    province:       order.province      || '',
+    shalom_office:  order.shalomOffice  || '',
+    notes:          order.notes         || '',
+    items:          order.items         || [],
+    total:          order.total         || 0,
+    status:         order.status        || 'pendiente'
+  };
+}
+
+// ─── Generar ID único para pedido ─────────────────────────────────────────────
+
+function generateOrderId() {
+  const now = new Date();
+  const date = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  const time = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+  const rand = String(Math.floor(Math.random() * 100)).padStart(2,'0');
+  return `ORD-${date}-${time}${rand}`;
+}
+
+// ─── API de pedidos (async, usa Supabase si está configurado) ─────────────────
+
+const CloudOrders = {
+
+  async getAll() {
+    if (db) {
+      const { data, error } = await db
+        .from('pedidos')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) { console.error('Supabase error:', error); return this._localGetAll(); }
+      return data.map(orderFromDB);
+    }
+    return this._localGetAll();
+  },
+
+  async getById(id) {
+    if (db) {
+      const { data, error } = await db
+        .from('pedidos')
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (error || !data) return this._localGetById(id);
+      return orderFromDB(data);
+    }
+    return this._localGetById(id);
+  },
+
+  async create(order) {
+    const newOrder = {
+      ...order,
+      id:     generateOrderId(),
+      date:   new Date().toISOString(),
+      status: 'pendiente'
+    };
+    if (db) {
+      const { error } = await db.from('pedidos').insert(orderToDB(newOrder));
+      if (error) {
+        console.error('Supabase error:', error);
+        this._localCreate(order);
+      }
+    } else {
+      this._localCreate(order);
+    }
+    return newOrder.id;
+  },
+
+  async updateStatus(id, status) {
+    // Descontar ml del inventario si se marca como "enviado"
+    if (status === 'enviado') {
+      const order = await this.getById(id);
+      if (order && order.status !== 'enviado') {
+        (order.items || []).forEach(item => {
+          const product = Products.getById(item.productId);
+          if (!product) return;
+          const mlUsed   = parseInt(item.size) * item.quantity;
+          const newRemain = Math.max(0, product.bottleRemainingMl - mlUsed);
+          Products.update(item.productId, { bottleRemainingMl: newRemain });
+        });
+      }
+    }
+    if (db) {
+      const { error } = await db
+        .from('pedidos')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) { console.error('Supabase error:', error); Orders.updateStatus(id, status); }
+    } else {
+      Orders.updateStatus(id, status);
+    }
+  },
+
+  async delete(id) {
+    if (db) {
+      const { error } = await db.from('pedidos').delete().eq('id', id);
+      if (error) { console.error('Supabase error:', error); Orders.delete(id); }
+    } else {
+      Orders.delete(id);
+    }
+  },
+
+  async getStats() {
+    const all = await this.getAll();
+    return {
+      total:     all.length,
+      pendiente: all.filter(o => o.status === 'pendiente').length,
+      pagado:    all.filter(o => o.status === 'pagado').length,
+      enviado:   all.filter(o => o.status === 'enviado').length,
+      entregado: all.filter(o => o.status === 'entregado').length,
+      revenue:   all.filter(o => ['pagado','enviado','entregado'].includes(o.status))
+                    .reduce((s, o) => s + o.total, 0)
+    };
+  },
+
+  // ─── Fallback a localStorage ────────────────────────────────────────────────
+  _localGetAll()   { return Orders.getAll(); },
+  _localGetById(id){ return Orders.getById(id); },
+  _localCreate(o)  { Orders.create(o); }
+};
+
+// ─── Tabla 'productos' en Supabase — ejecutar en SQL Editor ──────────────────
+//
+// CREATE TABLE productos (
+//   id                  INTEGER PRIMARY KEY,
+//   name                TEXT NOT NULL,
+//   brand               TEXT NOT NULL,
+//   type                TEXT DEFAULT 'diseñador',
+//   gender              TEXT DEFAULT 'unisex',
+//   occasion            TEXT DEFAULT 'ambas',
+//   olf_family          TEXT,
+//   top_notes           TEXT,
+//   heart_notes         TEXT,
+//   base_notes          TEXT,
+//   description         TEXT,
+//   image_url           TEXT,
+//   sizes               JSONB DEFAULT '{}',
+//   in_stock            BOOLEAN DEFAULT true,
+//   featured            BOOLEAN DEFAULT false,
+//   bottle_remaining_ml NUMERIC DEFAULT 0,
+//   bottle_total_ml     NUMERIC DEFAULT 0,
+//   created_at          TIMESTAMPTZ DEFAULT NOW(),
+//   updated_at          TIMESTAMPTZ
+// );
+// ALTER TABLE productos DISABLE ROW LEVEL SECURITY;
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+function productFromDB(row) {
+  return {
+    id:                row.id,
+    name:              row.name              || '',
+    brand:             row.brand             || '',
+    type:              row.type              || 'diseñador',
+    gender:            row.gender            || 'unisex',
+    occasion:          row.occasion          || 'ambas',
+    olfFamily:         row.olf_family        || '',
+    topNotes:          row.top_notes         || '',
+    heartNotes:        row.heart_notes       || '',
+    baseNotes:         row.base_notes        || '',
+    description:       row.description       || '',
+    imageUrl:          row.image_url         || '',
+    sizes:             row.sizes             || {},
+    inStock:           row.in_stock   !== null ? row.in_stock   : true,
+    featured:          row.featured   !== null ? row.featured   : false,
+    bottleRemainingMl: parseFloat(row.bottle_remaining_ml) || 0,
+    bottleTotalMl:     parseFloat(row.bottle_total_ml)     || 0,
+    date:              row.created_at,
+    updatedAt:         row.updated_at
+  };
+}
+
+function productToDB(product) {
+  const img = product.imageUrl || '';
+  return {
+    id:                  product.id,
+    name:                product.name              || '',
+    brand:               product.brand             || '',
+    type:                product.type              || 'diseñador',
+    gender:              product.gender            || 'unisex',
+    occasion:            product.occasion          || 'ambas',
+    olf_family:          product.olfFamily         || '',
+    top_notes:           product.topNotes          || '',
+    heart_notes:         product.heartNotes        || '',
+    base_notes:          product.baseNotes         || '',
+    description:         product.description       || '',
+    image_url:           img.startsWith('data:image/svg') ? '' : img,
+    sizes:               product.sizes             || {},
+    in_stock:            product.inStock    !== undefined ? product.inStock    : true,
+    featured:            product.featured   !== undefined ? product.featured   : false,
+    bottle_remaining_ml: product.bottleRemainingMl || 0,
+    bottle_total_ml:     product.bottleTotalMl     || 0
+  };
+}
+
+const _PRODUCT_FIELD_MAP = {
+  name: 'name', brand: 'brand', type: 'type', gender: 'gender',
+  occasion: 'occasion', olfFamily: 'olf_family', topNotes: 'top_notes',
+  heartNotes: 'heart_notes', baseNotes: 'base_notes', description: 'description',
+  imageUrl: 'image_url', sizes: 'sizes', inStock: 'in_stock',
+  featured: 'featured', bottleRemainingMl: 'bottle_remaining_ml',
+  bottleTotalMl: 'bottle_total_ml'
+};
+
+// ─── API de productos (async, usa Supabase si está configurado) ───────────────
+
+const CloudProducts = {
+
+  async getAll() {
+    if (db) {
+      const { data, error } = await db
+        .from('productos')
+        .select('*')
+        .order('id', { ascending: true });
+      if (error) { console.error('Supabase error:', error); return Products.getAll(); }
+      if (!data || !data.length) return this._seedFromDefaults();
+      const products = data.map(row => {
+        const p = productFromDB(row);
+        if (!p.imageUrl) p.imageUrl = buildProductImage(p);
+        return p;
+      });
+      Products.save(products);
+      return products;
+    }
+    return Products.getAll();
+  },
+
+  async getById(id) {
+    if (db) {
+      const { data, error } = await db
+        .from('productos').select('*').eq('id', id).single();
+      if (error || !data) return Products.getById(id);
+      const p = productFromDB(data);
+      if (!p.imageUrl) p.imageUrl = buildProductImage(p);
+      return p;
+    }
+    return Products.getById(id);
+  },
+
+  async add(product) {
+    const all = await this.getAll();
+    const newId = all.length ? Math.max(...all.map(p => p.id)) + 1 : 1;
+    const newProduct = {
+      ...product,
+      id:                newId,
+      inStock:           product.inStock           !== undefined ? product.inStock           : true,
+      featured:          product.featured          !== undefined ? product.featured          : false,
+      bottleRemainingMl: product.bottleRemainingMl || 0,
+      bottleTotalMl:     product.bottleTotalMl     || 0
+    };
+    if (db) {
+      const { error } = await db.from('productos').insert(productToDB(newProduct));
+      if (error) console.error('Supabase error:', error);
+    }
+    const local = Products.getAll();
+    local.push(newProduct);
+    Products.save(local);
+    return newId;
+  },
+
+  async update(id, data) {
+    if (db) {
+      const dbData = { updated_at: new Date().toISOString() };
+      Object.keys(data).forEach(key => {
+        const col = _PRODUCT_FIELD_MAP[key];
+        if (!col) return;
+        let val = data[key];
+        if (key === 'imageUrl' && typeof val === 'string' && val.startsWith('data:image/svg')) val = '';
+        dbData[col] = val;
+      });
+      const { error } = await db.from('productos').update(dbData).eq('id', id);
+      if (error) console.error('Supabase error:', error);
+    }
+    Products.update(id, data);
+  },
+
+  async delete(id) {
+    if (db) {
+      const { error } = await db.from('productos').delete().eq('id', id);
+      if (error) console.error('Supabase error:', error);
+    }
+    Products.delete(id);
+  },
+
+  async _seedFromDefaults() {
+    const products = DEFAULT_PRODUCTS.map(p => ({ ...p }));
+    if (db) {
+      const rows = products.map(productToDB);
+      for (let i = 0; i < rows.length; i += 20) {
+        const { error } = await db.from('productos').insert(rows.slice(i, i + 20));
+        if (error) console.error('Supabase seed error:', error);
+      }
+    }
+    Products.save(products);
+    return products;
+  }
+};
