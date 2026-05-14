@@ -34,11 +34,13 @@ const WHATSAPP_NUMBER = '51917452643';
 
 const Checkout = {
   deliveryType: 'pickup',
+  _step: 1,
 
   open() {
     const modal = document.getElementById('checkoutModal');
     modal.classList.add('open');
     document.getElementById('overlay').classList.add('active');
+    this._showStep(1);
     this.renderSummary();
     this.populateDepartments();
   },
@@ -46,6 +48,33 @@ const Checkout = {
   close() {
     document.getElementById('checkoutModal').classList.remove('open');
     document.getElementById('overlay').classList.remove('active');
+  },
+
+  _showStep(n) {
+    this._step = n;
+    document.getElementById('checkoutStep1').classList.toggle('hidden', n !== 1);
+    document.getElementById('checkoutStep2').classList.toggle('hidden', n !== 2);
+    document.getElementById('mstep1').classList.toggle('active', n >= 1);
+    document.getElementById('mstep2').classList.toggle('active', n >= 2);
+    document.getElementById('mstepLine').classList.toggle('active', n >= 2);
+    document.getElementById('checkoutTitle').textContent = n === 1 ? 'Finalizar Pedido' : 'Pagar con Yape';
+    if (n === 2) {
+      document.getElementById('yapeTotalAmount').textContent = `S/ ${Cart.total().toFixed(2)}`;
+      document.querySelector('.modal-content').scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  },
+
+  goToPayment() {
+    if (Cart.items.length === 0) { alert('Tu carrito está vacío.'); return; }
+    if (this.deliveryType === 'pickup') {
+      const name = document.getElementById('pickupNameInput').value.trim();
+      if (name.length < 2) { alert('Por favor ingresa tu nombre para el recojo.'); return; }
+    }
+    if (this.deliveryType === 'shipping') {
+      const errors = this.validateShippingForm();
+      if (errors.length) { alert(errors.join('\n')); return; }
+    }
+    this._showStep(2);
   },
 
   renderSummary() {
@@ -88,6 +117,8 @@ const Checkout = {
       lines.push(`  • ${i.brand} – ${i.productName} (${i.size}) × ${i.quantity} = S/ ${(i.price * i.quantity).toFixed(2)}`);
     });
     lines.push(`\n*Total: S/ ${Cart.total().toFixed(2)}*`);
+    lines.push('\n💸 *Método de pago:* Yape ✅');
+    lines.push('_(Por favor indica tu número de operación Yape para confirmar)_');
 
     if (this.deliveryType === 'pickup') {
       const pickupName = document.getElementById('pickupNameInput').value.trim();
@@ -194,6 +225,35 @@ const Checkout = {
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('closeModal').addEventListener('click', () => Checkout.close());
+
+  // Paso 1 → 2
+  document.getElementById('continueToPayBtn').addEventListener('click', () => Checkout.goToPayment());
+
+  // Paso 2 → 1
+  document.getElementById('backToStep1Btn').addEventListener('click', () => Checkout._showStep(1));
+
+  // Copiar número de celular
+  document.getElementById('copyPhoneBtn').addEventListener('click', function () {
+    const number = '917452643';
+    const btn = this;
+    const original = btn.innerHTML;
+    const markCopied = () => {
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="15" height="15"><polyline points="20 6 9 17 4 12"/></svg> ¡Copiado!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.innerHTML = original; btn.classList.remove('copied'); }, 2200);
+    };
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(number).then(markCopied).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = number; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta); markCopied();
+      });
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = number; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta); markCopied();
+    }
+  });
 
   function _applyDeliveryType(value) {
     Checkout.deliveryType = value;
