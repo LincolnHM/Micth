@@ -1499,6 +1499,48 @@ input, select, textarea { font-family: inherit; }
 }
 .mobile-menu.open .mobile-menu-footer { opacity: 1; }
 
+/* ─── Marquee strip ─────────────────────────────────────── */
+.marquee-strip {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  padding: .9rem 0;
+  overflow: hidden;
+  position: relative;
+}
+.marquee-track {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  white-space: nowrap;
+  width: max-content;
+  animation: marqueeScroll 26s linear infinite;
+  will-change: transform;
+}
+.marquee-strip:hover .marquee-track { animation-play-state: paused; }
+.marquee-track > span {
+  font-size: .6rem;
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+.marquee-dot {
+  color: var(--gold) !important;
+  font-size: .9rem !important;
+  letter-spacing: 0 !important;
+  font-weight: 400 !important;
+  opacity: .6;
+}
+@keyframes marqueeScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none; }
+}
+
 /* ─── Contact glassmorphism ─────────────────────────────── */
 .contact-section {
   padding: 5rem 0;
