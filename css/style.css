@@ -302,17 +302,7 @@ input, select, textarea { font-family: inherit; }
 .olf-select:focus { outline: none; border-color: var(--gold-d); color: var(--gold); }
 .olf-select option { background: var(--card); color: var(--text); }
 
-/* Search */
-.search-wrap { margin-left: auto; position: relative; }
-.search-wrap svg { position: absolute; left: .75rem; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; stroke: var(--text2); fill: none; stroke-width: 2; }
-.search-wrap input {
-  background: var(--card); border: 1px solid var(--border);
-  color: var(--text); border-radius: 50px;
-  padding: .4rem 1rem .4rem 2.2rem; font-size: .8rem;
-  width: 190px; transition: all var(--tr);
-}
-.search-wrap input:focus { outline: none; border-color: var(--gold-d); width: 220px; }
-.search-wrap input::placeholder { color: var(--text3); }
+/* search-wrap eliminado — reemplazado por #srch-poda (Uiverse gold) */
 
 /* Meta del catálogo */
 .catalog-meta { display: flex; align-items: center; justify-content: space-between; padding: .75rem 0 .5rem; }
@@ -1507,6 +1497,211 @@ input, select, textarea { font-family: inherit; }
   transition: opacity .5s .4s;
 }
 .mobile-menu.open .mobile-menu-footer { opacity: 1; }
+
+/* ─── Uiverse Search Input — Gold Edition ───────────────── */
+/* Adaptado de Uiverse.io/Lakshay-art con colores MICHT      */
+.srch-white,
+.srch-border,
+.srch-darkBg,
+.srch-glow {
+  max-height: 66px;
+  max-width: 268px;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  overflow: hidden;
+  z-index: -1;
+  border-radius: 12px;
+  filter: blur(3px);
+}
+.srch-input {
+  background-color: var(--bg);
+  border: none;
+  width: 255px;
+  height: 48px;
+  border-radius: 10px;
+  color: var(--text);
+  padding-inline: 50px;
+  font-size: .83rem;
+  font-family: var(--font-sans);
+}
+.srch-input::placeholder { color: var(--text3); }
+.srch-input:focus { outline: none; }
+
+#srch-poda {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+#srch-main { position: relative; }
+
+#srch-input-mask {
+  pointer-events: none;
+  width: 90px;
+  height: 20px;
+  position: absolute;
+  background: linear-gradient(90deg, transparent, var(--bg));
+  top: 14px;
+  left: 60px;
+}
+#srch-main:focus-within > #srch-input-mask { display: none; }
+
+#srch-gold-mask {
+  pointer-events: none;
+  width: 28px;
+  height: 18px;
+  position: absolute;
+  background: #c9a84c;
+  top: 10px;
+  left: 5px;
+  filter: blur(18px);
+  opacity: 0.75;
+  transition: opacity 2s;
+}
+#srch-main:hover > #srch-gold-mask { opacity: 0; }
+
+.srch-white {
+  max-height: 57px;
+  max-width: 261px;
+  border-radius: 10px;
+  filter: blur(2px);
+}
+.srch-white::before {
+  content: '';
+  z-index: -2;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(83deg);
+  position: absolute;
+  width: 600px; height: 600px;
+  filter: brightness(1.4);
+  background-image: conic-gradient(
+    rgba(0,0,0,0) 0%, #e8c96a,
+    rgba(0,0,0,0) 8%, rgba(0,0,0,0) 50%,
+    #c9a84c, rgba(0,0,0,0) 58%
+  );
+  transition: all 2s;
+}
+.srch-border {
+  max-height: 53px;
+  max-width: 257px;
+  border-radius: 11px;
+  filter: blur(0.5px);
+}
+.srch-border::before {
+  content: '';
+  z-index: -2;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(70deg);
+  position: absolute;
+  width: 600px; height: 600px;
+  filter: brightness(1.3);
+  background-image: conic-gradient(
+    #0a0a06, #c9a84c 5%, #0a0a06 14%,
+    #0a0a06 50%, #9a7a2a 60%, #0a0a06 64%
+  );
+  transition: all 2s;
+}
+.srch-darkBg {
+  max-height: 63px;
+  max-width: 266px;
+}
+.srch-darkBg::before {
+  content: '';
+  z-index: -2;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(82deg);
+  position: absolute;
+  width: 600px; height: 600px;
+  background-image: conic-gradient(
+    rgba(0,0,0,0), #3a2a00,
+    rgba(0,0,0,0) 10%, rgba(0,0,0,0) 50%,
+    #1a1000, rgba(0,0,0,0) 60%
+  );
+  transition: all 2s;
+}
+.srch-glow {
+  overflow: hidden;
+  filter: blur(28px);
+  opacity: 0.4;
+  max-height: 120px;
+  max-width: 306px;
+}
+.srch-glow::before {
+  content: '';
+  z-index: -2;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(60deg);
+  position: absolute;
+  width: 999px; height: 999px;
+  background-image: conic-gradient(
+    #000, #c9a84c 5%, #000 38%,
+    #000 50%, #9a7a2a 60%, #000 87%
+  );
+  transition: all 2s;
+}
+
+/* Hover — conic rota 180° */
+#srch-poda:hover > .srch-darkBg::before  { transform: translate(-50%,-50%) rotate(-98deg); }
+#srch-poda:hover > .srch-glow::before    { transform: translate(-50%,-50%) rotate(-120deg); }
+#srch-poda:hover > .srch-white::before   { transform: translate(-50%,-50%) rotate(-97deg); }
+#srch-poda:hover > .srch-border::before  { transform: translate(-50%,-50%) rotate(-110deg); }
+
+/* Focus-within — conic completa vuelta lenta */
+#srch-poda:focus-within > .srch-darkBg::before { transform: translate(-50%,-50%) rotate(442deg); transition: all 4s; }
+#srch-poda:focus-within > .srch-glow::before   { transform: translate(-50%,-50%) rotate(420deg); transition: all 4s; }
+#srch-poda:focus-within > .srch-white::before  { transform: translate(-50%,-50%) rotate(443deg); transition: all 4s; }
+#srch-poda:focus-within > .srch-border::before { transform: translate(-50%,-50%) rotate(430deg); transition: all 4s; }
+
+/* Filter icon + border giratorio */
+#srch-filter-icon {
+  position: absolute;
+  top: 5px; right: 5px;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2;
+  width: 38px; height: 38px;
+  isolation: isolate; overflow: hidden;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #0d0900, #000, #151000);
+  border: 1px solid transparent;
+}
+.srch-filterBorder {
+  height: 40px; width: 40px;
+  position: absolute;
+  overflow: hidden;
+  top: 4px; right: 4px;
+  border-radius: 10px;
+}
+.srch-filterBorder::before {
+  content: '';
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%) rotate(90deg);
+  position: absolute;
+  width: 600px; height: 600px;
+  filter: brightness(1.35);
+  background-image: conic-gradient(
+    rgba(0,0,0,0), #3a3020,
+    rgba(0,0,0,0) 50%, rgba(0,0,0,0) 50%,
+    #3a3020, rgba(0,0,0,0) 100%
+  );
+  animation: srchSpin 4s linear infinite;
+}
+@keyframes srchSpin { 100% { transform: translate(-50%,-50%) rotate(450deg); } }
+
+#srch-search-icon {
+  position: absolute;
+  left: 16px; top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  /* En móvil el search queda dentro del collapsible de filtros */
+  .srch-input { width: min(240px, calc(100vw - 3rem)); }
+  .srch-white, .srch-border, .srch-darkBg, .srch-glow {
+    max-width: min(265px, calc(100vw - 2.5rem));
+  }
+}
 
 /* ─── Marquee strip ─────────────────────────────────────── */
 .marquee-strip {

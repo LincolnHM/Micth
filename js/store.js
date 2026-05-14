@@ -224,8 +224,12 @@ function renderPagination(current, total) {
     btn.addEventListener('click', () => {
       Pagination.currentPage = parseInt(btn.dataset.page);
       renderProducts();
-      if (typeof scrollToSection === 'function') scrollToSection('catalogo');
-      else document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
+      // Esperar que GSAP procese las nuevas tarjetas antes de hacer scroll
+      // (el MutationObserver de GSAP tiene 65ms de debounce)
+      setTimeout(() => {
+        if (typeof scrollToSection === 'function') scrollToSection('catalogo');
+        else document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
+      }, 90);
     });
   });
 }
