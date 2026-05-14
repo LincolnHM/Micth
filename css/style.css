@@ -1222,3 +1222,122 @@ input, select, textarea { font-family: inherit; }
 
   @page { margin: 1.5cm; size: A4; }
 }
+
+/* ════════════════════════════════════════════════════════
+   CAROUSEL PREMIUM ANIMATIONS
+   ════════════════════════════════════════════════════════ */
+
+/* ── Stagger text reveal al entrar un slide ─────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .carousel-slide .carousel-tag,
+  .carousel-slide .carousel-title,
+  .carousel-slide .carousel-sub,
+  .carousel-slide .carousel-cta { opacity: 0; }
+
+  .carousel-slide.active .carousel-tag {
+    animation: csTextIn .55s cubic-bezier(.22,1,.36,1) .10s both;
+  }
+  .carousel-slide.active .carousel-title {
+    animation: csTextIn .65s cubic-bezier(.22,1,.36,1) .22s both;
+  }
+  .carousel-slide.active .carousel-sub {
+    animation: csTextIn .6s cubic-bezier(.22,1,.36,1) .38s both;
+  }
+  .carousel-slide.active .carousel-cta {
+    animation: csTextIn .5s cubic-bezier(.22,1,.36,1) .52s both;
+  }
+
+  @keyframes csTextIn {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Slide salida con depth ────────────────────────────── */
+  .carousel-slide.slide-exiting .carousel-content {
+    animation: csContentOut .5s cubic-bezier(.43,.13,.23,.96) forwards;
+  }
+  @keyframes csContentOut {
+    from { opacity: 1; transform: translateX(0) scale(1); }
+    to   { opacity: 0; transform: translateX(-30px) scale(.97); }
+  }
+
+  /* ── Deco rings: glow pulsante además de spin ───────────── */
+  .deco-ring-1 { animation: spin 20s linear infinite, ringGlow 4s ease-in-out infinite; }
+  .deco-ring-2 { animation: spin 30s linear infinite reverse, ringGlow 4s ease-in-out .8s infinite; }
+  .deco-ring-3 { animation: spin 15s linear infinite, ringGlow 4s ease-in-out 1.6s infinite; }
+  @keyframes ringGlow {
+    0%, 100% { border-color: rgba(201,168,76,.18); }
+    50%       { border-color: rgba(201,168,76,.55); box-shadow: 0 0 22px rgba(201,168,76,.12); }
+  }
+
+  /* ── Mascota: aura pulsante ─────────────────────────────── */
+  .hero-mascot::before {
+    animation: mascotAura 3.5s ease-in-out infinite;
+  }
+  @keyframes mascotAura {
+    0%, 100% { opacity: .5; transform: translateY(-50%) scale(1); }
+    50%       { opacity: 1;  transform: translateY(-50%) scale(1.18); }
+  }
+
+  /* ── Mascota: flotación suave ───────────────────────────── */
+  .hero-mascot {
+    animation: mascotFloat 5s ease-in-out infinite;
+  }
+  @keyframes mascotFloat {
+    0%, 100% { top: 50%; }
+    50%       { top: calc(50% - 8px); }
+  }
+
+  /* ── Micro-hover en flechas ─────────────────────────────── */
+  .carousel-prev, .carousel-next {
+    transition: background .2s, color .2s, transform .25s cubic-bezier(.22,1,.36,1), box-shadow .2s;
+  }
+  .carousel-prev:hover { transform: translateY(-50%) translateX(-2px) scale(1.1); }
+  .carousel-next:hover { transform: translateY(-50%) translateX(2px)  scale(1.1); }
+
+  /* ── Micro-hover en dots ────────────────────────────────── */
+  .dot { transition: all .3s cubic-bezier(.22,1,.36,1); }
+  .dot:hover { transform: scale(1.4); background: rgba(201,168,76,.5); }
+}
+
+/* ── Filtros móvil colapsables ──────────────────────────── */
+.filters-toggle-btn {
+  display: none;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: .65rem 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text2);
+  font-size: .82rem;
+  letter-spacing: .04em;
+  transition: all .25s ease;
+}
+.filters-toggle-btn:hover { border-color: var(--gold); color: var(--gold); }
+.filters-toggle-btn .ftb-badge {
+  background: var(--gold);
+  color: #000;
+  font-size: .65rem;
+  font-weight: 700;
+  padding: .1rem .4rem;
+  border-radius: 50px;
+  margin-left: .4rem;
+}
+.filters-toggle-btn .ftb-chevron {
+  width: 16px; height: 16px;
+  stroke: currentColor; fill: none; stroke-width: 2;
+  transition: transform .3s cubic-bezier(.22,1,.36,1);
+}
+.filters-toggle-btn.open .ftb-chevron { transform: rotate(180deg); }
+
+@media(max-width:640px) {
+  .filters-toggle-btn { display: flex; }
+  .filters-collapsible {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .4s cubic-bezier(.22,1,.36,1);
+  }
+  .filters-collapsible.open { max-height: 500px; }
+}

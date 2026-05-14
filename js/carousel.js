@@ -1,5 +1,6 @@
-// ─── Hero Carousel ─────────────────────────────────────────────────────────────
+// ─── Hero Carousel — Premium Edition ────────────────────────────────────────
 // Auto-rotate · Flechas · Dots · Swipe táctil · Pausa en hover
+// Parallax de ratón · Transiciones con stagger · Animaciones premium
 
 const Carousel = {
   current:   0,
@@ -39,10 +40,10 @@ const Carousel = {
     this.render(wrapper);
     this.startTimer();
     this.initSwipe(wrapper);
+    this.initMouseParallax(wrapper);
   },
 
   render(wrapper) {
-    // Slides
     const track = wrapper.querySelector('.carousel-track');
     track.innerHTML = this.slides.map((s, i) => `
       <div class="carousel-slide ${s.theme} ${i === 0 ? 'active' : ''}" role="listitem">
@@ -72,32 +73,61 @@ const Carousel = {
       <button class="dot ${i === 0 ? 'active' : ''}" data-index="${i}" aria-label="Slide ${i + 1}"></button>
     `).join('');
 
-    // Event listeners
+    // Eventos de navegación
     wrapper.querySelector('.carousel-prev').addEventListener('click', () => this.prev());
     wrapper.querySelector('.carousel-next').addEventListener('click', () => this.next());
     dots.querySelectorAll('.dot').forEach(dot => {
       dot.addEventListener('click', () => this.goTo(parseInt(dot.dataset.index)));
     });
 
-    // CTA links que activan filtros
+    // CTA con filtros
     track.querySelectorAll('.carousel-cta[data-filter]').forEach(a => {
       a.addEventListener('click', e => {
         e.preventDefault();
-        const filter = a.dataset.filter;
-        // Activar el filtro correspondiente en el catálogo
-        const btn = document.querySelector(`.filter-btn[data-filter="${filter}"]`);
-        if (btn) { btn.click(); }
+        const btn = document.querySelector(`.filter-btn[data-filter="${a.dataset.filter}"]`);
+        if (btn) btn.click();
         document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
       });
     });
 
-    // Actualizar total dinámico
     const totalEl = document.getElementById('slideTotalNum');
     if (totalEl) totalEl.textContent = String(this.total).padStart(2, '0');
 
-    // Pausa al hover
+    // Pausa en hover
     wrapper.addEventListener('mouseenter', () => this.stopTimer());
     wrapper.addEventListener('mouseleave', () => this.startTimer());
+  },
+
+  // ─── Parallax de ratón en la mascota ──────────────────────────────────────
+  initMouseParallax(wrapper) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    wrapper.addEventListener('mousemove', e => {
+      const mascot = document.querySelector('.mascot-img');
+      if (!mascot) return;
+      const rect = wrapper.getBoundingClientRect();
+      const dx = (e.clientX - rect.left - rect.width  / 2) / rect.width;
+      const dy = (e.clientY - rect.top  - rect.height / 2) / rect.height;
+      mascot.style.transform = `translate(${dx * -18}px, ${dy * -10}px) rotate(${dx * 2}deg)`;
+    });
+
+    wrapper.addEventListener('mouseleave', () => {
+      const mascot = document.querySelector('.mascot-img');
+      if (!mascot) return;
+      mascot.style.transition = 'transform .8s cubic-bezier(.22,1,.36,1)';
+      mascot.style.transform  = '';
+      setTimeout(() => { if (mascot) mascot.style.removeProperty('transition'); }, 800);
+    });
+  },
+
+  // ─── Reiniciar animaciones de stagger en los elementos de texto ───────────
+  _restartTextAnims(slide) {
+    slide.querySelectorAll('.carousel-tag, .carousel-title, .carousel-sub, .carousel-cta')
+      .forEach(el => {
+        el.style.animation = 'none';
+        void el.offsetWidth; // fuerza reflow para reiniciar
+        el.style.animation  = '';
+      });
   },
 
   goTo(index) {
@@ -105,19 +135,26 @@ const Carousel = {
     const dots   = document.querySelectorAll('.dot');
     if (!slides.length) return;
 
-    slides[this.current].classList.remove('active');
-    dots[this.current].classList.remove('active');
-
+    const oldIndex = this.current;
     this.current = (index + this.total) % this.total;
+
+    // Animación de salida en el slide anterior
+    slides[oldIndex].classList.add('slide-exiting');
+    setTimeout(() => slides[oldIndex].classList.remove('slide-exiting'), 600);
+
+    slides[oldIndex].classList.remove('active');
+    dots[oldIndex].classList.remove('active');
 
     slides[this.current].classList.add('active');
     dots[this.current].classList.add('active');
+
+    // Reiniciar stagger para que se vea al regresar a un slide
+    this._restartTextAnims(slides[this.current]);
 
     // Actualizar contador
     const counterEl = document.getElementById('slideCurrentNum');
     if (counterEl) counterEl.textContent = String(this.current + 1).padStart(2, '0');
 
-    // Reiniciar barra de progreso
     if (this.timer) this.resetProgress();
   },
 
@@ -144,14 +181,12 @@ const Carousel = {
     this.timer = null;
   },
 
-  // ─── Soporte de swipe táctil ──────────────────────────────────────────────
-
   initSwipe(wrapper) {
     let startX = 0;
     let isDragging = false;
 
     wrapper.addEventListener('touchstart', e => {
-      startX    = e.touches[0].clientX;
+      startX     = e.touches[0].clientX;
       isDragging = true;
     }, { passive: true });
 
@@ -159,9 +194,7 @@ const Carousel = {
       if (!isDragging) return;
       isDragging = false;
       const diff = startX - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 50) {
-        diff > 0 ? this.next() : this.prev();
-      }
+      if (Math.abs(diff) > 50) diff > 0 ? this.next() : this.prev();
     }, { passive: true });
   }
 };

@@ -64,7 +64,13 @@
   <!-- ── Filtros avanzados ────────────────────────────────────────────────── -->
   <section class="filters-section" id="catalogo" aria-label="Filtros de catálogo">
     <div class="container">
-      <div class="filters-inner">
+      <!-- Botón toggle solo visible en móvil -->
+      <button class="filters-toggle-btn" id="filtersToggleBtn" aria-expanded="false" aria-controls="filtersCollapsible">
+        <span>Filtros <span class="ftb-badge" id="filtersActiveBadge" style="display:none">0</span></span>
+        <svg class="ftb-chevron" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M6 9l6 6 6-6"/></svg>
+      </button>
+
+      <div class="filters-inner" id="filtersCollapsible">
 
         <!-- Fila 1: Tipo + Búsqueda -->
         <div class="filter-row-1">
@@ -102,10 +108,6 @@
           <!-- Meta + Limpiar -->
           <div style="margin-left:auto;display:flex;align-items:center;gap:.75rem">
             <span id="resultsCount" aria-live="polite"></span>
-            <button id="exportPdfBtn" aria-label="Descargar catálogo en PDF" title="Descargar catálogo PDF" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--text2);padding:.35rem .65rem;border:1px solid var(--border);border-radius:6px;transition:all .2s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-              PDF
-            </button>
             <button id="clearFilters" aria-label="Limpiar todos los filtros">
               <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               Limpiar
@@ -113,7 +115,8 @@
           </div>
         </div>
 
-      </div>
+      </div><!-- /filters-inner -->
+      </div><!-- /filters-collapsible -->
     </div>
   </section>
 
@@ -313,9 +316,52 @@
   <script src="js/chatbot.js"></script>
   <script src="js/animations.js"></script>
   <script>
-    document.getElementById('exportPdfBtn').addEventListener('click', () => {
-      window.print();
+    // ── Toggle filtros en móvil ──────────────────────────────
+    (function () {
+      const btn = document.getElementById('filtersToggleBtn');
+      const col = document.getElementById('filtersCollapsible');
+      if (!btn || !col) return;
+      col.classList.add('filters-collapsible');
+      btn.addEventListener('click', () => {
+        const open = col.classList.toggle('open');
+        btn.classList.toggle('open', open);
+        btn.setAttribute('aria-expanded', open);
+      });
+      // Contar filtros activos
+      function updateBadge() {
+        const active = document.querySelectorAll(
+          '.filter-btn.active:not([data-filter="all"]), .filter-group-btn.active:not([data-value="all"])'
+        ).length + (document.getElementById('searchInput')?.value ? 1 : 0);
+        const badge = document.getElementById('filtersActiveBadge');
+        if (badge) { badge.textContent = active; badge.style.display = active ? 'inline' : 'none'; }
+      }
+      document.addEventListener('click', e => {
+        if (e.target.closest('.filter-btn, .filter-group-btn, #clearFilters')) setTimeout(updateBadge, 50);
+      });
+      document.getElementById('searchInput')?.addEventListener('input', updateBadge);
+    })();
+
+    // ── PDF: mostrar todos los productos al imprimir ─────────
+    window.addEventListener('beforeprint', () => {
+      if (typeof Pagination !== 'undefined') {
+        window._savedPage   = Pagination.currentPage;
+        window._savedPerPage = Pagination.ITEMS_PER_PAGE;
+        Pagination.ITEMS_PER_PAGE = 9999;
+        Pagination.currentPage    = 1;
+        if (typeof renderProducts === 'function') renderProducts();
+      }
     });
+    window.addEventListener('afterprint', () => {
+      if (typeof Pagination !== 'undefined' && window._savedPerPage) {
+        Pagination.ITEMS_PER_PAGE = window._savedPerPage;
+        Pagination.currentPage    = window._savedPage || 1;
+        if (typeof renderProducts === 'function') renderProducts();
+      }
+    });
+    // Auto-print si viene desde el admin (?export=pdf)
+    if (new URLSearchParams(location.search).get('export') === 'pdf') {
+      document.addEventListener('catalogLoaded', () => setTimeout(() => window.print(), 500));
+    }
   </script>
 </body>
 </html>

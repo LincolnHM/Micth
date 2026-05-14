@@ -163,7 +163,7 @@ const Checkout = {
       quantity:    i.quantity
     }));
     const orderData = {
-      customerName:  isShipping ? document.getElementById('nameInput').value.trim()   : 'Recojo en tienda',
+      customerName:  isShipping ? document.getElementById('nameInput').value.trim()   : document.getElementById('pickupNameInput').value.trim(),
       customerPhone: isShipping ? document.getElementById('phoneInput').value.trim()  : '',
       customerDni:   isShipping ? document.getElementById('dniInput').value.trim()    : '',
       deliveryType:  isShipping ? 'envio' : 'recojo',
