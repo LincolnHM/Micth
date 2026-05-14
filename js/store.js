@@ -221,7 +221,8 @@ function renderPagination(current, total) {
     btn.addEventListener('click', () => {
       Pagination.currentPage = parseInt(btn.dataset.page);
       renderProducts();
-      document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (typeof scrollToSection === 'function') scrollToSection('catalogo');
+      else document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
     });
   });
 }
@@ -378,6 +379,18 @@ function renderProducts() {
   });
 
   renderPagination(Pagination.currentPage, totalPages);
+
+  // 3D tilt en tarjetas — solo en dispositivos con puntero fino (escritorio)
+  if (typeof VanillaTilt !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    VanillaTilt.init(grid.querySelectorAll('.product-card'), {
+      max: 7,
+      speed: 500,
+      glare: true,
+      'max-glare': 0.12,
+      scale: 1.02,
+      perspective: 900,
+    });
+  }
 }
 
 // ─── Poblar filtro de familias olfativas ──────────────────────────────────────
