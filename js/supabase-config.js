@@ -147,17 +147,17 @@ const CloudOrders = {
   },
 
   async updateStatus(id, status) {
-    // Descontar ml del inventario si se marca como "enviado"
-    if (status === 'enviado') {
+    // Descontar ml del inventario cuando se confirma el pago
+    if (status === 'pagado') {
       const order = await this.getById(id);
-      if (order && order.status !== 'enviado') {
-        (order.items || []).forEach(item => {
+      if (order && order.status !== 'pagado') {
+        for (const item of (order.items || [])) {
           const product = Products.getById(item.productId);
-          if (!product) return;
-          const mlUsed   = parseInt(item.size) * item.quantity;
+          if (!product) continue;
+          const mlUsed    = parseInt(item.size) * item.quantity;
           const newRemain = Math.max(0, product.bottleRemainingMl - mlUsed);
-          Products.update(item.productId, { bottleRemainingMl: newRemain });
-        });
+          await CloudProducts.update(item.productId, { bottleRemainingMl: newRemain });
+        }
       }
     }
     if (db) {

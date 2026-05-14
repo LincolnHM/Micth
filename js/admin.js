@@ -331,10 +331,10 @@ async function renderOrdersSection() {
     sel.addEventListener('change', async () => {
       const id     = sel.dataset.id;
       const status = sel.value;
-      if (status === 'enviado') {
+      if (status === 'pagado') {
         const order = await CloudOrders.getById(id);
         const mlInfo = (order?.items || []).map(i => `  • ${i.productName} ${i.size} ×${i.quantity} = ${parseInt(i.size) * i.quantity}ml`).join('\n');
-        if (!confirm(`Al marcar como "Enviado" se descontarán mililitros del inventario:\n\n${mlInfo}\n\n¿Continuar?`)) {
+        if (!confirm(`Al confirmar el pago se descontarán mililitros del inventario:\n\n${mlInfo}\n\n¿Confirmar pedido?`)) {
           sel.value = sel.dataset.status;
           return;
         }

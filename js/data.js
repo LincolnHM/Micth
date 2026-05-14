@@ -1420,12 +1420,12 @@ const Orders = {
       if (o.id !== id) return o;
       const updated = { ...o, status, updatedAt: new Date().toISOString() };
 
-      // Al marcar como "enviado": descontar ml del inventario
-      if (status === 'enviado' && o.status !== 'enviado') {
+      // Al confirmar el pago: descontar ml del inventario
+      if (status === 'pagado' && o.status !== 'pagado') {
         o.items.forEach(item => {
           const product = Products.getById(item.productId);
           if (!product) return;
-          const mlUsed   = parseInt(item.size) * item.quantity;
+          const mlUsed    = parseInt(item.size) * item.quantity;
           const newRemain = Math.max(0, product.bottleRemainingMl - mlUsed);
           Products.update(item.productId, { bottleRemainingMl: newRemain });
         });

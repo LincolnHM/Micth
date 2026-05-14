@@ -1176,9 +1176,192 @@ input, select, textarea { font-family: inherit; }
   .products-grid { grid-template-columns: 1fr; }
 }
 
+/* ─── Admin panel — responsivo móvil ──────────────────── */
+@media (max-width: 680px) {
+  .admin-header-inner {
+    height: auto;
+    min-height: 52px;
+    padding: .5rem .85rem;
+    flex-wrap: wrap;
+    gap: .4rem .5rem;
+  }
+  .admin-logo { font-size: .95rem; order: 1; flex: 1; }
+  .btn-logout  { order: 2; font-size: .7rem; padding: .28rem .6rem; }
+  .admin-nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    gap: .25rem;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .admin-nav::-webkit-scrollbar { display: none; }
+  .admin-nav-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: .7rem;
+    padding: .28rem .65rem;
+  }
+  .admin-body { padding: 1rem .75rem; }
+  .admin-section-header h2 { font-size: 1.1rem; }
+
+  /* Stats bar: 2 columnas en móvil */
+  .order-stats-bar { grid-template-columns: repeat(2, 1fr); gap: .5rem; }
+  .stat-val { font-size: 1.2rem; }
+  .stat-card { padding: .75rem .6rem; }
+
+  /* Filtros de pedidos: scroll horizontal */
+  .order-filters {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .order-filters::-webkit-scrollbar { display: none; }
+  .order-filter-btn { white-space: nowrap; flex-shrink: 0; }
+
+  /* Tabla pedidos: ocultar columnas menos importantes */
+  .orders-table th:nth-child(3),
+  .orders-table td:nth-child(3) { display: none; }
+  .orders-table th:nth-child(5),
+  .orders-table td:nth-child(5) { display: none; }
+  .orders-table { font-size: .74rem; }
+  .orders-table th { padding: .5rem .55rem; }
+  .orders-table td { padding: .6rem .55rem; }
+
+  /* Acciones del pedido: apilar verticalmente */
+  .orders-table td:last-child > div {
+    flex-direction: column;
+    gap: .35rem;
+    align-items: stretch;
+  }
+  .order-action-select { width: 100%; }
+  .btn-order-detail    { width: 100%; text-align: center; }
+
+  /* Modal responsivo */
+  .product-modal-content { margin: .5rem; border-radius: var(--r-lg); }
+  .product-modal-body    { padding: 1rem; }
+  .product-modal-header  { padding: .85rem 1rem; }
+  .product-modal-footer  { padding: .75rem 1rem; gap: .5rem; }
+
+  /* Sección inventario: controles ml en columna */
+  .ml-controls label { width: 100%; }
+  .ml-controls input { width: 100%; }
+  .btn-save-ml { width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .admin-section-header { flex-direction: column; align-items: flex-start; }
+  .admin-section-header > div { width: 100%; justify-content: flex-start; }
+  .btn-add { width: 100%; text-align: center; }
+  /* Tabla pedidos: ocultar cliente-teléfono, solo nombre */
+  .order-date { display: none; }
+}
+
 /* ── Mobile: ocultar flechas del carousel ─────────────── */
 @media(max-width:640px) {
   .carousel-prev, .carousel-next { display: none; }
+}
+
+/* ── Parallax — partículas doradas flotantes ───────────── */
+.parallax-particles-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.parallax-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--gold);
+  will-change: transform;
+  animation: particleFloat linear infinite;
+}
+
+@keyframes particleFloat {
+  0%   { transform: translateY(0) scale(1); opacity: inherit; }
+  50%  { transform: translateY(-28px) scale(1.15); opacity: .8; }
+  100% { transform: translateY(0) scale(1); opacity: inherit; }
+}
+
+/* ── Parallax — tilt de tarjetas ──────────────────────── */
+.product-card {
+  will-change: transform;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.product-card.tilted {
+  transition: transform .06s ease;
+  box-shadow: 0 12px 40px rgba(0,0,0,.55), 0 0 20px rgba(201,168,76,.12);
+}
+
+/* ── Parallax — separador decorativo ─────────────────── */
+.parallax-divider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .75rem;
+  padding: 2.5rem 2rem;
+  overflow: hidden;
+}
+.parallax-divider-line {
+  flex: 1;
+  max-width: 280px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-d), transparent);
+}
+.parallax-divider-diamond {
+  width: 8px;
+  height: 8px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(201,168,76,.5);
+  animation: diamondPulse 2.5s ease-in-out infinite;
+}
+@keyframes diamondPulse {
+  0%, 100% { transform: rotate(45deg) scale(1); box-shadow: 0 0 8px rgba(201,168,76,.4); }
+  50%       { transform: rotate(45deg) scale(1.3); box-shadow: 0 0 18px rgba(201,168,76,.7); }
+}
+.parallax-deco {
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  border: 1px solid rgba(201,168,76,.08);
+  will-change: transform;
+  pointer-events: none;
+}
+.parallax-deco--left  { left: -60px; top: 50%; transform: translateY(-50%); }
+.parallax-deco--right { right: -60px; top: 50%; transform: translateY(-50%); }
+
+/* ── Parallax — reveal al scroll ──────────────────────── */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .55s cubic-bezier(.43,.13,.23,.96),
+              transform .55s cubic-bezier(.43,.13,.23,.96);
+}
+.reveal-on-scroll.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Desactivar partículas en móvil muy pequeño (performance) */
+@media (max-width: 480px) {
+  .parallax-particles-layer { display: none; }
+  .parallax-divider { padding: 1.5rem 1rem; }
+  .parallax-divider-line { max-width: 100px; }
+  .parallax-deco { display: none; }
+}
+
+/* Desactivar tilt en dispositivos táctiles */
+@media (hover: none) {
+  .product-card { transition: transform .25s ease, box-shadow .25s ease; }
 }
 
 /* ── Scroll progress line (barra dorada superior) ──────── */
