@@ -328,20 +328,50 @@ async function renderOrdersSection() {
 
   // Cambio de estado
   tbody.querySelectorAll('.order-action-select').forEach(sel => {
-    sel.addEventListener('change', async () => {
-      const id     = sel.dataset.id;
-      const status = sel.value;
-      if (status === 'pagado') {
-        const order = await CloudOrders.getById(id);
-        const mlInfo = (order?.items || []).map(i => `  • ${i.productName} ${i.size} ×${i.quantity} = ${parseInt(i.size) * i.quantity}ml`).join('\n');
-        if (!confirm(`Al confirmar el pago se descontarán mililitros del inventario:\n\n${mlInfo}\n\n¿Confirmar pedido?`)) {
-          sel.value = sel.dataset.status;
-          return;
+    sel.addEventListener('change', () => {
+      const id        = sel.dataset.id;
+      const newStatus = sel.value;
+      const prevStatus = sel.dataset.status;
+
+      const doUpdate = async () => {
+        try {
+          await CloudOrders.updateStatus(id, newStatus);
+          sel.dataset.status = newStatus;
+          renderOrdersSection().catch(console.error);
+          showToast(`Pedido ${id} → ${STATUS_LABELS[newStatus]}`);
+        } catch (err) {
+          console.error('Error al actualizar estado:', err);
+          sel.value = prevStatus;
+          showToast('Error al actualizar el pedido. Inténtalo de nuevo.');
         }
+      };
+
+      if (newStatus === 'pagado') {
+        sel.value = prevStatus; // revertir visualmente mientras carga
+        CloudOrders.getById(id).then(order => {
+          const items = order?.items || [];
+          const mlLines = items
+            .filter(i => parseInt(i.size) > 0)
+            .map(i => `  • ${i.productName} ${i.size} ×${i.quantity} = ${parseInt(i.size) * i.quantity} ml`)
+            .join('\n');
+          const msg = mlLines
+            ? `Al confirmar el pago se descontarán mililitros del inventario:\n\n${mlLines}\n\n¿Confirmar pedido?`
+            : `¿Confirmar el pedido ${id} como PAGADO?`;
+
+          showConfirmModal(msg,
+            () => { sel.value = newStatus; doUpdate(); },
+            () => { sel.value = prevStatus; }
+          );
+        }).catch(() => {
+          showConfirmModal(
+            `¿Confirmar el pedido ${id} como PAGADO?`,
+            () => { sel.value = newStatus; doUpdate(); },
+            () => { sel.value = prevStatus; }
+          );
+        });
+      } else {
+        doUpdate();
       }
-      await CloudOrders.updateStatus(id, status);
-      renderOrdersSection();
-      showToast(`Pedido ${id} → ${STATUS_LABELS[status]}`);
     });
   });
 
@@ -729,6 +759,32 @@ function setupAdminEvents() {
     msg.className = 'msg-success'; msg.style.display = 'block';
     e.target.reset();
   });
+}
+
+// ─── Modal de confirmación (reemplaza confirm() nativo) ──────────────────────
+
+function showConfirmModal(message, onOk, onCancel) {
+  const modal   = document.getElementById('confirmActionModal');
+  const body    = document.getElementById('confirmActionBody');
+  const btnOk   = document.getElementById('confirmActionOk');
+  const btnCan  = document.getElementById('confirmActionCancel');
+  const btnClose = document.getElementById('closeConfirmModal');
+
+  body.textContent = message;
+  modal.classList.add('open');
+
+  function cleanup() {
+    modal.classList.remove('open');
+    btnOk.removeEventListener('click', handleOk);
+    btnCan.removeEventListener('click', handleCancel);
+    btnClose.removeEventListener('click', handleCancel);
+  }
+  function handleOk()     { cleanup(); onOk(); }
+  function handleCancel() { cleanup(); if (onCancel) onCancel(); }
+
+  btnOk.addEventListener('click',   handleOk);
+  btnCan.addEventListener('click',  handleCancel);
+  btnClose.addEventListener('click', handleCancel);
 }
 
 // ─── Toast de notificación ────────────────────────────────────────────────────
