@@ -442,6 +442,9 @@ input, select, textarea { font-family: inherit; }
 .size-btn.added { background: var(--green); border-color: var(--green); }
 .size-btn.added .size-ml,
 .size-btn.added .size-price { color: #fff; }
+.size-btn.selected { background: var(--gold); border-color: var(--gold); }
+.size-btn.selected .size-ml,
+.size-btn.selected .size-price { color: #000; }
 .size-btn.disabled { opacity: .35; cursor: not-allowed; }
 
 /* Chip decant */

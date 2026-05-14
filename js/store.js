@@ -26,7 +26,7 @@ const Cart = {
   },
   total()  { return this.items.reduce((s, i) => s + i.price * i.quantity, 0); },
   count()  { return this.items.reduce((s, i) => s + i.quantity, 0); },
-  clear()  { this.items = []; this._cartOpened = false; this.render(); },
+  clear()  { this.items = []; this._cartOpened = false; this.render(); if (typeof renderProducts === 'function') renderProducts(); },
 
   showCart() {
     document.getElementById('cartSidebar').classList.add('open');
@@ -279,13 +279,16 @@ function renderProducts() {
         ${p.baseNotes   ? `<div class="note-tier"><span class="note-label">Fondo</span><span class="note-val">${sanitize(p.baseNotes)}</span></div>` : ''}
       </div>` : '';
 
-    const sizesHtml = Object.entries(p.sizes).map(([ml, price]) => `
-      <button class="size-btn ${!p.inStock ? 'disabled' : ''}"
+    const sizesHtml = Object.entries(p.sizes).map(([ml, price]) => {
+      const inCart = Cart.items.some(i => i.productId === p.id && i.size === ml);
+      return `
+      <button class="size-btn ${!p.inStock ? 'disabled' : ''} ${inCart ? 'selected' : ''}"
               data-id="${p.id}" data-size="${escapeAttr(ml)}" data-price="${price}"
               ${!p.inStock ? 'disabled aria-disabled="true"' : ''}>
         <span class="size-ml">${sanitize(ml)}</span>
         <span class="size-price">S/${price}</span>
-      </button>`).join('');
+      </button>`;
+    }).join('');
 
     const imgHtml = p.imageUrl
       ? `<img src="${escapeAttr(p.imageUrl)}" alt="${escapeAttr(p.name)}" class="product-img" loading="lazy"
@@ -380,7 +383,7 @@ function renderProducts() {
       const product = _allProducts?.find(p => p.id === pid) ?? Products.getById(pid);
       if (!product) return;
       Cart.add(product, btn.dataset.size, parseFloat(btn.dataset.price));
-      btn.classList.add('added');
+      btn.classList.add('added', 'selected');
       setTimeout(() => btn.classList.remove('added'), 700);
     });
   });
