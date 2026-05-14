@@ -641,6 +641,11 @@ input, select, textarea { font-family: inherit; }
 .form-group input, .form-group select { background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: var(--r); padding: .6rem .85rem; font-size: .85rem; transition: border-color var(--tr); }
 .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--gold-d); }
 .form-group select option { background: var(--card); color: var(--text); }
+.form-group.fv-error input,
+.form-group.fv-error select  { border-color: #e05555; box-shadow: 0 0 0 2px rgba(224,85,85,.18); }
+.form-group.fv-ok   input,
+.form-group.fv-ok   select   { border-color: var(--gold); }
+.fv-msg { font-size: .72rem; color: #e05555; margin-top: .1rem; min-height: 1em; }
 
 .order-list { list-style: none; display: flex; flex-direction: column; gap: .45rem; }
 .order-list li { display: flex; justify-content: space-between; font-size: .82rem; color: var(--text2); padding-bottom: .35rem; border-bottom: 1px solid var(--border); }

@@ -30,6 +30,79 @@ const PERU_GEO = {
 
 const WHATSAPP_NUMBER = '51917452643';
 
+// ─── Reglas de validación ─────────────────────────────────────────────────────
+
+const _rules = {
+  pickupName(v) {
+    v = v.trim();
+    if (v.length < 2) return 'Ingresa tu nombre (mínimo 2 letras).';
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s'-]+$/.test(v)) return 'El nombre solo debe contener letras.';
+    return null;
+  },
+  dni(v) {
+    if (!/^\d{8}$/.test(v.trim())) return 'El DNI debe tener exactamente 8 dígitos numéricos.';
+    return null;
+  },
+  name(v) {
+    v = v.trim();
+    if (v.length < 4) return 'Ingresa tu nombre y apellido completos.';
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s'-]+$/.test(v)) return 'Solo letras y espacios, sin números ni caracteres especiales.';
+    if (v.split(/\s+/).filter(Boolean).length < 2) return 'Escribe nombre Y apellido (al menos dos palabras).';
+    return null;
+  },
+  phone(v) {
+    v = v.trim();
+    if (!/^9\d{8}$/.test(v)) return 'Celular peruano inválido — debe tener 9 dígitos y empezar con 9 (ej: 987654321).';
+    return null;
+  },
+  department(v) {
+    if (!v) return 'Selecciona tu departamento.';
+    return null;
+  },
+  province(v) {
+    if (!v) return 'Selecciona tu provincia.';
+    return null;
+  },
+  shalom(v) {
+    v = v.trim();
+    if (v.length < 5) return 'Indica la agencia Shalom con dirección (ej: Shalom – Av. España 123, Trujillo).';
+    return null;
+  }
+};
+
+// ─── Helpers de feedback visual ───────────────────────────────────────────────
+
+function _showErr(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const grp = el.closest('.form-group');
+  if (!grp) return;
+  grp.classList.add('fv-error');
+  grp.classList.remove('fv-ok');
+  let p = grp.querySelector('.fv-msg');
+  if (!p) { p = document.createElement('p'); p.className = 'fv-msg'; grp.appendChild(p); }
+  p.textContent = msg;
+}
+
+function _clearErr(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const grp = el.closest('.form-group');
+  if (!grp) return;
+  grp.classList.remove('fv-error');
+  grp.classList.add('fv-ok');
+  const p = grp.querySelector('.fv-msg');
+  if (p) p.textContent = '';
+}
+
+function _resetAllErr() {
+  document.querySelectorAll('.form-group.fv-error, .form-group.fv-ok').forEach(g => {
+    g.classList.remove('fv-error', 'fv-ok');
+    const p = g.querySelector('.fv-msg');
+    if (p) p.textContent = '';
+  });
+}
+
 // ─── Módulo de Checkout ───────────────────────────────────────────────────────
 
 const Checkout = {
@@ -66,14 +139,8 @@ const Checkout = {
 
   goToPayment() {
     if (Cart.items.length === 0) { alert('Tu carrito está vacío.'); return; }
-    if (this.deliveryType === 'pickup') {
-      const name = document.getElementById('pickupNameInput').value.trim();
-      if (name.length < 2) { alert('Por favor ingresa tu nombre para el recojo.'); return; }
-    }
-    if (this.deliveryType === 'shipping') {
-      const errors = this.validateShippingForm();
-      if (errors.length) { alert(errors.join('\n')); return; }
-    }
+    if (this.deliveryType === 'pickup'   && !this.validatePickupForm())   return;
+    if (this.deliveryType === 'shipping' && !this.validateShippingForm()) return;
     this._showStep(2);
   },
 
@@ -147,41 +214,32 @@ const Checkout = {
   },
 
   validateShippingForm() {
-    const dni    = document.getElementById('dniInput').value.trim();
-    const name   = document.getElementById('nameInput').value.trim();
-    const phone  = document.getElementById('phoneInput').value.trim();
-    const dept   = document.getElementById('departmentSelect').value;
-    const prov   = document.getElementById('provinceSelect').value;
-    const shalom = document.getElementById('shalomInput').value.trim();
+    const checks = [
+      ['dniInput',         _rules.dni,        () => document.getElementById('dniInput').value],
+      ['nameInput',        _rules.name,       () => document.getElementById('nameInput').value],
+      ['phoneInput',       _rules.phone,      () => document.getElementById('phoneInput').value],
+      ['departmentSelect', _rules.department, () => document.getElementById('departmentSelect').value],
+      ['provinceSelect',   _rules.province,   () => document.getElementById('provinceSelect').value],
+      ['shalomInput',      _rules.shalom,     () => document.getElementById('shalomInput').value],
+    ];
+    let ok = true;
+    checks.forEach(([id, rule, get]) => {
+      const err = rule(get());
+      if (err) { _showErr(id, err); ok = false; }
+      else     { _clearErr(id); }
+    });
+    return ok;
+  },
 
-    const errors = [];
-    if (!/^\d{8}$/.test(dni))        errors.push('El DNI debe tener 8 dígitos.');
-    if (name.length < 3)             errors.push('Ingresa tu nombre completo.');
-    if (!/^\d{7,9}$/.test(phone))    errors.push('El teléfono debe tener entre 7 y 9 dígitos.');
-    if (!dept)                        errors.push('Selecciona un departamento.');
-    if (!prov)                        errors.push('Selecciona una provincia.');
-    if (shalom.length < 3)           errors.push('Indica la agencia Shalom.');
-    return errors;
+  validatePickupForm() {
+    const err = _rules.pickupName(document.getElementById('pickupNameInput').value);
+    if (err) { _showErr('pickupNameInput', err); return false; }
+    _clearErr('pickupNameInput');
+    return true;
   },
 
   send() {
-    if (Cart.items.length === 0) {
-      alert('Tu carrito está vacío.');
-      return;
-    }
-
-    if (this.deliveryType === 'pickup') {
-      const name = document.getElementById('pickupNameInput').value.trim();
-      if (name.length < 2) { alert('Por favor ingresa tu nombre para el recojo.'); return; }
-    }
-
-    if (this.deliveryType === 'shipping') {
-      const errors = this.validateShippingForm();
-      if (errors.length) {
-        alert(errors.join('\n'));
-        return;
-      }
-    }
+    if (Cart.items.length === 0) { alert('Tu carrito está vacío.'); return; }
 
     // Capturar datos del pedido ANTES de limpiar el carrito
     const isShipping = this.deliveryType === 'shipping';
@@ -290,6 +348,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('phoneInput').addEventListener('input', function () {
     this.value = this.value.replace(/\D/g, '').slice(0, 9);
+  });
+
+  // ── Validación en tiempo real ─────────────────────────────────────────────
+  const _fieldRuleMap = {
+    pickupNameInput: 'pickupName',
+    dniInput:        'dni',
+    nameInput:       'name',
+    phoneInput:      'phone',
+    shalomInput:     'shalom',
+  };
+
+  Object.entries(_fieldRuleMap).forEach(([id, ruleKey]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('blur', () => {
+      const err = _rules[ruleKey](el.value);
+      if (err) _showErr(id, err); else _clearErr(id);
+    });
+    el.addEventListener('input', () => {
+      const grp = el.closest('.form-group');
+      if (!grp || !grp.classList.contains('fv-error')) return;
+      const err = _rules[ruleKey](el.value);
+      if (err) _showErr(id, err); else _clearErr(id);
+    });
+  });
+
+  ['departmentSelect', 'provinceSelect'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', () => {
+      const ruleKey = id === 'departmentSelect' ? 'department' : 'province';
+      const err = _rules[ruleKey](el.value);
+      if (err) _showErr(id, err); else _clearErr(id);
+    });
   });
 
   document.getElementById('sendWhatsappBtn').addEventListener('click', () => Checkout.send());
