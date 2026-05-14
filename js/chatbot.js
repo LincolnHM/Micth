@@ -1,6 +1,7 @@
-// ─── MICHT Decants · Chatbot IA con Google Gemini ────────────────────────────
+// ─── MICHT Decants · Chatbot IA con Groq ─────────────────────────────────────
 const GEMINI_API_KEY = window.GROQ_CONFIG?.apiKey || '';
-const GEMINI_MODEL   = 'gemini-2.0-flash';
+const GROQ_MODEL     = 'llama-3.3-70b-versatile';
+const GROQ_URL       = 'https://api.groq.com/openai/v1/chat/completions';
 
 let chatHistory     = [];
 let catalogReady    = false;
@@ -33,7 +34,7 @@ INSTRUCCIONES:
 - Usa emojis con moderación`;
 }
 
-// ─── Llamada a la API de Gemini ───────────────────────────────────────────────
+// ─── Llamada a la API de Groq ─────────────────────────────────────────────────
 async function askGemini(userMessage) {
   chatHistory.push({ role: 'user', content: userMessage });
 
@@ -41,35 +42,32 @@ async function askGemini(userMessage) {
     ? buildSystemPrompt(productsCatalog)
     : 'Eres el asistente de MICHT Decants. El catálogo se está cargando. Saluda al cliente y pídele que espere un momento.';
 
-  const contents = chatHistory.map(msg => ({
-    role: msg.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: msg.content }]
-  }));
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
-  const res = await fetch(url, {
+  const res = await fetch(GROQ_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GEMINI_API_KEY}`
+    },
     body: JSON.stringify({
-      system_instruction: { parts: [{ text: systemContent }] },
-      contents,
-      generationConfig: {
-        maxOutputTokens: 350,
-        temperature: 0.75
-      }
+      model: GROQ_MODEL,
+      messages: [
+        { role: 'system', content: systemContent },
+        ...chatHistory
+      ],
+      max_tokens: 300,
+      temperature: 0.75
     })
   });
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     const msg = err?.error?.message || `HTTP ${res.status}`;
-    console.error('[Gemini]', res.status, msg);
+    console.error('[Groq]', res.status, msg);
     throw new Error(msg);
   }
 
   const data  = await res.json();
-  const reply = data.candidates[0].content.parts[0].text.trim();
+  const reply = data.choices[0].message.content.trim();
   chatHistory.push({ role: 'assistant', content: reply });
   return reply;
 }

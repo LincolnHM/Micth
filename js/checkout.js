@@ -209,7 +209,7 @@ const Checkout = {
       lines.push(`  • Agencia Shalom: ${shalom}`);
     }
 
-    lines.push('\n_Mensaje enviado desde michtperfumes.com_');
+    lines.push('\n_Mensaje enviado desde michtdecants.com');
     return lines.join('\n');
   },
 
