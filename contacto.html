@@ -197,6 +197,19 @@
     }
     .cp-back:hover { color: var(--gold); }
     .cp-back svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+
+    /* ── Mobile responsive ──────────────────────────────── */
+    @media (max-width: 600px) {
+      .contact-page { padding: 2.5rem .75rem 2rem; justify-content: flex-start; }
+      .cp-headline { font-size: clamp(1.75rem, 9vw, 2.4rem); }
+      .cp-sub { font-size: .86rem; margin-bottom: 2rem; }
+      .cp-wa-btn { width: 100%; justify-content: center; padding: .9rem 1rem; font-size: .88rem; margin-bottom: 2rem; }
+      .cp-location { font-size: .68rem; flex-wrap: wrap; justify-content: center; text-align: center; margin-bottom: 2rem; }
+      .cp-cards { grid-template-columns: 1fr; gap: 1rem; margin-bottom: 2rem; }
+      .cp-card { padding: 1.4rem 1.1rem; }
+      .cp-social-row { gap: .65rem; }
+      .cp-social-link { font-size: .75rem; padding: .45rem .75rem; }
+    }
   </style>
 </head>
 <body>
@@ -228,9 +241,23 @@
            onmouseover="this.style.background='#e8c96a'" onmouseout="this.style.background='var(--gold)'">
           Ver tienda →
         </a>
+        <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobileMenu">
+          <span></span><span></span><span></span>
+        </button>
       </div>
     </div>
   </header>
+
+  <!-- ── Menú móvil ────────────────────────────────────────────────────────── -->
+  <div class="mobile-menu" id="mobileMenu" aria-hidden="true" role="dialog" aria-label="Menú de navegación">
+    <span class="mobile-menu-brand">MICHT DECANTS</span>
+    <nav class="mobile-nav">
+      <a href="index.html#catalogo" class="mobile-nav-link">Catálogo</a>
+      <a href="nosotros.html" class="mobile-nav-link">Nosotros</a>
+      <a href="contacto.html" class="mobile-nav-link" style="color:var(--gold)">Contacto</a>
+    </nav>
+    <div class="mobile-menu-footer">Soritor, Perú · @michtdecants</div>
+  </div>
 
   <!-- ── Página de Contacto ─────────────────────────────────────────────── -->
   <main class="contact-page">
@@ -325,6 +352,17 @@
     <p>© 2026 MICHT Decants · Todos los derechos reservados</p>
   </footer>
 
+  <script>
+    (function () {
+      const btn  = document.getElementById('menuBtn');
+      const menu = document.getElementById('mobileMenu');
+      function openMenu()  { menu.classList.add('open'); menu.setAttribute('aria-hidden','false'); btn.classList.add('open'); btn.setAttribute('aria-expanded','true');  document.body.style.overflow = 'hidden'; }
+      function closeMenu() { menu.classList.remove('open'); menu.setAttribute('aria-hidden','true');  btn.classList.remove('open'); btn.setAttribute('aria-expanded','false'); document.body.style.overflow = ''; }
+      btn.addEventListener('click', () => menu.classList.contains('open') ? closeMenu() : openMenu());
+      menu.querySelectorAll('.mobile-nav-link').forEach(l => l.addEventListener('click', closeMenu));
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && menu.classList.contains('open')) closeMenu(); });
+    })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
   <script>
