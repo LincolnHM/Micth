@@ -3,16 +3,17 @@
 let _adminProductSearch = '';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  if (SUPABASE_READY) {
-    const { data: { session } } = await db.auth.getSession();
-    if (session) { Auth.login(); await showDashboard(); }
-    else { showLoginScreen(); }
-  } else {
-    Auth.isLoggedIn() ? await showDashboard() : showLoginScreen();
+  if (!SUPABASE_READY) {
+    // Sin Supabase no hay acceso — evita la puerta trasera por sessionStorage
+    showNoDbScreen();
+    return;
   }
+  const { data: { session } } = await db.auth.getSession();
+  if (session) { await showDashboard(); }
+  else { showLoginScreen(); }
+
   document.getElementById('logoutBtn').addEventListener('click', async () => {
-    if (SUPABASE_READY) await db.auth.signOut();
-    Auth.logout();
+    await db.auth.signOut();
     showLoginScreen();
   });
 });
@@ -25,18 +26,31 @@ function showLoginScreen() {
   const form      = document.getElementById('loginForm');
   const set       = document.getElementById('setPasswordForm');
   const emailWrap = document.getElementById('loginEmailWrap');
-  if (SUPABASE_READY) {
-    form.style.display = 'block'; set.style.display = 'none';
-    if (emailWrap) emailWrap.style.display = 'block';
-    form.onsubmit = handleLogin;
-  } else if (Auth.hasPassword()) {
-    form.style.display = 'block'; set.style.display = 'none';
-    if (emailWrap) emailWrap.style.display = 'none';
-    form.onsubmit = handleLogin;
-  } else {
-    form.style.display = 'none'; set.style.display = 'block';
-    set.onsubmit = handleSetPassword;
-  }
+  // Solo Supabase Auth — siempre pide correo + contraseña
+  form.style.display = 'block';
+  set.style.display  = 'none';
+  if (emailWrap) emailWrap.style.display = 'block';
+  form.onsubmit = handleLogin;
+}
+
+function showNoDbScreen() {
+  document.getElementById('loginSection').style.display     = 'flex';
+  document.getElementById('dashboardSection').style.display = 'none';
+  const box = document.createElement('div');
+  box.style.cssText = 'text-align:center;padding:2rem;color:var(--text2);max-width:360px;margin:auto';
+  box.innerHTML = `
+    <div style="font-size:2.5rem;margin-bottom:1rem">⚠️</div>
+    <h2 style="color:var(--gold);margin-bottom:.5rem">Sin conexión</h2>
+    <p style="font-size:.9rem;line-height:1.6">
+      No se pudo conectar con la base de datos.<br>
+      Verifica tu conexión a internet y recarga la página.
+    </p>
+    <button onclick="location.reload()" style="margin-top:1.5rem;padding:.6rem 1.5rem;background:var(--gold);color:#111;border:none;border-radius:6px;font-weight:700;cursor:pointer">
+      Recargar
+    </button>
+  `;
+  document.getElementById('loginSection').innerHTML = '';
+  document.getElementById('loginSection').appendChild(box);
 }
 
 async function showDashboard() {
@@ -52,33 +66,29 @@ async function showDashboard() {
 
 async function handleLogin(e) {
   e.preventDefault();
-  const pw  = document.getElementById('loginPassword').value;
-  const err = document.getElementById('loginError');
+  const email = (document.getElementById('loginEmail')?.value || '').trim();
+  const pw    = document.getElementById('loginPassword').value;
+  const err   = document.getElementById('loginError');
   err.style.display = 'none';
 
-  if (SUPABASE_READY) {
-    const email = (document.getElementById('loginEmail')?.value || '').trim();
-    if (!email) { err.textContent = 'Ingresa tu correo electrónico.'; err.style.display = 'block'; return; }
-    const { error } = await db.auth.signInWithPassword({ email, password: pw });
-    if (error) { err.textContent = 'Correo o contraseña incorrectos.'; err.style.display = 'block'; }
-    else { Auth.login(); await showDashboard(); }
+  if (!email) { err.textContent = 'Ingresa tu correo electrónico.'; err.style.display = 'block'; return; }
+  if (!pw)    { err.textContent = 'Ingresa tu contraseña.'; err.style.display = 'block'; return; }
+
+  const btn = e.target.querySelector('button[type=submit]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Verificando…'; }
+
+  const { error } = await db.auth.signInWithPassword({ email, password: pw });
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Entrar'; }
+
+  if (error) {
+    err.textContent = 'Correo o contraseña incorrectos.';
+    err.style.display = 'block';
   } else {
-    if (await Auth.verify(pw)) { Auth.login(); await showDashboard(); }
-    else { err.textContent = 'Contraseña incorrecta.'; err.style.display = 'block'; }
+    await showDashboard();
   }
 }
 
-async function handleSetPassword(e) {
-  e.preventDefault();
-  const pw1 = document.getElementById('newPassword').value;
-  const pw2 = document.getElementById('confirmPassword').value;
-  const err = document.getElementById('setPassError');
-  if (pw1.length < 6) { err.textContent = 'Mínimo 6 caracteres.'; err.style.display = 'block'; return; }
-  if (pw1 !== pw2)    { err.textContent = 'Las contraseñas no coinciden.'; err.style.display = 'block'; return; }
-  await Auth.setPassword(pw1);
-  Auth.login();
-  showDashboard();
-}
 
 // ─── Navegación ───────────────────────────────────────────────────────────────
 
@@ -312,15 +322,15 @@ async function renderOrdersSection() {
       <td class="order-date">${date}<br><small style="color:var(--text3)">${delivLabel}</small></td>
       <td style="font-size:.75rem;color:var(--text2);max-width:200px">${sanitize(items)}</td>
       <td class="order-total-cell">S/ ${o.total.toFixed(2)}</td>
-      <td><span class="status-badge status-${o.status}">${STATUS_LABELS[o.status] || o.status}</span></td>
+      <td><span class="status-badge status-${o.status.replace(/[^a-z]/g, '')}">${STATUS_LABELS[o.status] || '—'}</span></td>
       <td>
         <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
-          <select class="order-action-select" data-id="${o.id}" data-status="${o.status}" aria-label="Cambiar estado">
+          <select class="order-action-select" data-id="${escapeAttr(o.id)}" data-status="${escapeAttr(o.status)}" aria-label="Cambiar estado">
             ${['pendiente','pagado','enviado','entregado','cancelado'].map(s =>
               `<option value="${s}" ${o.status === s ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`
             ).join('')}
           </select>
-          <button class="btn-order-detail" data-id="${o.id}">Ver</button>
+          <button class="btn-order-detail" data-id="${escapeAttr(o.id)}">Ver</button>
         </div>
       </td>
     </tr>`;
@@ -744,47 +754,114 @@ function setupAdminEvents() {
     imgInput.value = '';
   });
 
-  // Cambiar contraseña
+  // Cambiar contraseña (usa Supabase Auth)
   document.getElementById('changePassForm').addEventListener('submit', async e => {
     e.preventDefault();
-    const curr = document.getElementById('currPassword').value;
     const pw1  = document.getElementById('adminNewPassword').value;
     const pw2  = document.getElementById('adminConfirmPassword').value;
     const msg  = document.getElementById('passChangeMsg');
-    if (!await Auth.verify(curr)) { msg.textContent = 'Contraseña actual incorrecta.'; msg.className = 'msg-error'; msg.style.display = 'block'; return; }
-    if (pw1.length < 6) { msg.textContent = 'Mínimo 6 caracteres.'; msg.className = 'msg-error'; msg.style.display = 'block'; return; }
+    if (pw1.length < 8) { msg.textContent = 'Mínimo 8 caracteres.'; msg.className = 'msg-error'; msg.style.display = 'block'; return; }
     if (pw1 !== pw2)    { msg.textContent = 'Las contraseñas no coinciden.'; msg.className = 'msg-error'; msg.style.display = 'block'; return; }
-    await Auth.setPassword(pw1);
-    msg.textContent = '¡Contraseña cambiada correctamente!';
-    msg.className = 'msg-success'; msg.style.display = 'block';
+    const { error } = await db.auth.updateUser({ password: pw1 });
+    if (error) {
+      msg.textContent = 'Error al cambiar contraseña: ' + error.message;
+      msg.className = 'msg-error';
+    } else {
+      msg.textContent = '¡Contraseña cambiada correctamente!';
+      msg.className = 'msg-success';
+    }
+    msg.style.display = 'block';
     e.target.reset();
   });
 }
 
-// ─── Modal de confirmación (reemplaza confirm() nativo) ──────────────────────
+// ─── Modal de confirmación (totalmente dinámico, sin dependencia de HTML) ────
 
 function showConfirmModal(message, onOk, onCancel) {
-  const modal   = document.getElementById('confirmActionModal');
-  const body    = document.getElementById('confirmActionBody');
-  const btnOk   = document.getElementById('confirmActionOk');
-  const btnCan  = document.getElementById('confirmActionCancel');
-  const btnClose = document.getElementById('closeConfirmModal');
+  // Overlay
+  const overlay = document.createElement('div');
+  overlay.style.cssText = [
+    'position:fixed;inset:0;z-index:10000',
+    'background:rgba(0,0,0,.72)',
+    'display:flex;align-items:center;justify-content:center',
+    'padding:1rem',
+    'opacity:0;transition:opacity .22s ease'
+  ].join(';');
 
+  // Caja del diálogo
+  const box = document.createElement('div');
+  box.style.cssText = [
+    'background:#1a1a1a',
+    'border:1px solid #c9a84c',
+    'border-radius:10px',
+    'padding:1.5rem 1.75rem',
+    'max-width:420px;width:100%',
+    'box-shadow:0 8px 32px rgba(0,0,0,.6)',
+    'display:flex;flex-direction:column;gap:1rem'
+  ].join(';');
+
+  // Encabezado
+  const header = document.createElement('div');
+  header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:1rem';
+
+  const title = document.createElement('h3');
+  title.textContent = 'Confirmar acción';
+  title.style.cssText = 'margin:0;font-size:1rem;color:#c9a84c;font-weight:700';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕';
+  closeBtn.style.cssText = 'background:none;border:none;color:#888;font-size:1.1rem;cursor:pointer;line-height:1;padding:0';
+
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+
+  // Cuerpo del mensaje
+  const body = document.createElement('p');
+  body.style.cssText = 'margin:0;color:#e0d5c5;font-size:.88rem;white-space:pre-line;line-height:1.55';
   body.textContent = message;
-  modal.classList.add('open');
+
+  // Pie con botones
+  const footer = document.createElement('div');
+  footer.style.cssText = 'display:flex;gap:.75rem;justify-content:flex-end;flex-wrap:wrap';
+
+  const btnCan = document.createElement('button');
+  btnCan.textContent = 'Cancelar';
+  btnCan.style.cssText = [
+    'padding:.55rem 1.1rem;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:600',
+    'background:transparent;border:1px solid #555;color:#aaa'
+  ].join(';');
+
+  const btnOk = document.createElement('button');
+  btnOk.textContent = 'Confirmar';
+  btnOk.style.cssText = [
+    'padding:.55rem 1.25rem;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:700',
+    'background:#c9a84c;border:1px solid #c9a84c;color:#111'
+  ].join(';');
+
+  footer.appendChild(btnCan);
+  footer.appendChild(btnOk);
+
+  box.appendChild(header);
+  box.appendChild(body);
+  box.appendChild(footer);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  // Fade-in
+  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
 
   function cleanup() {
-    modal.classList.remove('open');
-    btnOk.removeEventListener('click', handleOk);
-    btnCan.removeEventListener('click', handleCancel);
-    btnClose.removeEventListener('click', handleCancel);
+    overlay.style.opacity = '0';
+    setTimeout(() => { overlay.remove(); }, 240);
   }
   function handleOk()     { cleanup(); onOk(); }
   function handleCancel() { cleanup(); if (onCancel) onCancel(); }
 
   btnOk.addEventListener('click',   handleOk);
   btnCan.addEventListener('click',  handleCancel);
-  btnClose.addEventListener('click', handleCancel);
+  closeBtn.addEventListener('click', handleCancel);
+  // Cerrar al hacer clic fuera del diálogo
+  overlay.addEventListener('click', e => { if (e.target === overlay) handleCancel(); });
 }
 
 // ─── Toast de notificación ────────────────────────────────────────────────────

@@ -20,9 +20,9 @@
 
       <!-- Login con contraseña existente -->
       <form id="loginForm" style="display:none">
-        <div class="login-field" id="loginEmailWrap" style="display:none">
+        <div class="login-field" id="loginEmailWrap">
           <label for="loginEmail">Correo electrónico</label>
-          <input type="email" id="loginEmail" autocomplete="email" placeholder="tu@correo.com">
+          <input type="email" id="loginEmail" autocomplete="email" placeholder="tu@correo.com" required>
         </div>
         <div class="login-field">
           <label for="loginPassword">Contraseña</label>
@@ -166,12 +166,8 @@
           <h3>Cambiar Contraseña</h3>
           <form id="changePassForm">
             <div class="pass-field">
-              <label for="currPassword">Contraseña actual</label>
-              <input type="password" id="currPassword" autocomplete="current-password" required>
-            </div>
-            <div class="pass-field">
-              <label for="adminNewPassword">Nueva contraseña</label>
-              <input type="password" id="adminNewPassword" autocomplete="new-password" required minlength="6">
+              <label for="adminNewPassword">Nueva contraseña (mín. 8 caracteres)</label>
+              <input type="password" id="adminNewPassword" autocomplete="new-password" required minlength="8">
             </div>
             <div class="pass-field">
               <label for="adminConfirmPassword">Confirmar nueva contraseña</label>
@@ -361,23 +357,6 @@
       <div class="product-modal-footer">
         <button class="btn-cancel" id="cancelOrderModalFooter" onclick="document.getElementById('registerOrderModal').classList.remove('open')">Cancelar</button>
         <button class="btn-save" id="saveOrderBtn">Guardar Pedido</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Modal: Confirmar acción ───────────────────────────────────────────── -->
-  <div class="product-modal" id="confirmActionModal" role="dialog" aria-modal="true" aria-labelledby="confirmActionTitle">
-    <div class="product-modal-content" style="max-width:420px">
-      <div class="product-modal-header">
-        <h3 id="confirmActionTitle">Confirmar</h3>
-        <button class="close-btn" id="closeConfirmModal" aria-label="Cerrar">×</button>
-      </div>
-      <div class="product-modal-body">
-        <div id="confirmActionBody" style="font-size:.88rem;color:var(--text2);line-height:1.7;white-space:pre-wrap"></div>
-      </div>
-      <div class="product-modal-footer" style="gap:.6rem">
-        <button class="btn-cancel" id="confirmActionCancel">Cancelar</button>
-        <button class="btn-save" id="confirmActionOk">Confirmar</button>
       </div>
     </div>
   </div>
