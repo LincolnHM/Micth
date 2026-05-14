@@ -2,6 +2,7 @@
 
 const Cart = {
   items: [],
+  _cartOpened: false,
 
   add(product, size, price) {
     const existing = this.items.find(i => i.productId === product.id && i.size === size);
@@ -10,7 +11,10 @@ const Cart = {
       this.items.push({ productId: product.id, productName: product.name, brand: product.brand, size, price, quantity: 1, imageUrl: product.imageUrl || '' });
     }
     this.render();
-    this.showCart();
+    if (!this._cartOpened) {
+      this._cartOpened = true;
+      this.showCart();
+    }
     this.bounce();
   },
 
@@ -22,7 +26,7 @@ const Cart = {
   },
   total()  { return this.items.reduce((s, i) => s + i.price * i.quantity, 0); },
   count()  { return this.items.reduce((s, i) => s + i.quantity, 0); },
-  clear()  { this.items = []; this.render(); },
+  clear()  { this.items = []; this._cartOpened = false; this.render(); },
 
   showCart() {
     document.getElementById('cartSidebar').classList.add('open');

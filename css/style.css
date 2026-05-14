@@ -1307,6 +1307,7 @@ input, select, textarea { font-family: inherit; }
   align-items: center;
   justify-content: space-between;
   padding: .65rem 1rem;
+  margin-bottom: .75rem;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--r);
@@ -1337,7 +1338,23 @@ input, select, textarea { font-family: inherit; }
   .filters-collapsible {
     overflow: hidden;
     max-height: 0;
-    transition: max-height .4s cubic-bezier(.22,1,.36,1);
+    transition: max-height .45s cubic-bezier(.22,1,.36,1);
   }
-  .filters-collapsible.open { max-height: 500px; }
+  .filters-collapsible.open { max-height: 600px; }
+
+  /* Animaciones más suaves en móvil — sin scale */
+  .anim-scale {
+    transform: translateY(16px) !important;
+  }
+  .anim-scale.anim-visible {
+    transform: translateY(0) !important;
+  }
+
+  /* Rings más grandes y visibles en móvil */
+  .carousel-deco {
+    width: 75% !important;
+    opacity: .65 !important;
+    right: 50% !important;
+    transform: translate(50%, -50%) !important;
+  }
 }
