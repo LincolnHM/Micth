@@ -545,11 +545,73 @@ input, select, textarea { font-family: inherit; }
 
 /* ─── Secciones informativas ──────────────────────────── */
 .info-section { padding: 4rem 0; border-top: 1px solid var(--border); }
-.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
-.info-card { text-align: center; padding: 1.5rem 1rem; }
-.info-icon { font-size: 2rem; margin-bottom: .75rem; }
-.info-card h3 { font-family: var(--font-serif); color: var(--white); font-size: 1rem; margin-bottom: .4rem; }
-.info-card p  { color: var(--text2); font-size: .82rem; line-height: 1.6; }
+.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; }
+.info-card {
+  text-align: center;
+  padding: 1.75rem 1.25rem;
+  background: rgba(20,20,20,.75);
+  backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(201,168,76,.15);
+  border-radius: 18px;
+  box-shadow: 0 0 30px rgba(201,168,76,.04), inset 0 1px 0 rgba(201,168,76,.08);
+  transition: border-color .3s, transform .3s cubic-bezier(.22,1,.36,1);
+}
+.info-card:hover { border-color: rgba(201,168,76,.35); transform: translateY(-5px); }
+.info-icon { font-size: 2rem; margin-bottom: .85rem; }
+.info-card h3 { font-family: var(--font-serif); color: var(--white); font-size: 1.05rem; margin-bottom: .45rem; }
+.info-card p  { color: var(--text2); font-size: .82rem; line-height: 1.65; }
+
+/* ─── Nosotros: Stats ─────────────────────────────────── */
+.ns-stats { display: flex; align-items: center; justify-content: center; gap: 2rem; margin: 1.75rem 0 2rem; flex-wrap: wrap; }
+.ns-stat { display: flex; flex-direction: column; align-items: center; gap: .2rem; }
+.ns-stat-num { font-family: var(--font-serif); font-size: 1.45rem; font-weight: 700; color: var(--gold); line-height: 1; }
+.ns-stat-lbl { font-size: .65rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text3); }
+.ns-stat-sep { width: 1px; height: 32px; background: var(--border); }
+
+/* ─── Nosotros: CTA Final ─────────────────────────────── */
+.ns-cta-section { padding: 4.5rem 1rem 5rem; border-top: 1px solid var(--border); }
+.ns-cta-card {
+  position: relative;
+  max-width: 680px;
+  margin: 0 auto;
+  background: rgba(20,20,20,.8);
+  backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(201,168,76,.22);
+  border-radius: 24px;
+  padding: 3rem 2.5rem;
+  text-align: center;
+  box-shadow: 0 0 80px rgba(201,168,76,.07), inset 0 1px 0 rgba(201,168,76,.12);
+  overflow: hidden;
+}
+.ns-cta-glow {
+  position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
+  width: 420px; height: 200px;
+  background: radial-gradient(ellipse, rgba(201,168,76,.13), transparent 70%);
+  pointer-events: none;
+}
+.ns-cta-eyebrow { font-size: .6rem; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); opacity: .8; margin-bottom: .9rem; }
+.ns-cta-title { font-family: var(--font-serif); font-size: clamp(1.6rem, 4vw, 2.4rem); color: var(--white); font-weight: 700; line-height: 1.2; margin-bottom: .8rem; }
+.ns-cta-title span { color: var(--gold); }
+.ns-cta-sub { font-size: .88rem; color: var(--text2); line-height: 1.65; margin: 0 auto 2rem; max-width: 380px; }
+.ns-cta-actions { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.ns-wa-btn {
+  display: inline-flex; align-items: center; gap: .65rem;
+  background: #25d366; color: #fff; font-weight: 700;
+  padding: .85rem 2rem; border-radius: 50px; font-size: .9rem;
+  text-decoration: none;
+  transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s, background .2s;
+  box-shadow: 0 5px 22px rgba(37,211,102,.3);
+}
+.ns-wa-btn:hover { transform: translateY(-4px) scale(1.03); box-shadow: 0 12px 34px rgba(37,211,102,.4); background: #1ebe5d; color: #fff; }
+.ns-more-link { font-size: .8rem; color: var(--gold); text-decoration: none; letter-spacing: .04em; transition: color .2s, letter-spacing .2s; }
+.ns-more-link:hover { color: var(--gold-l); letter-spacing: .08em; }
+
+@media (max-width: 600px) {
+  .ns-stat-sep { display: none; }
+  .ns-stats { gap: 1.25rem; }
+  .ns-cta-card { padding: 2rem 1.25rem; }
+  .ns-wa-btn { width: 100%; justify-content: center; }
+}
 
 /* ─── Footer ──────────────────────────────────────────── */
 .footer { background: var(--black); border-top: 1px solid var(--border); padding: 2.5rem 1rem; text-align: center; color: var(--text2); font-size: .78rem; }
