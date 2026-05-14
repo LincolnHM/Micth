@@ -53,7 +53,7 @@ input, select, textarea { font-family: inherit; }
 }
 .header-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: .75rem; }
 
-.logo { display: flex; align-items: center; gap: .5rem; text-decoration: none; }
+.logo { display: flex; align-items: center; gap: .5rem; text-decoration: none; min-width: 0; flex-shrink: 1; }
 .logo-text { font-family: var(--font-serif); font-size: 1.45rem; font-weight: 700; color: var(--white); letter-spacing: .01em; }
 .logo-text span { color: var(--gold); }
 .logo-sub { font-size: .58rem; letter-spacing: .22em; text-transform: uppercase; color: var(--text2); line-height: 1; }
@@ -65,7 +65,8 @@ input, select, textarea { font-family: inherit; }
   .nav a:hover { color: var(--gold); }
 }
 
-.header-right { display: flex; align-items: center; gap: .5rem; }
+.header-right { display: flex; align-items: center; gap: .5rem; flex-shrink: 0; }
+@media (max-width: 420px) { .logo-sub { display: none; } }
 
 .cart-btn { position: relative; color: var(--text2); padding: .5rem; border-radius: var(--r); transition: color var(--tr); }
 .cart-btn:hover { color: var(--gold); }
@@ -661,10 +662,15 @@ input, select, textarea { font-family: inherit; }
   display: inline-flex; align-items: center; gap: .5rem;
   background: var(--gold); color: #000;
   font-weight: 700; font-size: .9rem;
-  padding: .8rem 1.8rem; border-radius: var(--r);
-  transition: background var(--tr), transform var(--tr);
+  padding: .85rem 2rem; border-radius: 50px;
+  transition: background var(--tr), transform var(--tr), box-shadow var(--tr);
+  box-shadow: 0 5px 20px rgba(201,168,76,.3);
 }
-.nosotros-hero .btn-store:hover { background: var(--gold-l); color: #000; transform: translateY(-2px); }
+.nosotros-hero .btn-store:hover { background: var(--gold-l); color: #000; transform: translateY(-3px); box-shadow: 0 10px 30px rgba(201,168,76,.4); }
+@media (max-width: 600px) {
+  .nosotros-hero { padding: 3rem 1rem 2.5rem; }
+  .nosotros-hero .btn-store { width: 100%; justify-content: center; max-width: 320px; }
+}
 
 /* ─── Misión & Visión ────────────────────────────────── */
 .mv-section { padding: 4rem 0; border-top: 1px solid var(--border); }
