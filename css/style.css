@@ -469,6 +469,15 @@ input, select, textarea { font-family: inherit; }
 
 .cart-header { display: flex; align-items: center; justify-content: space-between; padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--border); }
 .cart-header h3 { font-family: var(--font-serif); font-size: 1.1rem; color: var(--white); }
+.cart-header-actions { display: flex; align-items: center; gap: .4rem; }
+.cart-clear-btn {
+  display: flex; align-items: center; gap: .3rem;
+  font-size: .7rem; color: var(--text3); letter-spacing: .04em;
+  padding: .3rem .65rem; border: 1px solid var(--border-l); border-radius: 50px;
+  transition: all var(--tr);
+}
+.cart-clear-btn svg { width: 13px; height: 13px; }
+.cart-clear-btn:hover { color: var(--red); border-color: rgba(239,83,80,.5); background: rgba(239,83,80,.08); }
 .close-btn { color: var(--text2); font-size: 1.4rem; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: var(--r); transition: all var(--tr); }
 .close-btn:hover { background: var(--card); color: var(--text); }
 

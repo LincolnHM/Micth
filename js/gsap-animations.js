@@ -34,22 +34,7 @@
     });
   }
 
-  // ── 3. Filter buttons: stagger al entrar en viewport ─────────────────────
-  gsap.from('.filter-btn, .filter-group-btn, .olf-select', {
-    scrollTrigger: {
-      trigger: '.filters-section',
-      start: 'top 86%',
-      toggleActions: 'play none none none',
-    },
-    opacity: 0,
-    y: 16,
-    scale: 0.88,
-    duration: 0.45,
-    ease: 'power3.out',
-    stagger: 0.03,
-  });
-
-  // ── 4. Product cards: batch reveal con MutationObserver ──────────────────
+  // ── 3. Product cards: batch reveal con MutationObserver ──────────────────
   (function initProductCards() {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;

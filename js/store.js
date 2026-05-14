@@ -53,6 +53,9 @@ const Cart = {
     countEl.style.display = n > 0 ? 'flex' : 'none';
     totalEl.textContent = `S/ ${this.total().toFixed(2)}`;
 
+    const clearBtn = document.getElementById('clearCartBtn');
+    if (clearBtn) clearBtn.style.display = n > 0 ? 'flex' : 'none';
+
     if (!this.items.length) {
       container.innerHTML = `
         <div class="cart-empty-state">
@@ -477,6 +480,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Carrito ───────────────────────────────────────────────────────────────
   document.getElementById('cartBtn')?.addEventListener('click', Cart.showCart.bind(Cart));
   document.getElementById('closeCart')?.addEventListener('click', Cart.hideCart.bind(Cart));
+  document.getElementById('clearCartBtn')?.addEventListener('click', () => Cart.clear());
   document.getElementById('overlay')?.addEventListener('click', () => {
     Cart.hideCart();
     document.getElementById('checkoutModal')?.classList.remove('open');

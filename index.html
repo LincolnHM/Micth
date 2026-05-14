@@ -238,7 +238,15 @@
   <aside class="cart-sidebar" id="cartSidebar" aria-label="Carrito de compras">
     <div class="cart-header">
       <h3>Tu Carrito</h3>
-      <button class="close-btn" id="closeCart" aria-label="Cerrar carrito">×</button>
+      <div class="cart-header-actions">
+        <button class="cart-clear-btn" id="clearCartBtn" aria-label="Vaciar todo el carrito" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+          </svg>
+          Vaciar
+        </button>
+        <button class="close-btn" id="closeCart" aria-label="Cerrar carrito">×</button>
+      </div>
     </div>
     <div class="cart-items" id="cartItems" aria-live="polite"></div>
     <div class="cart-footer">
@@ -398,11 +406,12 @@
     })();
 
     // ── Scroll con offset del header fijo (64 px) ────────────
+    // Usa offsetTop (posición natural en documento) en lugar de
+    // getBoundingClientRect, que falla con elementos position:sticky
     window.scrollToSection = function (id) {
       const el = document.getElementById(id);
       if (!el) return;
-      const top = el.getBoundingClientRect().top + window.scrollY - 68;
-      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      window.scrollTo({ top: Math.max(0, el.offsetTop - 68), behavior: 'smooth' });
     };
 
     document.addEventListener('click', function (e) {
@@ -413,8 +422,7 @@
       const target = document.querySelector(href);
       if (!target) return;
       e.preventDefault();
-      const top = target.getBoundingClientRect().top + window.scrollY - 68;
-      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      window.scrollTo({ top: Math.max(0, target.offsetTop - 68), behavior: 'smooth' });
     });
 
     // ── Toggle filtros en móvil ──────────────────────────────
