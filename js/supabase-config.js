@@ -195,9 +195,8 @@ const CloudOrders = {
       total:     all.length,
       pendiente: all.filter(o => o.status === 'pendiente').length,
       pagado:    all.filter(o => o.status === 'pagado').length,
-      enviado:   all.filter(o => o.status === 'enviado').length,
-      entregado: all.filter(o => o.status === 'entregado').length,
-      revenue:   all.filter(o => ['pagado','enviado','entregado'].includes(o.status))
+      cancelado: all.filter(o => o.status === 'cancelado').length,
+      revenue:   all.filter(o => o.status === 'pagado')
                     .reduce((s, o) => s + o.total, 0)
     };
   },

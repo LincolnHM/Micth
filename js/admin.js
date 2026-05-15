@@ -290,7 +290,7 @@ async function updateOrderStats() {
     <div class="stat-card"><div class="stat-val" style="color:var(--gold)">${stats.total}</div><div class="stat-label">Total</div></div>
     <div class="stat-card"><div class="stat-val" style="color:var(--orange)">${stats.pendiente}</div><div class="stat-label">Pendientes</div></div>
     <div class="stat-card"><div class="stat-val" style="color:var(--green)">${stats.pagado}</div><div class="stat-label">Pagados</div></div>
-    <div class="stat-card"><div class="stat-val" style="color:#64b5f6">${stats.enviado}</div><div class="stat-label">Enviados</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:#ef5350">${stats.cancelado}</div><div class="stat-label">Cancelados</div></div>
     <div class="stat-card"><div class="stat-val" style="color:var(--gold-d)">S/${stats.revenue.toFixed(0)}</div><div class="stat-label">Facturado</div></div>
   `;
 }
@@ -308,12 +308,16 @@ async function renderOrdersSection() {
     return;
   }
 
-  const STATUS_LABELS = { pendiente: 'Pendiente', pagado: 'Pagado', enviado: 'Enviado', entregado: 'Entregado', cancelado: 'Cancelado' };
+  const STATUS_LABELS = { pendiente: 'Pendiente', pagado: 'Pagado', cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado' };
+  const SELECT_OPTIONS = ['pendiente', 'pagado', 'cancelado'];
 
   tbody.innerHTML = orders.map(o => {
     const date   = new Date(o.date).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: '2-digit' });
     const items  = o.items.map(i => `${i.productName} ${i.size} ×${i.quantity}`).join(', ');
     const delivLabel = o.deliveryType === 'recojo' ? '🏪 Recojo' : '📦 Shalom';
+    const safeStatus = o.status.replace(/[^a-z]/g, '');
+    // Si el pedido tiene un estado antiguo (enviado/entregado), mostrar en select como pendiente
+    const selectVal  = SELECT_OPTIONS.includes(o.status) ? o.status : 'pendiente';
 
     return `
     <tr>
@@ -322,12 +326,12 @@ async function renderOrdersSection() {
       <td class="order-date">${date}<br><small style="color:var(--text3)">${delivLabel}</small></td>
       <td style="font-size:.75rem;color:var(--text2);max-width:200px">${sanitize(items)}</td>
       <td class="order-total-cell">S/ ${o.total.toFixed(2)}</td>
-      <td><span class="status-badge status-${o.status.replace(/[^a-z]/g, '')}">${STATUS_LABELS[o.status] || '—'}</span></td>
+      <td><span class="status-badge status-${safeStatus}">${STATUS_LABELS[o.status] || o.status}</span></td>
       <td>
         <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
           <select class="order-action-select" data-id="${escapeAttr(o.id)}" data-status="${escapeAttr(o.status)}" aria-label="Cambiar estado">
-            ${['pendiente','pagado','enviado','entregado','cancelado'].map(s =>
-              `<option value="${s}" ${o.status === s ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`
+            ${SELECT_OPTIONS.map(s =>
+              `<option value="${s}" ${selectVal === s ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`
             ).join('')}
           </select>
           <button class="btn-order-detail" data-id="${escapeAttr(o.id)}">Ver</button>
@@ -365,7 +369,7 @@ async function renderOrdersSection() {
             .map(i => `  • ${i.productName} ${i.size} ×${i.quantity} = ${parseInt(i.size) * i.quantity} ml`)
             .join('\n');
           const msg = mlLines
-            ? `Al confirmar el pago se descontarán mililitros del inventario:\n\n${mlLines}\n\n¿Confirmar pedido?`
+            ? `Se descontará del stock al confirmar:\n\n${mlLines}\n\n¿Confirmar pago?`
             : `¿Confirmar el pedido ${id} como PAGADO?`;
 
           showConfirmModal(msg,
@@ -397,7 +401,7 @@ async function openOrderDetail(id) {
   const modal = document.getElementById('orderDetailModal');
   const body  = document.getElementById('orderDetailBody');
 
-  const STATUS_LABELS = { pendiente: 'Pendiente', pagado: 'Pagado', enviado: 'Enviado', entregado: 'Entregado', cancelado: 'Cancelado' };
+  const STATUS_LABELS = { pendiente: 'Pendiente', pagado: 'Pagado', cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado' };
   const date = new Date(order.date).toLocaleString('es-PE');
 
   body.innerHTML = `
