@@ -109,7 +109,14 @@ const CloudOrders = {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) { console.error('Supabase error:', error); return this._localGetAll(); }
-      return data.map(orderFromDB);
+      const supabaseOrders = data.map(orderFromDB);
+      // Incluir pedidos en localStorage que aún no llegaron a Supabase
+      const localOrders  = Orders.getAll();
+      const supabaseIds  = new Set(supabaseOrders.map(o => o.id));
+      const pendingLocal = localOrders.filter(o => !supabaseIds.has(o.id));
+      if (!pendingLocal.length) return supabaseOrders;
+      return [...supabaseOrders, ...pendingLocal]
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
     }
     return this._localGetAll();
   },
@@ -134,14 +141,15 @@ const CloudOrders = {
       date:   new Date().toISOString(),
       status: 'pendiente'
     };
+    // Guardar en localStorage primero (nunca se pierde el pedido)
+    this._localCreate(newOrder);
+
     if (db) {
       const { error } = await db.from('pedidos').insert(orderToDB(newOrder));
       if (error) {
-        console.error('Supabase error:', error);
-        this._localCreate(order);
+        console.error('Supabase error al guardar pedido:', error);
+        // El pedido ya quedó en localStorage — no se pierde
       }
-    } else {
-      this._localCreate(order);
     }
     return newOrder.id;
   },
@@ -194,9 +202,15 @@ const CloudOrders = {
   },
 
   // ─── Fallback a localStorage ────────────────────────────────────────────────
-  _localGetAll()   { return Orders.getAll(); },
-  _localGetById(id){ return Orders.getById(id); },
-  _localCreate(o)  { Orders.create(o); }
+  _localGetAll()    { return Orders.getAll(); },
+  _localGetById(id) { return Orders.getById(id); },
+  _localCreate(o)   {
+    // Guardar preservando el ID ya generado (no regenerar con Orders.create)
+    const orders = Orders.getAll();
+    if (orders.some(e => e.id === o.id)) return; // ya existe, no duplicar
+    orders.unshift(o);
+    Orders.save(orders);
+  }
 };
 
 // ─── Tabla 'productos' en Supabase — ejecutar en SQL Editor ──────────────────
