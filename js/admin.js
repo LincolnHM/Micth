@@ -207,10 +207,31 @@ async function renderAdminProducts() {
 
   container.querySelectorAll('.btn-save-ml').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const id = parseInt(btn.dataset.id);
+      const id   = parseInt(btn.dataset.id);
       const card = btn.closest('.admin-card');
       const updates = {};
-      card.querySelectorAll('.ml-input').forEach(inp => { updates[inp.dataset.field] = sanitizeNum(inp.value, 0, 9999); });
+      let hasNegative = false;
+
+      card.querySelectorAll('.ml-input').forEach(inp => {
+        const val = parseFloat(inp.value);
+        if (val < 0 || isNaN(val)) { hasNegative = true; inp.style.borderColor = '#ef5350'; }
+        else { inp.style.borderColor = ''; }
+        updates[inp.dataset.field] = sanitizeNum(inp.value, 0, 9999);
+      });
+
+      if (hasNegative) {
+        showToast('Los ml no pueden ser negativos.');
+        return;
+      }
+
+      // Restante no puede superar el Total
+      const remaining = updates.bottleRemainingMl ?? 0;
+      const total     = updates.bottleTotalMl     ?? 0;
+      if (remaining > total && total > 0) {
+        showToast('Los ml restantes no pueden superar el total del frasco.');
+        return;
+      }
+
       await CloudProducts.update(id, updates);
       renderAdminProducts().catch(console.error);
       showToast('Mililitros actualizados ✓');

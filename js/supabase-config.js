@@ -156,16 +156,19 @@ const CloudOrders = {
   },
 
   async updateStatus(id, status) {
-    // Descontar ml del inventario cuando se confirma el pago
+    // Descontar ml del stock cuando se confirma el pago
     if (status === 'pagado') {
       const order = await this.getById(id);
       if (order && order.status !== 'pagado') {
         for (const item of (order.items || [])) {
-          const product = Products.getById(item.productId);
+          const pid     = parseInt(item.productId);
+          // Leer siempre desde Supabase para tener el valor más actualizado
+          const product = await CloudProducts.getById(pid);
           if (!product) continue;
-          const mlUsed    = parseInt(item.size) * item.quantity;
-          const newRemain = Math.max(0, product.bottleRemainingMl - mlUsed);
-          await CloudProducts.update(item.productId, { bottleRemainingMl: newRemain });
+          const mlUsed    = parseInt(item.size) * (item.quantity || 1);
+          if (isNaN(mlUsed) || mlUsed <= 0) continue;
+          const newRemain = Math.max(0, (product.bottleRemainingMl || 0) - mlUsed);
+          await CloudProducts.update(pid, { bottleRemainingMl: newRemain });
         }
       }
     }
