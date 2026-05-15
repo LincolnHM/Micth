@@ -141,15 +141,16 @@ const CloudOrders = {
       date:   new Date().toISOString(),
       status: 'pendiente'
     };
-    // Guardar en localStorage primero (nunca se pierde el pedido)
-    this._localCreate(newOrder);
-
     if (db) {
       const { error } = await db.from('pedidos').insert(orderToDB(newOrder));
       if (error) {
         console.error('Supabase error al guardar pedido:', error);
-        // El pedido ya quedó en localStorage — no se pierde
+        try { this._localCreate(newOrder); } catch {}
+      } else {
+        try { this._localCreate(newOrder); } catch {}
       }
+    } else {
+      try { this._localCreate(newOrder); } catch {}
     }
     return newOrder.id;
   },
