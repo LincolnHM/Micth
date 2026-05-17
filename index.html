@@ -12,9 +12,8 @@
   <link rel="stylesheet" href="css/style.css">
   <style>
     /* ── Perfumes Enteros — estilos adicionales ─────────── */
-    .badge-entero { background: rgba(180,130,255,.15); color: #c79aff; border: 1px solid rgba(180,130,255,.3); }
-    .filter-btn-entero { border-color: rgba(180,130,255,.35) !important; }
-    .filter-btn-entero.active { background: rgba(180,130,255,.18) !important; color: #c79aff !important; border-color: rgba(180,130,255,.6) !important; }
+    .filter-btn-entero { border-color: rgba(201,168,76,.35) !important; }
+    .filter-btn-entero.active { background: rgba(201,168,76,.15) !important; color: var(--gold) !important; border-color: rgba(201,168,76,.6) !important; }
     .product-content-desc {
       font-size: .75rem; font-style: italic;
       color: var(--gold); letter-spacing: .03em;
@@ -22,27 +21,35 @@
     }
     .product-content-desc::before { content: '📦 '; font-style: normal; }
     .price-consultar { font-size: .82rem; color: var(--text2); font-style: italic; }
+    .btn-consultar-wa {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: #25d366; color: #fff; font-weight: 700; font-size: .82rem;
+      padding: .45rem 1rem; border-radius: 50px; text-decoration: none;
+      margin-bottom: .55rem;
+      transition: background .2s, transform .15s;
+    }
+    .btn-consultar-wa:hover { background: #1ebe5d; transform: translateY(-1px); }
 
     /* ── Banner Perfumes Enteros ────────────────────────── */
     #catalogBanner { padding: 2.5rem 0 1.5rem; }
     .catalog-banner-entero {
       display: flex; align-items: flex-start; justify-content: space-between;
       gap: 1.5rem; flex-wrap: wrap;
-      background: linear-gradient(135deg, rgba(180,130,255,.08) 0%, rgba(201,168,76,.06) 100%);
-      border: 1px solid rgba(180,130,255,.22);
+      background: linear-gradient(135deg, rgba(201,168,76,.08) 0%, rgba(201,168,76,.04) 100%);
+      border: 1px solid rgba(201,168,76,.22);
       border-radius: 20px; padding: 1.75rem 2rem;
       position: relative; overflow: hidden;
     }
     .catalog-banner-entero::before {
       content: '✦'; position: absolute; right: 1.5rem; top: 1rem;
-      font-size: 5rem; color: rgba(180,130,255,.08); line-height: 1; pointer-events: none;
+      font-size: 5rem; color: rgba(201,168,76,.08); line-height: 1; pointer-events: none;
     }
-    .cbe-eyebrow { font-size: .6rem; letter-spacing: .35em; text-transform: uppercase; color: #c79aff; margin-bottom: .5rem; opacity: .8; }
+    .cbe-eyebrow { font-size: .6rem; letter-spacing: .35em; text-transform: uppercase; color: var(--gold); margin-bottom: .5rem; opacity: .8; }
     .cbe-title { font-family: var(--font-serif); font-size: clamp(1.6rem,4vw,2.4rem); font-weight: 700; color: var(--white); line-height: 1.15; margin-bottom: .6rem; }
-    .cbe-title span { color: #c79aff; }
+    .cbe-title span { color: var(--gold); }
     .cbe-sub { font-size: .85rem; color: var(--text2); max-width: 420px; line-height: 1.65; }
     .cbe-tags { display: flex; flex-wrap: wrap; gap: .5rem; align-items: flex-start; padding-top: .25rem; }
-    .cbe-tags span { font-size: .7rem; padding: .28rem .75rem; border-radius: 50px; background: rgba(180,130,255,.1); border: 1px solid rgba(180,130,255,.25); color: #c79aff; letter-spacing: .04em; white-space: nowrap; }
+    .cbe-tags span { font-size: .7rem; padding: .28rem .75rem; border-radius: 50px; background: rgba(201,168,76,.1); border: 1px solid rgba(201,168,76,.25); color: var(--gold); letter-spacing: .04em; white-space: nowrap; }
     @media (max-width: 600px) {
       #catalogBanner { padding: 1.25rem 0 .75rem; }
       .catalog-banner-entero { padding: 1.25rem 1.1rem; flex-direction: column; gap: 1rem; }
@@ -74,7 +81,7 @@
       </a>
       <nav class="nav" aria-label="Principal">
         <a href="#catalogo">Catálogo</a>
-        <a href="#catalogo" id="navEnteroLink" style="color:#c79aff !important;font-weight:600">Perfumes Enteros</a>
+        <a href="#catalogo" id="navEnteroLink" style="color:var(--gold) !important;font-weight:600">Perfumes Enteros</a>
         <a href="nosotros.html">Nosotros</a>
         <a href="contacto.html">Contacto</a>
       </nav>
@@ -99,7 +106,7 @@
     <span class="mobile-menu-brand">MICHT DECANTS</span>
     <nav class="mobile-nav">
       <a href="#catalogo" class="mobile-nav-link">Catálogo</a>
-      <a href="#catalogo" class="mobile-nav-link" id="mobileNavEnteroLink" style="color:#c79aff">✦ Perfumes Enteros</a>
+      <a href="#catalogo" class="mobile-nav-link" id="mobileNavEnteroLink" style="color:var(--gold)">✦ Perfumes Enteros</a>
       <a href="nosotros.html" class="mobile-nav-link">Nosotros</a>
       <a href="contacto.html" class="mobile-nav-link">Contacto</a>
     </nav>

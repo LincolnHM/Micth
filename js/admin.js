@@ -1,6 +1,7 @@
 // ─── Panel Administrador — MICHT Decants ─────────────────────────────────────
 
 let _adminProductSearch = '';
+let _adminProductTypeFilter = 'all';
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!SUPABASE_READY) {
@@ -112,6 +113,11 @@ function setupNav() {
 async function renderAdminProducts() {
   const container = document.getElementById('adminProductList');
   let products    = await CloudProducts.getAll();
+  if (_adminProductTypeFilter === 'entero') {
+    products = products.filter(p => p.type === 'entero');
+  } else if (_adminProductTypeFilter === 'decant') {
+    products = products.filter(p => p.type !== 'entero');
+  }
   if (_adminProductSearch) {
     const q = _adminProductSearch.toLowerCase();
     products = products.filter(p =>
@@ -740,6 +746,20 @@ function setupAdminEvents() {
   document.getElementById('adminProductSearch')?.addEventListener('input', function() {
     _adminProductSearch = this.value.trim();
     renderAdminProducts().catch(console.error);
+  });
+
+  document.querySelectorAll('.admin-type-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _adminProductTypeFilter = btn.dataset.type;
+      document.querySelectorAll('.admin-type-filter').forEach(b => {
+        const active = b === btn;
+        b.style.background = active ? 'var(--gold)' : 'var(--bg2)';
+        b.style.color       = active ? '#111' : 'var(--text2)';
+        b.style.borderColor = active ? 'var(--gold)' : 'var(--border)';
+        b.classList.toggle('active', active);
+      });
+      renderAdminProducts().catch(console.error);
+    });
   });
 
   document.getElementById('addProductBtn').addEventListener('click', () => openProductModal());

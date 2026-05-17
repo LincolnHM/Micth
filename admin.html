@@ -88,11 +88,25 @@
             <button class="btn-add" id="addProductBtn">+ Agregar Perfume</button>
           </div>
         </div>
-        <div style="margin-bottom:1rem">
+        <div style="margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center">
           <input type="text" id="adminProductSearch"
                  placeholder="🔍  Buscar por nombre, marca o familia olfativa…"
-                 style="width:100%;max-width:420px;padding:.52rem .9rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;outline:none;transition:border-color .2s"
+                 style="flex:1;min-width:200px;max-width:380px;padding:.52rem .9rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;outline:none;transition:border-color .2s"
                  onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='var(--border)'">
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+            <button class="admin-type-filter active" data-type="all"
+                    style="font-size:.78rem;padding:.42rem .85rem;border-radius:50px;border:1px solid var(--border);background:var(--gold);color:#111;font-weight:700;cursor:pointer;transition:all .2s">
+              Todos
+            </button>
+            <button class="admin-type-filter" data-type="decant"
+                    style="font-size:.78rem;padding:.42rem .85rem;border-radius:50px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-weight:600;cursor:pointer;transition:all .2s">
+              Decants
+            </button>
+            <button class="admin-type-filter" data-type="entero"
+                    style="font-size:.78rem;padding:.42rem .85rem;border-radius:50px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-weight:600;cursor:pointer;transition:all .2s">
+              Perfumes Enteros
+            </button>
+          </div>
         </div>
         <div id="adminProductList"></div>
       </div>

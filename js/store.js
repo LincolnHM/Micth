@@ -243,6 +243,8 @@ let _allProducts = null;
 function renderProducts() {
   const grid        = document.getElementById('productsGrid');
   const allFiltered = Filter.apply(_allProducts || Products.getAll());
+  // Agotados siempre al fondo
+  allFiltered.sort((a, b) => (a.inStock === b.inStock ? 0 : a.inStock ? -1 : 1));
   const totalPages  = Pagination.totalPages(allFiltered.length);
 
   // Corregir página si excede el total
@@ -309,9 +311,14 @@ function renderProducts() {
               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : '';
 
+    const waConsultUrl = isEntero && minPrice === 0
+      ? `https://wa.me/51917452643?text=${encodeURIComponent(`Hola, me interesa el perfume ${p.brand} – ${p.name}. ¿Cuál es el precio?`)}`
+      : '';
     const priceHtml = minPrice > 0
       ? `<p class="price-from">${isEntero ? '' : 'Desde '}<strong>S/ ${minPrice}</strong></p>`
-      : `<p class="price-consultar">Consultar precio</p>`;
+      : isEntero
+        ? `<a class="btn-consultar-wa" href="${waConsultUrl}" target="_blank" rel="noopener noreferrer">💬 Consultar precio</a>`
+        : `<p class="price-consultar">Consultar precio</p>`;
 
     return `
       <article class="product-card ${!p.inStock ? 'out-of-stock' : ''} ${p.featured ? 'featured' : ''}">
@@ -410,17 +417,6 @@ function renderProducts() {
 
   renderPagination(Pagination.currentPage, totalPages);
 
-  // 3D tilt en tarjetas — solo en dispositivos con puntero fino (escritorio)
-  if (typeof VanillaTilt !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-    VanillaTilt.init(grid.querySelectorAll('.product-card'), {
-      max: 7,
-      speed: 500,
-      glare: true,
-      'max-glare': 0.12,
-      scale: 1.02,
-      perspective: 900,
-    });
-  }
 }
 
 // ─── Poblar filtro de familias olfativas ──────────────────────────────────────

@@ -185,7 +185,7 @@ const Checkout = {
     });
     lines.push(`\n*Total: S/ ${Cart.total().toFixed(2)}*`);
     lines.push('\n💸 *Método de pago:* Yape ✅');
-    lines.push('_(Por favor indica tu número de operación Yape para confirmar)_');
+    lines.push('_(Por favor 📸 envíanos una captura de pantalla de tu pago Yape para confirmar el pedido)_');
 
     if (this.deliveryType === 'pickup') {
       const pickupName = document.getElementById('pickupNameInput').value.trim();
