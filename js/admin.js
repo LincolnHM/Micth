@@ -124,18 +124,21 @@ async function renderAdminProducts() {
   container.innerHTML = products.map(p => {
     const pct    = p.bottleTotalMl > 0 ? Math.round(p.bottleRemainingMl / p.bottleTotalMl * 100) : 0;
     const color  = pct > 50 ? '#4caf50' : pct > 20 ? '#ff9800' : '#ef5350';
-    const typeLabel = p.type === 'arabe' ? 'Árabe' : 'Diseñador';
+    const typeLabel = p.type === 'arabe' ? 'Árabe' : p.type === 'entero' ? 'Entero' : 'Diseñador';
+    const typeBadge = p.type === 'arabe' ? 'badge-arabe' : p.type === 'entero' ? 'badge-entero' : 'badge-dis';
     const gLabel    = { hombre: '♂ Hombre', mujer: '♀ Mujer', unisex: '⚥ Unisex' }[p.gender] || '';
+    const isEntero  = p.type === 'entero';
 
     return `
     <div class="admin-card" data-id="${p.id}">
       <div class="admin-card-head">
         ${p.imageUrl ? `<img src="${escapeAttr(p.imageUrl)}" alt="${escapeAttr(p.name)}" class="admin-product-thumb" loading="lazy" onerror="this.style.display='none'">` : ''}
         <div style="flex:1;min-width:0">
-          <span class="admin-type-badge ${p.type === 'arabe' ? 'badge-arabe' : 'badge-dis'}">${typeLabel}</span>
+          <span class="admin-type-badge ${typeBadge}">${typeLabel}</span>
           ${p.gender ? `<span style="font-size:.65rem;color:var(--text2);margin-left:.4rem">${gLabel}</span>` : ''}
           <h3 class="admin-product-name">${sanitize(p.brand)} – ${sanitize(p.name)}</h3>
-          ${p.olfFamily ? `<p style="font-size:.72rem;color:var(--gold-d);margin-top:.2rem">${sanitize(p.olfFamily)}</p>` : ''}
+          ${p.contentDescription ? `<p style="font-size:.72rem;color:var(--gold);margin-top:.2rem">📦 ${sanitize(p.contentDescription)}</p>` : ''}
+          ${p.olfFamily ? `<p style="font-size:.72rem;color:var(--gold-d);margin-top:.15rem">${sanitize(p.olfFamily)}</p>` : ''}
         </div>
         <div class="admin-card-actions">
           <button class="btn-edit"   data-id="${p.id}">Editar</button>
@@ -158,15 +161,31 @@ async function renderAdminProducts() {
           </label>
         </div>
 
-        <!-- Notas olfativas (resumen) -->
-        ${p.topNotes || p.heartNotes ? `
-        <div style="font-size:.75rem;color:var(--text2);display:flex;flex-wrap:wrap;gap:.5rem">
-          ${p.topNotes    ? `<span><strong style="color:var(--gold-d)">Salida:</strong> ${sanitize(p.topNotes)}</span>` : ''}
-          ${p.heartNotes  ? `<span><strong style="color:var(--gold-d)">Corazón:</strong> ${sanitize(p.heartNotes)}</span>` : ''}
-          ${p.baseNotes   ? `<span><strong style="color:var(--gold-d)">Fondo:</strong> ${sanitize(p.baseNotes)}</span>` : ''}
-        </div>` : ''}
+        <!-- Precios editables inline -->
+        <div class="sizes-admin">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
+            <strong style="font-size:.78rem;color:var(--text2)">${isEntero ? 'Precio (S/)' : 'Precios por talla (S/)'}</strong>
+            <button class="btn-save-prices" data-id="${p.id}"
+                    style="font-size:.72rem;padding:.3rem .75rem;background:var(--gold);color:#111;border:none;border-radius:var(--r);font-weight:700;cursor:pointer;transition:background .2s"
+                    onmouseover="this.style.background='var(--gold-l)'" onmouseout="this.style.background='var(--gold)'">
+              Guardar precios
+            </button>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:.5rem">
+            ${Object.entries(p.sizes).map(([ml, price]) => `
+            <div style="display:flex;align-items:center;gap:.3rem;background:var(--bg2);border:1px solid var(--border-l);border-radius:var(--r);padding:.3rem .55rem">
+              <span style="font-size:.75rem;color:var(--text2);white-space:nowrap">${sanitize(ml)}</span>
+              <span style="font-size:.72rem;color:var(--text3)">S/</span>
+              <input type="number" class="price-inline-input" data-id="${p.id}" data-size="${escapeAttr(ml)}"
+                     value="${price}" min="0" max="9999" step="0.5"
+                     style="width:64px;background:transparent;border:none;border-bottom:1px solid var(--border-l);color:var(--text);font-size:.82rem;font-weight:600;padding:.1rem .2rem;outline:none;text-align:right"
+                     onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border-l)'">
+            </div>`).join('')}
+          </div>
+        </div>
 
-        <!-- ML tracker -->
+        <!-- ML tracker — solo para decants -->
+        ${!isEntero ? `
         <div class="ml-tracker">
           <div class="ml-label">
             <span>Perfume en frasco:</span>
@@ -184,15 +203,15 @@ async function renderAdminProducts() {
             </label>
             <button class="btn-save-ml" data-id="${p.id}">Guardar ml</button>
           </div>
-        </div>
+        </div>` : ''}
 
-        <!-- Tallas -->
-        <div class="sizes-admin">
-          <strong>Tallas:</strong>
-          ${Object.entries(p.sizes).map(([ml, price]) =>
-            `<span class="size-chip">${sanitize(ml)} → S/${price}</span>`
-          ).join('')}
-        </div>
+        <!-- Notas olfativas (resumen) — solo decants -->
+        ${!isEntero && (p.topNotes || p.heartNotes) ? `
+        <div style="font-size:.75rem;color:var(--text2);display:flex;flex-wrap:wrap;gap:.5rem">
+          ${p.topNotes    ? `<span><strong style="color:var(--gold-d)">Salida:</strong> ${sanitize(p.topNotes)}</span>` : ''}
+          ${p.heartNotes  ? `<span><strong style="color:var(--gold-d)">Corazón:</strong> ${sanitize(p.heartNotes)}</span>` : ''}
+          ${p.baseNotes   ? `<span><strong style="color:var(--gold-d)">Fondo:</strong> ${sanitize(p.baseNotes)}</span>` : ''}
+        </div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -235,6 +254,28 @@ async function renderAdminProducts() {
       await CloudProducts.update(id, updates);
       renderAdminProducts().catch(console.error);
       showToast('Mililitros actualizados ✓');
+    });
+  });
+
+  container.querySelectorAll('.btn-save-prices').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = parseInt(btn.dataset.id);
+      const card = btn.closest('.admin-card');
+      const product = await CloudProducts.getById(id);
+      if (!product) return;
+      const newSizes = {};
+      let hasError = false;
+      card.querySelectorAll('.price-inline-input').forEach(inp => {
+        const size  = inp.dataset.size;
+        const price = parseFloat(inp.value);
+        if (isNaN(price) || price < 0) { inp.style.borderColor = '#ef5350'; hasError = true; return; }
+        inp.style.borderColor = 'var(--border-l)';
+        newSizes[size] = price;
+      });
+      if (hasError) { showToast('Los precios deben ser números positivos.'); return; }
+      if (!Object.keys(newSizes).length) return;
+      await CloudProducts.update(id, { sizes: newSizes });
+      showToast('Precios actualizados ✓');
     });
   });
 
@@ -667,7 +708,8 @@ function openProductModal(id = null) {
   document.getElementById('editTopNotes').value    = product?.topNotes ?? '';
   document.getElementById('editHeartNotes').value  = product?.heartNotes ?? '';
   document.getElementById('editBaseNotes').value   = product?.baseNotes ?? '';
-  document.getElementById('editDescription').value = product?.description ?? '';
+  document.getElementById('editDescription').value   = product?.description ?? '';
+  document.getElementById('editContentDesc').value   = product?.contentDescription ?? '';
   const imageUrl = product?.imageUrl ?? '';
   document.getElementById('editImageUrl').value = imageUrl;
   updateImgPreview(imageUrl);
@@ -722,8 +764,9 @@ function setupAdminEvents() {
     const topNotes    = document.getElementById('editTopNotes').value.trim();
     const heartNotes  = document.getElementById('editHeartNotes').value.trim();
     const baseNotes   = document.getElementById('editBaseNotes').value.trim();
-    const description = document.getElementById('editDescription').value.trim();
-    const imageUrl    = document.getElementById('editImageUrl').value.trim();
+    const description    = document.getElementById('editDescription').value.trim();
+    const contentDescription = document.getElementById('editContentDesc').value.trim();
+    const imageUrl       = document.getElementById('editImageUrl').value.trim();
 
     if (!name || !brand) { alert('Nombre y marca son obligatorios.'); return; }
 
@@ -735,7 +778,7 @@ function setupAdminEvents() {
     });
     if (!Object.keys(sizes).length) { alert('Agrega al menos una talla.'); return; }
 
-    const data = { name, brand, type, gender, occasion, olfFamily, topNotes, heartNotes, baseNotes, description, imageUrl, sizes, inStock: true, bottleRemainingMl: 0, bottleTotalMl: 0, featured: false };
+    const data = { name, brand, type, gender, occasion, olfFamily, topNotes, heartNotes, baseNotes, description, contentDescription, imageUrl, sizes, inStock: true, bottleRemainingMl: 0, bottleTotalMl: 0, featured: false };
 
     const saveBtn = document.getElementById('saveProductBtn');
     saveBtn.disabled = true; saveBtn.textContent = 'Guardando...';

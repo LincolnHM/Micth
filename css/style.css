@@ -388,6 +388,7 @@ input, select, textarea { font-family: inherit; }
 .badge-type { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .2rem .6rem; border-radius: 50px; }
 .badge-arabe  { background: rgba(201,168,76,.2); color: var(--gold); border: 1px solid rgba(201,168,76,.35); }
 .badge-dis    { background: rgba(255,255,255,.07); color: var(--text2); border: 1px solid rgba(255,255,255,.12); }
+.badge-entero { background: rgba(180,130,255,.15); color: #c79aff; border: 1px solid rgba(180,130,255,.3); }
 .badge-featured { font-size: .6rem; font-weight: 700; padding: .18rem .55rem; border-radius: 50px; background: rgba(201,168,76,.12); color: var(--gold); border: 1px solid rgba(201,168,76,.25); }
 
 .out-badge { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.55); color: var(--red); font-weight: 700; font-size: .85rem; letter-spacing: .1em; text-transform: uppercase; }
@@ -406,6 +407,8 @@ input, select, textarea { font-family: inherit; }
 .tag-occasion { font-size: .62rem; padding: .15rem .55rem; border-radius: 50px; background: rgba(255,255,255,.05); color: var(--text3); border: 1px solid var(--border-l); }
 
 .product-desc { font-size: .78rem; color: var(--text2); line-height: 1.6; }
+.product-content-desc { font-size: .75rem; font-style: italic; color: var(--gold); letter-spacing: .03em; margin: .2rem 0 .3rem; line-height: 1.4; }
+.product-content-desc::before { content: '📦 '; font-style: normal; }
 
 /* Notas olfativas */
 .notes-toggle {
@@ -426,6 +429,7 @@ input, select, textarea { font-family: inherit; }
 .product-footer { margin-top: auto; padding-top: .75rem; border-top: 1px solid var(--border); }
 .price-from { font-size: .8rem; color: var(--text2); margin-bottom: .55rem; }
 .price-from strong { color: var(--gold); font-size: 1rem; font-family: var(--font-serif); }
+.price-consultar { font-size: .8rem; color: var(--text3); font-style: italic; margin-bottom: .55rem; }
 
 .sizes-row { display: flex; gap: .4rem; flex-wrap: wrap; }
 .size-btn {

@@ -10,6 +10,21 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ── Perfumes Enteros — estilos adicionales ─────────── */
+    .badge-entero { background: rgba(180,130,255,.15); color: #c79aff; border: 1px solid rgba(180,130,255,.3); }
+    .filter-btn-entero { border-color: rgba(180,130,255,.35) !important; }
+    .filter-btn-entero.active { background: rgba(180,130,255,.18) !important; color: #c79aff !important; border-color: rgba(180,130,255,.6) !important; }
+    .product-content-desc {
+      font-size: .75rem; font-style: italic;
+      color: var(--gold); letter-spacing: .03em;
+      margin: .2rem 0 .35rem; line-height: 1.4;
+    }
+    .product-content-desc::before { content: '📦 '; font-style: normal; }
+    .price-consultar { font-size: .82rem; color: var(--text2); font-style: italic; }
+    /* admin badge entero */
+    .badge-entero { background: rgba(180,130,255,.15); color: #c79aff; border: 1px solid rgba(180,130,255,.3); }
+  </style>
 </head>
 <body>
 
@@ -101,6 +116,7 @@
           <button class="filter-btn active" data-filter="all">Todos</button>
           <button class="filter-btn" data-filter="arabe">Árabes</button>
           <button class="filter-btn" data-filter="diseñador">Diseñador</button>
+          <button class="filter-btn filter-btn-entero" data-filter="entero">Perfumes Enteros</button>
           <div class="filter-divider" aria-hidden="true"></div>
           <!-- Familia olfativa -->
           <select class="olf-select" id="olfFamilyFilter" aria-label="Familia olfativa">

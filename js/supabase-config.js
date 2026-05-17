@@ -256,6 +256,7 @@ function productFromDB(row) {
     heartNotes:        row.heart_notes       || '',
     baseNotes:         row.base_notes        || '',
     description:       row.description       || '',
+    contentDescription: row.content_description || '',
     imageUrl:          row.image_url         || '',
     sizes:             row.sizes             || {},
     inStock:           row.in_stock   !== null ? row.in_stock   : true,
@@ -281,6 +282,7 @@ function productToDB(product) {
     heart_notes:         product.heartNotes        || '',
     base_notes:          product.baseNotes         || '',
     description:         product.description       || '',
+    content_description: product.contentDescription || '',
     image_url:           img.startsWith('data:image/svg') ? '' : img,
     sizes:               product.sizes             || {},
     in_stock:            product.inStock    !== undefined ? product.inStock    : true,
@@ -294,6 +296,7 @@ const _PRODUCT_FIELD_MAP = {
   name: 'name', brand: 'brand', type: 'type', gender: 'gender',
   occasion: 'occasion', olfFamily: 'olf_family', topNotes: 'top_notes',
   heartNotes: 'heart_notes', baseNotes: 'base_notes', description: 'description',
+  contentDescription: 'content_description',
   imageUrl: 'image_url', sizes: 'sizes', inStock: 'in_stock',
   featured: 'featured', bottleRemainingMl: 'bottle_remaining_ml',
   bottleTotalMl: 'bottle_total_ml'

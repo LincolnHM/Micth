@@ -203,6 +203,7 @@
             <select id="editType">
               <option value="diseñador">Diseñador</option>
               <option value="arabe">Árabe</option>
+              <option value="entero">Perfume Entero</option>
             </select>
           </div>
           <div class="field">
@@ -231,6 +232,12 @@
         <div class="field">
           <label for="editDescription">Descripción</label>
           <textarea id="editDescription" maxlength="400" placeholder="Describe el perfume: carácter, temporada, etc."></textarea>
+        </div>
+
+        <div class="field" id="contentDescField">
+          <label for="editContentDesc">Contenido del producto <span style="color:var(--text3);font-size:.75rem">(para Perfumes Enteros)</span></label>
+          <input type="text" id="editContentDesc" maxlength="160"
+                 placeholder="Ej: Perfume entero · Frasco 100ml  /  Gift Set · 3 fragancias" autocomplete="off">
         </div>
 
         <!-- Notas olfativas -->
@@ -276,10 +283,13 @@
         <!-- Tallas y precios -->
         <div>
           <div class="sizes-label">
-            <span>Tallas y Precios (ml → S/) *</span>
-            <button type="button" class="btn-add-size" id="addSizeBtn">+ Agregar talla</button>
+            <span id="sizesLabelText">Tallas y Precios *</span>
+            <button type="button" class="btn-add-size" id="addSizeBtn">+ Agregar</button>
           </div>
-          <div id="sizesContainer" style="margin-top:.6rem"></div>
+          <p style="font-size:.73rem;color:var(--text3);margin-bottom:.5rem" id="sizesHint">
+            Para decants: 3ml, 5ml, 10ml → precio. Para enteros: Unidad o Set → precio.
+          </p>
+          <div id="sizesContainer" style="margin-top:.4rem"></div>
         </div>
       </div>
       <div class="product-modal-footer">

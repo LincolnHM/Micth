@@ -149,7 +149,7 @@ function fuzzyMatch(query, text) {
 // ─── Estado del filtro avanzado ───────────────────────────────────────────────
 
 const Filter = {
-  type:      'all',   // all | arabe | diseñador
+  type:      'all',   // all | arabe | diseñador | entero
   gender:    'all',   // all | hombre | mujer | unisex
   occasion:  'all',   // all | dia | noche | ambas
   olfFamily: 'all',   // all | <nombre>
@@ -159,16 +159,18 @@ const Filter = {
 
   apply(products) {
     return products.filter(p => {
-      if (this.type      !== 'all' && p.type      !== this.type)      return false;
+      if (this.type === 'entero') {
+        if (p.type !== 'entero') return false;
+      } else if (this.type !== 'all') {
+        if (p.type !== this.type) return false;
+      }
       if (this.gender    !== 'all' && p.gender    !== this.gender)    return false;
       if (this.occasion  !== 'all' && p.occasion  !== this.occasion && p.occasion !== 'ambas') return false;
       if (this.olfFamily !== 'all' && p.olfFamily !== this.olfFamily) return false;
       if (this.search) {
-        const fields = [p.name, p.brand, p.description || '', p.olfFamily || ''];
+        const fields = [p.name, p.brand, p.description || '', p.olfFamily || '', p.contentDescription || ''];
         const qLow   = this.search.toLowerCase();
-        // Coincidencia exacta primero (rápido)
         if (fields.some(f => f.toLowerCase().includes(qLow))) return true;
-        // Búsqueda fuzzy: tolera errores de tipeo
         return fields.some(f => fuzzyMatch(this.search, f));
       }
       return true;
@@ -250,7 +252,10 @@ function renderProducts() {
 
   // Actualizar el contador de resultados
   const countEl = document.getElementById('resultsCount');
-  if (countEl) countEl.textContent = `${allFiltered.length} fragancia${allFiltered.length !== 1 ? 's' : ''}`;
+  if (countEl) {
+    const label = Filter.type === 'entero' ? 'producto' : 'fragancia';
+    countEl.textContent = `${allFiltered.length} ${label}${allFiltered.length !== 1 ? 's' : ''}`;
+  }
 
   // Botón limpiar filtros
   const clearBtn = document.getElementById('clearFilters');
@@ -268,11 +273,15 @@ function renderProducts() {
   }
 
   grid.innerHTML = products.map(p => {
-    const minPrice = Math.min(...Object.values(p.sizes));
+    const sizeValues = Object.values(p.sizes);
+    const minPrice   = sizeValues.length ? Math.min(...sizeValues) : 0;
+    const isEntero   = p.type === 'entero';
     const genderIcon  = { hombre: '♂', mujer: '♀', unisex: '⚥' }[p.gender] || '';
     const occasionLbl = { dia: 'Día', noche: 'Noche', ambas: 'Día & Noche' }[p.occasion] || '';
+    const typeLabel   = p.type === 'arabe' ? 'Árabe' : isEntero ? 'Entero' : 'Diseñador';
+    const typeBadge   = p.type === 'arabe' ? 'badge-arabe' : isEntero ? 'badge-entero' : 'badge-dis';
 
-    const notesHtml = (p.topNotes || p.heartNotes || p.baseNotes) ? `
+    const notesHtml = (!isEntero && (p.topNotes || p.heartNotes || p.baseNotes)) ? `
       <div class="notes-pyramid" id="notes-${p.id}" style="display:none">
         ${p.topNotes    ? `<div class="note-tier"><span class="note-label">Salida</span><span class="note-val">${sanitize(p.topNotes)}</span></div>` : ''}
         ${p.heartNotes  ? `<div class="note-tier"><span class="note-label">Corazón</span><span class="note-val">${sanitize(p.heartNotes)}</span></div>` : ''}
@@ -281,12 +290,13 @@ function renderProducts() {
 
     const sizesHtml = Object.entries(p.sizes).map(([ml, price]) => {
       const inCart = Cart.items.some(i => i.productId === p.id && i.size === ml);
+      const priceDisplay = price > 0 ? `S/${price}` : 'Consultar';
       return `
       <button class="size-btn ${!p.inStock ? 'disabled' : ''} ${inCart ? 'selected' : ''}"
               data-id="${p.id}" data-size="${escapeAttr(ml)}" data-price="${price}"
-              ${!p.inStock ? 'disabled aria-disabled="true"' : ''}>
+              ${!p.inStock || (isEntero && price === 0) ? 'disabled aria-disabled="true"' : ''}>
         <span class="size-ml">${sanitize(ml)}</span>
-        <span class="size-price">S/${price}</span>
+        <span class="size-price">${priceDisplay}</span>
       </button>`;
     }).join('');
 
@@ -294,6 +304,10 @@ function renderProducts() {
       ? `<img src="${escapeAttr(p.imageUrl)}" alt="${escapeAttr(p.name)}" class="product-img" loading="lazy"
               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : '';
+
+    const priceHtml = minPrice > 0
+      ? `<p class="price-from">${isEntero ? '' : 'Desde '}<strong>S/ ${minPrice}</strong></p>`
+      : `<p class="price-consultar">Consultar precio</p>`;
 
     return `
       <article class="product-card ${!p.inStock ? 'out-of-stock' : ''} ${p.featured ? 'featured' : ''}">
@@ -307,7 +321,7 @@ function renderProducts() {
             </svg>
           </div>
           <div class="product-badges">
-            <span class="badge-type ${p.type === 'arabe' ? 'badge-arabe' : 'badge-dis'}">${p.type === 'arabe' ? 'Árabe' : 'Diseñador'}</span>
+            <span class="badge-type ${typeBadge}">${typeLabel}</span>
             ${p.featured ? '<span class="badge-featured">⭐ Popular</span>' : ''}
           </div>
           ${!p.inStock ? '<div class="out-badge">Agotado</div>' : ''}
@@ -321,6 +335,8 @@ function renderProducts() {
           </div>
 
           <h3 class="product-name">${sanitize(p.name)}</h3>
+
+          ${p.contentDescription ? `<p class="product-content-desc">${sanitize(p.contentDescription)}</p>` : ''}
 
           <div class="product-tags">
             ${occasionLbl ? `<span class="tag-occasion">${occasionLbl}</span>` : ''}
@@ -344,7 +360,7 @@ function renderProducts() {
           ${notesHtml}` : ''}
 
           <div class="product-footer">
-            <p class="price-from">Desde <strong>S/ ${minPrice}</strong></p>
+            ${priceHtml}
             <div class="sizes-row">${sizesHtml}</div>
           </div>
         </div>
