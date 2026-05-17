@@ -314,11 +314,17 @@ const CloudProducts = {
         .order('id', { ascending: true });
       if (error) { console.error('Supabase error:', error); return Products.getAll(); }
       if (!data || !data.length) return this._seedFromDefaults();
-      const products = data.map(row => {
+      const supabaseProducts = data.map(row => {
         const p = productFromDB(row);
         if (!p.imageUrl) p.imageUrl = buildProductImage(p);
         return p;
       });
+      // Incluir productos de DEFAULT_PRODUCTS que todavía no están en Supabase
+      const supabaseIds = new Set(supabaseProducts.map(p => p.id));
+      const localExtras  = DEFAULT_PRODUCTS.filter(p => !supabaseIds.has(p.id));
+      const products = localExtras.length
+        ? [...supabaseProducts, ...localExtras].sort((a, b) => a.id - b.id)
+        : supabaseProducts;
       Products.save(products);
       return products;
     }

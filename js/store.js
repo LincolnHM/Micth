@@ -257,6 +257,10 @@ function renderProducts() {
     countEl.textContent = `${allFiltered.length} ${label}${allFiltered.length !== 1 ? 's' : ''}`;
   }
 
+  // Mostrar/ocultar banner de Perfumes Enteros
+  const banner = document.getElementById('catalogBanner');
+  if (banner) banner.style.display = Filter.type === 'entero' ? 'block' : 'none';
+
   // Botón limpiar filtros
   const clearBtn = document.getElementById('clearFilters');
   if (clearBtn) clearBtn.style.display = Filter.hasActiveFilters() ? 'flex' : 'none';
