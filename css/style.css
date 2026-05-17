@@ -54,7 +54,7 @@ input, select, textarea { font-family: inherit; }
 .header-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: .75rem; }
 
 .logo { display: flex; align-items: center; gap: .5rem; text-decoration: none; min-width: 0; flex-shrink: 1; }
-.logo-text { font-family: var(--font-serif); font-size: 1.45rem; font-weight: 700; color: var(--white); letter-spacing: .01em; }
+.logo-text { font-family: var(--font-serif); font-size: 1.45rem; font-weight: 700; color: var(--white); letter-spacing: .01em; margin: 0; line-height: 1.2; }
 .logo-text span { color: var(--gold); }
 .logo-sub { font-size: .58rem; letter-spacing: .22em; text-transform: uppercase; color: var(--text2); line-height: 1; }
 
