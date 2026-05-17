@@ -316,12 +316,19 @@ const CloudProducts = {
       if (!data || !data.length) return this._seedFromDefaults();
       const supabaseProducts = data.map(row => {
         const p = productFromDB(row);
-        if (!p.imageUrl) p.imageUrl = buildProductImage(p);
+        // La imagen del mapa local siempre tiene prioridad (evita imágenes incorrectas en Supabase)
+        const mapImg = typeof PRODUCT_IMAGE_MAP !== 'undefined' && PRODUCT_IMAGE_MAP[p.name];
+        if (mapImg) p.imageUrl = mapImg;
+        else if (!p.imageUrl) p.imageUrl = buildProductImage(p);
         return p;
       });
       // Incluir productos de DEFAULT_PRODUCTS que todavía no están en Supabase
-      const supabaseIds = new Set(supabaseProducts.map(p => p.id));
-      const localExtras  = DEFAULT_PRODUCTS.filter(p => !supabaseIds.has(p.id));
+      // Se usa localStorage para capturar cambios de stock/featured ya aplicados localmente
+      const supabaseIds   = new Set(supabaseProducts.map(p => p.id));
+      const storedProducts = Products.getAll();
+      const localExtras   = DEFAULT_PRODUCTS
+        .filter(p => !supabaseIds.has(p.id))
+        .map(p => storedProducts.find(sp => sp.id === p.id) || p);
       const products = localExtras.length
         ? [...supabaseProducts, ...localExtras].sort((a, b) => a.id - b.id)
         : supabaseProducts;
@@ -337,7 +344,9 @@ const CloudProducts = {
         .from('productos').select('*').eq('id', id).single();
       if (error || !data) return Products.getById(id);
       const p = productFromDB(data);
-      if (!p.imageUrl) p.imageUrl = buildProductImage(p);
+      const mapImg = typeof PRODUCT_IMAGE_MAP !== 'undefined' && PRODUCT_IMAGE_MAP[p.name];
+      if (mapImg) p.imageUrl = mapImg;
+      else if (!p.imageUrl) p.imageUrl = buildProductImage(p);
       return p;
     }
     return Products.getById(id);
@@ -365,19 +374,15 @@ const CloudProducts = {
   },
 
   async update(id, data) {
+    Products.update(id, data); // localStorage primero
     if (db) {
-      const dbData = { updated_at: new Date().toISOString() };
-      Object.keys(data).forEach(key => {
-        const col = _PRODUCT_FIELD_MAP[key];
-        if (!col) return;
-        let val = data[key];
-        if (key === 'imageUrl' && typeof val === 'string' && val.startsWith('data:image/svg')) val = '';
-        dbData[col] = val;
-      });
-      const { error } = await db.from('productos').update(dbData).eq('id', id);
-      if (error) console.error('Supabase error:', error);
+      const product = Products.getById(id);
+      if (!product) return;
+      // Upsert: si el producto aún no está en Supabase (ej. enteros recién añadidos), lo inserta
+      const row = { ...productToDB(product), updated_at: new Date().toISOString() };
+      const { error } = await db.from('productos').upsert(row, { onConflict: 'id' });
+      if (error) console.error('Supabase upsert error:', error);
     }
-    Products.update(id, data);
   },
 
   async delete(id) {

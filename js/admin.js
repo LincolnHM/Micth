@@ -167,6 +167,20 @@ async function renderAdminProducts() {
           </label>
         </div>
 
+        <!-- Toggle de popular -->
+        <div class="admin-info-row">
+          <label class="toggle-label">
+            <span>Popular:</span>
+            <label class="toggle">
+              <input type="checkbox" class="featured-toggle" data-id="${p.id}" ${p.featured ? 'checked' : ''}>
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="stock-status ${p.featured ? 'in-stock' : 'out-stock'}">
+              ${p.featured ? '⭐ Popular' : 'Normal'}
+            </span>
+          </label>
+        </div>
+
         <!-- Precios editables inline -->
         <div class="sizes-admin">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
@@ -226,6 +240,13 @@ async function renderAdminProducts() {
   container.querySelectorAll('.stock-toggle').forEach(chk => {
     chk.addEventListener('change', async () => {
       await CloudProducts.update(parseInt(chk.dataset.id), { inStock: chk.checked });
+      renderAdminProducts().catch(console.error);
+    });
+  });
+
+  container.querySelectorAll('.featured-toggle').forEach(chk => {
+    chk.addEventListener('change', async () => {
+      await CloudProducts.update(parseInt(chk.dataset.id), { featured: chk.checked });
       renderAdminProducts().catch(console.error);
     });
   });
