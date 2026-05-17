@@ -74,6 +74,7 @@
       </a>
       <nav class="nav" aria-label="Principal">
         <a href="#catalogo">Catálogo</a>
+        <a href="#catalogo" id="navEnteroLink" style="color:#c79aff !important;font-weight:600">Perfumes Enteros</a>
         <a href="nosotros.html">Nosotros</a>
         <a href="contacto.html">Contacto</a>
       </nav>
@@ -98,6 +99,7 @@
     <span class="mobile-menu-brand">MICHT DECANTS</span>
     <nav class="mobile-nav">
       <a href="#catalogo" class="mobile-nav-link">Catálogo</a>
+      <a href="#catalogo" class="mobile-nav-link" id="mobileNavEnteroLink" style="color:#c79aff">✦ Perfumes Enteros</a>
       <a href="nosotros.html" class="mobile-nav-link">Nosotros</a>
       <a href="contacto.html" class="mobile-nav-link">Contacto</a>
     </nav>
@@ -648,6 +650,30 @@
     if (new URLSearchParams(location.search).get('export') === 'pdf') {
       document.addEventListener('catalogLoaded', () => setTimeout(() => window.print(), 500));
     }
+
+    // ── Links "Perfumes Enteros" del nav ──────────────────────────────────────
+    function activarFiltroEntero(e) {
+      e.preventDefault();
+      const btn = document.querySelector('.filter-btn[data-filter="entero"]');
+      if (btn) {
+        btn.click();
+        // Cerrar menú móvil si está abierto
+        const menu = document.getElementById('mobileMenu');
+        if (menu && menu.classList.contains('open')) {
+          menu.classList.remove('open');
+          menu.setAttribute('aria-hidden', 'true');
+          document.getElementById('menuBtn')?.classList.remove('open');
+          document.getElementById('menuBtn')?.setAttribute('aria-expanded', 'false');
+          document.body.style.overflow = '';
+        }
+        // Scroll al catálogo
+        setTimeout(() => {
+          document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
+        }, 80);
+      }
+    }
+    document.getElementById('navEnteroLink')?.addEventListener('click', activarFiltroEntero);
+    document.getElementById('mobileNavEnteroLink')?.addEventListener('click', activarFiltroEntero);
   </script>
 </body>
 </html>
