@@ -1,0 +1,27 @@
+# robots.txt — MICHT Decants (michtdecants.com)
+# Generado: 2026-05-17
+
+# ── Reglas generales para todos los bots ──────────────────────────────────────
+User-agent: *
+Allow: /
+
+# Bloquear el panel de administración
+Disallow: /admin.html
+
+# Bloquear archivos de entorno o configuración sensible (por precaución)
+Disallow: /.env
+Disallow: /package.json
+Disallow: /package-lock.json
+
+# ── Reglas para Googlebot (explícitas para mayor compatibilidad) ───────────────
+User-agent: Googlebot
+Allow: /
+Allow: /css/
+Allow: /js/
+Allow: /img PERFUMES/
+Allow: /imgPerfumesEnteros/
+Allow: /imgGato/
+Disallow: /admin.html
+
+# ── Sitemap ───────────────────────────────────────────────────────────────────
+Sitemap: https://michtdecants.com/sitemap.xml

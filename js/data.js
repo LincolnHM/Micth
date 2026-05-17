@@ -820,8 +820,8 @@ const DEFAULT_PRODUCTS = [
     topNotes: 'Bergamota, Especias doradas',
     heartNotes: 'Sándalo, Madera de oud',
     baseNotes: 'Ámbar dorado, Almizcle',
-    description: 'Nitro Gold: elegancia dorada con sándalo y ámbar. Opulento y distinguido. Próximamente.',
-    imageUrl: '',
+    description: 'Nitro Gold: elegancia dorada con sándalo y ámbar. Opulento y distinguido.',
+    imageUrl: 'img PERFUMES/Nitro Gold.jpg',
     sizes: { '3ml': 12, '5ml': 17, '10ml': 27 },
     inStock: true,
     featured: false,
@@ -1280,6 +1280,7 @@ const PRODUCT_IMAGE_MAP = {
   'Nitro Red':                  'img PERFUMES/Nitro Red.png',
   'Nitro Elixir':               'img PERFUMES/Nitro Elixir.jpg',
   'Nitro Gold':                 'img PERFUMES/Nitro Gold.jpg',
+  'Nitro Red Intensely':        'img PERFUMES/Nitro Red Intensely.jpg',
   'Asad Elixir':                'img PERFUMES/Asad Elixir.webp',
   'Asad Bourbon':               'img PERFUMES/Asad Bourbon.jpg',
   'Mandarin Sky':               'img PERFUMES/Mandarin Sky.webp',
@@ -1431,6 +1432,18 @@ DEFAULT_PRODUCTS.push(
     contentDescription: 'Perfume entero · Frasco original Stallion',
     imageUrl: 'imgPerfumesEnteros/stallion donna intense.avif',
     sizes: { 'Unidad': 0 }, inStock: true, featured: false, bottleRemainingMl: 0, bottleTotalMl: 0
+  },
+  // ─── LATTAFA — NITRO RED INTENSELY ───────────────────────────────────────────
+  {
+    id: 73, name: 'Nitro Red Intensely', brand: 'Lattafa', type: 'arabe',
+    gender: 'hombre', occasion: 'noche', olfFamily: 'Oriental Especiado',
+    topNotes: 'Pimienta roja, Bergamota, Azafrán',
+    heartNotes: 'Rosa, Oud, Madera especiada',
+    baseNotes: 'Ámbar, Cuero, Almizcle oscuro',
+    description: 'Nitro Red Intensely: la versión más intensa y oscura de la serie Nitro. Especias ardientes sobre cuero y ámbar profundo.',
+    imageUrl: 'img PERFUMES/Nitro Red Intensely.jpg',
+    sizes: { '3ml': 14, '5ml': 19, '10ml': 29 },
+    inStock: true, featured: false, bottleRemainingMl: 0, bottleTotalMl: 0
   }
 );
 
