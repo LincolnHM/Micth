@@ -325,6 +325,10 @@ const CloudProducts = {
         const mapImg = typeof PRODUCT_IMAGE_MAP !== 'undefined' && PRODUCT_IMAGE_MAP[p.name];
         if (mapImg) p.imageUrl = mapImg;
         else if (!p.imageUrl) p.imageUrl = buildProductImage(p);
+        // Normalizar paths relativos guardados antes de la corrección de rutas
+        else if (p.imageUrl && !p.imageUrl.startsWith('/') && !p.imageUrl.startsWith('http') && !p.imageUrl.startsWith('data:')) {
+          p.imageUrl = '/' + p.imageUrl;
+        }
         return p;
       });
       // Incluir productos de DEFAULT_PRODUCTS que todavía no están en Supabase
@@ -352,6 +356,9 @@ const CloudProducts = {
       const mapImg = typeof PRODUCT_IMAGE_MAP !== 'undefined' && PRODUCT_IMAGE_MAP[p.name];
       if (mapImg) p.imageUrl = mapImg;
       else if (!p.imageUrl) p.imageUrl = buildProductImage(p);
+      else if (p.imageUrl && !p.imageUrl.startsWith('/') && !p.imageUrl.startsWith('http') && !p.imageUrl.startsWith('data:')) {
+        p.imageUrl = '/' + p.imageUrl;
+      }
       return p;
     }
     return Products.getById(id);

@@ -110,6 +110,12 @@ function setupNav() {
 
 // ─── Sección: Productos ────────────────────────────────────────────────────────
 
+function _normAdminImg(url) {
+  if (!url) return '';
+  if (url.startsWith('/') || url.startsWith('http') || url.startsWith('data:')) return url;
+  return '/' + url;
+}
+
 async function renderAdminProducts() {
   const container = document.getElementById('adminProductList');
   let products    = await CloudProducts.getAll();
@@ -127,6 +133,10 @@ async function renderAdminProducts() {
     );
   }
 
+  // Mapa de SVGs de respaldo indexado por id (evita poner data-URIs enormes en atributos HTML)
+  window._adminImgFallback = {};
+  products.forEach(p => { window._adminImgFallback[p.id] = buildProductImage(p); });
+
   container.innerHTML = products.map(p => {
     const pct    = p.bottleTotalMl > 0 ? Math.round(p.bottleRemainingMl / p.bottleTotalMl * 100) : 0;
     const color  = pct > 50 ? '#4caf50' : pct > 20 ? '#ff9800' : '#ef5350';
@@ -134,13 +144,14 @@ async function renderAdminProducts() {
     const typeBadge = p.type === 'arabe' ? 'badge-arabe' : p.type === 'entero' ? 'badge-entero' : 'badge-dis';
     const gLabel    = { hombre: '♂ Hombre', mujer: '♀ Mujer', unisex: '⚥ Unisex' }[p.gender] || '';
     const isEntero  = p.type === 'entero';
+    const isFull    = p.bottleTotalMl > 0 && p.bottleRemainingMl >= p.bottleTotalMl;
+    const adminImg  = _normAdminImg(p.imageUrl) || buildProductImage(p);
 
     return `
     <div class="admin-card" data-id="${p.id}">
       <div class="admin-card-head">
-        <img src="${escapeAttr(p.imageUrl || buildProductImage(p))}" alt="${escapeAttr(p.name)}" class="admin-product-thumb" loading="lazy"
-             data-fallback="${escapeAttr(buildProductImage(p))}"
-             onerror="this.onerror=null;this.src=this.dataset.fallback"
+        <img src="${escapeAttr(adminImg)}" alt="${escapeAttr(p.name)}" class="admin-product-thumb" loading="lazy"
+             onerror="this.onerror=null;this.src=window._adminImgFallback[${p.id}]"
              style="object-fit:contain"  />
         <div style="flex:1;min-width:0">
           <span class="admin-type-badge ${typeBadge}">${typeLabel}</span>
@@ -184,8 +195,8 @@ async function renderAdminProducts() {
           </label>
         </div>
 
-        <!-- Toggle disponible como entero — solo para decants -->
-        ${!isEntero ? `
+        <!-- Toggle "Como Entero": visible solo cuando el frasco está 100% lleno -->
+        ${!isEntero && isFull ? `
         <div class="admin-info-row">
           <label class="toggle-label">
             <span>Como Entero:</span>
@@ -212,7 +223,10 @@ async function renderAdminProducts() {
               Guardar precio
             </button>
           </div>
-        </div>` : ''}` : ''}
+        </div>` : ''}` : !isEntero && p.bottleTotalMl > 0 ? `
+        <div class="admin-info-row" style="padding:.25rem 0">
+          <span style="font-size:.72rem;color:var(--text3)">💡 Frasco al 100% (${p.bottleRemainingMl}/${p.bottleTotalMl} ml) para habilitar como entero</span>
+        </div>` : ''}
 
         <!-- Precios editables inline -->
         <div class="sizes-admin">
@@ -622,13 +636,39 @@ function addOrderItemRow() {
   const container = document.getElementById('regOrderItems');
   const products  = Products.getAll();
 
-  // Construir lista completa de opciones (producto + talla)
+  // ── Construir lista completa de opciones (producto + talla) ────────────────
+  // Orden: 1) Enteros (tipo entero), 2) Decants disponibles como entero, 3) Decants normales
+  const enteroProds  = products.filter(p => p.type === 'entero');
+  const decantProds  = products.filter(p => p.type !== 'entero');
+
   const allOptions = [];
-  products.forEach(p => {
+
+  // Perfumes Enteros (tipo entero)
+  enteroProds.forEach(p => {
+    Object.entries(p.sizes).forEach(([sizeLabel, price]) => {
+      const priceStr = price > 0 ? `S/${price}` : 'Consultar';
+      allOptions.push({
+        value: `${p.id}|${sizeLabel}|${price}|${p.name}|${p.brand}`,
+        label: `🛍 ENTERO · ${p.brand} – ${p.name} (${sizeLabel}) ${priceStr}`
+      });
+    });
+  });
+
+  // Decants habilitados como entero (opción extra Unidad)
+  decantProds.filter(p => p.availableAsEntero && (p.enteroPrice || 0) > 0).forEach(p => {
+    allOptions.push({
+      value: `${p.id}|Unidad|${p.enteroPrice}|${p.name}|${p.brand}`,
+      label: `🛍 ENTERO · ${p.brand} – ${p.name} (Unidad) S/${p.enteroPrice}`
+    });
+  });
+
+  // Decants normales (todos sus ml)
+  decantProds.forEach(p => {
     Object.entries(p.sizes).forEach(([ml, price]) => {
+      const priceStr = price > 0 ? `S/${price}` : 'Consultar';
       allOptions.push({
         value: `${p.id}|${ml}|${price}|${p.name}|${p.brand}`,
-        label: `${p.brand} – ${p.name} (${ml}) S/${price}`
+        label: `💧 Decant · ${p.brand} – ${p.name} (${ml}) ${priceStr}`
       });
     });
   });

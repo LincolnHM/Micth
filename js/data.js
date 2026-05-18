@@ -1322,7 +1322,7 @@ DEFAULT_PRODUCTS.push(
     topNotes: 'Pomelo, Bergamota, Cítricos', heartNotes: 'Lavanda, Albahaca', baseNotes: 'Cedro, Almizcle, Vetiver',
     description: 'Frasco completo de 9AM Afnan. Fragancia fresca y cítrica ideal para el día.',
     contentDescription: 'Perfume entero · Frasco original Afnan',
-    imageUrl: 'imgPerfumesEnteros/9am.webp',
+    imageUrl: '/imgPerfumesEnteros/9am.webp',
     sizes: { 'Unidad': 0 }, inStock: true, featured: false, bottleRemainingMl: 0, bottleTotalMl: 0
   },
   {
@@ -1331,7 +1331,7 @@ DEFAULT_PRODUCTS.push(
     topNotes: 'Bergamota, Pimienta negra', heartNotes: 'Cardamomo, Rosa', baseNotes: 'Oud, Ámbar, Almizcle',
     description: 'Frasco completo de 9PM Night Out Afnan. Versión oscura y especiada, ideal para la noche.',
     contentDescription: 'Perfume entero · Frasco original Afnan',
-    imageUrl: 'imgPerfumesEnteros/9pm night out.webp',
+    imageUrl: '/imgPerfumesEnteros/9pm night out.webp',
     sizes: { 'Unidad': 0 }, inStock: true, featured: false, bottleRemainingMl: 0, bottleTotalMl: 0
   },
   {
@@ -1340,7 +1340,7 @@ DEFAULT_PRODUCTS.push(
     topNotes: 'Manzana, Bergamota', heartNotes: 'Lavanda, Pachulí', baseNotes: 'Vainilla, Ámbar, Almizcle',
     description: 'Frasco completo de 9PM Afnan. El clásico oriental nocturno inspirado en Stronger With You.',
     contentDescription: 'Perfume entero · Frasco original Afnan',
-    imageUrl: 'imgPerfumesEnteros/9pm.webp',
+    imageUrl: '/imgPerfumesEnteros/9pm.webp',
     sizes: { 'Unidad': 0 }, inStock: true, featured: false, bottleRemainingMl: 0, bottleTotalMl: 0
   },
   {
@@ -1349,7 +1349,7 @@ DEFAULT_PRODUCTS.push(
     topNotes: 'Manzana, Bergamota, Canela', heartNotes: 'Rosa, Oud, Sándalo', baseNotes: 'Ámbar, Vainilla, Almizcle',
     description: 'Frasco completo del Khamrah clásico de Lattafa. Oriental y especiado, viaje sensorial a Arabia.',
     contentDescription: 'Perfume entero · Frasco original Lattafa',
-    imageUrl: 'imgPerfumesEnteros/Khamrah clasico.webp',
+    imageUrl: '/imgPerfumesEnteros/Khamrah clasico.webp',
     sizes: { 'Unidad': 0 }, inStock: true, featured: false, bottleRemainingMl: 0, bottleTotalMl: 0
   },
   {
@@ -1358,7 +1358,7 @@ DEFAULT_PRODUCTS.push(
     topNotes: 'Bergamota, Grosella negra', heartNotes: 'Lavanda, Oud', baseNotes: 'Cedro, Vetiver, Almizcle',
     description: 'Set de regalo Odyssey Mega de Armaf. Incluye perfume y complementos de la línea Odyssey.',
     contentDescription: 'Gift Set · Incluye perfume + accesorios Armaf',
-    imageUrl: 'imgPerfumesEnteros/ODYSSEYMEGAGIFTSET.webp',
+    imageUrl: '/imgPerfumesEnteros/ODYSSEYMEGAGIFTSET.webp',
     sizes: { 'Set': 0 }, inStock: true, featured: true, bottleRemainingMl: 0, bottleTotalMl: 0
   },
   {
@@ -1367,7 +1367,7 @@ DEFAULT_PRODUCTS.push(
     topNotes: 'Frutas tropicales, Bergamota', heartNotes: 'Gardenia, Jazmín, Rosa', baseNotes: 'Almizcle, Cedro, Vainilla',
     description: 'Frasco completo de Aruba Gold Armaf. Luminoso y tropical, ideal para el día.',
     contentDescription: 'Perfume entero · Frasco original Armaf',
-    imageUrl: 'imgPerfumesEnteros/aruba gold.webp',
+    imageUrl: '/imgPerfumesEnteros/aruba gold.webp',
     sizes: { 'Unidad': 0 }, inStock: true, featured: false, bottleRemainingMl: 0, bottleTotalMl: 0
   },
   {
@@ -1376,7 +1376,7 @@ DEFAULT_PRODUCTS.push(
     topNotes: 'Naranja de Sicilia, Pomelo, Limón', heartNotes: 'Flor de naranja, Jazmín', baseNotes: 'Almizcle blanco, Ámbar, Sándalo',
     description: 'Frasco completo de Erba Pura de Xerjoff. Frescura mediterránea de alta perfumería italiana.',
     contentDescription: 'Perfume entero · Frasco original Xerjoff',
-    imageUrl: 'imgPerfumesEnteros/erba pura.jpg',
+    imageUrl: '/imgPerfumesEnteros/erba pura.jpg',
     sizes: { 'Unidad': 0 }, inStock: true, featured: true, bottleRemainingMl: 0, bottleTotalMl: 0
   },
   {
@@ -1385,7 +1385,7 @@ DEFAULT_PRODUCTS.push(
     topNotes: 'Rosa, Azafrán', heartNotes: 'Oud ahumado, Incienso', baseNotes: 'Ámbar, Madera de oud, Almizcle',
     description: 'Frasco completo de Khamrah Dukhan Lattafa. El humo del oud árabe en su forma más pura.',
     contentDescription: 'Perfume entero · Frasco original Lattafa',
-    imageUrl: 'imgPerfumesEnteros/khamrah dukan.webp',
+    imageUrl: '/imgPerfumesEnteros/khamrah dukan.webp',
     sizes: { 'Unidad': 0 }, inStock: true, featured: false, bottleRemainingMl: 0, bottleTotalMl: 0
   },
   {
@@ -1394,7 +1394,7 @@ DEFAULT_PRODUCTS.push(
     topNotes: 'Café árabe, Cardamomo', heartNotes: 'Incienso, Oud', baseNotes: 'Ámbar dorado, Vainilla, Almizcle',
     description: 'Frasco completo de Khamrah Qahwa Lattafa. Inspirado en el café árabe con oud y ámbar dorado.',
     contentDescription: 'Perfume entero · Frasco original Lattafa',
-    imageUrl: 'imgPerfumesEnteros/khamrah qahwa.webp',
+    imageUrl: '/imgPerfumesEnteros/khamrah qahwa.webp',
     sizes: { 'Unidad': 0 }, inStock: true, featured: false, bottleRemainingMl: 0, bottleTotalMl: 0
   },
   {
@@ -1403,7 +1403,7 @@ DEFAULT_PRODUCTS.push(
     topNotes: 'Mandarina, Naranja, Bergamota', heartNotes: 'Lavanda, Geranio', baseNotes: 'Cedro, Almizcle, Ámbar',
     description: 'Frasco completo de Odyssey Mandarin Sky Armaf. Cítrico solar y energético para el día.',
     contentDescription: 'Perfume entero · Frasco original Armaf',
-    imageUrl: 'imgPerfumesEnteros/odyssey mandarin sky.webp',
+    imageUrl: '/imgPerfumesEnteros/odyssey mandarin sky.webp',
     sizes: { 'Unidad': 0 }, inStock: true, featured: false, bottleRemainingMl: 0, bottleTotalMl: 0
   },
   {
@@ -1412,7 +1412,7 @@ DEFAULT_PRODUCTS.push(
     topNotes: 'Manzana, Bergamota', heartNotes: 'Lavanda, Especias', baseNotes: 'Vainilla, Ámbar, Almizcle',
     description: 'Set completo de la línea 9PM de Afnan. El regalo perfecto para los amantes de la perfumería oriental.',
     contentDescription: 'Set de regalo · Incluye fragancias de la línea 9PM',
-    imageUrl: 'imgPerfumesEnteros/set de 9pm.webp',
+    imageUrl: '/imgPerfumesEnteros/set de 9pm.webp',
     sizes: { 'Set': 0 }, inStock: true, featured: true, bottleRemainingMl: 0, bottleTotalMl: 0
   },
   {
@@ -1421,7 +1421,7 @@ DEFAULT_PRODUCTS.push(
     topNotes: 'Menta, Bergamota, Manzana', heartNotes: 'Lavanda, Especias verdes', baseNotes: 'Cedro, Vetiver, Cachemira',
     description: 'Frasco completo de Spectre Malacrite Armaf. Frescura aromática con especias verdes y madera noble.',
     contentDescription: 'Perfume entero · Frasco original Armaf',
-    imageUrl: 'imgPerfumesEnteros/spectre malacrite.webp',
+    imageUrl: '/imgPerfumesEnteros/spectre malacrite.webp',
     sizes: { 'Unidad': 0 }, inStock: true, featured: false, bottleRemainingMl: 0, bottleTotalMl: 0
   },
   {
@@ -1430,7 +1430,7 @@ DEFAULT_PRODUCTS.push(
     topNotes: 'Bergamota, Durazno', heartNotes: 'Rosa turca, Jazmín, Iris', baseNotes: 'Ámbar, Almizcle, Vainilla',
     description: 'Frasco completo de Stallion Donna Intense. Feminidad apasionada con rosa turca sobre ámbar.',
     contentDescription: 'Perfume entero · Frasco original Stallion',
-    imageUrl: 'imgPerfumesEnteros/stallion donna intense.avif',
+    imageUrl: '/imgPerfumesEnteros/stallion donna intense.avif',
     sizes: { 'Unidad': 0 }, inStock: true, featured: false, bottleRemainingMl: 0, bottleTotalMl: 0
   },
   // ─── LATTAFA — NITRO RED INTENSELY ───────────────────────────────────────────
