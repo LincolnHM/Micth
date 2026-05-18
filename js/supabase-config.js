@@ -263,6 +263,8 @@ function productFromDB(row) {
     featured:          row.featured   !== null ? row.featured   : false,
     bottleRemainingMl: parseFloat(row.bottle_remaining_ml) || 0,
     bottleTotalMl:     parseFloat(row.bottle_total_ml)     || 0,
+    availableAsEntero: row.available_as_entero             || false,
+    enteroPrice:       parseFloat(row.entero_price)        || 0,
     date:              row.created_at,
     updatedAt:         row.updated_at
   };
@@ -288,7 +290,9 @@ function productToDB(product) {
     in_stock:            product.inStock    !== undefined ? product.inStock    : true,
     featured:            product.featured   !== undefined ? product.featured   : false,
     bottle_remaining_ml: product.bottleRemainingMl || 0,
-    bottle_total_ml:     product.bottleTotalMl     || 0
+    bottle_total_ml:     product.bottleTotalMl     || 0,
+    available_as_entero: product.availableAsEntero || false,
+    entero_price:        product.enteroPrice       || 0
   };
 }
 
@@ -299,7 +303,8 @@ const _PRODUCT_FIELD_MAP = {
   contentDescription: 'content_description',
   imageUrl: 'image_url', sizes: 'sizes', inStock: 'in_stock',
   featured: 'featured', bottleRemainingMl: 'bottle_remaining_ml',
-  bottleTotalMl: 'bottle_total_ml'
+  bottleTotalMl: 'bottle_total_ml', availableAsEntero: 'available_as_entero',
+  enteroPrice: 'entero_price'
 };
 
 // ─── API de productos (async, usa Supabase si está configurado) ───────────────

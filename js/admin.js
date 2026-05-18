@@ -138,8 +138,10 @@ async function renderAdminProducts() {
     return `
     <div class="admin-card" data-id="${p.id}">
       <div class="admin-card-head">
-        <img src="${escapeAttr(p.imageUrl || buildProductImage(p))}" alt="${escapeAttr(p.name)}" class="admin-product-thumb" loading="lazy" onerror="this.onerror=null;this.style.opacity='.12'"
-             style="object-fit:cover"  />
+        <img src="${escapeAttr(p.imageUrl || buildProductImage(p))}" alt="${escapeAttr(p.name)}" class="admin-product-thumb" loading="lazy"
+             data-fallback="${escapeAttr(buildProductImage(p))}"
+             onerror="this.onerror=null;this.src=this.dataset.fallback"
+             style="object-fit:contain"  />
         <div style="flex:1;min-width:0">
           <span class="admin-type-badge ${typeBadge}">${typeLabel}</span>
           ${p.gender ? `<span style="font-size:.65rem;color:var(--text2);margin-left:.4rem">${gLabel}</span>` : ''}
@@ -181,6 +183,36 @@ async function renderAdminProducts() {
             </span>
           </label>
         </div>
+
+        <!-- Toggle disponible como entero — solo para decants -->
+        ${!isEntero ? `
+        <div class="admin-info-row">
+          <label class="toggle-label">
+            <span>Como Entero:</span>
+            <label class="toggle">
+              <input type="checkbox" class="entero-avail-toggle" data-id="${p.id}" ${p.availableAsEntero ? 'checked' : ''}>
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="stock-status ${p.availableAsEntero ? 'in-stock' : 'out-stock'}">
+              ${p.availableAsEntero ? '🛍 Visible en catálogo enteros' : 'Solo decants'}
+            </span>
+          </label>
+        </div>
+        ${p.availableAsEntero ? `
+        <div class="admin-info-row" style="align-items:center;gap:.75rem;flex-wrap:wrap">
+          <strong style="font-size:.76rem;color:var(--text2)">Precio entero (S/):</strong>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <input type="number" class="entero-price-input" data-id="${p.id}"
+                   value="${p.enteroPrice || 0}" min="0" max="9999" step="0.5"
+                   style="width:72px;background:transparent;border:none;border-bottom:1px solid var(--border-l);color:var(--text);font-size:.82rem;font-weight:600;padding:.1rem .2rem;outline:none;text-align:right"
+                   onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border-l)'">
+            <button class="btn-save-entero-price" data-id="${p.id}"
+                    style="font-size:.72rem;padding:.3rem .75rem;background:var(--gold);color:#111;border:none;border-radius:var(--r);font-weight:700;cursor:pointer;transition:background .2s"
+                    onmouseover="this.style.background='var(--gold-l)'" onmouseout="this.style.background='var(--gold)'">
+              Guardar precio
+            </button>
+          </div>
+        </div>` : ''}` : ''}
 
         <!-- Precios editables inline -->
         <div class="sizes-admin">
@@ -249,6 +281,25 @@ async function renderAdminProducts() {
     chk.addEventListener('change', async () => {
       await CloudProducts.update(parseInt(chk.dataset.id), { featured: chk.checked });
       renderAdminProducts().catch(console.error);
+    });
+  });
+
+  container.querySelectorAll('.entero-avail-toggle').forEach(chk => {
+    chk.addEventListener('change', async () => {
+      await CloudProducts.update(parseInt(chk.dataset.id), { availableAsEntero: chk.checked });
+      renderAdminProducts().catch(console.error);
+    });
+  });
+
+  container.querySelectorAll('.btn-save-entero-price').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id   = parseInt(btn.dataset.id);
+      const card = btn.closest('.admin-card');
+      const inp  = card.querySelector('.entero-price-input');
+      const price = parseFloat(inp?.value ?? '0');
+      if (isNaN(price) || price < 0) { showToast('El precio debe ser un número positivo.'); return; }
+      await CloudProducts.update(id, { enteroPrice: price });
+      showToast('Precio entero guardado ✓');
     });
   });
 

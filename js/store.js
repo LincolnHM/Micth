@@ -160,7 +160,7 @@ const Filter = {
   apply(products) {
     return products.filter(p => {
       if (this.type === 'entero') {
-        if (p.type !== 'entero') return false;
+        if (p.type !== 'entero' && !p.availableAsEntero) return false;
       } else if (this.type !== 'all') {
         if (p.type !== this.type) return false;
       }
@@ -279,13 +279,14 @@ function renderProducts() {
   }
 
   grid.innerHTML = products.map(p => {
-    const sizeValues = Object.values(p.sizes);
-    const minPrice   = sizeValues.length ? Math.min(...sizeValues) : 0;
-    const isEntero   = p.type === 'entero';
+    const showAsEntero = Filter.type === 'entero' && p.availableAsEntero === true && p.type !== 'entero';
+    const isEntero     = p.type === 'entero' || showAsEntero;
+    const sizeValues   = showAsEntero ? [p.enteroPrice || 0] : Object.values(p.sizes);
+    const minPrice     = sizeValues.length ? Math.min(...sizeValues) : 0;
     const genderIcon  = { hombre: '♂', mujer: '♀', unisex: '⚥' }[p.gender] || '';
     const occasionLbl = { dia: 'Día', noche: 'Noche', ambas: 'Día & Noche' }[p.occasion] || '';
-    const typeLabel   = p.type === 'arabe' ? 'Árabe' : isEntero ? 'Entero' : 'Diseñador';
-    const typeBadge   = p.type === 'arabe' ? 'badge-arabe' : isEntero ? 'badge-entero' : 'badge-dis';
+    const typeLabel   = showAsEntero ? 'Entero' : (p.type === 'arabe' ? 'Árabe' : isEntero ? 'Entero' : 'Diseñador');
+    const typeBadge   = showAsEntero ? 'badge-entero' : (p.type === 'arabe' ? 'badge-arabe' : isEntero ? 'badge-entero' : 'badge-dis');
 
     const notesHtml = (!isEntero && (p.topNotes || p.heartNotes || p.baseNotes)) ? `
       <div class="notes-pyramid" id="notes-${p.id}" style="display:none">
@@ -294,17 +295,29 @@ function renderProducts() {
         ${p.baseNotes   ? `<div class="note-tier"><span class="note-label">Fondo</span><span class="note-val">${sanitize(p.baseNotes)}</span></div>` : ''}
       </div>` : '';
 
-    const sizesHtml = Object.entries(p.sizes).map(([ml, price]) => {
-      const inCart = Cart.items.some(i => i.productId === p.id && i.size === ml);
-      const priceDisplay = price > 0 ? `S/${price}` : 'Consultar';
-      return `
+    const sizesHtml = showAsEntero
+      ? (() => {
+          const price  = p.enteroPrice || 0;
+          const inCart = Cart.items.some(i => i.productId === p.id && i.size === 'Unidad');
+          return `
+      <button class="size-btn ${!p.inStock ? 'disabled' : ''} ${inCart ? 'selected' : ''}"
+              data-id="${p.id}" data-size="Unidad" data-price="${price}"
+              ${!p.inStock || price === 0 ? 'disabled aria-disabled="true"' : ''}>
+        <span class="size-ml">Unidad</span>
+        <span class="size-price">${price > 0 ? `S/${price}` : 'Consultar'}</span>
+      </button>`;
+        })()
+      : Object.entries(p.sizes).map(([ml, price]) => {
+          const inCart = Cart.items.some(i => i.productId === p.id && i.size === ml);
+          const priceDisplay = price > 0 ? `S/${price}` : 'Consultar';
+          return `
       <button class="size-btn ${!p.inStock ? 'disabled' : ''} ${inCart ? 'selected' : ''}"
               data-id="${p.id}" data-size="${escapeAttr(ml)}" data-price="${price}"
               ${!p.inStock || (isEntero && price === 0) ? 'disabled aria-disabled="true"' : ''}>
         <span class="size-ml">${sanitize(ml)}</span>
         <span class="size-price">${priceDisplay}</span>
       </button>`;
-    }).join('');
+        }).join('');
 
     const imgHtml = p.imageUrl
       ? `<img src="${escapeAttr(p.imageUrl)}" alt="${escapeAttr(p.name)}" class="product-img" loading="lazy"
