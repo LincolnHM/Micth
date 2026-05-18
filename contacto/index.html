@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ── SEO ───────────────────────────────────────────────────────────────── -->
+  <title>Contacto — MICHT Decants | WhatsApp +51 917 452 643</title>
+  <meta name="description" content="Contáctanos por WhatsApp al +51 917 452 643. Respondemos en minutos. Pedidos de decants de perfumes árabes y de diseñador con envío a todo el Perú.">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="MICHT Decants">
+  <link rel="canonical" href="https://michtdecants.com/contacto/">
+
+  <!-- ── Open Graph ────────────────────────────────────────────────────────── -->
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://michtdecants.com/contacto/">
+  <meta property="og:site_name"   content="MICHT Decants">
+  <meta property="og:locale"      content="es_PE">
+  <meta property="og:title"       content="Contacto — MICHT Decants">
+  <meta property="og:description" content="Contáctanos por WhatsApp al +51 917 452 643. Pedidos de decants con envío a todo el Perú.">
+  <meta property="og:image"       content="https://michtdecants.com/imgGato/web.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="../imgGato/web.png">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* ── Página Contacto ─────────────────────────── */
+    .contact-page {
+      min-height: calc(100vh - 64px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 5rem 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .contact-page::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 800px; height: 500px;
+      background: radial-gradient(ellipse, rgba(201,168,76,.07), transparent 65%);
+      pointer-events: none;
+    }
+
+    /* Hero label */
+    .cp-eyebrow {
+      font-size: .6rem;
+      letter-spacing: .35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      text-align: center;
+      opacity: .8;
+    }
+    .cp-headline {
+      font-family: var(--font-serif);
+      font-size: clamp(2.2rem, 6vw, 3.5rem);
+      font-weight: 700;
+      color: var(--white);
+      text-align: center;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+    .cp-headline span { color: var(--gold); }
+    .cp-sub {
+      font-size: .95rem;
+      color: var(--text2);
+      text-align: center;
+      max-width: 420px;
+      margin: 0 auto 3.5rem;
+      line-height: 1.7;
+    }
+
+    /* Cards grid */
+    .cp-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      max-width: 860px;
+      width: 100%;
+      margin-bottom: 3rem;
+    }
+    .cp-card {
+      background: rgba(20,20,20,.75);
+      backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid rgba(201,168,76,.18);
+      border-radius: 20px;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 0 50px rgba(201,168,76,.05), inset 0 1px 0 rgba(201,168,76,.1);
+      transition: border-color .3s, transform .3s cubic-bezier(.22,1,.36,1);
+    }
+    .cp-card:hover {
+      border-color: rgba(201,168,76,.4);
+      transform: translateY(-6px);
+    }
+    .cp-card-icon {
+      width: 52px; height: 52px;
+      background: rgba(201,168,76,.1);
+      border: 1px solid rgba(201,168,76,.25);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.2rem;
+      font-size: 1.4rem;
+    }
+    .cp-card-title {
+      font-family: var(--font-serif);
+      font-size: 1.05rem;
+      color: var(--white);
+      margin-bottom: .5rem;
+    }
+    .cp-card-text {
+      font-size: .82rem;
+      color: var(--text2);
+      line-height: 1.65;
+      margin-bottom: 1.2rem;
+    }
+    .cp-card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--gold);
+      text-decoration: none;
+      letter-spacing: .04em;
+      transition: color .2s, gap .2s;
+    }
+    .cp-card-link:hover { color: var(--gold-l); gap: .7rem; }
+    .cp-card-link svg { width: 14px; height: 14px; }
+
+    /* Main CTA WhatsApp */
+    .cp-wa-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .75rem;
+      background: #25d366;
+      color: #fff;
+      font-weight: 700;
+      padding: 1rem 2.6rem;
+      border-radius: 50px;
+      font-size: .95rem;
+      text-decoration: none;
+      transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s, background .2s;
+      box-shadow: 0 6px 28px rgba(37,211,102,.3);
+      margin-bottom: 3.5rem;
+    }
+    .cp-wa-btn:hover {
+      transform: translateY(-5px) scale(1.04);
+      box-shadow: 0 14px 40px rgba(37,211,102,.42);
+      background: #1ebe5d;
+      color: #fff;
+    }
+    .cp-wa-btn svg { flex-shrink: 0; }
+
+    /* Location badge */
+    .cp-location {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .75rem;
+      color: var(--text3);
+      letter-spacing: .06em;
+      padding: .45rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      margin-bottom: 2.5rem;
+    }
+    .cp-location svg { width: 14px; height: 14px; stroke: var(--gold); fill: none; }
+
+    /* Social links row */
+    .cp-social-row {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .cp-social-link {
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      font-size: .8rem;
+      color: var(--text2);
+      text-decoration: none;
+      padding: .5rem .9rem;
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      transition: all .25s;
+    }
+    .cp-social-link:hover { border-color: var(--gold-d); color: var(--gold); }
+    .cp-social-link svg { width: 15px; height: 15px; fill: currentColor; }
+    .cp-social-link.wa:hover  { border-color: #25d366; color: #25d366; }
+    .cp-social-link.ig:hover  { border-color: #e1306c; color: #e1306c; }
+    .cp-social-link.fb:hover  { border-color: #1877f2; color: #1877f2; }
+
+    /* Back link */
+    .cp-back {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .75rem;
+      color: var(--text3);
+      text-decoration: none;
+      letter-spacing: .06em;
+      transition: color .2s;
+      margin-top: 2rem;
+    }
+    .cp-back:hover { color: var(--gold); }
+    .cp-back svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+
+    /* ── Mobile responsive ──────────────────────────────── */
+    @media (max-width: 600px) {
+      .contact-page { padding: 2.5rem .75rem 2rem; justify-content: flex-start; }
+      .cp-headline { font-size: clamp(1.75rem, 9vw, 2.4rem); }
+      .cp-sub { font-size: .86rem; margin-bottom: 2rem; }
+      .cp-wa-btn { width: 100%; justify-content: center; padding: .9rem 1rem; font-size: .88rem; margin-bottom: 2rem; }
+      .cp-location { font-size: .68rem; flex-wrap: wrap; justify-content: center; text-align: center; margin-bottom: 2rem; }
+      .cp-cards { grid-template-columns: 1fr; gap: 1rem; margin-bottom: 2rem; }
+      .cp-card { padding: 1.4rem 1.1rem; }
+      .cp-social-row { gap: .65rem; }
+      .cp-social-link { font-size: .75rem; padding: .45rem .75rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Animated background blobs -->
+  <div class="bg-blobs" aria-hidden="true">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <header class="header">
+    <div class="header-inner container">
+      <a href="../" class="logo" aria-label="MICHT Decants — inicio">
+        <div>
+          <p class="logo-text">MICHT<span> Decants</span></p>
+          <p class="logo-sub">Perfumería Árabe & Diseñador</p>
+        </div>
+      </a>
+      <nav class="nav" aria-label="Principal">
+        <a href="../#catalogo">Catálogo</a>
+        <a href="../nosotros/">Nosotros</a>
+        <a href="../contacto/" style="color:var(--gold)">Contacto</a>
+      </nav>
+      <div class="header-right">
+        <a href="../#catalogo"
+           style="display:inline-flex;align-items:center;gap:.45rem;background:var(--gold);color:#000;font-weight:700;font-size:.78rem;padding:.45rem 1rem;border-radius:var(--r);transition:background .2s"
+           onmouseover="this.style.background='#e8c96a'" onmouseout="this.style.background='var(--gold)'">
+          Ver tienda →
+        </a>
+        <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobileMenu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Menú móvil ────────────────────────────────────────────────────────── -->
+  <div class="mobile-menu" id="mobileMenu" aria-hidden="true" role="dialog" aria-label="Menú de navegación">
+    <span class="mobile-menu-brand">MICHT DECANTS</span>
+    <nav class="mobile-nav">
+      <a href="../#catalogo" class="mobile-nav-link">Catálogo</a>
+      <a href="../nosotros/" class="mobile-nav-link">Nosotros</a>
+      <a href="../contacto/" class="mobile-nav-link" style="color:var(--gold)">Contacto</a>
+    </nav>
+    <div class="mobile-menu-footer">Soritor, Perú · @michtdecants</div>
+  </div>
+
+  <!-- ── Página de Contacto ─────────────────────────────────────────────── -->
+  <main class="contact-page">
+    <div class="container" style="display:flex;flex-direction:column;align-items:center">
+
+      <p class="cp-eyebrow">MICHT Decants · Soritor, Perú</p>
+      <h1 class="cp-headline">¿Hablamos sobre<br><span>tu fragancia?</span></h1>
+      <p class="cp-sub">Estamos en Soritor, San Martín. Respondemos en minutos por WhatsApp y con gusto te asesoramos para encontrar tu decant perfecto.</p>
+
+      <!-- Botón WhatsApp principal -->
+      <a href="https://wa.me/51917452643" target="_blank" rel="noopener noreferrer" class="cp-wa-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="22" height="22" aria-hidden="true">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+        Escribir al +51 917 452 643
+      </a>
+
+      <!-- Badge ubicación -->
+      <div class="cp-location">
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+        Jr. Las Flores N°620, Soritor · San Martín, Perú
+      </div>
+
+      <!-- Cards de info -->
+      <div class="cp-cards">
+        <div class="cp-card">
+          <div class="cp-card-icon">📱</div>
+          <p class="cp-card-title">WhatsApp</p>
+          <p class="cp-card-text">Nuestro canal principal. Te respondemos en minutos, todos los días.</p>
+          <a href="https://wa.me/51917452643" target="_blank" rel="noopener noreferrer" class="cp-card-link">
+            +51 917 452 643
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+
+        <div class="cp-card">
+          <div class="cp-card-icon">🏪</div>
+          <p class="cp-card-title">Recojo en Tienda</p>
+          <p class="cp-card-text">Jr. Las Flores N°620, Soritor — San Martín. Coordina tu hora de recojo por WhatsApp.</p>
+          <a href="https://wa.me/51917452643?text=Hola,%20quiero%20coordinar%20mi%20recojo%20en%20tienda" target="_blank" rel="noopener noreferrer" class="cp-card-link">
+            Coordinar recojo
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+
+        <div class="cp-card">
+          <div class="cp-card-icon">📦</div>
+          <p class="cp-card-title">Envíos Shalom</p>
+          <p class="cp-card-text">Enviamos a todo el Perú vía Shalom. Seguro, rápido y con seguimiento.</p>
+          <a href="https://wa.me/51917452643?text=Hola,%20quiero%20información%20sobre%20el%20envío%20a%20mi%20ciudad" target="_blank" rel="noopener noreferrer" class="cp-card-link">
+            Consultar envío
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Social -->
+      <div class="cp-social-row">
+        <a href="https://wa.me/51917452643" target="_blank" rel="noopener noreferrer" class="cp-social-link wa" aria-label="WhatsApp">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          WhatsApp
+        </a>
+        <a href="https://www.facebook.com/profile.php?id=100082908725647" target="_blank" rel="noopener noreferrer" class="cp-social-link fb" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M23.9981 11.9991C23.9981 5.37216 18.626 0 11.9991 0C5.37216 0 0 5.37216 0 11.9991C0 17.9882 4.38789 22.9522 10.1242 23.8524V15.4676H7.07758V11.9991H10.1242V9.35553C10.1242 6.34826 11.9156 4.68714 14.6564 4.68714C15.9692 4.68714 17.3424 4.92149 17.3424 4.92149V7.87439H15.8294C14.3388 7.87439 13.8739 8.79933 13.8739 9.74824V11.9991H17.2018L16.6698 15.4676H13.8739V23.8524C19.6103 22.9522 23.9981 17.9882 23.9981 11.9991Z"/>
+          </svg>
+          Facebook
+        </a>
+        <a href="https://www.instagram.com/l1ncoln_photo/" target="_blank" rel="noopener noreferrer" class="cp-social-link ig" aria-label="Instagram">
+          <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599s.453.546.598.92c.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92s.546-.453.92-.598c.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334"/>
+          </svg>
+          Instagram
+        </a>
+      </div>
+
+      <a href="../" class="cp-back">
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Volver al Catálogo
+      </a>
+    </div>
+  </main>
+
+  <!-- ── Footer ────────────────────────────────────────────────────────────── -->
+  <footer class="footer">
+    <p class="footer-logo">MICHT<span> Decants</span></p>
+    <p>Perfumería árabe y diseñador · Decants auténticos · Soritor, Perú</p>
+    <p>© 2026 MICHT Decants · Todos los derechos reservados</p>
+  </footer>
+
+  <script>
+    (function () {
+      const btn  = document.getElementById('menuBtn');
+      const menu = document.getElementById('mobileMenu');
+      function openMenu()  { menu.classList.add('open'); menu.setAttribute('aria-hidden','false'); btn.classList.add('open'); btn.setAttribute('aria-expanded','true');  document.body.style.overflow = 'hidden'; }
+      function closeMenu() { menu.classList.remove('open'); menu.setAttribute('aria-hidden','true');  btn.classList.remove('open'); btn.setAttribute('aria-expanded','false'); document.body.style.overflow = ''; }
+      btn.addEventListener('click', () => menu.classList.contains('open') ? closeMenu() : openMenu());
+      menu.querySelectorAll('.mobile-nav-link').forEach(l => l.addEventListener('click', closeMenu));
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && menu.classList.contains('open')) closeMenu(); });
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <script>
+    if (typeof gsap !== 'undefined') {
+      gsap.registerPlugin(ScrollTrigger);
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
+        tl.from('.logo',  { opacity: 0, y: -22, duration: 0.7 }, 0.05)
+          .from('.nav a', { opacity: 0, y: -16, stagger: 0.08, duration: 0.5 }, 0.2);
+
+        gsap.from('.cp-eyebrow',   { opacity: 0, y: 20, duration: 0.6, ease: 'power3.out', delay: 0.15 });
+        gsap.from('.cp-headline',  { opacity: 0, y: 30, duration: 0.75, ease: 'power3.out', delay: 0.28 });
+        gsap.from('.cp-sub',       { opacity: 0, y: 20, duration: 0.65, ease: 'power3.out', delay: 0.42 });
+        gsap.from('.cp-wa-btn',    { opacity: 0, y: 30, scale: 0.9, duration: 0.8, ease: 'expo.out', delay: 0.55 });
+        gsap.from('.cp-location',  { opacity: 0, y: 16, duration: 0.55, ease: 'power3.out', delay: 0.68 });
+        gsap.from('.cp-card',      { opacity: 0, y: 45, scale: 0.93, stagger: 0.1, duration: 0.75, ease: 'power3.out', delay: 0.75 });
+        gsap.from('.cp-social-row',{ opacity: 0, y: 20, duration: 0.6, ease: 'power3.out', delay: 1.1 });
+      }
+    }
+  </script>
+</body>
+</html>

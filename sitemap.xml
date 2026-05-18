@@ -22,7 +22,7 @@
 
   <!-- Nosotros -->
   <url>
-    <loc>https://michtdecants.com/nosotros.html</loc>
+    <loc>https://michtdecants.com/nosotros/</loc>
     <lastmod>2026-05-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -30,7 +30,7 @@
 
   <!-- Contacto -->
   <url>
-    <loc>https://michtdecants.com/contacto.html</loc>
+    <loc>https://michtdecants.com/contacto/</loc>
     <lastmod>2026-05-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
