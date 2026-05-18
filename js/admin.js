@@ -138,7 +138,10 @@ async function renderAdminProducts() {
     return `
     <div class="admin-card" data-id="${p.id}">
       <div class="admin-card-head">
-        ${p.imageUrl ? `<img src="${escapeAttr(p.imageUrl)}" alt="${escapeAttr(p.name)}" class="admin-product-thumb" loading="lazy" onerror="this.style.display='none'">` : ''}
+        ${p.imageUrl
+          ? `<img src="${escapeAttr(p.imageUrl)}" alt="${escapeAttr(p.name)}" class="admin-product-thumb" loading="lazy" onerror="this.onerror=null;this.style.opacity='.12'">`
+          : `<div class="admin-thumb-placeholder" aria-hidden="true" title="Sin imagen"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>`
+        }
         <div style="flex:1;min-width:0">
           <span class="admin-type-badge ${typeBadge}">${typeLabel}</span>
           ${p.gender ? `<span style="font-size:.65rem;color:var(--text2);margin-left:.4rem">${gLabel}</span>` : ''}

@@ -875,7 +875,31 @@ input, select, textarea { font-family: inherit; }
 /* Admin card */
 .admin-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-lg); margin-bottom: .85rem; overflow: hidden; }
 .admin-card-head { display: flex; align-items: flex-start; justify-content: space-between; padding: .9rem 1.1rem; border-bottom: 1px solid var(--border); gap: .75rem; }
-.admin-product-thumb { width: 64px; height: 64px; object-fit: contain; background: #fff; border-radius: var(--r); flex-shrink: 0; padding: 4px; }
+
+/* Miniatura del producto — fondo oscuro para que los frascos blancos sean visibles */
+.admin-product-thumb {
+  width: 82px; height: 104px;
+  object-fit: contain;
+  background: rgba(255,255,255,.05);        /* fondo oscuro translúcido */
+  border: 1px solid rgba(201,168,76,.2);    /* borde dorado sutil */
+  border-radius: var(--r);
+  flex-shrink: 0;
+  padding: 6px;
+  display: block;
+}
+/* Placeholder cuando no hay imagen o la imagen falla al cargar */
+.admin-thumb-placeholder {
+  width: 82px; height: 104px;
+  background: rgba(255,255,255,.03);
+  border: 1px dashed rgba(201,168,76,.22);
+  border-radius: var(--r);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.admin-thumb-placeholder svg { width: 30px; height: 30px; stroke: rgba(201,168,76,.3); fill: none; stroke-width: 1.2; }
+
 .admin-type-badge { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .15rem .55rem; border-radius: 50px; display: inline-block; margin-bottom: .3rem; }
 .admin-product-name { font-family: var(--font-serif); color: var(--white); font-size: .95rem; }
 .admin-card-actions { display: flex; gap: .4rem; flex-shrink: 0; }
@@ -1172,8 +1196,10 @@ input, select, textarea { font-family: inherit; }
   .products-grid { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
   .product-name  { font-size: .9rem; }
   .filter-row-2  { gap: .5rem; }
-  .admin-card-head { flex-direction: column; }
+  .admin-card-head { flex-direction: row; flex-wrap: wrap; }
   .admin-card-actions { width: 100%; justify-content: flex-end; }
+  /* En móvil la miniatura va a la izquierda al lado del nombre */
+  .admin-product-thumb, .admin-thumb-placeholder { width: 68px; height: 86px; }
   .ml-controls   { flex-direction: column; align-items: flex-start; }
   .orders-table th:nth-child(4),
   .orders-table td:nth-child(4) { display: none; }
