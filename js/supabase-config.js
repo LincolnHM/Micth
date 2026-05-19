@@ -319,6 +319,8 @@ const CloudProducts = {
         .order('id', { ascending: true });
       if (error) { console.error('Supabase error:', error); return Products.getAll(); }
       if (!data || !data.length) return this._seedFromDefaults();
+      // Leer localStorage antes del map para preservar campos que aún no están en Supabase
+      const storedProducts = Products.getAll();
       const supabaseProducts = data.map(row => {
         const p = productFromDB(row);
         // La imagen del mapa local siempre tiene prioridad (evita imágenes incorrectas en Supabase)
@@ -329,12 +331,17 @@ const CloudProducts = {
         else if (p.imageUrl && !p.imageUrl.startsWith('/') && !p.imageUrl.startsWith('http') && !p.imageUrl.startsWith('data:')) {
           p.imageUrl = '/' + p.imageUrl;
         }
+        // Si las columnas aún no existen en Supabase, preservar valores de localStorage
+        if (!('available_as_entero' in row)) {
+          const cached = storedProducts.find(sp => sp.id === p.id);
+          p.availableAsEntero = cached?.availableAsEntero || false;
+          p.enteroPrice       = cached?.enteroPrice       || 0;
+        }
         return p;
       });
       // Incluir productos de DEFAULT_PRODUCTS que todavía no están en Supabase
       // Se usa localStorage para capturar cambios de stock/featured ya aplicados localmente
       const supabaseIds   = new Set(supabaseProducts.map(p => p.id));
-      const storedProducts = Products.getAll();
       const localExtras   = DEFAULT_PRODUCTS
         .filter(p => !supabaseIds.has(p.id))
         .map(p => storedProducts.find(sp => sp.id === p.id) || p);
@@ -358,6 +365,11 @@ const CloudProducts = {
       else if (!p.imageUrl) p.imageUrl = buildProductImage(p);
       else if (p.imageUrl && !p.imageUrl.startsWith('/') && !p.imageUrl.startsWith('http') && !p.imageUrl.startsWith('data:')) {
         p.imageUrl = '/' + p.imageUrl;
+      }
+      if (!('available_as_entero' in data)) {
+        const cached = Products.getById(id);
+        p.availableAsEntero = cached?.availableAsEntero || false;
+        p.enteroPrice       = cached?.enteroPrice       || 0;
       }
       return p;
     }
@@ -390,10 +402,16 @@ const CloudProducts = {
     if (db) {
       const product = Products.getById(id);
       if (!product) return;
-      // Upsert: si el producto aún no está en Supabase (ej. enteros recién añadidos), lo inserta
       const row = { ...productToDB(product), updated_at: new Date().toISOString() };
-      const { error } = await db.from('productos').upsert(row, { onConflict: 'id' });
-      if (error) console.error('Supabase upsert error:', error);
+      let { error } = await db.from('productos').upsert(row, { onConflict: 'id' });
+      // Si falla por columnas que aún no existen en Supabase, reintentar sin esas columnas
+      if (error && error.message && error.message.includes('available_as_entero')) {
+        const { available_as_entero, entero_price, ...rowSafe } = row;
+        const res2 = await db.from('productos').upsert(rowSafe, { onConflict: 'id' });
+        if (res2.error) console.error('Supabase upsert error:', res2.error);
+      } else if (error) {
+        console.error('Supabase upsert error:', error);
+      }
     }
   },
 
