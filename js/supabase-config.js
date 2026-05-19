@@ -162,10 +162,23 @@ const CloudOrders = {
       if (order && order.status !== 'pagado') {
         for (const item of (order.items || [])) {
           const pid     = parseInt(item.productId);
-          // Leer siempre desde Supabase para tener el valor más actualizado
           const product = await CloudProducts.getById(pid);
           if (!product) continue;
-          const mlUsed    = parseInt(item.size) * (item.quantity || 1);
+
+          // Perfume entero (tipo entero) → marcar agotado
+          if (product.type === 'entero') {
+            if (product.inStock) await CloudProducts.update(pid, { inStock: false });
+            continue;
+          }
+
+          // Decant vendido como entero (Unidad) → limpiar estado
+          if (product.availableAsEntero && item.size === 'Unidad') {
+            await CloudProducts.update(pid, { availableAsEntero: false, bottleRemainingMl: 0, inStock: false });
+            continue;
+          }
+
+          // Decant normal → descontar ml
+          const mlUsed = parseInt(item.size) * (item.quantity || 1);
           if (isNaN(mlUsed) || mlUsed <= 0) continue;
           const newRemain = Math.max(0, (product.bottleRemainingMl || 0) - mlUsed);
           await CloudProducts.update(pid, { bottleRemainingMl: newRemain });

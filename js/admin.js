@@ -766,9 +766,28 @@ async function saveManualOrder() {
 
   try {
     await CloudOrders.create({ customerName: name, customerPhone: phone, customerDni: dni, deliveryType: dtype, notes, items, total });
+
+    // Descontar stock de perfumes enteros al registrar el pedido
+    const agotados = [];
+    for (const item of items) {
+      const product = Products.getById(item.productId);
+      if (!product) continue;
+      if (product.type === 'entero') {
+        await CloudProducts.update(item.productId, { inStock: false });
+        agotados.push(product.name);
+      } else if (product.availableAsEntero && item.size === 'Unidad') {
+        await CloudProducts.update(item.productId, { availableAsEntero: false, bottleRemainingMl: 0, inStock: false });
+        agotados.push(product.name);
+      }
+    }
+
     document.getElementById('registerOrderModal').classList.remove('open');
     await renderOrdersSection();
-    showToast('Pedido registrado correctamente ✓');
+    renderAdminProducts().catch(console.error);
+    const msg = agotados.length
+      ? `Pedido registrado ✓  |  Agotado: ${agotados.join(', ')}`
+      : 'Pedido registrado correctamente ✓';
+    showToast(msg);
   } catch (err) {
     console.error(err);
     showToast('Error al guardar el pedido. Inténtalo de nuevo.');
