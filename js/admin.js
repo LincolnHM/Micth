@@ -490,6 +490,10 @@ async function renderOrdersSection() {
             ).join('')}
           </select>
           <button class="btn-order-detail" data-id="${escapeAttr(o.id)}">Ver</button>
+          <button class="btn-delete-order" data-id="${escapeAttr(o.id)}"
+                  style="font-size:.72rem;padding:.3rem .6rem;background:transparent;color:#ef5350;border:1px solid #ef5350;border-radius:var(--r);cursor:pointer;font-weight:600;transition:background .15s,color .15s"
+                  onmouseover="this.style.background='#ef5350';this.style.color='#fff'"
+                  onmouseout="this.style.background='transparent';this.style.color='#ef5350'">Borrar</button>
         </div>
       </td>
     </tr>`;
@@ -547,6 +551,27 @@ async function renderOrdersSection() {
   // Ver detalle
   tbody.querySelectorAll('.btn-order-detail').forEach(btn => {
     btn.addEventListener('click', () => openOrderDetail(btn.dataset.id).catch(console.error));
+  });
+
+  // Eliminar pedido
+  tbody.querySelectorAll('.btn-delete-order').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      showConfirmModal(
+        `¿Eliminar el pedido ${id}? Esta acción no se puede deshacer.`,
+        async () => {
+          try {
+            await CloudOrders.delete(id);
+            renderOrdersSection().catch(console.error);
+            showToast(`Pedido ${id} eliminado.`);
+          } catch (err) {
+            console.error(err);
+            showToast('Error al eliminar el pedido.');
+          }
+        },
+        () => {}
+      );
+    });
   });
 }
 
