@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- ── Página principal — todos los decants ─────────────────────────────── -->
+  <url>
+    <loc>https://michtdecants.com/</loc>
+
+    <!-- Logo / Marca -->
+    <image:image>
+      <image:loc>https://michtdecants.com/imgGato/web.png</image:loc>
+      <image:title>Logo Micht Decants — Tienda de Decants en Perú</image:title>
+      <image:caption>Logo oficial de Micht Decants, tienda de decants de perfumes árabes y de diseñador en Perú.</image:caption>
+    </image:image>
+
+    <!-- ── DISEÑADOR ──────────────────────────────────────────────────────── -->
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Aventus%20Creed.png</image:loc>
+      <image:title>Decant Creed Aventus — Micht Decants Perú</image:title>
+      <image:caption>Decant Creed Aventus 3ml, 5ml y 10ml. Perfume masculino amaderado frutal. Disponible en Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/erba%20pura.webp</image:loc>
+      <image:title>Decant Erba Pura Xerjoff — Micht Decants Perú</image:title>
+      <image:caption>Decant Erba Pura de Xerjoff 3ml, 5ml y 10ml. Fragancia unisex floral amaderada. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Le%20Beau%20Le%20Parfum.webp</image:loc>
+      <image:title>Decant Le Beau Le Parfum Jean Paul Gaultier — Micht Decants</image:title>
+      <image:caption>Decant Le Beau Le Parfum Jean Paul Gaultier 3ml, 5ml y 10ml. Oriental cítrico masculino. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Le%20Male%20Elixir.webp</image:loc>
+      <image:title>Decant Le Male Elixir Jean Paul Gaultier — Micht Decants</image:title>
+      <image:caption>Decant Le Male Elixir Jean Paul Gaultier 3ml, 5ml y 10ml. Oriental especiado para noche. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Le%20Male%20Le%20Parfum.webp</image:loc>
+      <image:title>Decant Le Male Le Parfum Jean Paul Gaultier — Micht Decants</image:title>
+      <image:caption>Decant Le Male Le Parfum Jean Paul Gaultier 3ml, 5ml y 10ml. Amaderado oriental profundo. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/valentino%20intense.webp</image:loc>
+      <image:title>Decant Valentino Born in Roma Intense — Micht Decants Perú</image:title>
+      <image:caption>Decant Valentino Intense 3ml, 5ml y 10ml. Oriental amaderado especiado. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/The%20Most%20Wanted.webp</image:loc>
+      <image:title>Decant Azzaro The Most Wanted — Micht Decants Perú</image:title>
+      <image:caption>Decant Azzaro The Most Wanted 3ml, 5ml y 10ml. Amaderado especiado masculino. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Stronger%20With%20You%20Intensely.webp</image:loc>
+      <image:title>Decant Giorgio Armani Stronger With You Intensely — Micht Decants</image:title>
+      <image:caption>Decant Stronger With You Intensely de Giorgio Armani 3ml, 5ml y 10ml. Oriental amaderado. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Bleu%20de%20Chanel%20Parfum.webp</image:loc>
+      <image:title>Decant Bleu de Chanel Parfum — Micht Decants Perú</image:title>
+      <image:caption>Decant Bleu de Chanel Parfum 3ml, 5ml y 10ml. Aromático amaderado masculino. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Y%20EDP.png</image:loc>
+      <image:title>Decant YSL Y EDP Yves Saint Laurent — Micht Decants Perú</image:title>
+      <image:caption>Decant Y EDP de Yves Saint Laurent 3ml, 5ml y 10ml. Aromático frutal masculino. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Homme%20Intense.webp</image:loc>
+      <image:title>Decant Dior Homme Intense — Micht Decants Perú</image:title>
+      <image:caption>Decant Dior Homme Intense 3ml, 5ml y 10ml. Oriental amaderado con iris. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Dior%20Sauvage.jpg</image:loc>
+      <image:title>Decant Dior Sauvage — Micht Decants Perú</image:title>
+      <image:caption>Decant Dior Sauvage 3ml, 5ml y 10ml. El perfume masculino más vendido del mundo. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Eros%20Flame.jpg</image:loc>
+      <image:title>Decant Versace Eros Flame — Micht Decants Perú</image:title>
+      <image:caption>Decant Versace Eros Flame 3ml, 5ml y 10ml. Oriental amaderado con cítricos. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Invictus%20Parfum.jpg</image:loc>
+      <image:title>Decant Paco Rabanne Invictus Parfum — Micht Decants Perú</image:title>
+      <image:caption>Decant Invictus Parfum de Paco Rabanne 3ml, 5ml y 10ml. Amaderado marino. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Rose%20N%20Roses.webp</image:loc>
+      <image:title>Decant Miss Dior Rose N Roses — Micht Decants Perú</image:title>
+      <image:caption>Decant Miss Dior Rose N Roses 3ml, 5ml y 10ml. Floral femenino con rosas. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Q.webp</image:loc>
+      <image:title>Decant Dolce &amp; Gabbana Q — Micht Decants Perú</image:title>
+      <image:caption>Decant Q de Dolce &amp; Gabbana 3ml, 5ml y 10ml. Floral amaderado femenino. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Miss%20Dior%20Blooming%20Bouquet.jpg</image:loc>
+      <image:title>Decant Miss Dior Blooming Bouquet — Micht Decants Perú</image:title>
+      <image:caption>Decant Miss Dior Blooming Bouquet 3ml, 5ml y 10ml. Floral delicado femenino. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/N%C2%B05.webp</image:loc>
+      <image:title>Decant Chanel N°5 — Micht Decants Perú</image:title>
+      <image:caption>Decant Chanel N°5 3ml, 5ml y 10ml. El perfume más icónico de la historia. Floral aldehídico. Micht Decants Perú.</image:caption>
+    </image:image>
+
+    <!-- ── ÁRABES ─────────────────────────────────────────────────────────── -->
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Bharara%20King.webp</image:loc>
+      <image:title>Decant Bharara King — Micht Decants Perú</image:title>
+      <image:caption>Decant Bharara King 3ml, 5ml y 10ml. Perfume árabe unisex oriental amaderado. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Sceptre%20Malachite.webp</image:loc>
+      <image:title>Decant Alhambra Sceptre Malachite — Micht Decants Perú</image:title>
+      <image:caption>Decant Sceptre Malachite de Alhambra 3ml, 5ml y 10ml. Aromático acuático árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Amber%20Oud%20Gold%20Edition.jpg</image:loc>
+      <image:title>Decant Al Haramain Amber Oud Gold Edition — Micht Decants Perú</image:title>
+      <image:caption>Decant Amber Oud Gold Edition de Al Haramain 3ml, 5ml y 10ml. Oriental árabe de lujo. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Liquid%20Brun.jpg</image:loc>
+      <image:title>Decant Lattafa Liquid Brun — Micht Decants Perú</image:title>
+      <image:caption>Decant Liquid Brun de Lattafa 3ml, 5ml y 10ml. Oriental especiado con oud. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/9PM.jpg</image:loc>
+      <image:title>Decant Afnan 9PM — Micht Decants Perú</image:title>
+      <image:caption>Decant 9PM de Afnan 3ml, 5ml y 10ml. Perfume árabe oriental amaderado nocturno. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/9PM%20Night%20Out.jpg</image:loc>
+      <image:title>Decant Afnan 9PM Night Out — Micht Decants Perú</image:title>
+      <image:caption>Decant 9PM Night Out de Afnan 3ml, 5ml y 10ml. Oriental especiado con oud. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/9AM%20Dive.webp</image:loc>
+      <image:title>Decant Afnan 9AM Dive — Micht Decants Perú</image:title>
+      <image:caption>Decant 9AM Dive de Afnan 3ml, 5ml y 10ml. Acuático aromático fresco árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/9PM%20Elixir.jpg</image:loc>
+      <image:title>Decant Afnan 9PM Elixir — Micht Decants Perú</image:title>
+      <image:caption>Decant 9PM Elixir de Afnan 3ml, 5ml y 10ml. Oriental amaderado intenso. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/9PM%20Rebel.webp</image:loc>
+      <image:title>Decant Afnan 9PM Rebel — Micht Decants Perú</image:title>
+      <image:caption>Decant 9PM Rebel de Afnan 3ml, 5ml y 10ml. Amaderado especiado con cuero. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/His%20Confession.webp</image:loc>
+      <image:title>Decant Lattafa His Confession — Micht Decants Perú</image:title>
+      <image:caption>Decant His Confession de Lattafa 3ml, 5ml y 10ml. Oriental especiado con oud. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Khamrah%20Qahwa.webp</image:loc>
+      <image:title>Decant Lattafa Khamrah Qahwa — Micht Decants Perú</image:title>
+      <image:caption>Decant Khamrah Qahwa de Lattafa 3ml, 5ml y 10ml. Oriental gourmand café árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Khamrah%20Dukhan.jpg</image:loc>
+      <image:title>Decant Lattafa Khamrah Dukhan — Micht Decants Perú</image:title>
+      <image:caption>Decant Khamrah Dukhan de Lattafa 3ml, 5ml y 10ml. Oriental ahumado con oud. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Khamrah.webp</image:loc>
+      <image:title>Decant Lattafa Khamrah — Micht Decants Perú</image:title>
+      <image:caption>Decant Khamrah de Lattafa 3ml, 5ml y 10ml. Oriental amaderado árabe clásico. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Hawas%20Fire.webp</image:loc>
+      <image:title>Decant Rasasi Hawas Fire — Micht Decants Perú</image:title>
+      <image:caption>Decant Hawas Fire de Rasasi 3ml, 5ml y 10ml. Oriental especiado árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Hawas%20Elixir.jpg</image:loc>
+      <image:title>Decant Rasasi Hawas Elixir — Micht Decants Perú</image:title>
+      <image:caption>Decant Hawas Elixir de Rasasi 3ml, 5ml y 10ml. Oriental amaderado con oud. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Hawas%20Ice.png</image:loc>
+      <image:title>Decant Rasasi Hawas Ice — Micht Decants Perú</image:title>
+      <image:caption>Decant Hawas Ice de Rasasi 3ml, 5ml y 10ml. Acuático aromático árabe frío. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Hawas%20For%20Him.webp</image:loc>
+      <image:title>Decant Rasasi Hawas For Him — Micht Decants Perú</image:title>
+      <image:caption>Decant Hawas For Him de Rasasi 3ml, 5ml y 10ml. Acuático aromático árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Nitro%20Red.png</image:loc>
+      <image:title>Decant Lattafa Nitro Red — Micht Decants Perú</image:title>
+      <image:caption>Decant Nitro Red de Lattafa 3ml, 5ml y 10ml. Oriental especiado árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Nitro%20Red%20Intensely.jpg</image:loc>
+      <image:title>Decant Lattafa Nitro Red Intensely — Micht Decants Perú</image:title>
+      <image:caption>Decant Nitro Red Intensely de Lattafa 3ml, 5ml y 10ml. Oriental especiado intenso. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Nitro%20Elixir.jpg</image:loc>
+      <image:title>Decant Lattafa Nitro Elixir — Micht Decants Perú</image:title>
+      <image:caption>Decant Nitro Elixir de Lattafa 3ml, 5ml y 10ml. Oriental amaderado con oud. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Nitro%20Gold.jpg</image:loc>
+      <image:title>Decant Lattafa Nitro Gold — Micht Decants Perú</image:title>
+      <image:caption>Decant Nitro Gold de Lattafa 3ml, 5ml y 10ml. Oriental amaderado dorado árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Asad%20Elixir.webp</image:loc>
+      <image:title>Decant Lattafa Asad Elixir — Micht Decants Perú</image:title>
+      <image:caption>Decant Asad Elixir de Lattafa 3ml, 5ml y 10ml. Oriental especiado con vetiver. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Asad%20Bourbon.jpg</image:loc>
+      <image:title>Decant Lattafa Asad Bourbon — Micht Decants Perú</image:title>
+      <image:caption>Decant Asad Bourbon de Lattafa 3ml, 5ml y 10ml. Oriental gourmand con bourbon. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Mandarin%20Sky.webp</image:loc>
+      <image:title>Decant Armaf Odyssey Mandarin Sky — Micht Decants Perú</image:title>
+      <image:caption>Decant Odyssey Mandarin Sky de Armaf 3ml, 5ml y 10ml. Cítrico aromático árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Odyssey%20Mega.jpg</image:loc>
+      <image:title>Decant Armaf Odyssey Mega — Micht Decants Perú</image:title>
+      <image:caption>Decant Odyssey Mega de Armaf 3ml, 5ml y 10ml. Aromático amaderado árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Odyssey%20Aqua.webp</image:loc>
+      <image:title>Decant Armaf Odyssey Aqua — Micht Decants Perú</image:title>
+      <image:caption>Decant Odyssey Aqua de Armaf 3ml, 5ml y 10ml. Acuático fresco árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Odyssey%20White.jpg</image:loc>
+      <image:title>Decant Armaf Odyssey White — Micht Decants Perú</image:title>
+      <image:caption>Decant Odyssey White de Armaf 3ml, 5ml y 10ml. Aromático amaderado limpio. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Odyssey%20Limoni.webp</image:loc>
+      <image:title>Decant Armaf Odyssey Limoni — Micht Decants Perú</image:title>
+      <image:caption>Decant Odyssey Limoni de Armaf 3ml, 5ml y 10ml. Cítrico limón aromático árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Odyssey%20Mango.jpg</image:loc>
+      <image:title>Decant Armaf Odyssey Mango — Micht Decants Perú</image:title>
+      <image:caption>Decant Odyssey Mango de Armaf 3ml, 5ml y 10ml. Frutal floral tropical árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Eter%20Arabian%20Sky.jpg</image:loc>
+      <image:title>Decant Eter Arabian Sky — Micht Decants Perú</image:title>
+      <image:caption>Decant Eter Arabian Sky 3ml, 5ml y 10ml. Oriental floral árabe con oud. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Aruba%20Gold.webp</image:loc>
+      <image:title>Decant Armaf Aruba Gold — Micht Decants Perú</image:title>
+      <image:caption>Decant Aruba Gold de Armaf 3ml, 5ml y 10ml. Floral frutal femenino árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Eclaire%20Banoffi.webp</image:loc>
+      <image:title>Decant Lattafa Eclaire Banoffi — Micht Decants Perú</image:title>
+      <image:caption>Decant Eclaire Banoffi de Lattafa 3ml, 5ml y 10ml. Gourmand floral femenino árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Odyssey%20Candee.webp</image:loc>
+      <image:title>Decant Armaf Odyssey Candee — Micht Decants Perú</image:title>
+      <image:caption>Decant Odyssey Candee de Armaf 3ml, 5ml y 10ml. Gourmand floral femenino árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Eclaire.jpg</image:loc>
+      <image:title>Decant Lattafa Eclaire — Micht Decants Perú</image:title>
+      <image:caption>Decant Eclaire de Lattafa 3ml, 5ml y 10ml. Floral oriental femenino árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Eclaire%20Pistache.webp</image:loc>
+      <image:title>Decant Lattafa Eclaire Pistache — Micht Decants Perú</image:title>
+      <image:caption>Decant Eclaire Pistache de Lattafa 3ml, 5ml y 10ml. Gourmand pistacho femenino árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Stallion%20Donna%20Intense.jpg</image:loc>
+      <image:title>Decant Stallion Donna Intense — Micht Decants Perú</image:title>
+      <image:caption>Decant Stallion Donna Intense 3ml, 5ml y 10ml. Oriental floral femenino árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Yara%20Elixir.webp</image:loc>
+      <image:title>Decant Lattafa Yara Elixir — Micht Decants Perú</image:title>
+      <image:caption>Decant Yara Elixir de Lattafa 3ml, 5ml y 10ml. Oriental floral femenino árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Yara%20Moi.webp</image:loc>
+      <image:title>Decant Lattafa Yara Moi — Micht Decants Perú</image:title>
+      <image:caption>Decant Yara Moi de Lattafa 3ml, 5ml y 10ml. Floral frutal femenino árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Yara%20Rosa.webp</image:loc>
+      <image:title>Decant Lattafa Yara Rosa — Micht Decants Perú</image:title>
+      <image:caption>Decant Yara Rosa de Lattafa 3ml, 5ml y 10ml. Floral rosa femenino árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/9PM%20Pour%20Femme.webp</image:loc>
+      <image:title>Decant Afnan 9PM Pour Femme — Micht Decants Perú</image:title>
+      <image:caption>Decant 9PM Pour Femme de Afnan 3ml, 5ml y 10ml. Floral oriental femenino árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/9AM%20Pour%20Femme.webp</image:loc>
+      <image:title>Decant Afnan 9AM Pour Femme — Micht Decants Perú</image:title>
+      <image:caption>Decant 9AM Pour Femme de Afnan 3ml, 5ml y 10ml. Floral frutal femenino árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/img%20PERFUMES/Delilah.jpg</image:loc>
+      <image:title>Decant Lattafa Delilah — Micht Decants Perú</image:title>
+      <image:caption>Decant Delilah de Lattafa 3ml, 5ml y 10ml. Floral oriental femenino árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+
+    <!-- ── PERFUMES ENTEROS ────────────────────────────────────────────────── -->
+    <image:image>
+      <image:loc>https://michtdecants.com/imgPerfumesEnteros/9am.webp</image:loc>
+      <image:title>Afnan 9AM Frasco Completo — Micht Decants Perú</image:title>
+      <image:caption>Perfume Afnan 9AM frasco completo original. Fragancia cítrica aromática. Disponible en Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/imgPerfumesEnteros/9pm%20night%20out.webp</image:loc>
+      <image:title>Afnan 9PM Night Out Frasco Completo — Micht Decants Perú</image:title>
+      <image:caption>Perfume Afnan 9PM Night Out frasco completo original. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/imgPerfumesEnteros/9pm.webp</image:loc>
+      <image:title>Afnan 9PM Frasco Completo — Micht Decants Perú</image:title>
+      <image:caption>Perfume Afnan 9PM frasco completo original. Oriental amaderado nocturno. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/imgPerfumesEnteros/Khamrah%20clasico.webp</image:loc>
+      <image:title>Lattafa Khamrah Clásico Frasco Completo — Micht Decants Perú</image:title>
+      <image:caption>Perfume Lattafa Khamrah Clásico frasco completo original. Oriental árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/imgPerfumesEnteros/ODYSSEYMEGAGIFTSET.webp</image:loc>
+      <image:title>Armaf Odyssey Mega Gift Set — Micht Decants Perú</image:title>
+      <image:caption>Gift Set Armaf Odyssey Mega frasco completo original. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/imgPerfumesEnteros/aruba%20gold.webp</image:loc>
+      <image:title>Armaf Aruba Gold Frasco Completo — Micht Decants Perú</image:title>
+      <image:caption>Perfume Armaf Aruba Gold frasco completo original femenino. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/imgPerfumesEnteros/erba%20pura.jpg</image:loc>
+      <image:title>Xerjoff Erba Pura Frasco Completo — Micht Decants Perú</image:title>
+      <image:caption>Perfume Xerjoff Erba Pura frasco completo original unisex. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/imgPerfumesEnteros/khamrah%20dukhan.webp</image:loc>
+      <image:title>Lattafa Khamrah Dukhan Frasco Completo — Micht Decants Perú</image:title>
+      <image:caption>Perfume Lattafa Khamrah Dukhan frasco completo original. Oriental ahumado árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/imgPerfumesEnteros/khamrah%20qahwa.webp</image:loc>
+      <image:title>Lattafa Khamrah Qahwa Frasco Completo — Micht Decants Perú</image:title>
+      <image:caption>Perfume Lattafa Khamrah Qahwa frasco completo original. Oriental gourmand café. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/imgPerfumesEnteros/odyssey%20mandarin%20sky.webp</image:loc>
+      <image:title>Armaf Odyssey Mandarin Sky Frasco Completo — Micht Decants Perú</image:title>
+      <image:caption>Perfume Armaf Odyssey Mandarin Sky frasco completo original. Cítrico aromático. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/imgPerfumesEnteros/set%20de%209pm.webp</image:loc>
+      <image:title>Set Afnan 9PM Frasco Completo — Micht Decants Perú</image:title>
+      <image:caption>Set completo Afnan 9PM frasco original. Oriental amaderado árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/imgPerfumesEnteros/spectre%20malacrite.webp</image:loc>
+      <image:title>Alhambra Sceptre Malachite Frasco Completo — Micht Decants Perú</image:title>
+      <image:caption>Perfume Alhambra Sceptre Malachite frasco completo original árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://michtdecants.com/imgPerfumesEnteros/stallion%20donna%20intense.avif</image:loc>
+      <image:title>Stallion Donna Intense Frasco Completo — Micht Decants Perú</image:title>
+      <image:caption>Perfume Stallion Donna Intense frasco completo original femenino árabe. Micht Decants Perú.</image:caption>
+    </image:image>
+
+  </url>
+
+  <!-- ── Nosotros ───────────────────────────────────────────────────────────── -->
+  <url>
+    <loc>https://michtdecants.com/nosotros/</loc>
+    <image:image>
+      <image:loc>https://michtdecants.com/imgGato/gato-removebg-preview.png</image:loc>
+      <image:title>Mascota Micht Decants — Tienda de Decants en Perú</image:title>
+      <image:caption>Mascota oficial de Micht Decants, tienda de decants de perfumes árabes y de diseñador en Perú.</image:caption>
+    </image:image>
+  </url>
+
+</urlset>

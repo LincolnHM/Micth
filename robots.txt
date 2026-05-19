@@ -1,5 +1,5 @@
 # robots.txt — MICHT Decants (michtdecants.com)
-# Generado: 2026-05-17
+# Actualizado: 2026-05-19
 
 # ── Reglas generales para todos los bots ──────────────────────────────────────
 User-agent: *
@@ -7,21 +7,32 @@ Allow: /
 
 # Bloquear el panel de administración
 Disallow: /admin.html
+Disallow: /admin/
 
-# Bloquear archivos de entorno o configuración sensible (por precaución)
+# Bloquear archivos de entorno o configuración sensible
 Disallow: /.env
 Disallow: /package.json
 Disallow: /package-lock.json
 
-# ── Reglas para Googlebot (explícitas para mayor compatibilidad) ───────────────
+# ── Reglas para Googlebot ─────────────────────────────────────────────────────
 User-agent: Googlebot
 Allow: /
 Allow: /css/
 Allow: /js/
-Allow: /img PERFUMES/
+Allow: /img%20PERFUMES/
 Allow: /imgPerfumesEnteros/
 Allow: /imgGato/
+Allow: /images/
 Disallow: /admin.html
+Disallow: /admin/
 
-# ── Sitemap ───────────────────────────────────────────────────────────────────
+# ── Reglas para Googlebot-Image ───────────────────────────────────────────────
+User-agent: Googlebot-Image
+Allow: /img%20PERFUMES/
+Allow: /imgPerfumesEnteros/
+Allow: /imgGato/
+Allow: /images/
+
+# ── Sitemaps ──────────────────────────────────────────────────────────────────
 Sitemap: https://michtdecants.com/sitemap.xml
+Sitemap: https://michtdecants.com/sitemap-images.xml
