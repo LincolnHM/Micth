@@ -300,7 +300,13 @@ async function renderAdminProducts() {
 
   container.querySelectorAll('.entero-avail-toggle').forEach(chk => {
     chk.addEventListener('change', async () => {
-      await CloudProducts.update(parseInt(chk.dataset.id), { availableAsEntero: chk.checked });
+      const id  = parseInt(chk.dataset.id);
+      const err = await CloudProducts.update(id, { availableAsEntero: chk.checked });
+      if (err) {
+        showToast(`❌ Error Supabase: ${err.message || JSON.stringify(err)}`);
+      } else {
+        showToast(chk.checked ? '✓ Guardado en nube como entero' : '✓ Desactivado en nube');
+      }
       renderAdminProducts().catch(console.error);
     });
   });

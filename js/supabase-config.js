@@ -420,8 +420,12 @@ const CloudProducts = {
         if (col) patch[col] = val;
       });
       const { error } = await db.from('productos').update(patch).eq('id', id);
-      if (error) console.error('Supabase update error:', error);
+      if (error) {
+        console.error('Supabase update error:', error);
+        return error;
+      }
     }
+    return null;
   },
 
   async delete(id) {
