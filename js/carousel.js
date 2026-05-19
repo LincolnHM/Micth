@@ -10,25 +10,25 @@ const Carousel = {
 
   slides: [
     {
-      tag:      'NUEVA COLECCIÓN',
-      title:    'El Lujo que mereces,\nen cada gota',
-      subtitle: 'Decants auténticos de las mejores casas de perfumería árabe y de diseñador del mundo.',
-      cta:      { text: 'Explorar Catálogo', href: '#catalogo' },
-      theme:    'slide-1'
+      tag:       'NUEVA COLECCIÓN',
+      titleHtml: 'El Lujo que mereces,<br>en cada <em class="c-gold">gota.</em>',
+      subtitle:  'Decants auténticos de las mejores casas de perfumería árabe y de diseñador del mundo.',
+      cta:       { text: 'Explorar Catálogo', href: '#catalogo' },
+      theme:     'slide-1'
     },
     {
-      tag:      'PERFUMES ÁRABES',
-      title:    'Misterio Oriental.\nAura Inconfundible.',
-      subtitle: 'Oud puro, rosa de Damasco y ámbar sagrado. Las fragancias más codiciadas de Medio Oriente.',
-      cta:      { text: 'Ver Árabes', href: '#catalogo', filter: 'arabe' },
-      theme:    'slide-2'
+      tag:       'PERFUMES ÁRABES',
+      titleHtml: '<em class="c-gold">Misterio Oriental.</em><br>Aura Inconfundible.',
+      subtitle:  'Oud puro, rosa de Damasco y ámbar sagrado. Las fragancias más codiciadas de Medio Oriente.',
+      cta:       { text: 'Ver Árabes', href: '#catalogo', filter: 'arabe' },
+      theme:     'slide-2'
     },
     {
-      tag:      'ENVÍOS A TODO PERÚ',
-      title:    'Desde Soritor\na todo el Perú.',
-      subtitle: 'Envíos seguros vía Shalom a cualquier ciudad del país. Recojo en tienda disponible también.',
-      cta:      { text: 'Hacer Pedido', href: '#catalogo' },
-      theme:    'slide-3'
+      tag:       'ENVÍOS A TODO PERÚ',
+      titleHtml: 'Desde <em class="c-gold">Soritor</em><br>a todo el Perú.',
+      subtitle:  'Envíos seguros vía Shalom a cualquier ciudad del país. Recojo en tienda disponible también.',
+      cta:       { text: 'Hacer Pedido', href: '#catalogo' },
+      theme:     'slide-3'
     }
   ],
 
@@ -49,7 +49,7 @@ const Carousel = {
       <div class="carousel-slide ${s.theme} ${i === 0 ? 'active' : ''}" role="listitem">
         <div class="carousel-content">
           <span class="carousel-tag">${s.tag}</span>
-          <h2 class="carousel-title">${s.title.replace('\n', '<br>')}</h2>
+          <h2 class="carousel-title">${s.titleHtml || s.title.replace(/\n/g, '<br>')}</h2>
           <p class="carousel-sub">${s.subtitle}</p>
           <a href="${s.cta.href}" class="carousel-cta" ${s.cta.filter ? `data-filter="${s.cta.filter}"` : ''}>
             ${s.cta.text}

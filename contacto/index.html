@@ -157,20 +157,170 @@
     }
     .cp-wa-btn svg { flex-shrink: 0; }
 
-    /* Location badge */
-    .cp-location {
+    /* Location badge (legacy — ya no se usa) */
+    .cp-location { display: none; }
+
+    /* ── Sección de Ubicación Premium ─────────────────── */
+    .cp-loc-section {
+      width: 100%;
+      max-width: 900px;
+      margin-bottom: 3rem;
+    }
+    .cp-loc-eyebrow {
+      font-size: .58rem;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: .7;
+      text-align: center;
+      margin-bottom: 1.25rem;
+    }
+    .cp-loc-card {
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      background: rgba(10,8,5,.88);
+      backdrop-filter: blur(28px) saturate(150%);
+      border: 1px solid rgba(201,168,76,.18);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow:
+        0 0 80px rgba(201,168,76,.05),
+        inset 0 1px 0 rgba(201,168,76,.14);
+      position: relative;
+    }
+    .cp-loc-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(201,168,76,.55), transparent);
+    }
+    .cp-loc-info {
+      padding: 2.25rem 2rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .cp-loc-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1.1rem 0;
+    }
+    .cp-loc-icon {
+      width: 42px; height: 42px;
+      border-radius: 13px;
+      background: rgba(201,168,76,.07);
+      border: 1px solid rgba(201,168,76,.2);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      color: var(--gold);
+      transition: background .25s, border-color .25s;
+    }
+    .cp-loc-row:hover .cp-loc-icon {
+      background: rgba(201,168,76,.14);
+      border-color: rgba(201,168,76,.4);
+    }
+    .cp-loc-label {
+      font-size: .56rem;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: .65;
+      margin-bottom: .3rem;
+    }
+    .cp-loc-value {
+      font-size: .88rem;
+      color: var(--white);
+      font-weight: 500;
+      margin-bottom: .15rem;
+      line-height: 1.4;
+    }
+    .cp-loc-sub {
+      font-size: .75rem;
+      color: var(--text3);
+      line-height: 1.5;
+    }
+    .cp-loc-sep {
+      height: 1px;
+      background: rgba(255,255,255,.05);
+      margin: 0 0 0 3.25rem;
+    }
+    .cp-loc-maps-btn {
       display: inline-flex;
       align-items: center;
       gap: .5rem;
-      font-size: .75rem;
-      color: var(--text3);
-      letter-spacing: .06em;
-      padding: .45rem 1rem;
-      border: 1px solid var(--border);
+      margin-top: 1.75rem;
+      padding: .62rem 1.3rem;
+      border: 1px solid rgba(201,168,76,.3);
       border-radius: 50px;
-      margin-bottom: 2.5rem;
+      color: var(--gold);
+      font-size: .78rem;
+      font-weight: 600;
+      text-decoration: none;
+      letter-spacing: .04em;
+      background: rgba(201,168,76,.05);
+      width: fit-content;
+      transition: background .25s, border-color .25s, transform .25s, box-shadow .25s;
     }
-    .cp-location svg { width: 14px; height: 14px; stroke: var(--gold); fill: none; }
+    .cp-loc-maps-btn:hover {
+      background: rgba(201,168,76,.13);
+      border-color: rgba(201,168,76,.6);
+      color: var(--gold-l);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(201,168,76,.12);
+    }
+    .cp-loc-map {
+      position: relative;
+      border-left: 1px solid rgba(201,168,76,.1);
+      background: #0a0800;
+      min-height: 340px;
+    }
+    .cp-loc-map iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      border: none;
+      display: block;
+      filter: invert(92%) hue-rotate(180deg) saturate(0.45) brightness(0.82);
+    }
+    /* Degradados en los bordes del mapa para integrarlo */
+    .cp-loc-map-fade {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to right,  rgba(10,8,5,.55) 0%,  transparent 18%),
+        linear-gradient(to left,   rgba(10,8,5,.2)  0%,  transparent 12%),
+        linear-gradient(to bottom, rgba(10,8,5,.35) 0%,  transparent 20%),
+        linear-gradient(to top,    rgba(10,8,5,.5)  0%,  transparent 18%);
+      pointer-events: none;
+      z-index: 1;
+    }
+    /* Pin label flotante */
+    .cp-loc-map-pin {
+      position: absolute;
+      bottom: 1rem; left: 50%;
+      transform: translateX(-50%);
+      display: flex; align-items: center; gap: .4rem;
+      font-size: .67rem;
+      color: var(--text2);
+      background: rgba(0,0,0,.78);
+      backdrop-filter: blur(10px);
+      padding: .38rem .85rem;
+      border-radius: 50px;
+      border: 1px solid rgba(201,168,76,.22);
+      white-space: nowrap;
+      z-index: 2;
+      letter-spacing: .04em;
+    }
+    .cp-loc-map-pin svg { color: var(--gold); flex-shrink: 0; }
+
+    /* Responsive */
+    @media (max-width: 720px) {
+      .cp-loc-card { grid-template-columns: 1fr; }
+      .cp-loc-map  { border-left: none; border-top: 1px solid rgba(201,168,76,.1); min-height: 240px; }
+      .cp-loc-info { padding: 1.6rem 1.25rem; }
+      .cp-loc-sep  { margin-left: 3.25rem; }
+    }
 
     /* Social links row */
     .cp-social-row {
@@ -290,18 +440,12 @@
         Escribir al +51 917 452 643
       </a>
 
-      <!-- Badge ubicación -->
-      <div class="cp-location">
-        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
-        </svg>
-        Jr. Las Flores N°620, Soritor · San Martín, Perú
-      </div>
-
       <!-- Cards de info -->
       <div class="cp-cards">
         <div class="cp-card">
-          <div class="cp-card-icon">📱</div>
+          <div class="cp-card-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+          </div>
           <p class="cp-card-title">WhatsApp</p>
           <p class="cp-card-text">Nuestro canal principal. Te respondemos en minutos, todos los días.</p>
           <a href="https://wa.me/51917452643" target="_blank" rel="noopener noreferrer" class="cp-card-link">
@@ -311,7 +455,9 @@
         </div>
 
         <div class="cp-card">
-          <div class="cp-card-icon">🏪</div>
+          <div class="cp-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="22" height="22" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13 21H5a2 2 0 01-2-2V9l7-6 7 6v3m0 9v-5a2 2 0 00-2-2h-2a2 2 0 00-2 2v5m6 0h2a2 2 0 002-2v-5"/></svg>
+          </div>
           <p class="cp-card-title">Recojo en Tienda</p>
           <p class="cp-card-text">Jr. Las Flores N°620, Soritor — San Martín. Coordina tu hora de recojo por WhatsApp.</p>
           <a href="https://wa.me/51917452643?text=Hola,%20quiero%20coordinar%20mi%20recojo%20en%20tienda" target="_blank" rel="noopener noreferrer" class="cp-card-link">
@@ -321,7 +467,9 @@
         </div>
 
         <div class="cp-card">
-          <div class="cp-card-icon">📦</div>
+          <div class="cp-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="22" height="22" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zM16 21H8m4-4v4M12 3v4"/></svg>
+          </div>
           <p class="cp-card-title">Envíos Shalom</p>
           <p class="cp-card-text">Enviamos a todo el Perú vía Shalom. Seguro, rápido y con seguimiento.</p>
           <a href="https://wa.me/51917452643?text=Hola,%20quiero%20información%20sobre%20el%20envío%20a%20mi%20ciudad" target="_blank" rel="noopener noreferrer" class="cp-card-link">
@@ -330,6 +478,78 @@
           </a>
         </div>
       </div>
+
+      <!-- Sección de Ubicación Premium -->
+      <section class="cp-loc-section" aria-label="Ubicación de la tienda">
+        <p class="cp-loc-eyebrow">Encuéntranos</p>
+        <div class="cp-loc-card">
+
+          <!-- Info de ubicación -->
+          <div class="cp-loc-info">
+
+            <div class="cp-loc-row">
+              <div class="cp-loc-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+              </div>
+              <div>
+                <p class="cp-loc-label">Dirección</p>
+                <p class="cp-loc-value">Jr. Las Flores N°620</p>
+                <p class="cp-loc-sub">Soritor · San Martín, Perú</p>
+              </div>
+            </div>
+
+            <div class="cp-loc-sep"></div>
+
+            <div class="cp-loc-row">
+              <div class="cp-loc-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 6v6l4 2"/></svg>
+              </div>
+              <div>
+                <p class="cp-loc-label">Horario de atención</p>
+                <p class="cp-loc-value">Lun – Sáb · 9am – 7pm</p>
+                <p class="cp-loc-sub">Dom · 10am – 2pm</p>
+              </div>
+            </div>
+
+            <div class="cp-loc-sep"></div>
+
+            <div class="cp-loc-row">
+              <div class="cp-loc-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="20" height="20" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" d="M16 7V5a2 2 0 00-4 0v2M8 7V5a2 2 0 014 0"/><path stroke-linecap="round" d="M9 12h6m-3-3v6"/></svg>
+              </div>
+              <div>
+                <p class="cp-loc-label">Envíos nacionales</p>
+                <p class="cp-loc-value">Vía Shalom · Todo el Perú</p>
+                <p class="cp-loc-sub">Coordina tu pedido por WhatsApp</p>
+              </div>
+            </div>
+
+            <a href="https://maps.google.com/maps?q=-6.1241,-77.0950" target="_blank" rel="noopener noreferrer" class="cp-loc-maps-btn" aria-label="Ver ubicación en Google Maps">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="16" height="16" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+              Abrir en Google Maps
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+
+          </div>
+
+          <!-- Mapa interactivo -->
+          <div class="cp-loc-map">
+            <iframe
+              src="https://maps.google.com/maps?q=-6.1241,-77.0950&hl=es&z=15&output=embed"
+              title="Ubicación MICHT Decants — Jr. Las Flores N°620, Soritor, San Martín"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              aria-label="Mapa de ubicación de MICHT Decants"
+            ></iframe>
+            <div class="cp-loc-map-fade" aria-hidden="true"></div>
+            <div class="cp-loc-map-pin" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10"><circle cx="12" cy="12" r="6"/></svg>
+              MICHT Decants · Soritor
+            </div>
+          </div>
+
+        </div>
+      </section>
 
       <!-- Social -->
       <div class="cp-social-row">
@@ -362,9 +582,77 @@
 
   <!-- ── Footer ────────────────────────────────────────────────────────────── -->
   <footer class="footer">
-    <p class="footer-logo">MICHT<span> Decants</span></p>
-    <p>Perfumería árabe y diseñador · Decants auténticos · Soritor, Perú</p>
-    <p>© 2026 MICHT Decants · Todos los derechos reservados</p>
+
+    <div class="footer-glow-line" aria-hidden="true"></div>
+
+    <div class="footer-body">
+      <div class="footer-inner container">
+
+        <div class="footer-brand">
+          <p class="footer-logo">MICHT<span> Decants</span></p>
+          <p class="footer-tagline">Perfumería Árabe &amp; Diseñador</p>
+          <p class="footer-desc">Decants auténticos desde S/ 12. Fragancias de Lattafa, Afnan, Armaf, Dior, Chanel y más. Envíos a todo el Perú.</p>
+        </div>
+
+        <div class="footer-col">
+          <h3 class="footer-col-title">Explorar</h3>
+          <nav class="footer-nav" aria-label="Footer">
+            <a href="../#catalogo">Catálogo completo</a>
+            <a href="../nosotros/">Nosotros</a>
+            <a href="../contacto/">Contacto</a>
+          </nav>
+        </div>
+
+        <div class="footer-col">
+          <h3 class="footer-col-title">Contáctanos</h3>
+          <a class="footer-wa-btn" href="https://wa.me/51917452643" target="_blank" rel="noopener noreferrer" aria-label="Pedir por WhatsApp">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+            Pedir por WhatsApp
+          </a>
+          <p class="footer-location">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="13" height="13" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            Soritor, San Martín · Perú
+          </p>
+
+          <p class="footer-social-label">Síguenos</p>
+          <ul class="social-list footer-social-list">
+            <li class="social-item">
+              <a data-social="whatsapp" href="https://wa.me/51917452643" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+                <div class="filled"></div>
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+              </a>
+              <div class="social-tooltip">WhatsApp</div>
+            </li>
+            <li class="social-item">
+              <a data-social="facebook" href="https://www.facebook.com/profile.php?id=100082908725647" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                <div class="filled"></div>
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.9981 11.9991C23.9981 5.37216 18.626 0 11.9991 0C5.37216 0 0 5.37216 0 11.9991C0 17.9882 4.38789 22.9522 10.1242 23.8524V15.4676H7.07758V11.9991H10.1242V9.35553C10.1242 6.34826 11.9156 4.68714 14.6564 4.68714C15.9692 4.68714 17.3424 4.92149 17.3424 4.92149V7.87439H15.8294C14.3388 7.87439 13.8739 8.79933 13.8739 9.74824V11.9991H17.2018L16.6698 15.4676H13.8739V23.8524C19.6103 22.9522 23.9981 17.9882 23.9981 11.9991Z"/></svg>
+              </a>
+              <div class="social-tooltip">Facebook</div>
+            </li>
+            <li class="social-item">
+              <a data-social="instagram" href="https://www.instagram.com/l1ncoln_photo/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <div class="filled"></div>
+                <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599s.453.546.598.92c.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92s.546-.453.92-.598c.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334"/></svg>
+              </a>
+              <div class="social-tooltip">Instagram</div>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-bottom-inner container">
+        <p>© 2026 MICHT Decants · Todos los derechos reservados</p>
+        <a href="../admin/" class="footer-admin-link" aria-label="Panel Administrador">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="12" height="12" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Panel Administrador
+        </a>
+      </div>
+    </div>
+
   </footer>
 
   <script>
@@ -391,10 +679,11 @@
         gsap.from('.cp-eyebrow',   { opacity: 0, y: 20, duration: 0.6, ease: 'power3.out', delay: 0.15 });
         gsap.from('.cp-headline',  { opacity: 0, y: 30, duration: 0.75, ease: 'power3.out', delay: 0.28 });
         gsap.from('.cp-sub',       { opacity: 0, y: 20, duration: 0.65, ease: 'power3.out', delay: 0.42 });
-        gsap.from('.cp-wa-btn',    { opacity: 0, y: 30, scale: 0.9, duration: 0.8, ease: 'expo.out', delay: 0.55 });
-        gsap.from('.cp-location',  { opacity: 0, y: 16, duration: 0.55, ease: 'power3.out', delay: 0.68 });
-        gsap.from('.cp-card',      { opacity: 0, y: 45, scale: 0.93, stagger: 0.1, duration: 0.75, ease: 'power3.out', delay: 0.75 });
-        gsap.from('.cp-social-row',{ opacity: 0, y: 20, duration: 0.6, ease: 'power3.out', delay: 1.1 });
+        gsap.from('.cp-wa-btn',      { opacity: 0, y: 30, scale: 0.9, duration: 0.8, ease: 'expo.out', delay: 0.55 });
+        gsap.from('.cp-card',        { opacity: 0, y: 45, scale: 0.93, stagger: 0.1, duration: 0.75, ease: 'power3.out', delay: 0.7 });
+        gsap.from('.cp-loc-eyebrow', { opacity: 0, y: 14, duration: 0.5, ease: 'power3.out', delay: 1.0 });
+        gsap.from('.cp-loc-card',    { opacity: 0, y: 40, scale: 0.97, duration: 0.85, ease: 'power3.out', delay: 1.1 });
+        gsap.from('.cp-social-row',  { opacity: 0, y: 20, duration: 0.6, ease: 'power3.out', delay: 1.3 });
       }
     }
   </script>
