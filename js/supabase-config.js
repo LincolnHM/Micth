@@ -413,18 +413,14 @@ const CloudProducts = {
   async update(id, data) {
     Products.update(id, data); // localStorage primero
     if (db) {
-      const product = Products.getById(id);
-      if (!product) return;
-      const row = { ...productToDB(product), updated_at: new Date().toISOString() };
-      let { error } = await db.from('productos').upsert(row, { onConflict: 'id' });
-      // Si falla por columnas que aún no existen en Supabase, reintentar sin esas columnas
-      if (error && error.message && error.message.includes('available_as_entero')) {
-        const { available_as_entero, entero_price, ...rowSafe } = row;
-        const res2 = await db.from('productos').upsert(rowSafe, { onConflict: 'id' });
-        if (res2.error) console.error('Supabase upsert error:', res2.error);
-      } else if (error) {
-        console.error('Supabase upsert error:', error);
-      }
+      // Construir patch con solo los campos que cambian, traducidos al nombre de columna Supabase
+      const patch = { updated_at: new Date().toISOString() };
+      Object.entries(data).forEach(([key, val]) => {
+        const col = _PRODUCT_FIELD_MAP[key];
+        if (col) patch[col] = val;
+      });
+      const { error } = await db.from('productos').update(patch).eq('id', id);
+      if (error) console.error('Supabase update error:', error);
     }
   },
 
