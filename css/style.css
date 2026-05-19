@@ -2583,3 +2583,41 @@ input, select, textarea { font-family: inherit; }
   .footer-social-list { justify-content: flex-start; }
   .footer-bottom-inner { flex-direction: column; text-align: center; }
 }
+
+/* ── Separadores degradados header ↔ contenido ↔ footer ─ */
+.page-sep {
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent    0%,
+    rgba(201,168,76,.15) 15%,
+    rgba(201,168,76,.55) 50%,
+    rgba(201,168,76,.15) 85%,
+    transparent    100%
+  );
+  position: relative;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 10;
+}
+.page-sep-top::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 140px;
+  background: linear-gradient(180deg,
+    rgba(201,168,76,.07) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+.page-sep-bottom::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 140px;
+  background: linear-gradient(0deg,
+    rgba(201,168,76,.07) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
