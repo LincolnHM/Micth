@@ -1,73 +1,35 @@
-// ─── MICHT Decants · Chatbot IA con Groq ─────────────────────────────────────
-const GEMINI_API_KEY = window.GROQ_CONFIG?.apiKey || '';
-const GROQ_MODEL     = 'llama-3.3-70b-versatile';
-const GROQ_URL       = 'https://api.groq.com/openai/v1/chat/completions';
+// ─── MICHT Decants · Chatbot IA ───────────────────────────────────────────────
+// La clave GROQ vive en el servidor (netlify/functions/chat.js).
+// El frontend solo envía el mensaje al endpoint /api/chat.
 
 let chatHistory     = [];
 let catalogReady    = false;
 let productsCatalog = [];
 
-// ─── Construir prompt del sistema con el catálogo real ────────────────────────
-function buildSystemPrompt(products) {
-  const inStock = products.filter(p => p.inStock !== false);
-  const catalogText = inStock.map(p => {
-    const sizesRaw = p.sizes || {};
-    const prices = Array.isArray(sizesRaw)
-      ? sizesRaw.map(s => `${s.ml}ml=S/${s.price}`).join(', ')
-      : Object.entries(sizesRaw).map(([ml, price]) => `${ml}=S/${price}`).join(', ') || 'consultar';
-    return `• ${p.name} (${p.brand}) | ${p.gender || 'unisex'} | ${p.type || ''} | ${p.occasion || ''} | ${prices}`;
-  }).join('\n');
-
-  return `Eres Micht Bot, asistente virtual de MICHT Decants, tienda peruana de decants de perfumes árabes y de diseñador en Soritor, Perú.
-
-Tu misión: ayudar al cliente a encontrar su fragancia ideal y animarlo a pedir por WhatsApp +51 917 452 643.
-
-CATÁLOGO DISPONIBLE (${inStock.length} productos con stock):
-${catalogText}
-
-INSTRUCCIONES:
-- Responde siempre en español, de forma amigable y breve (máximo 4 oraciones)
-- Si el cliente no especifica qué busca, haz 1-2 preguntas: ¿para quién?, ¿qué ocasión?, ¿qué aroma le gusta?
-- Recomienda 1 a 3 productos del catálogo con su precio
-- No inventes productos que no estén en el catálogo
-- Termina invitando a pedir por WhatsApp
-- Usa emojis con moderación`;
-}
-
-// ─── Llamada a la API de Groq ─────────────────────────────────────────────────
-async function askGemini(userMessage) {
+// ─── Llamada al proxy seguro en el servidor ───────────────────────────────────
+async function askGroq(userMessage) {
   chatHistory.push({ role: 'user', content: userMessage });
 
-  const systemContent = catalogReady
-    ? buildSystemPrompt(productsCatalog)
-    : 'Eres el asistente de MICHT Decants. El catálogo se está cargando. Saluda al cliente y pídele que espere un momento.';
-
-  const res = await fetch(GROQ_URL, {
+  const res = await fetch('/api/chat', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${GEMINI_API_KEY}`
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: GROQ_MODEL,
-      messages: [
-        { role: 'system', content: systemContent },
-        ...chatHistory
-      ],
-      max_tokens: 300,
-      temperature: 0.75
+      message:  userMessage,
+      history:  chatHistory.slice(-6)   // últimos 3 turnos de contexto
     })
   });
 
+  let data;
+  try { data = await res.json(); } catch { data = {}; }
+
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    const msg = err?.error?.message || `HTTP ${res.status}`;
-    console.error('[Groq]', res.status, msg);
+    const msg = data?.error || `Error ${res.status}`;
     throw new Error(msg);
   }
 
-  const data  = await res.json();
-  const reply = data.choices[0].message.content.trim();
+  const reply = data.reply;
+  if (!reply) throw new Error('Respuesta vacía del asistente');
+
   chatHistory.push({ role: 'assistant', content: reply });
   return reply;
 }
@@ -85,10 +47,10 @@ const Chatbot = {
 
     if (!fab) return;
 
-    fab.addEventListener('click', () => this.toggle());
+    fab.addEventListener('click',   () => this.toggle());
     closeBtn.addEventListener('click', () => this.close());
-    sendBtn.addEventListener('click', () => this.send());
-    input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) this.send(); });
+    sendBtn.addEventListener('click',  () => this.send());
+    input.addEventListener('keydown',  e => { if (e.key === 'Enter' && !e.shiftKey) this.send(); });
 
     document.addEventListener('catalogLoaded', e => {
       productsCatalog = e.detail || [];
@@ -105,7 +67,7 @@ const Chatbot = {
     if (!this.greeted) {
       this.greeted = true;
       setTimeout(() => {
-        this.addMessage('bot', '¡Hola! 👋 Soy el asistente de **MICHT Decants**. Estoy aquí para ayudarte a encontrar tu fragancia perfecta entre nuestros decants árabes y de diseñador. ¿Para quién estás buscando el perfume?');
+        this.addMessage('bot', '¡Hola! 👋 Soy el asistente de **MICHT Decants**. Estoy aquí para ayudarte a encontrar tu fragancia perfecta. ¿Para quién estás buscando el perfume?');
       }, 300);
     }
     setTimeout(() => document.getElementById('chatInput').focus(), 350);
@@ -151,27 +113,27 @@ const Chatbot = {
     const text  = input.value.trim();
     if (!text) return;
 
-    if (!GEMINI_API_KEY) {
-      this.addMessage('user', text);
-      input.value = '';
-      this.addMessage('bot', '⚠️ La IA no está configurada aún. Por ahora puedes escribir directamente al WhatsApp: **+51 917 452 643** 😊');
-      return;
-    }
-
     input.value = '';
     this.setInputState(true);
     this.addMessage('user', text);
     this.showTyping();
 
     try {
-      const reply = await askGemini(text);
+      const reply = await askGroq(text);
       this.hideTyping();
       this.addMessage('bot', reply);
     } catch (err) {
       this.hideTyping();
-      console.error('[MICHT Chatbot] Error:', err.message);
-      const detail = err.message ? ` (${err.message})` : '';
-      this.addMessage('bot', `Ups, no pude conectarme a la IA${detail} 😅. Por favor escríbenos por WhatsApp: **+51 917 452 643**`);
+      console.error('[MICHT Chatbot]', err.message);
+
+      // Mensajes de error descriptivos según tipo
+      let userMsg = 'Ups, ocurrió un error 😅 Por favor escríbenos por WhatsApp: **+51 917 452 643**';
+      if (err.message.includes('429') || err.message.toLowerCase().includes('demasiado')) {
+        userMsg = 'Estás enviando muchos mensajes seguidos 😅 Espera un momento e intenta de nuevo.';
+      } else if (err.message.includes('503') || err.message.toLowerCase().includes('disponible')) {
+        userMsg = 'El asistente no está disponible ahora mismo. Escríbenos directo por WhatsApp: **+51 917 452 643**';
+      }
+      this.addMessage('bot', userMsg);
     }
 
     this.setInputState(false);

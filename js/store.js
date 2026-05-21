@@ -350,6 +350,7 @@ function renderProducts() {
           </div>
           ${!p.inStock ? '<div class="out-badge">Agotado</div>' : ''}
           ${p.olfFamily ? `<div class="olf-family-tag">${sanitize(p.olfFamily)}</div>` : ''}
+          <button class="pd-open-btn" data-id="${p.id}" aria-label="Ver detalles de ${sanitize(p.name)}">Ver detalles →</button>
         </div>
 
         <div class="product-info">
@@ -386,6 +387,10 @@ function renderProducts() {
           <div class="product-footer">
             ${priceHtml}
             <div class="sizes-row">${sizesHtml}</div>
+            <button class="btn-ver-detalle" data-id="${p.id}">
+              Ver perfil completo
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true"><path stroke-linecap="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
           </div>
         </div>
       </article>
@@ -414,6 +419,11 @@ function renderProducts() {
       btn.querySelector('span').textContent = open ? 'Ver notas olfativas' : 'Ocultar notas';
       btn.querySelector('.chevron').style.transform = open ? '' : 'rotate(180deg)';
     });
+  });
+
+  // Eventos: abrir modal de detalle
+  grid.querySelectorAll('.pd-open-btn, .btn-ver-detalle').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); openPdModal(parseInt(btn.dataset.id)); });
   });
 
   // Eventos: agregar al carrito
@@ -527,3 +537,233 @@ document.addEventListener('DOMContentLoaded', async () => {
     Checkout.open();
   });
 });
+
+// ─── Modal de detalle de producto ─────────────────────────────────────────────
+
+let _pdProduct  = null;
+let _pdSelSize  = null;
+let _pdSelPrice = 0;
+
+function _createPdModal() {
+  if (document.getElementById('pdModal')) return;
+  const el = document.createElement('div');
+  el.id = 'pdModal';
+  el.className = 'pd-modal';
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.innerHTML = `
+    <div class="pd-backdrop"></div>
+    <div class="pd-panel">
+      <button class="pd-close" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <div class="pd-hero">
+        <div class="pd-img-col">
+          <div class="pd-img-wrap">
+            <img id="pdImg" class="pd-img" alt="" loading="eager">
+            <div id="pdImgPh" class="pd-img-ph" style="display:none">
+              <svg viewBox="0 0 32 48" fill="none" stroke="currentColor" stroke-width="1">
+                <rect x="10" y="0" width="12" height="4" rx="1"/>
+                <path d="M8 4C4 4 2 8 2 12L2 44C2 46 4 48 6 48L26 48C28 48 30 46 30 44L30 12C30 8 28 4 24 4Z"/>
+                <line x1="2" y1="14" x2="30" y2="14"/>
+              </svg>
+            </div>
+          </div>
+          <div id="pdOlfTag" class="pd-olf-tag"></div>
+        </div>
+
+        <div class="pd-info-col">
+          <div id="pdBadges" class="pd-badges-row"></div>
+          <p id="pdBrand" class="pd-brand"></p>
+          <h2 id="pdName" class="pd-name"></h2>
+          <div id="pdTags" class="pd-tags-row"></div>
+          <p id="pdDesc" class="pd-desc"></p>
+          <div id="pdNotes" class="pd-notes-pyramid"></div>
+          <div class="pd-purchase">
+            <p class="pd-price-label">Elige tu tamaño</p>
+            <div id="pdSizesRow" class="pd-sizes-row"></div>
+            <button id="pdCartBtn" class="pd-cart-btn" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0h8"/>
+              </svg>
+              <span id="pdCartBtnText">Selecciona un tamaño</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pd-discover">
+        <h3 class="pd-discover-title">
+          <span class="pd-discover-line"></span>
+          Descubre más fragancias
+          <span class="pd-discover-line"></span>
+        </h3>
+        <div id="pdDiscoverScroll" class="pd-discover-scroll"></div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(el);
+
+  el.querySelector('.pd-backdrop').addEventListener('click', closePdModal);
+  el.querySelector('.pd-close').addEventListener('click', closePdModal);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePdModal(); });
+
+  document.getElementById('pdCartBtn').addEventListener('click', () => {
+    if (!_pdProduct || !_pdSelSize) return;
+    Cart.add(_pdProduct, _pdSelSize, _pdSelPrice);
+    const btn = document.getElementById('pdCartBtn');
+    const txt = document.getElementById('pdCartBtnText');
+    btn.classList.add('added');
+    txt.textContent = '¡Agregado al carrito! ✓';
+    setTimeout(() => {
+      btn.classList.remove('added');
+      txt.textContent = `Agregar al carrito — S/ ${_pdSelPrice}`;
+    }, 2000);
+    renderProducts();
+  });
+}
+
+function openPdModal(productId) {
+  _createPdModal();
+  const p = _allProducts?.find(x => x.id === productId) ?? Products.getById(productId);
+  if (!p) return;
+  _pdProduct  = p;
+  _pdSelSize  = null;
+  _pdSelPrice = 0;
+
+  const isEntero    = p.type === 'entero';
+  const genderLabel = { hombre: 'Hombre', mujer: 'Mujer', unisex: 'Unisex' }[p.gender] || '';
+  const occasionLbl = { dia: 'Día', noche: 'Noche', ambas: 'Día & Noche' }[p.occasion] || '';
+  const typeLabel   = p.type === 'arabe' ? 'Árabe' : isEntero ? 'Perfume Entero' : 'Diseñador';
+  const typeBadge   = p.type === 'arabe' ? 'badge-arabe' : isEntero ? 'badge-entero' : 'badge-dis';
+
+  // Imagen
+  const imgEl = document.getElementById('pdImg');
+  const imgPh = document.getElementById('pdImgPh');
+  if (p.imageUrl) {
+    imgEl.src = p.imageUrl;
+    imgEl.alt = `${sanitize(p.brand)} ${sanitize(p.name)}`;
+    imgEl.style.display = 'block';
+    imgPh.style.display = 'none';
+    imgEl.onerror = () => { imgEl.style.display = 'none'; imgPh.style.display = 'flex'; };
+  } else {
+    imgEl.style.display = 'none';
+    imgPh.style.display = 'flex';
+  }
+
+  // Familia olfativa
+  const olfTag = document.getElementById('pdOlfTag');
+  olfTag.textContent = p.olfFamily || '';
+  olfTag.style.display = p.olfFamily ? 'inline-block' : 'none';
+
+  // Badges
+  document.getElementById('pdBadges').innerHTML = `
+    <span class="badge-type ${typeBadge}">${typeLabel}</span>
+    ${p.featured ? '<span class="badge-featured">⭐ Popular</span>' : ''}
+    ${!p.inStock ? '<span class="pd-badge-out">Agotado</span>' : ''}`;
+
+  document.getElementById('pdBrand').textContent = p.brand.toUpperCase();
+  document.getElementById('pdName').textContent  = p.name;
+
+  document.getElementById('pdTags').innerHTML = [
+    genderLabel ? `<span class="pd-tag">${genderLabel}</span>` : '',
+    occasionLbl ? `<span class="pd-tag">${occasionLbl}</span>` : '',
+  ].filter(Boolean).join('');
+
+  document.getElementById('pdDesc').textContent = p.description || '';
+
+  // Notas olfativas
+  const notesEl = document.getElementById('pdNotes');
+  if (!isEntero && (p.topNotes || p.heartNotes || p.baseNotes)) {
+    notesEl.innerHTML = `
+      <p class="pd-notes-title">Pirámide olfativa</p>
+      ${p.topNotes   ? `<div class="pd-note-row pd-note-top"><span class="pd-note-icon">▲</span><span class="pd-note-lbl">Salida</span><span class="pd-note-val">${sanitize(p.topNotes)}</span></div>` : ''}
+      ${p.heartNotes ? `<div class="pd-note-row pd-note-heart"><span class="pd-note-icon">♥</span><span class="pd-note-lbl">Corazón</span><span class="pd-note-val">${sanitize(p.heartNotes)}</span></div>` : ''}
+      ${p.baseNotes  ? `<div class="pd-note-row pd-note-base"><span class="pd-note-icon">●</span><span class="pd-note-lbl">Fondo</span><span class="pd-note-val">${sanitize(p.baseNotes)}</span></div>` : ''}`;
+    notesEl.style.display = 'flex';
+  } else {
+    notesEl.style.display = 'none';
+  }
+
+  // Tallas
+  const sizesRow = document.getElementById('pdSizesRow');
+  const cartBtn  = document.getElementById('pdCartBtn');
+  const cartTxt  = document.getElementById('pdCartBtnText');
+  cartBtn.disabled = true;
+  cartTxt.textContent = 'Selecciona un tamaño';
+  cartBtn.classList.remove('added');
+
+  if (isEntero) {
+    const price = p.enteroPrice || 0;
+    sizesRow.innerHTML = `
+      <button class="pd-size-btn ${!p.inStock || price === 0 ? 'pd-size-disabled' : ''}"
+              data-size="Unidad" data-price="${price}"
+              ${!p.inStock || price === 0 ? 'disabled' : ''}>
+        <span class="pd-size-ml">Unidad</span>
+        <span class="pd-size-price">${price > 0 ? `S/ ${price}` : 'Consultar'}</span>
+      </button>`;
+  } else {
+    sizesRow.innerHTML = Object.entries(p.sizes).map(([ml, price]) => `
+      <button class="pd-size-btn ${!p.inStock ? 'pd-size-disabled' : ''}"
+              data-size="${escapeAttr(ml)}" data-price="${price}"
+              ${!p.inStock ? 'disabled' : ''}>
+        <span class="pd-size-ml">${sanitize(ml)}</span>
+        <span class="pd-size-price">S/ ${price}</span>
+      </button>`).join('');
+  }
+
+  sizesRow.querySelectorAll('.pd-size-btn:not([disabled])').forEach(btn => {
+    btn.addEventListener('click', () => {
+      sizesRow.querySelectorAll('.pd-size-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      _pdSelSize  = btn.dataset.size;
+      _pdSelPrice = parseFloat(btn.dataset.price);
+      cartBtn.disabled = false;
+      cartTxt.textContent = `Agregar al carrito — S/ ${_pdSelPrice}`;
+      cartBtn.classList.remove('added');
+    });
+  });
+
+  // Descubre más fragancias
+  const all = _allProducts || Products.getAll();
+  const similar = all
+    .filter(x => x.id !== p.id && x.inStock !== false)
+    .sort((a, b) => {
+      const aScore = (a.olfFamily === p.olfFamily ? 2 : 0) + (a.type === p.type ? 1 : 0);
+      const bScore = (b.olfFamily === p.olfFamily ? 2 : 0) + (b.type === p.type ? 1 : 0);
+      return bScore - aScore;
+    })
+    .slice(0, 8);
+
+  document.getElementById('pdDiscoverScroll').innerHTML = similar.map(sp => {
+    const spMin = sp.type === 'entero' ? (sp.enteroPrice || 0)
+      : (Object.values(sp.sizes).length ? Math.min(...Object.values(sp.sizes)) : 0);
+    const spImg = sp.imageUrl
+      ? `<img src="${escapeAttr(sp.imageUrl)}" alt="${escapeAttr(sp.name)}" class="pd-mini-img" loading="lazy" onerror="this.style.display='none'">`
+      : '';
+    return `
+      <button class="pd-mini-card" data-id="${sp.id}" aria-label="Ver ${sanitize(sp.name)}">
+        <div class="pd-mini-img-wrap">${spImg}</div>
+        <p class="pd-mini-brand">${sanitize(sp.brand)}</p>
+        <p class="pd-mini-name">${sanitize(sp.name)}</p>
+        ${spMin > 0 ? `<p class="pd-mini-price">Desde S/ ${spMin}</p>` : ''}
+      </button>`;
+  }).join('');
+
+  document.getElementById('pdDiscoverScroll').querySelectorAll('.pd-mini-card').forEach(btn => {
+    btn.addEventListener('click', () => openPdModal(parseInt(btn.dataset.id)));
+  });
+
+  const modal = document.getElementById('pdModal');
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  modal.querySelector('.pd-panel').scrollTop = 0;
+}
+
+function closePdModal() {
+  document.getElementById('pdModal')?.classList.remove('open');
+  document.body.style.overflow = '';
+}
