@@ -611,19 +611,10 @@ function _createPdModal() {
             </div>
           </div>
 
-          <!-- Acordeón notas olfativas -->
-          <div class="pd-accordions">
-            <details class="pd-accordion" id="pdAccNotes">
-              <summary class="pd-acc-summary">
-                <span>NOTAS OLFATIVAS</span>
-                <svg class="pd-acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" d="M6 9l6 6 6-6"/>
-                </svg>
-              </summary>
-              <div class="pd-acc-body">
-                <div id="pdNotesList" class="pd-notes-list"></div>
-              </div>
-            </details>
+          <!-- Notas olfativas — siempre visibles -->
+          <div id="pdAccNotes" class="pd-notes-section">
+            <p class="pd-notes-section-title">NOTAS OLFATIVAS</p>
+            <div id="pdNotesList" class="pd-notes-list"></div>
           </div>
 
           <!-- Botón carrito -->
