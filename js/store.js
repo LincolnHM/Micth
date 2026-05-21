@@ -288,12 +288,6 @@ function renderProducts() {
     const typeLabel   = showAsEntero ? 'Entero' : (p.type === 'arabe' ? 'Árabe' : isEntero ? 'Entero' : 'Diseñador');
     const typeBadge   = showAsEntero ? 'badge-entero' : (p.type === 'arabe' ? 'badge-arabe' : isEntero ? 'badge-entero' : 'badge-dis');
 
-    const notesHtml = (!isEntero && (p.topNotes || p.heartNotes || p.baseNotes)) ? `
-      <div class="notes-pyramid" id="notes-${p.id}" style="display:none">
-        ${p.topNotes    ? `<div class="note-tier"><span class="note-label">Salida</span><span class="note-val">${sanitize(p.topNotes)}</span></div>` : ''}
-        ${p.heartNotes  ? `<div class="note-tier"><span class="note-label">Corazón</span><span class="note-val">${sanitize(p.heartNotes)}</span></div>` : ''}
-        ${p.baseNotes   ? `<div class="note-tier"><span class="note-label">Fondo</span><span class="note-val">${sanitize(p.baseNotes)}</span></div>` : ''}
-      </div>` : '';
 
     const sizesHtml = showAsEntero
       ? (() => {
@@ -375,14 +369,6 @@ function renderProducts() {
           </button>
           <p class="product-desc" id="desc-${p.id}">${sanitize(p.description)}</p>
 
-          ${notesHtml ? `
-          <button class="notes-toggle" data-id="${p.id}" aria-expanded="false">
-            <span>Ver notas olfativas</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron" aria-hidden="true">
-              <path stroke-linecap="round" d="M6 9l6 6 6-6"/>
-            </svg>
-          </button>
-          ${notesHtml}` : ''}
 
           <div class="product-footer">
             ${priceHtml}
@@ -409,17 +395,6 @@ function renderProducts() {
     });
   });
 
-  // Eventos: notas olfativas toggle
-  grid.querySelectorAll('.notes-toggle').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const panel = document.getElementById(`notes-${btn.dataset.id}`);
-      const open  = panel.style.display === 'block';
-      panel.style.display  = open ? 'none' : 'block';
-      btn.setAttribute('aria-expanded', String(!open));
-      btn.querySelector('span').textContent = open ? 'Ver notas olfativas' : 'Ocultar notas';
-      btn.querySelector('.chevron').style.transform = open ? '' : 'rotate(180deg)';
-    });
-  });
 
   // Eventos: abrir modal de detalle
   grid.querySelectorAll('.pd-open-btn, .btn-ver-detalle').forEach(btn => {
