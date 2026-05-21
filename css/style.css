@@ -1997,7 +1997,7 @@ input, select, textarea { font-family: inherit; }
 
 /* Columna izquierda — imagen sticky */
 .pd-left-col {
-  background: #eeeae3;
+  background: #ffffff;
   display: flex; align-items: center; justify-content: center;
   min-height: 300px;
   overflow: hidden;
@@ -2095,12 +2095,26 @@ input, select, textarea { font-family: inherit; }
   line-height: 1;
 }
 .pd-price-consultar { font-size: .85rem; color: #666; font-style: italic; }
+.pd-consult-wa {
+  display: inline-flex; align-items: center; gap: .45rem;
+  font-size: .82rem; font-weight: 700; color: #128c3e;
+  text-decoration: none; transition: opacity var(--tr);
+}
+.pd-consult-wa:hover { opacity: .8; }
+.pd-cart-btn.pd-cart-wa {
+  background: #25d366 !important; color: #fff !important;
+  border: none !important;
+}
+.pd-cart-btn.pd-cart-wa:hover {
+  background: #20b858 !important;
+  box-shadow: 0 8px 24px rgba(37,211,102,.3) !important;
+}
 
 /* Sección de tamaños */
 .pd-size-section {
   display: flex; flex-direction: column; gap: .7rem;
   padding: 1.1rem 1.25rem;
-  background: #f9f7f4;
+  background: #f8f8f8;
   border: 1px solid rgba(0,0,0,.1);
   border-radius: var(--r-lg);
 }
@@ -2175,7 +2189,7 @@ input, select, textarea { font-family: inherit; }
   display: flex; align-items: center; gap: .9rem;
   padding: .85rem 1.1rem;
   border-radius: var(--r-lg);
-  background: #fafaf8;
+  background: #f8f8f8;
   border: 1px solid rgba(0,0,0,.08);
   border-left-width: 3px;
 }
@@ -2239,7 +2253,7 @@ input, select, textarea { font-family: inherit; }
 /* ── Sección "Descubre más vibras" ───────────────────────── */
 .pd-discover-wrap {
   border-top: 1px solid rgba(0,0,0,.08);
-  background: #f4f1eb;
+  background: #f5f5f5;
   padding: 2rem 1.5rem 3rem;
 }
 @media(min-width:768px) { .pd-discover-wrap { padding: 2.5rem 3rem 4rem; } }
@@ -2284,7 +2298,7 @@ input, select, textarea { font-family: inherit; }
 }
 .pd-mini-img-wrap {
   width: 100%; aspect-ratio: 3/4;
-  background: #eeeae3;
+  background: #ffffff;
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
 }
