@@ -281,7 +281,7 @@ function renderProducts() {
   grid.innerHTML = products.map(p => {
     const showAsEntero = Filter.type === 'entero' && p.availableAsEntero === true && p.type !== 'entero';
     const isEntero     = p.type === 'entero' || showAsEntero;
-    const sizeValues   = showAsEntero ? [p.enteroPrice || 0] : Object.values(p.sizes);
+    const sizeValues   = isEntero ? [p.enteroPrice || 0] : Object.values(p.sizes);
     const minPrice     = sizeValues.length ? Math.min(...sizeValues) : 0;
     const genderIcon  = { hombre: '♂', mujer: '♀', unisex: '⚥' }[p.gender] || '';
     const occasionLbl = { dia: 'Día', noche: 'Noche', ambas: 'Día & Noche' }[p.occasion] || '';
@@ -856,7 +856,7 @@ function openPdModal(productId) {
         <div class="pd-mini-info">
           <p class="pd-mini-brand">${sanitize(sp.brand)}</p>
           <p class="pd-mini-name">${sanitize(sp.name)}</p>
-          ${spMin > 0 && sp.type !== 'entero' ? `<p class="pd-mini-price">Desde S/ ${spMin}</p>` : ''}
+          ${spMin > 0 ? `<p class="pd-mini-price">${sp.type === 'entero' ? '' : 'Desde '}S/ ${spMin}</p>` : ''}
         </div>
       </button>`;
   }).join('');
