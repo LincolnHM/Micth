@@ -556,11 +556,14 @@ function _createPdModal() {
   el.innerHTML = `
     <div class="pd-backdrop"></div>
     <div class="pd-panel">
-      <button class="pd-close" aria-label="Cerrar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="17" height="17">
-          <path stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/>
-        </svg>
-      </button>
+      <div class="pd-topbar">
+        <button class="pd-close" aria-label="Volver al catálogo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span>CATÁLOGO</span>
+        </button>
+      </div>
 
       <div class="pd-layout">
         <!-- Columna imagen -->
@@ -672,7 +675,6 @@ function _createPdModal() {
   `;
   document.body.appendChild(el);
 
-  el.querySelector('.pd-backdrop').addEventListener('click', closePdModal);
   el.querySelector('.pd-close').addEventListener('click', closePdModal);
   document.addEventListener('keydown', _pdEscHandler);
 
@@ -882,7 +884,7 @@ function openPdModal(productId) {
   const modal = document.getElementById('pdModal');
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
-  modal.querySelector('.pd-panel').scrollTop = 0;
+  modal.scrollTop = 0;
 }
 
 function closePdModal() {
