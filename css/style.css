@@ -1931,67 +1931,67 @@ input, select, textarea { font-family: inherit; }
 .btn-ver-detalle svg { transition: transform var(--tr); }
 .btn-ver-detalle:hover svg { transform: translateX(3px); }
 
-/* ── Vista de detalle — página completa (sin flotante) ───── */
+/* ── Vista de detalle — flujo normal de página ───────────── */
 .pd-modal {
-  position: fixed; inset: 0; z-index: 600;
-  background: var(--bg);
-  opacity: 0; pointer-events: none;
-  transform: translateX(18px);
-  transition: opacity .28s ease, transform .28s ease;
-  overflow-y: auto; overflow-x: hidden;
-  -ms-overflow-style: none; scrollbar-width: none;
+  display: none;
+  width: 100%;
 }
-.pd-modal::-webkit-scrollbar { display: none; }
-.pd-modal.open { opacity: 1; pointer-events: auto; transform: translateX(0); }
+.pd-modal.open {
+  display: block;
+  animation: pd-fadein .22s ease;
+}
+@keyframes pd-fadein {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-/* Backdrop oculto — no se necesita en vista de página */
+/* Secciones del catálogo ocultadas al abrir el detalle */
+.pd-page-hidden { display: none !important; }
+
+/* Backdrop oculto */
 .pd-backdrop { display: none; }
 
-/* Panel — ocupa todo el ancho sin bordes flotantes */
+/* Panel — ancho completo, sin bordes flotantes */
 .pd-panel {
-  position: relative; z-index: 1;
-  width: 100%; min-height: 100dvh;
+  position: relative;
+  width: 100%;
   background: var(--bg);
-  overflow: visible;
 }
 
-/* Barra superior con botón volver */
+/* Barra superior con botón volver — sticky bajo el header */
 .pd-topbar {
-  position: sticky; top: 0; z-index: 10;
+  position: sticky; top: 64px; z-index: 10;
   display: flex; align-items: center;
-  padding: .75rem 1.25rem;
-  background: rgba(10,10,10,.92);
+  padding: .6rem 1.25rem;
+  background: rgba(10,10,10,.95);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
 }
 
-/* Botón cerrar — estilo "← Volver" */
+/* Botón "← CATÁLOGO" */
 .pd-close {
-  display: flex; align-items: center; gap: .5rem;
-  font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .45rem;
+  font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
   color: var(--text2);
   background: none; border: none;
   cursor: pointer; transition: color var(--tr);
-  padding: .3rem 0;
+  padding: .25rem 0;
 }
 .pd-close:hover { color: var(--gold); }
-.pd-close svg { width: 16px; height: 16px; pointer-events: none; }
+.pd-close svg { width: 15px; height: 15px; pointer-events: none; }
 
 /* ── Layout dos columnas ─────────────────────────────────── */
 .pd-layout {
   display: grid;
   grid-template-columns: 1fr;
-  max-width: 1100px;
+  max-width: 1160px;
   margin: 0 auto;
 }
 @media(min-width:768px) {
-  .pd-layout {
-    grid-template-columns: 2fr 3fr;
-    min-height: calc(100dvh - 52px);
-  }
+  .pd-layout { grid-template-columns: 2fr 3fr; }
 }
 
-/* Columna izquierda — imagen sticky */
+/* Columna izquierda — imagen sticky bajo header + topbar */
 .pd-left-col {
   background: #f7f5f2;
   display: flex; align-items: center; justify-content: center;
@@ -2001,9 +2001,9 @@ input, select, textarea { font-family: inherit; }
 @media(min-width:768px) {
   .pd-left-col {
     position: sticky;
-    top: 52px;
+    top: 108px; /* 64px header + 44px topbar */
     align-self: start;
-    min-height: calc(100dvh - 52px);
+    min-height: calc(100vh - 108px);
   }
 }
 
@@ -2168,9 +2168,10 @@ input, select, textarea { font-family: inherit; }
 .pd-acc-body { padding: .1rem 1rem 1rem; }
 
 .pd-desc-text {
-  font-size: .84rem; color: var(--text2); line-height: 1.8;
+  font-size: .88rem; color: var(--text2); line-height: 1.85;
   font-style: italic;
-  border-left: 2px solid var(--gold-d); padding-left: .85rem;
+  border-left: 2px solid var(--gold-d); padding-left: .9rem;
+  padding-top: .15rem; padding-bottom: .15rem;
 }
 
 /* ── Notas olfativas — glass panels ──────────────────────── */

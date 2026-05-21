@@ -591,6 +591,9 @@ function _createPdModal() {
           <h2 id="pdName" class="pd-product-name"></h2>
           <p id="pdSubtitle" class="pd-product-subtitle"></p>
 
+          <!-- Descripción siempre visible -->
+          <p id="pdDesc" class="pd-desc-text"></p>
+
           <!-- Precio — solo decants -->
           <div id="pdPriceRow" class="pd-price-row"></div>
 
@@ -608,20 +611,8 @@ function _createPdModal() {
             </div>
           </div>
 
-          <!-- Acordeones -->
+          <!-- Acordeón notas olfativas -->
           <div class="pd-accordions">
-            <details class="pd-accordion" open>
-              <summary class="pd-acc-summary">
-                <span>HISTORIA Y VIBRA</span>
-                <svg class="pd-acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" d="M6 9l6 6 6-6"/>
-                </svg>
-              </summary>
-              <div class="pd-acc-body">
-                <p id="pdDesc" class="pd-desc-text"></p>
-              </div>
-            </details>
-
             <details class="pd-accordion" id="pdAccNotes">
               <summary class="pd-acc-summary">
                 <span>NOTAS OLFATIVAS</span>
@@ -673,7 +664,9 @@ function _createPdModal() {
       </section>
     </div>
   `;
-  document.body.appendChild(el);
+  const footer = document.querySelector('.footer');
+  if (footer) footer.parentNode.insertBefore(el, footer);
+  else document.body.appendChild(el);
 
   el.querySelector('.pd-close').addEventListener('click', closePdModal);
   document.addEventListener('keydown', _pdEscHandler);
@@ -881,13 +874,20 @@ function openPdModal(productId) {
     btn.addEventListener('click', () => openPdModal(parseInt(btn.dataset.id)));
   });
 
+  // Ocultar secciones del catálogo
+  ['#carouselWrapper', '.filters-section', '#catalogBanner', '.products-section',
+   '.marquee-strip', '.parallax-divider', '#contacto'].forEach(sel => {
+    document.querySelector(sel)?.classList.add('pd-page-hidden');
+  });
+
   const modal = document.getElementById('pdModal');
   modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  modal.scrollTop = 0;
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 function closePdModal() {
   document.getElementById('pdModal')?.classList.remove('open');
-  document.body.style.overflow = '';
+  // Restaurar secciones del catálogo
+  document.querySelectorAll('.pd-page-hidden').forEach(el => el.classList.remove('pd-page-hidden'));
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
