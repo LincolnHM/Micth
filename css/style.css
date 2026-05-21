@@ -2278,16 +2278,16 @@ input, select, textarea { font-family: inherit; }
 .pd-discover-all:hover { color: var(--gold); }
 
 .pd-discover-scroll {
-  display: flex; gap: 1rem; overflow-x: auto;
-  padding-bottom: .75rem;
-  scroll-snap-type: x mandatory;
-  -ms-overflow-style: none; scrollbar-width: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
 }
-.pd-discover-scroll::-webkit-scrollbar { display: none; }
+@media(min-width:640px) {
+  .pd-discover-scroll { grid-template-columns: repeat(6, 1fr); }
+}
 
 .pd-mini-card {
-  flex-shrink: 0; width: 150px;
-  scroll-snap-align: start;
+  width: 100%;
   background: var(--card); border: 1px solid rgba(255,255,255,.07);
   border-radius: var(--r-lg); overflow: hidden;
   text-align: left; cursor: pointer;

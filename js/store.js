@@ -849,7 +849,7 @@ function openPdModal(productId) {
       const bScore = (b.olfFamily === p.olfFamily ? 2 : 0) + (b.type === p.type ? 1 : 0);
       return bScore - aScore;
     })
-    .slice(0, 8);
+    .slice(0, 6);
 
   document.getElementById('pdDiscoverScroll').innerHTML = similar.map(sp => {
     const _spPrices = Object.values(sp.sizes || {}).filter(v => v > 0);
