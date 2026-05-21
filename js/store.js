@@ -281,7 +281,7 @@ function renderProducts() {
   grid.innerHTML = products.map(p => {
     const showAsEntero = Filter.type === 'entero' && p.availableAsEntero === true && p.type !== 'entero';
     const isEntero     = p.type === 'entero' || showAsEntero;
-    const sizeValues   = isEntero ? [p.enteroPrice || 0] : Object.values(p.sizes);
+    const sizeValues   = showAsEntero ? [p.enteroPrice || 0] : Object.values(p.sizes || {});
     const minPrice     = sizeValues.length ? Math.min(...sizeValues) : 0;
     const genderIcon  = { hombre: '♂', mujer: '♀', unisex: '⚥' }[p.gender] || '';
     const occasionLbl = { dia: 'Día', noche: 'Noche', ambas: 'Día & Noche' }[p.occasion] || '';
@@ -706,8 +706,9 @@ function openPdModal(productId) {
       : `<span class="pd-price-consultar">Consultar precio</span>`;
     priceRow.style.display = 'flex';
   } else {
-    // Entero: mostrar precio si admin lo configuró, si no → consultar WA
-    const enteroPrice = p.enteroPrice || 0;
+    // Entero: precio viene de enteroPrice (decant→entero) o de sizes (entero nativo)
+    const _sizePrices  = Object.values(p.sizes || {}).filter(v => v > 0);
+    const enteroPrice  = p.enteroPrice > 0 ? p.enteroPrice : (_sizePrices.length ? Math.min(..._sizePrices) : 0);
     if (enteroPrice > 0) {
       priceRow.innerHTML = `<strong class="pd-price-main">S/ ${enteroPrice}</strong>`;
     } else {
@@ -749,7 +750,8 @@ function openPdModal(productId) {
   cartBtn.classList.remove('added');
 
   if (isEntero) {
-    const price = p.enteroPrice || 0;
+    const _sp  = Object.values(p.sizes || {}).filter(v => v > 0);
+    const price = p.enteroPrice > 0 ? p.enteroPrice : (_sp.length ? Math.min(..._sp) : 0);
     cartBtn.classList.remove('pd-cart-wa');
     cartBtn.onclick = null;
 
@@ -836,7 +838,12 @@ function openPdModal(productId) {
   // ── Descubre más vibras ───────────────────────────────────
   const all = _allProducts || Products.getAll();
   const similar = all
-    .filter(x => x.id !== p.id && x.inStock !== false)
+    .filter(x => {
+      if (x.id === p.id || x.inStock === false) return false;
+      if (p.gender === 'hombre') return x.gender === 'hombre' || x.gender === 'unisex';
+      if (p.gender === 'mujer')  return x.gender === 'mujer'  || x.gender === 'unisex';
+      return true;
+    })
     .sort((a, b) => {
       const aScore = (a.olfFamily === p.olfFamily ? 2 : 0) + (a.type === p.type ? 1 : 0);
       const bScore = (b.olfFamily === p.olfFamily ? 2 : 0) + (b.type === p.type ? 1 : 0);
@@ -845,8 +852,10 @@ function openPdModal(productId) {
     .slice(0, 8);
 
   document.getElementById('pdDiscoverScroll').innerHTML = similar.map(sp => {
-    const spMin = sp.type === 'entero' ? (sp.enteroPrice || 0)
-      : (Object.values(sp.sizes).length ? Math.min(...Object.values(sp.sizes)) : 0);
+    const _spPrices = Object.values(sp.sizes || {}).filter(v => v > 0);
+    const spMin = sp.type === 'entero'
+      ? (sp.enteroPrice > 0 ? sp.enteroPrice : (_spPrices.length ? Math.min(..._spPrices) : 0))
+      : (_spPrices.length ? Math.min(..._spPrices) : 0);
     const spImg = sp.imageUrl
       ? `<img src="${escapeAttr(sp.imageUrl)}" alt="${escapeAttr(sp.name)}" class="pd-mini-img" loading="lazy" onerror="this.style.display='none'">`
       : '';
