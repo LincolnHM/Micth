@@ -538,11 +538,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
-// ─── Modal de detalle de producto ─────────────────────────────────────────────
+// ─── Modal de detalle de producto (v2) ────────────────────────────────────────
 
 let _pdProduct  = null;
 let _pdSelSize  = null;
 let _pdSelPrice = 0;
+
+function _pdEscHandler(e) { if (e.key === 'Escape') closePdModal(); }
 
 function _createPdModal() {
   if (document.getElementById('pdModal')) return;
@@ -555,16 +557,17 @@ function _createPdModal() {
     <div class="pd-backdrop"></div>
     <div class="pd-panel">
       <button class="pd-close" aria-label="Cerrar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="17" height="17">
           <path stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/>
         </svg>
       </button>
 
-      <div class="pd-hero">
-        <div class="pd-img-col">
-          <div class="pd-img-wrap">
-            <img id="pdImg" class="pd-img" alt="" loading="eager">
-            <div id="pdImgPh" class="pd-img-ph" style="display:none">
+      <div class="pd-layout">
+        <!-- Columna imagen -->
+        <div class="pd-left-col">
+          <div class="pd-hero-img-wrap">
+            <img id="pdImg" class="pd-hero-img" alt="">
+            <div id="pdImgPh" class="pd-img-ph">
               <svg viewBox="0 0 32 48" fill="none" stroke="currentColor" stroke-width="1">
                 <rect x="10" y="0" width="12" height="4" rx="1"/>
                 <path d="M8 4C4 4 2 8 2 12L2 44C2 46 4 48 6 48L26 48C28 48 30 46 30 44L30 12C30 8 28 4 24 4Z"/>
@@ -572,44 +575,113 @@ function _createPdModal() {
               </svg>
             </div>
           </div>
-          <div id="pdOlfTag" class="pd-olf-tag"></div>
         </div>
 
-        <div class="pd-info-col">
-          <div id="pdBadges" class="pd-badges-row"></div>
-          <p id="pdBrand" class="pd-brand"></p>
-          <h2 id="pdName" class="pd-name"></h2>
-          <div id="pdTags" class="pd-tags-row"></div>
-          <p id="pdDesc" class="pd-desc"></p>
-          <div id="pdNotes" class="pd-notes-pyramid"></div>
-          <div class="pd-purchase">
-            <p class="pd-price-label">Elige tu tamaño</p>
-            <div id="pdSizesRow" class="pd-sizes-row"></div>
+        <!-- Columna detalles -->
+        <div class="pd-right-col">
+          <nav class="pd-breadcrumb">
+            <span onclick="closePdModal()">CATÁLOGO</span>
+            <span class="pd-bc-sep">›</span>
+            <span id="pdBreadBrand"></span>
+          </nav>
+
+          <h2 id="pdName" class="pd-product-name"></h2>
+          <p id="pdSubtitle" class="pd-product-subtitle"></p>
+
+          <!-- Precio — solo decants -->
+          <div id="pdPriceRow" class="pd-price-row"></div>
+
+          <!-- Selector de tamaño -->
+          <div id="pdSizeSection" class="pd-size-section">
+            <div class="pd-size-header">
+              <span class="pd-size-label">SELECCIONAR TAMAÑO</span>
+              <button id="pdGuideBtn" class="pd-guide-link">Guía de decants</button>
+            </div>
+            <div id="pdSizesRow" class="pd-sizes-grid"></div>
+            <div id="pdGuideTooltip" class="pd-guide-tooltip" style="display:none">
+              <p class="pd-guide-title">¿Cuánto dura cada decant?</p>
+              <div id="pdGuideRows" class="pd-guide-rows"></div>
+              <p class="pd-guide-note">Basado en 2-3 sprays por uso diario</p>
+            </div>
+          </div>
+
+          <!-- Acordeones -->
+          <div class="pd-accordions">
+            <details class="pd-accordion" open>
+              <summary class="pd-acc-summary">
+                <span>HISTORIA Y VIBRA</span>
+                <svg class="pd-acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" d="M6 9l6 6 6-6"/>
+                </svg>
+              </summary>
+              <div class="pd-acc-body">
+                <p id="pdDesc" class="pd-desc-text"></p>
+              </div>
+            </details>
+
+            <details class="pd-accordion" id="pdAccNotes">
+              <summary class="pd-acc-summary">
+                <span>NOTAS OLFATIVAS</span>
+                <svg class="pd-acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" d="M6 9l6 6 6-6"/>
+                </svg>
+              </summary>
+              <div class="pd-acc-body">
+                <div id="pdNotesList" class="pd-notes-list"></div>
+              </div>
+            </details>
+          </div>
+
+          <!-- Botón carrito -->
+          <div class="pd-actions">
             <button id="pdCartBtn" class="pd-cart-btn" disabled>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0h8"/>
               </svg>
               <span id="pdCartBtnText">Selecciona un tamaño</span>
             </button>
           </div>
+
+          <!-- Trust badges -->
+          <div class="pd-trust">
+            <div class="pd-trust-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path stroke-linecap="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              <span>Originalidad Garantizada</span>
+            </div>
+            <div class="pd-trust-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path stroke-linecap="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+              <span>Envío a Todo el Perú</span>
+            </div>
+            <div class="pd-trust-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path stroke-linecap="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+              <span>Pago Seguro</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="pd-discover">
-        <h3 class="pd-discover-title">
-          <span class="pd-discover-line"></span>
-          Descubre más fragancias
-          <span class="pd-discover-line"></span>
-        </h3>
+      <!-- Descubre más vibras -->
+      <section class="pd-discover">
+        <div class="pd-discover-header">
+          <h3 class="pd-discover-title">DESCUBRE MÁS VIBRAS</h3>
+          <button class="pd-discover-all" onclick="closePdModal()">VER TODO →</button>
+        </div>
         <div id="pdDiscoverScroll" class="pd-discover-scroll"></div>
-      </div>
+      </section>
     </div>
   `;
   document.body.appendChild(el);
 
   el.querySelector('.pd-backdrop').addEventListener('click', closePdModal);
   el.querySelector('.pd-close').addEventListener('click', closePdModal);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePdModal(); });
+  document.addEventListener('keydown', _pdEscHandler);
+
+  // Guía de decants: toggle tooltip
+  document.getElementById('pdGuideBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    const tt = document.getElementById('pdGuideTooltip');
+    tt.style.display = tt.style.display === 'none' ? 'block' : 'none';
+  });
 
   document.getElementById('pdCartBtn').addEventListener('click', () => {
     if (!_pdProduct || !_pdSelSize) return;
@@ -620,7 +692,8 @@ function _createPdModal() {
     txt.textContent = '¡Agregado al carrito! ✓';
     setTimeout(() => {
       btn.classList.remove('added');
-      txt.textContent = `Agregar al carrito — S/ ${_pdSelPrice}`;
+      const isE = _pdProduct?.type === 'entero';
+      txt.textContent = isE ? 'AÑADIR AL CARRITO' : `AÑADIR AL CARRITO — S/ ${_pdSelPrice}`;
     }, 2000);
     renderProducts();
   });
@@ -635,17 +708,15 @@ function openPdModal(productId) {
   _pdSelPrice = 0;
 
   const isEntero    = p.type === 'entero';
-  const genderLabel = { hombre: 'Hombre', mujer: 'Mujer', unisex: 'Unisex' }[p.gender] || '';
-  const occasionLbl = { dia: 'Día', noche: 'Noche', ambas: 'Día & Noche' }[p.occasion] || '';
   const typeLabel   = p.type === 'arabe' ? 'Árabe' : isEntero ? 'Perfume Entero' : 'Diseñador';
-  const typeBadge   = p.type === 'arabe' ? 'badge-arabe' : isEntero ? 'badge-entero' : 'badge-dis';
+  const occasionLbl = { dia: 'Día', noche: 'Noche', ambas: 'Día & Noche' }[p.occasion] || '';
 
-  // Imagen
+  // ── Imagen ───────────────────────────────────────────────
   const imgEl = document.getElementById('pdImg');
   const imgPh = document.getElementById('pdImgPh');
   if (p.imageUrl) {
     imgEl.src = p.imageUrl;
-    imgEl.alt = `${sanitize(p.brand)} ${sanitize(p.name)}`;
+    imgEl.alt = `${p.brand} ${p.name}`;
     imgEl.style.display = 'block';
     imgPh.style.display = 'none';
     imgEl.onerror = () => { imgEl.style.display = 'none'; imgPh.style.display = 'flex'; };
@@ -654,80 +725,129 @@ function openPdModal(productId) {
     imgPh.style.display = 'flex';
   }
 
-  // Familia olfativa
-  const olfTag = document.getElementById('pdOlfTag');
-  olfTag.textContent = p.olfFamily || '';
-  olfTag.style.display = p.olfFamily ? 'inline-block' : 'none';
+  // ── Breadcrumb + Nombre ──────────────────────────────────
+  document.getElementById('pdBreadBrand').textContent = p.brand.toUpperCase();
+  document.getElementById('pdName').textContent = p.name;
+  const subtitleParts = [typeLabel, p.olfFamily, occasionLbl].filter(Boolean);
+  document.getElementById('pdSubtitle').textContent = subtitleParts.join(' · ');
 
-  // Badges
-  document.getElementById('pdBadges').innerHTML = `
-    <span class="badge-type ${typeBadge}">${typeLabel}</span>
-    ${p.featured ? '<span class="badge-featured">⭐ Popular</span>' : ''}
-    ${!p.inStock ? '<span class="pd-badge-out">Agotado</span>' : ''}`;
-
-  document.getElementById('pdBrand').textContent = p.brand.toUpperCase();
-  document.getElementById('pdName').textContent  = p.name;
-
-  document.getElementById('pdTags').innerHTML = [
-    genderLabel ? `<span class="pd-tag">${genderLabel}</span>` : '',
-    occasionLbl ? `<span class="pd-tag">${occasionLbl}</span>` : '',
-  ].filter(Boolean).join('');
-
-  document.getElementById('pdDesc').textContent = p.description || '';
-
-  // Notas olfativas
-  const notesEl = document.getElementById('pdNotes');
-  if (!isEntero && (p.topNotes || p.heartNotes || p.baseNotes)) {
-    notesEl.innerHTML = `
-      <p class="pd-notes-title">Pirámide olfativa</p>
-      ${p.topNotes   ? `<div class="pd-note-row pd-note-top"><span class="pd-note-icon">▲</span><span class="pd-note-lbl">Salida</span><span class="pd-note-val">${sanitize(p.topNotes)}</span></div>` : ''}
-      ${p.heartNotes ? `<div class="pd-note-row pd-note-heart"><span class="pd-note-icon">♥</span><span class="pd-note-lbl">Corazón</span><span class="pd-note-val">${sanitize(p.heartNotes)}</span></div>` : ''}
-      ${p.baseNotes  ? `<div class="pd-note-row pd-note-base"><span class="pd-note-icon">●</span><span class="pd-note-lbl">Fondo</span><span class="pd-note-val">${sanitize(p.baseNotes)}</span></div>` : ''}`;
-    notesEl.style.display = 'flex';
+  // ── Precio (solo decants) ────────────────────────────────
+  const priceRow = document.getElementById('pdPriceRow');
+  if (!isEntero) {
+    const sizes = Object.values(p.sizes);
+    const minPrice = sizes.length ? Math.min(...sizes) : 0;
+    priceRow.innerHTML = minPrice > 0
+      ? `<span class="pd-price-from">Desde</span> <strong class="pd-price-main">S/ ${minPrice}</strong>`
+      : `<span class="pd-price-consultar">Consultar precio</span>`;
+    priceRow.style.display = 'flex';
   } else {
-    notesEl.style.display = 'none';
+    priceRow.style.display = 'none';
   }
 
-  // Tallas
+  // ── Guía de decants (solo decants) ──────────────────────
+  const guideBtn = document.getElementById('pdGuideBtn');
+  document.getElementById('pdGuideTooltip').style.display = 'none';
+  guideBtn.style.display = isEntero ? 'none' : 'inline-block';
+
+  if (!isEntero) {
+    document.getElementById('pdGuideRows').innerHTML = Object.keys(p.sizes).map(ml => {
+      const n = parseFloat(ml);
+      if (isNaN(n)) return '';
+      const sprays   = Math.round(n / 0.1);
+      const weeksMin = Math.max(1, Math.round((n / 0.3) / 7));
+      const weeksMax = Math.max(1, Math.round((n / 0.2) / 7));
+      const dur = weeksMax < 2 ? `${Math.round(n/0.3)}-${Math.round(n/0.2)} días`
+                               : `${weeksMin}-${weeksMax} semanas`;
+      return `<div class="pd-guide-row">
+        <span class="pd-guide-ml">${sanitize(ml)}</span>
+        <span class="pd-guide-sprays">~${sprays} sprays</span>
+        <span class="pd-guide-dur">${dur}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Botones de tamaño ────────────────────────────────────
   const sizesRow = document.getElementById('pdSizesRow');
   const cartBtn  = document.getElementById('pdCartBtn');
   const cartTxt  = document.getElementById('pdCartBtnText');
-  cartBtn.disabled = true;
-  cartTxt.textContent = 'Selecciona un tamaño';
   cartBtn.classList.remove('added');
 
   if (isEntero) {
     const price = p.enteroPrice || 0;
     sizesRow.innerHTML = `
-      <button class="pd-size-btn ${!p.inStock || price === 0 ? 'pd-size-disabled' : ''}"
+      <button class="pd-size-btn-new ${!p.inStock ? 'pd-size-disabled' : ''}"
               data-size="Unidad" data-price="${price}"
-              ${!p.inStock || price === 0 ? 'disabled' : ''}>
-        <span class="pd-size-ml">Unidad</span>
-        <span class="pd-size-price">${price > 0 ? `S/ ${price}` : 'Consultar'}</span>
+              ${!p.inStock ? 'disabled' : ''}>
+        Unidad
       </button>`;
+    // Auto-seleccionar para entero
+    if (p.inStock) {
+      _pdSelSize  = 'Unidad';
+      _pdSelPrice = price;
+      cartBtn.disabled = false;
+      cartTxt.textContent = 'AÑADIR AL CARRITO';
+      sizesRow.querySelector('.pd-size-btn-new')?.classList.add('active');
+    } else {
+      cartBtn.disabled = true;
+      cartTxt.textContent = 'Agotado';
+    }
   } else {
+    cartBtn.disabled = true;
+    cartTxt.textContent = 'Selecciona un tamaño';
     sizesRow.innerHTML = Object.entries(p.sizes).map(([ml, price]) => `
-      <button class="pd-size-btn ${!p.inStock ? 'pd-size-disabled' : ''}"
+      <button class="pd-size-btn-new ${!p.inStock ? 'pd-size-disabled' : ''}"
               data-size="${escapeAttr(ml)}" data-price="${price}"
               ${!p.inStock ? 'disabled' : ''}>
-        <span class="pd-size-ml">${sanitize(ml)}</span>
-        <span class="pd-size-price">S/ ${price}</span>
+        ${sanitize(ml)}
       </button>`).join('');
+
+    sizesRow.querySelectorAll('.pd-size-btn-new:not([disabled])').forEach(btn => {
+      btn.addEventListener('click', () => {
+        sizesRow.querySelectorAll('.pd-size-btn-new').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        _pdSelSize  = btn.dataset.size;
+        _pdSelPrice = parseFloat(btn.dataset.price);
+        cartBtn.disabled = false;
+        cartTxt.textContent = `AÑADIR AL CARRITO — S/ ${_pdSelPrice}`;
+        cartBtn.classList.remove('added');
+      });
+    });
   }
 
-  sizesRow.querySelectorAll('.pd-size-btn:not([disabled])').forEach(btn => {
-    btn.addEventListener('click', () => {
-      sizesRow.querySelectorAll('.pd-size-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      _pdSelSize  = btn.dataset.size;
-      _pdSelPrice = parseFloat(btn.dataset.price);
-      cartBtn.disabled = false;
-      cartTxt.textContent = `Agregar al carrito — S/ ${_pdSelPrice}`;
-      cartBtn.classList.remove('added');
-    });
-  });
+  // ── Descripción ──────────────────────────────────────────
+  document.getElementById('pdDesc').textContent = p.description || '';
 
-  // Descubre más fragancias
+  // ── Notas olfativas ──────────────────────────────────────
+  const notesList = document.getElementById('pdNotesList');
+  const notesAcc  = document.getElementById('pdAccNotes');
+  if (!isEntero && (p.topNotes || p.heartNotes || p.baseNotes)) {
+    notesList.innerHTML = [
+      p.topNotes    ? `<div class="pd-note-glass pd-note-top">
+        <div class="pd-note-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="22" height="22"><path stroke-linecap="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+        </div>
+        <div><p class="pd-note-tier-lbl">SALIDA</p><p class="pd-note-tier-val">${sanitize(p.topNotes)}</p></div>
+      </div>` : '',
+      p.heartNotes  ? `<div class="pd-note-glass pd-note-heart">
+        <div class="pd-note-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        </div>
+        <div><p class="pd-note-tier-lbl">CORAZÓN</p><p class="pd-note-tier-val">${sanitize(p.heartNotes)}</p></div>
+      </div>` : '',
+      p.baseNotes   ? `<div class="pd-note-glass pd-note-base">
+        <div class="pd-note-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="22" height="22"><path stroke-linecap="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        </div>
+        <div><p class="pd-note-tier-lbl">FONDO</p><p class="pd-note-tier-val">${sanitize(p.baseNotes)}</p></div>
+      </div>` : ''
+    ].filter(Boolean).join('');
+    notesAcc.style.display = 'block';
+  } else {
+    notesList.innerHTML = '';
+    notesAcc.style.display = 'none';
+  }
+
+  // ── Descubre más vibras ───────────────────────────────────
   const all = _allProducts || Products.getAll();
   const similar = all
     .filter(x => x.id !== p.id && x.inStock !== false)
@@ -747,9 +867,11 @@ function openPdModal(productId) {
     return `
       <button class="pd-mini-card" data-id="${sp.id}" aria-label="Ver ${sanitize(sp.name)}">
         <div class="pd-mini-img-wrap">${spImg}</div>
-        <p class="pd-mini-brand">${sanitize(sp.brand)}</p>
-        <p class="pd-mini-name">${sanitize(sp.name)}</p>
-        ${spMin > 0 ? `<p class="pd-mini-price">Desde S/ ${spMin}</p>` : ''}
+        <div class="pd-mini-info">
+          <p class="pd-mini-brand">${sanitize(sp.brand)}</p>
+          <p class="pd-mini-name">${sanitize(sp.name)}</p>
+          ${spMin > 0 && sp.type !== 'entero' ? `<p class="pd-mini-price">Desde S/ ${spMin}</p>` : ''}
+        </div>
       </button>`;
   }).join('');
 
