@@ -1997,7 +1997,7 @@ input, select, textarea { font-family: inherit; }
 
 /* Columna izquierda — imagen sticky */
 .pd-left-col {
-  background: #eeeae3;
+  background: var(--bg);
   display: flex; align-items: center; justify-content: center;
   min-height: 300px;
   overflow: hidden;
@@ -2298,7 +2298,7 @@ input, select, textarea { font-family: inherit; }
 }
 .pd-mini-img-wrap {
   width: 100%; aspect-ratio: 3/4;
-  background: #eeeae3;
+  background: var(--bg);
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
 }
