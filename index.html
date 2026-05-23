@@ -314,17 +314,19 @@
 
         <!-- Fila 1: Tipo + Búsqueda -->
         <div class="filter-row-1">
-          <button class="filter-btn active" data-filter="all">Todos</button>
-          <button class="filter-btn" data-filter="arabe">Árabes</button>
-          <button class="filter-btn" data-filter="diseñador">Diseñador</button>
-          <button class="filter-btn filter-btn-entero" data-filter="entero">Perfumes Enteros</button>
-          <div class="filter-divider" aria-hidden="true"></div>
-          <!-- Familia olfativa -->
-          <select class="olf-select" id="olfFamilyFilter" aria-label="Familia olfativa">
-            <option value="all">Familia olfativa</option>
-          </select>
+          <div class="filter-row-1-types">
+            <button class="filter-btn active" data-filter="all">Todos</button>
+            <button class="filter-btn" data-filter="arabe">Árabes</button>
+            <button class="filter-btn" data-filter="diseñador">Diseñador</button>
+            <button class="filter-btn filter-btn-entero" data-filter="entero">Perfumes Enteros</button>
+            <div class="filter-divider" aria-hidden="true"></div>
+            <!-- Familia olfativa -->
+            <select class="olf-select" id="olfFamilyFilter" aria-label="Familia olfativa">
+              <option value="all">Familia olfativa</option>
+            </select>
+          </div>
           <!-- Búsqueda premium -->
-          <div id="srch-poda" style="margin-left:auto" role="search">
+          <div id="srch-poda" role="search">
             <div class="srch-glow"></div>
             <div class="srch-darkBg"></div>
             <div class="srch-darkBg"></div>
@@ -334,6 +336,7 @@
             <div id="srch-main">
               <input placeholder="Buscar perfume…" type="search" id="searchInput"
                      class="srch-input" maxlength="100" autocomplete="off" aria-label="Buscar perfume">
+              <div id="srch-suggestions" role="listbox" aria-label="Sugerencias"></div>
               <div id="srch-input-mask" aria-hidden="true"></div>
               <div id="srch-gold-mask"  aria-hidden="true"></div>
               <div class="srch-filterBorder" aria-hidden="true"></div>

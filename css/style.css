@@ -272,6 +272,8 @@ input, select, textarea { font-family: inherit; }
 .filters-inner { display: flex; flex-direction: column; gap: .75rem; }
 
 .filter-row-1 { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.filter-row-1-types { display: flex; align-items: center; gap: .5rem; flex: 1; flex-wrap: wrap; }
+#srch-poda { margin-left: auto; }
 
 .filter-btn {
   padding: .4rem 1rem; border-radius: 50px;
@@ -1738,7 +1740,44 @@ input, select, textarea { font-family: inherit; }
     max-height: 0;
     transition: max-height .45s cubic-bezier(.22,1,.36,1);
   }
-  .filters-collapsible.open { max-height: 600px; }
+  .filters-collapsible.open { max-height: 800px; }
+
+  /* ── Fila 1 en móvil: columna, tipos scroll horizontal ── */
+  .filter-row-1 { flex-direction: column; align-items: stretch; gap: .5rem; }
+  .filter-row-1-types {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    flex: none;
+  }
+  .filter-row-1-types::-webkit-scrollbar { display: none; }
+  .filter-row-1-types .filter-btn,
+  .filter-row-1-types .olf-select,
+  .filter-row-1-types .filter-divider { flex-shrink: 0; }
+
+  /* ── Search full-width en móvil ─────────────────────── */
+  #srch-poda { width: 100%; margin-left: 0 !important; justify-content: flex-start; }
+  #srch-main { width: 100%; }
+  .srch-input { width: 100% !important; box-sizing: border-box; }
+  .srch-white, .srch-border, .srch-darkBg, .srch-glow {
+    max-width: 100% !important; width: 100% !important;
+  }
+  #srch-suggestions { min-width: unset; }
+
+  /* ── Fila 2 scroll horizontal ───────────────────────── */
+  .filter-row-2 {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .filter-row-2::-webkit-scrollbar { display: none; }
+  .filter-row-2 .filter-group,
+  .filter-row-2 .filter-group-btn,
+  .filter-row-2 .filter-group-label,
+  .filter-row-2 .filter-divider { flex-shrink: 0; }
+  .filter-row-2 > div:last-child { flex-shrink: 0; }
 
   /* Animaciones más suaves en móvil — sin scale */
   .anim-scale {
@@ -2350,6 +2389,43 @@ input, select, textarea { font-family: inherit; }
 .srch-input::placeholder { color: var(--text3); }
 .srch-input:focus { outline: none; }
 
+/* ─── Sugerencias de búsqueda ──────────────────────────── */
+#srch-suggestions {
+  position: fixed;
+  background: #161610;
+  border: 1px solid rgba(201,168,76,.35);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0,0,0,.75), 0 0 0 1px rgba(201,168,76,.06);
+  z-index: 9999;
+  display: none;
+  min-width: 240px;
+}
+#srch-suggestions.open { display: block; }
+.srch-sug-item {
+  padding: .62rem 1rem;
+  font-size: .82rem;
+  color: var(--text2);
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  transition: background .12s, color .12s;
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  overflow: hidden;
+}
+.srch-sug-item:last-child { border-bottom: none; }
+.srch-sug-item:hover,
+.srch-sug-item.focused { background: rgba(201,168,76,.1); color: var(--gold); }
+.srch-sug-item.no-results {
+  cursor: default; color: var(--text3); font-style: italic;
+  justify-content: center; padding: .9rem 1rem;
+}
+.srch-sug-item.no-results:hover { background: transparent; color: var(--text3); }
+.srch-sug-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.srch-sug-brand { font-size: .7rem; opacity: .45; flex-shrink: 0; }
+mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
+
 #srch-poda {
   display: flex;
   align-items: center;
@@ -2517,13 +2593,6 @@ input, select, textarea { font-family: inherit; }
   pointer-events: none;
 }
 
-@media (max-width: 640px) {
-  /* En móvil el search queda dentro del collapsible de filtros */
-  .srch-input { width: min(240px, calc(100vw - 3rem)); }
-  .srch-white, .srch-border, .srch-darkBg, .srch-glow {
-    max-width: min(265px, calc(100vw - 2.5rem));
-  }
-}
 
 /* ─── Marquee strip ─────────────────────────────────────── */
 .marquee-strip {
