@@ -1301,7 +1301,8 @@ const PRODUCT_IMAGE_MAP = {
   'Yara Rosa':                  '/img PERFUMES/Yara Rosa.webp',
   '9PM Pour Femme':             '/img PERFUMES/9PM Pour Femme.webp',
   '9AM Pour Femme':             '/img PERFUMES/9AM Pour Femme.webp',
-  'Delilah':                    '/img PERFUMES/Delilah.jpg'
+  'Delilah':                    '/img PERFUMES/Delilah.jpg',
+  'Valentino Uomo Born in Roma':'/img PERFUMES/Valentino Uomo Born in Roma.jpg'
 };
 
 DEFAULT_PRODUCTS.forEach(p => {
@@ -1432,6 +1433,18 @@ DEFAULT_PRODUCTS.push(
     contentDescription: 'Perfume entero · Frasco original Stallion',
     imageUrl: '/imgPerfumesEnteros/stallion donna intense.avif',
     sizes: { 'Unidad': 0 }, inStock: true, featured: false, bottleRemainingMl: 0, bottleTotalMl: 0
+  },
+  // ─── VALENTINO — UOMO BORN IN ROMA ──────────────────────────────────────────
+  {
+    id: 74, name: 'Valentino Uomo Born in Roma', brand: 'Valentino', type: 'diseñador',
+    gender: 'hombre', occasion: 'noche', olfFamily: 'Oriental Gourmand',
+    topNotes: 'Limón, Bergamota, Mandarina',
+    heartNotes: 'Salvia romana, Violeta, Pachulí',
+    baseNotes: 'Vainilla bourbon, Ámbar, Almizcle blanco',
+    description: 'Valentino Uomo Born in Roma: elegancia italiana pura. Cítricos brillantes que abren paso a una salvia fresca y violeta, sobre una base caliente y adictiva de vainilla bourbon con ámbar dorado.',
+    imageUrl: '/img PERFUMES/Valentino Uomo Born in Roma.jpg',
+    sizes: { '3ml': 20, '5ml': 30, '10ml': 60 },
+    inStock: true, featured: false, bottleRemainingMl: 0, bottleTotalMl: 0
   },
   // ─── LATTAFA — NITRO RED INTENSELY ───────────────────────────────────────────
   {
