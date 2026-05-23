@@ -243,8 +243,28 @@ let _allProducts = null;
 function renderProducts() {
   const grid        = document.getElementById('productsGrid');
   const allFiltered = Filter.apply(_allProducts || Products.getAll());
-  // Agotados siempre al fondo
-  allFiltered.sort((a, b) => (a.inStock === b.inStock ? 0 : a.inStock ? -1 : 1));
+
+  // Ordenar: si hay búsqueda, priorizar por relevancia; siempre agotados al fondo
+  if (Filter.search) {
+    const q = Filter.search.toLowerCase();
+    const score = p => {
+      const name  = (p.name  || '').toLowerCase();
+      const brand = (p.brand || '').toLowerCase();
+      if (name === q)                  return 6;
+      if (name.startsWith(q))          return 5;
+      if (brand === q)                 return 4;
+      if (name.includes(q))            return 3;
+      if (brand.includes(q))           return 2;
+      return 1; // fuzzy match
+    };
+    allFiltered.sort((a, b) => {
+      if (a.inStock !== b.inStock) return a.inStock ? -1 : 1;
+      return score(b) - score(a);
+    });
+  } else {
+    // Sin búsqueda: agotados al fondo, resto en orden original
+    allFiltered.sort((a, b) => (a.inStock === b.inStock ? 0 : a.inStock ? -1 : 1));
+  }
   const totalPages  = Pagination.totalPages(allFiltered.length);
 
   // Corregir página si excede el total
