@@ -247,7 +247,7 @@
         </div>
       </a>
       <nav class="nav" aria-label="Principal">
-        <a href="#catalogo">Catálogo</a>
+        <a href="#catalogo" id="navCatalogLink">Catálogo</a>
         <a href="#catalogo" id="navEnteroLink" style="color:var(--gold) !important;font-weight:600">Perfumes Enteros</a>
         <a href="nosotros/">Nosotros</a>
         <a href="contacto/">Contacto</a>
@@ -272,7 +272,7 @@
   <div class="mobile-menu" id="mobileMenu" aria-hidden="true" role="dialog" aria-label="Menú principal">
     <span class="mobile-menu-brand">MICHT DECANTS</span>
     <nav class="mobile-nav">
-      <a href="#catalogo" class="mobile-nav-link">Catálogo</a>
+      <a href="#catalogo" class="mobile-nav-link" id="mobileCatalogLink">Catálogo</a>
       <a href="#catalogo" class="mobile-nav-link" id="mobileNavEnteroLink" style="color:var(--gold)">✦ Perfumes Enteros</a>
       <a href="nosotros/" class="mobile-nav-link">Nosotros</a>
       <a href="contacto/" class="mobile-nav-link">Contacto</a>
@@ -866,25 +866,49 @@
       document.addEventListener('catalogLoaded', () => setTimeout(() => window.print(), 500));
     }
 
-    // ── Links "Perfumes Enteros" del nav ──────────────────────────────────────
+    // ── Cerrar menú móvil (helper) ────────────────────────────────────────────
+    function cerrarMenuMovil() {
+      const menu = document.getElementById('mobileMenu');
+      if (menu && menu.classList.contains('open')) {
+        menu.classList.remove('open');
+        menu.setAttribute('aria-hidden', 'true');
+        document.getElementById('menuBtn')?.classList.remove('open');
+        document.getElementById('menuBtn')?.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      }
+    }
+
+    // ── Link "Catálogo" → ir al inicio de la página ───────────────────────────
+    function activarFiltroCatalogo(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      cerrarMenuMovil();
+      // Resetear filtro a "Todos" si no está activo
+      const btnTodos = document.querySelector('.filter-btn[data-filter="all"]');
+      if (btnTodos && !btnTodos.classList.contains('active')) btnTodos.click();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    document.getElementById('navCatalogLink')?.addEventListener('click', activarFiltroCatalogo);
+    document.getElementById('mobileCatalogLink')?.addEventListener('click', activarFiltroCatalogo);
+
+    // ── Links "Perfumes Enteros" → mostrar banner correctamente ──────────────
     function activarFiltroEntero(e) {
       e.preventDefault();
+      e.stopPropagation();
+      cerrarMenuMovil();
       const btn = document.querySelector('.filter-btn[data-filter="entero"]');
       if (btn) {
         btn.click();
-        // Cerrar menú móvil si está abierto
-        const menu = document.getElementById('mobileMenu');
-        if (menu && menu.classList.contains('open')) {
-          menu.classList.remove('open');
-          menu.setAttribute('aria-hidden', 'true');
-          document.getElementById('menuBtn')?.classList.remove('open');
-          document.getElementById('menuBtn')?.setAttribute('aria-expanded', 'false');
-          document.body.style.overflow = '';
-        }
-        // Scroll al catálogo
+        // Scroll para mostrar el banner justo debajo de los filtros sticky
         setTimeout(() => {
-          document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
-        }, 80);
+          const banner    = document.getElementById('catalogBanner');
+          const filtersEl = document.getElementById('catalogo');
+          if (!banner) return;
+          const headerH  = 64;
+          const filtersH = filtersEl ? filtersEl.offsetHeight : 0;
+          const targetY  = banner.offsetTop - headerH - filtersH;
+          window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+        }, 100);
       }
     }
     document.getElementById('navEnteroLink')?.addEventListener('click', activarFiltroEntero);
