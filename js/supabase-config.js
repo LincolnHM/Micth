@@ -25,7 +25,15 @@
 //   created_at     TIMESTAMPTZ DEFAULT NOW(),
 //   updated_at     TIMESTAMPTZ
 // );
-// ALTER TABLE pedidos DISABLE ROW LEVEL SECURITY;
+//
+// -- SEGURIDAD: habilitar RLS y crear políticas
+// ALTER TABLE pedidos ENABLE ROW LEVEL SECURITY;
+// -- Clientes anónimos solo pueden INSERTAR (crear pedidos)
+// CREATE POLICY "anon_insert_pedidos" ON pedidos FOR INSERT TO anon WITH CHECK (true);
+// -- Solo el admin autenticado puede leer, actualizar y eliminar
+// CREATE POLICY "admin_select_pedidos" ON pedidos FOR SELECT TO authenticated USING (true);
+// CREATE POLICY "admin_update_pedidos" ON pedidos FOR UPDATE TO authenticated USING (true);
+// CREATE POLICY "admin_delete_pedidos" ON pedidos FOR DELETE TO authenticated USING (true);
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -44,11 +52,7 @@ const db = SUPABASE_READY
   ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
 
-if (SUPABASE_READY) {
-  console.log('✅ Supabase conectado');
-} else {
-  console.warn('⚠️ Supabase no configurado — usando almacenamiento local');
-}
+// Conexión silenciosa — no exponer detalles del stack en consola pública
 
 // ─── Convertir formato Supabase ↔ JavaScript ──────────────────────────────────
 
@@ -252,7 +256,12 @@ const CloudOrders = {
 //   created_at          TIMESTAMPTZ DEFAULT NOW(),
 //   updated_at          TIMESTAMPTZ
 // );
-// ALTER TABLE productos DISABLE ROW LEVEL SECURITY;
+// -- SEGURIDAD: habilitar RLS y crear políticas
+// ALTER TABLE productos ENABLE ROW LEVEL SECURITY;
+// -- Clientes anónimos pueden LEER productos (ver catálogo)
+// CREATE POLICY "anon_read_productos" ON productos FOR SELECT TO anon USING (true);
+// -- Solo el admin autenticado puede crear, editar y eliminar productos
+// CREATE POLICY "admin_all_productos" ON productos FOR ALL TO authenticated USING (true);
 //
 // ─────────────────────────────────────────────────────────────────────────────
 

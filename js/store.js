@@ -71,7 +71,7 @@ const Cart = {
         (_allProducts?.find(p => p.id === item.productId) ?? Products.getById(item.productId))?.imageUrl ||
         '';
       const thumbHtml = imgUrl
-        ? `<img src="${imgUrl}" alt="" class="cart-item-thumb" loading="lazy" onerror="this.style.display='none'">`
+        ? `<img src="${escapeAttr(imgUrl)}" alt="" class="cart-item-thumb" loading="lazy" onerror="this.style.display='none'">`
         : `<div class="cart-item-thumb-ph"><svg viewBox="0 0 32 48" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="10" y="0" width="12" height="4" rx="1"/><path d="M8 4C4 4 2 8 2 12L2 44C2 46 4 48 6 48L26 48C28 48 30 46 30 44L30 12C30 8 28 4 24 4Z"/><line x1="2" y1="14" x2="30" y2="14"/></svg></div>`;
       return `
       <div class="cart-item">
