@@ -1235,6 +1235,13 @@ async function renderAccountingSection() {
       <td style="text-align:right;font-weight:700;color:${m.net > 0 ? 'var(--gold)' : m.net < 0 ? '#ef5350' : 'var(--text3)'}">
         ${(m.revenue > 0 || m.expenses > 0) ? `S/ ${m.net.toFixed(2)}` : '—'}
       </td>
+      <td style="text-align:center">
+        <button class="btn-days-detail" data-month="${m.month}" data-year="${year}"
+                style="font-size:.78rem;padding:.2rem .55rem;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:3px;cursor:pointer;transition:all .15s"
+                onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)';this.style.background='rgba(201,168,76,.08)'"
+                onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)';this.style.background='transparent'"
+                title="Ver días de ${m.name}">📅</button>
+      </td>
     </tr>`;
   }).join('');
 
@@ -1247,11 +1254,17 @@ async function renderAccountingSection() {
       <td style="text-align:right;font-weight:700;color:var(--green)">S/ ${totalRevenue.toFixed(2)}</td>
       <td style="text-align:right;font-weight:700;color:#ef5350">${totalExpenses > 0 ? `S/ ${totalExpenses.toFixed(2)}` : '—'}</td>
       <td style="text-align:right;font-weight:700;color:var(--gold)">S/ ${totalNet.toFixed(2)}</td>
+      <td></td>
     </tr>`;
 
   // Eventos de detalle de gastos
   tbody.querySelectorAll('.btn-expense-detail').forEach(btn => {
     btn.addEventListener('click', () => openExpenseModal(parseInt(btn.dataset.month), parseInt(btn.dataset.year)));
+  });
+
+  // Eventos de detalle diario
+  tbody.querySelectorAll('.btn-days-detail').forEach(btn => {
+    btn.addEventListener('click', () => renderDailyView(allOrders, parseInt(btn.dataset.year), parseInt(btn.dataset.month)));
   });
 }
 
@@ -1444,7 +1457,7 @@ function openExpenseModal(month, year) {
 function setupAccountingEvents() {
   document.getElementById('accountingYear')?.addEventListener('change', () => {
     const yearSel = document.getElementById('accountingYear');
-    if (yearSel) yearSel.dataset.filled = ''; // forzar repoblación si cambia año
+    if (yearSel) yearSel.dataset.filled = '';
     renderAccountingSection().catch(console.error);
   });
 
@@ -1452,5 +1465,201 @@ function setupAccountingEvents() {
     const year  = parseInt(document.getElementById('accountingYear')?.value) || new Date().getFullYear();
     const month = new Date().getMonth();
     openExpenseModal(month, year);
+  });
+
+  document.getElementById('dailyBackBtn')?.addEventListener('click', () => {
+    document.getElementById('accountingDailyView').style.display  = 'none';
+    document.getElementById('accountingMonthlyView').style.display = '';
+  });
+}
+
+// ─── Vista Diaria ─────────────────────────────────────────────────────────────
+
+function getDailyStats(orders, year, month) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const filtered    = orders.filter(o => {
+    const d = new Date(o.date);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+  return Array.from({ length: daysInMonth }, (_, i) => {
+    const day       = i + 1;
+    const dayOrders = filtered.filter(o => new Date(o.date).getDate() === day);
+    const paid      = dayOrders.filter(o => o.status === 'pagado');
+    const cancelled = dayOrders.filter(o => o.status === 'cancelado');
+    const revenue   = paid.reduce((s, o) => s + o.total, 0);
+    return { day, orders: dayOrders.length, paid: paid.length, cancelled: cancelled.length, revenue };
+  });
+}
+
+function renderDailyView(allOrders, year, month) {
+  const dailyStats = getDailyStats(allOrders, year, month);
+  const monthName  = MONTH_NAMES[month];
+  const now        = new Date();
+  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
+  const today      = now.getDate();
+
+  // Cambiar vista
+  document.getElementById('accountingMonthlyView').style.display = 'none';
+  document.getElementById('accountingDailyView').style.display   = '';
+
+  // Título
+  document.getElementById('dailyViewTitle').textContent = `Días de ${monthName} ${year}`;
+
+  // Resumen
+  const bestDay      = dailyStats.reduce((b, d) => d.revenue > b.revenue ? d : b, dailyStats[0]);
+  const totalRevenue = dailyStats.reduce((s, d) => s + d.revenue, 0);
+  const totalPaid    = dailyStats.reduce((s, d) => s + d.paid, 0);
+  const activeDays   = dailyStats.filter(d => d.revenue > 0).length;
+
+  document.getElementById('dailySummary').innerHTML = [
+    { label: `Total ${monthName}`, val: `S/ ${totalRevenue.toFixed(0)}`, sub: `${totalPaid} pedidos pagados`, color: 'var(--gold)' },
+    { label: 'Mejor Día',         val: bestDay.revenue > 0 ? `Día ${bestDay.day}` : '—', sub: bestDay.revenue > 0 ? `S/ ${bestDay.revenue.toFixed(0)}` : 'Sin ventas aún', color: 'var(--green)' },
+    { label: 'Días con Ventas',   val: String(activeDays || 0), sub: `de ${dailyStats.length} días del mes`, color: 'var(--gold-d)' },
+    { label: 'Prom / Día Activo', val: activeDays > 0 ? `S/ ${(totalRevenue / activeDays).toFixed(0)}` : '—', sub: 'promedio días con venta', color: 'var(--text2)' },
+  ].map(c => `
+    <div class="stat-card" style="text-align:left;padding:1rem 1.1rem">
+      <div class="stat-label" style="margin-bottom:.35rem">${c.label}</div>
+      <div class="stat-val" style="color:${c.color};font-size:1.25rem;line-height:1.2">${c.val}</div>
+      <div style="font-size:.7rem;color:var(--text3);margin-top:.3rem">${c.sub}</div>
+    </div>`).join('');
+
+  // Gráfico
+  setTimeout(() => drawDailyChart(dailyStats, year, month), 0);
+
+  // Tabla
+  const tbody    = document.getElementById('dailyTableBody');
+  const bestRev  = Math.max(...dailyStats.map(d => d.revenue));
+  const activeDaysList = dailyStats.filter(d => d.orders > 0);
+
+  if (activeDaysList.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text2);padding:2rem">Sin ventas registradas en este mes</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = activeDaysList.map(d => {
+    const isBest  = d.revenue > 0 && d.revenue === bestRev;
+    const isToday = isCurrentMonth && d.day === today;
+    return `
+    <tr style="${isToday ? 'background:rgba(201,168,76,.06)' : ''}">
+      <td>
+        <span style="font-weight:700;color:${isToday ? 'var(--gold)' : 'var(--text)'}">
+          ${d.day} de ${monthName}
+        </span>
+        ${isBest ? '&nbsp;<span style="font-size:.68rem;background:rgba(76,175,80,.15);color:#4caf50;padding:.1rem .45rem;border-radius:3px;font-weight:600">⭐ mejor</span>' : ''}
+        ${isToday ? '&nbsp;<span style="font-size:.66rem;color:var(--gold-d)">(hoy)</span>' : ''}
+      </td>
+      <td style="text-align:center;color:var(--text2)">${d.paid || '—'}</td>
+      <td style="text-align:center;color:${d.cancelled ? '#ef5350' : 'var(--text3)'}">${d.cancelled || '—'}</td>
+      <td style="text-align:right;font-weight:600;color:${d.revenue > 0 ? 'var(--green)' : 'var(--text3)'}">
+        ${d.revenue > 0 ? `S/ ${d.revenue.toFixed(2)}` : '—'}
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Fila total
+  tbody.innerHTML += `
+    <tr style="background:var(--bg2);border-top:2px solid var(--border)">
+      <td style="font-weight:700;color:var(--text);font-size:.85rem">TOTAL ${monthName}</td>
+      <td style="text-align:center;font-weight:700;color:var(--gold)">${totalPaid}</td>
+      <td style="text-align:center;font-weight:700;color:#ef5350">${dailyStats.reduce((s,d)=>s+d.cancelled,0) || '—'}</td>
+      <td style="text-align:right;font-weight:700;color:var(--green)">S/ ${totalRevenue.toFixed(2)}</td>
+    </tr>`;
+}
+
+function drawDailyChart(dailyStats, year, month) {
+  const canvas = document.getElementById('dailyChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const W = canvas.parentElement.offsetWidth - 48;
+  if (W <= 0) return;
+  const H   = 200;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+
+  const padL = 52, padR = 8, padT = 22, padB = 38;
+  const cW     = W - padL - padR;
+  const cH     = H - padT - padB;
+  const n      = dailyStats.length;
+  const maxRev = Math.max(...dailyStats.map(d => d.revenue), 1);
+  const barW   = cW / n;
+  const barGap = barW * 0.3;
+  const bw     = barW - barGap;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid + etiquetas Y
+  for (let i = 0; i <= 4; i++) {
+    const y   = padT + cH - cH * i / 4;
+    const val = Math.round(maxRev * i / 4);
+    ctx.font      = '10px Inter, sans-serif';
+    ctx.fillStyle = '#666';
+    ctx.textAlign = 'right';
+    ctx.fillText(`S/${val}`, padL - 5, y + 4);
+    ctx.beginPath();
+    ctx.strokeStyle = '#2e2e2e';
+    ctx.lineWidth   = 0.8;
+    ctx.moveTo(padL, y); ctx.lineTo(padL + cW, y);
+    ctx.stroke();
+  }
+
+  const now        = new Date();
+  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
+  const today      = now.getDate();
+  const bestRev    = Math.max(...dailyStats.map(d => d.revenue));
+
+  dailyStats.forEach((d, i) => {
+    const x    = padL + i * barW + barGap / 2;
+    const barH = (d.revenue / maxRev) * cH;
+    const y    = padT + cH - barH;
+
+    const isBest  = d.revenue > 0 && d.revenue === bestRev;
+    const isToday = isCurrentMonth && d.day === today;
+
+    if (d.revenue === 0) {
+      ctx.fillStyle = '#252525';
+      ctx.fillRect(x, padT + cH - 2, bw, 2);
+    } else {
+      const grad = ctx.createLinearGradient(0, y, 0, padT + cH);
+      if (isBest) {
+        grad.addColorStop(0, '#c9a84c'); grad.addColorStop(1, '#7a5c1e');
+      } else if (isToday) {
+        grad.addColorStop(0, '#4da6ff'); grad.addColorStop(1, '#1a4a7a');
+      } else {
+        grad.addColorStop(0, '#5a5a5a'); grad.addColorStop(1, '#2a2a2a');
+      }
+      ctx.fillStyle = grad;
+      const r = Math.min(3, bw / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + bw - r, y);
+      ctx.quadraticCurveTo(x + bw, y, x + bw, y + r);
+      ctx.lineTo(x + bw, padT + cH);
+      ctx.lineTo(x, padT + cH);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+      ctx.fill();
+
+      if (barH > 14 && bw > 10) {
+        ctx.fillStyle = 'rgba(255,255,255,.85)';
+        ctx.font      = '8px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${d.revenue.toFixed(0)}`, x + bw / 2, y - 4);
+      }
+    }
+
+    // Etiqueta día — mostrar todos si hay espacio, si no cada 5
+    const showLabel = bw >= 10 || d.day === 1 || d.day % 5 === 0 || d.day === n;
+    if (showLabel) {
+      ctx.fillStyle = isToday ? '#c9a84c' : isBest ? '#c9a84c' : '#666';
+      ctx.font      = `${(isToday || isBest) ? '700 ' : ''}${bw > 12 ? '9' : '8'}px Inter, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(`${d.day}`, x + bw / 2, padT + cH + 14);
+    }
   });
 }

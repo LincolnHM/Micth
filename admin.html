@@ -176,43 +176,102 @@
         <!-- Tarjetas de resumen del año -->
         <div id="accountingSummary" class="order-stats-bar" style="grid-template-columns:repeat(auto-fill,minmax(155px,1fr));margin-bottom:1.25rem"></div>
 
-        <!-- Gráfico de barras mensuales -->
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.25rem 1.5rem;margin-bottom:1.25rem">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;flex-wrap:wrap;gap:.5rem">
-            <h3 style="font-family:'Playfair Display',serif;color:var(--white);font-size:.95rem;margin:0">Ingresos por Mes (S/)</h3>
-            <div style="display:flex;gap:1rem;font-size:.73rem;color:var(--text3)">
-              <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#c9a84c"></span>Mejor mes</span>
-              <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#4da6ff"></span>Mes actual</span>
-              <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#5a5a5a"></span>Otros</span>
+        <!-- ── Vista mensual (se oculta al entrar a vista diaria) ─────────────── -->
+        <div id="accountingMonthlyView">
+
+          <!-- Gráfico de barras mensuales -->
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.25rem 1.5rem;margin-bottom:1.25rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;flex-wrap:wrap;gap:.5rem">
+              <h3 style="font-family:'Playfair Display',serif;color:var(--white);font-size:.95rem;margin:0">Ingresos por Mes (S/)</h3>
+              <div style="display:flex;gap:1rem;font-size:.73rem;color:var(--text3)">
+                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#c9a84c"></span>Mejor mes</span>
+                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#4da6ff"></span>Mes actual</span>
+                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#5a5a5a"></span>Otros</span>
+              </div>
+            </div>
+            <canvas id="accountingChart" style="display:block;width:100%;height:200px"></canvas>
+          </div>
+
+          <!-- Tabla mensual detallada -->
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
+            <div style="padding:.9rem 1.2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+              <h3 style="font-family:'Playfair Display',serif;color:var(--white);font-size:.95rem;margin:0">Detalle Mensual</h3>
+              <span style="font-size:.73rem;color:var(--text3)">Clic en <strong style="color:var(--gold)">📅</strong> para ver los días del mes</span>
+            </div>
+            <div class="orders-table-wrap">
+              <table class="orders-table" style="min-width:580px">
+                <thead>
+                  <tr>
+                    <th>Mes</th>
+                    <th style="text-align:center">Pedidos</th>
+                    <th style="text-align:center">Cancelados</th>
+                    <th style="text-align:right">Ingresos</th>
+                    <th style="text-align:right">Gastos</th>
+                    <th style="text-align:right">Neto</th>
+                    <th style="text-align:center">Días</th>
+                  </tr>
+                </thead>
+                <tbody id="accountingTableBody">
+                  <tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">Cargando…</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
-          <canvas id="accountingChart" style="display:block;width:100%;height:200px"></canvas>
-        </div>
 
-        <!-- Tabla mensual detallada -->
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
-          <div style="padding:.9rem 1.2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-            <h3 style="font-family:'Playfair Display',serif;color:var(--white);font-size:.95rem;margin:0">Detalle Mensual</h3>
-            <span style="font-size:.73rem;color:var(--text3)">Haz clic en <strong style="color:var(--text2)">+</strong> en la columna Gastos para registrar un gasto del mes</span>
+        </div><!-- /accountingMonthlyView -->
+
+        <!-- ── Vista diaria (se muestra al hacer clic en un mes) ─────────────── -->
+        <div id="accountingDailyView" style="display:none">
+
+          <!-- Cabecera: volver + título -->
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.1rem;flex-wrap:wrap">
+            <button id="dailyBackBtn"
+                    style="display:flex;align-items:center;gap:.4rem;background:var(--card);border:1px solid var(--border);color:var(--text2);padding:.42rem .9rem;border-radius:var(--r);font-size:.8rem;cursor:pointer;transition:all .2s"
+                    onmouseover="this.style.borderColor='var(--gold-d)';this.style.color='var(--gold)'"
+                    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">
+              ← Volver a Meses
+            </button>
+            <h3 id="dailyViewTitle" style="font-family:'Playfair Display',serif;color:var(--white);font-size:1rem;margin:0"></h3>
           </div>
-          <div class="orders-table-wrap">
-            <table class="orders-table" style="min-width:560px">
-              <thead>
-                <tr>
-                  <th>Mes</th>
-                  <th style="text-align:center">Pedidos</th>
-                  <th style="text-align:center">Cancelados</th>
-                  <th style="text-align:right">Ingresos</th>
-                  <th style="text-align:right">Gastos</th>
-                  <th style="text-align:right">Neto</th>
-                </tr>
-              </thead>
-              <tbody id="accountingTableBody">
-                <tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">Cargando…</td></tr>
-              </tbody>
-            </table>
+
+          <!-- Tarjetas de resumen diario -->
+          <div id="dailySummary" class="order-stats-bar" style="grid-template-columns:repeat(auto-fill,minmax(145px,1fr));margin-bottom:1.25rem"></div>
+
+          <!-- Gráfico de barras diario -->
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.25rem 1.5rem;margin-bottom:1.25rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;flex-wrap:wrap;gap:.5rem">
+              <h3 style="font-family:'Playfair Display',serif;color:var(--white);font-size:.95rem;margin:0">Ingresos por Día (S/)</h3>
+              <div style="display:flex;gap:1rem;font-size:.73rem;color:var(--text3)">
+                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#c9a84c"></span>Mejor día</span>
+                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#4da6ff"></span>Hoy</span>
+              </div>
+            </div>
+            <canvas id="dailyChart" style="display:block;width:100%;height:200px"></canvas>
           </div>
-        </div>
+
+          <!-- Tabla diaria -->
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
+            <div style="padding:.9rem 1.2rem;border-bottom:1px solid var(--border)">
+              <h3 style="font-family:'Playfair Display',serif;color:var(--white);font-size:.95rem;margin:0">Detalle por Día</h3>
+            </div>
+            <div class="orders-table-wrap">
+              <table class="orders-table" style="min-width:380px">
+                <thead>
+                  <tr>
+                    <th>Día</th>
+                    <th style="text-align:center">Pagados</th>
+                    <th style="text-align:center">Cancelados</th>
+                    <th style="text-align:right">Ingresos</th>
+                  </tr>
+                </thead>
+                <tbody id="dailyTableBody">
+                  <tr><td colspan="4" style="text-align:center;color:var(--text2);padding:2rem">Cargando…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div><!-- /accountingDailyView -->
 
       </div>
 
