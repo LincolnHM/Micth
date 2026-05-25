@@ -1700,86 +1700,193 @@ input, select, textarea { font-family: inherit; }
   .dot:hover { transform: scale(1.4); background: rgba(201,168,76,.5); }
 }
 
-/* ── Filtros móvil colapsables ──────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   FILTROS MÓVIL — Toggle + Drawer colapsable
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Botón toggle (siempre oculto en desktop) ────────────── */
 .filters-toggle-btn {
   display: none;
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  padding: .65rem 1rem;
-  margin-bottom: .75rem;
+  padding: .7rem 1rem;
   background: var(--card);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-l);
   border-radius: var(--r);
-  color: var(--text2);
-  font-size: .82rem;
-  letter-spacing: .04em;
-  transition: all .25s ease;
+  color: var(--text);
+  font-size: .83rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  transition: border-color .25s, box-shadow .25s;
+  gap: .5rem;
 }
-.filters-toggle-btn:hover { border-color: var(--gold); color: var(--gold); }
+.filters-toggle-btn:hover,
+.filters-toggle-btn.open {
+  border-color: rgba(201,168,76,.45);
+  box-shadow: 0 0 0 1px rgba(201,168,76,.12);
+}
+.ftb-left {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.ftb-icon {
+  width: 15px; height: 15px;
+  stroke: var(--gold); fill: none; stroke-width: 1.8;
+  flex-shrink: 0;
+}
 .filters-toggle-btn .ftb-badge {
   background: var(--gold);
   color: #000;
-  font-size: .65rem;
-  font-weight: 700;
-  padding: .1rem .4rem;
+  font-size: .62rem;
+  font-weight: 800;
+  padding: .1rem .42rem;
   border-radius: 50px;
-  margin-left: .4rem;
+  line-height: 1.4;
 }
 .filters-toggle-btn .ftb-chevron {
   width: 16px; height: 16px;
-  stroke: currentColor; fill: none; stroke-width: 2;
+  stroke: var(--text2); fill: none; stroke-width: 2;
   transition: transform .3s cubic-bezier(.22,1,.36,1);
+  flex-shrink: 0;
 }
 .filters-toggle-btn.open .ftb-chevron { transform: rotate(180deg); }
 
+/* ── Drawer (colapsable solo en móvil) — visible en desktop ── */
+/* No se sobreescribe display en desktop; el max-height solo aplica en mobile */
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE — Mobile ≤ 640px
+   ═══════════════════════════════════════════════════════════ */
 @media(max-width:640px) {
+
+  /* Sección filtros — padding más compacto */
+  .filters-section { padding: .6rem 0; }
+
+  /* Mostrar toggle */
   .filters-toggle-btn { display: flex; }
+
+  /* Drawer colapsable */
   .filters-collapsible {
+    display: block;
     overflow: hidden;
     max-height: 0;
-    transition: max-height .45s cubic-bezier(.22,1,.36,1);
+    transition: max-height .42s cubic-bezier(.22,1,.36,1);
   }
-  .filters-collapsible.open { max-height: 800px; }
+  .filters-collapsible.open { max-height: 1000px; }
 
-  /* ── Fila 1 en móvil: columna, tipos scroll horizontal ── */
-  .filter-row-1 { flex-direction: column; align-items: stretch; gap: .5rem; }
+  .filters-inner { gap: .85rem; padding-top: .1rem; }
+
+  /* ─── Fila 1: Tipo de perfume — grid 2×2 ─────────────── */
+  .filter-row-1 {
+    flex-direction: column;
+    align-items: stretch;
+    gap: .6rem;
+  }
   .filter-row-1-types {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    scrollbar-width: none;
-    padding-bottom: 2px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .4rem;
+    overflow: visible;
+    flex-wrap: unset;
+    padding-bottom: 0;
     flex: none;
   }
-  .filter-row-1-types::-webkit-scrollbar { display: none; }
-  .filter-row-1-types .filter-btn,
-  .filter-row-1-types .olf-select,
-  .filter-row-1-types .filter-divider { flex-shrink: 0; }
+  .filter-row-1-types .filter-divider { display: none; }
 
-  /* ── Search full-width en móvil ─────────────────────── */
-  #srch-poda { width: 100%; margin-left: 0 !important; justify-content: flex-start; }
+  /* Botones de tipo — más grandes para touch */
+  .filter-row-1-types .filter-btn {
+    padding: .55rem .6rem;
+    min-height: 42px;
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    border-radius: var(--r);
+    flex: none;
+    font-size: .8rem;
+    line-height: 1.2;
+  }
+
+  /* Selector familia — full width */
+  .filter-row-1-types .olf-select {
+    grid-column: 1 / -1;
+    width: 100%;
+    padding: .55rem .9rem;
+    min-height: 40px;
+    border-radius: var(--r);
+  }
+
+  /* ─── Buscador — full width ─────────────────────────── */
+  #srch-poda {
+    width: 100%;
+    margin-left: 0 !important;
+    justify-content: flex-start;
+  }
   #srch-main { width: 100%; }
   .srch-input { width: 100% !important; box-sizing: border-box; }
   .srch-white, .srch-border, .srch-darkBg, .srch-glow {
-    max-width: 100% !important; width: 100% !important;
+    max-width: 100% !important;
+    width: 100% !important;
   }
   #srch-suggestions { min-width: unset; }
 
-  /* ── Fila 2 scroll horizontal ───────────────────────── */
+  /* ─── Fila 2: Género + Ocasión — layout en columna ──── */
   .filter-row-2 {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    scrollbar-width: none;
-    padding-bottom: 2px;
+    flex-direction: column;
+    overflow: visible;
+    flex-wrap: unset;
+    gap: .7rem;
+    padding-bottom: 0;
   }
-  .filter-row-2::-webkit-scrollbar { display: none; }
-  .filter-row-2 .filter-group,
-  .filter-row-2 .filter-group-btn,
-  .filter-row-2 .filter-group-label,
-  .filter-row-2 .filter-divider { flex-shrink: 0; }
-  .filter-row-2 > div:last-child { flex-shrink: 0; }
+  .filter-row-2 .filter-divider { display: none; }
 
-  /* Animaciones más suaves en móvil — sin scale */
+  /* Grupos con label visible y botones en wrap */
+  .filter-row-2 .filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .4rem;
+    flex-shrink: unset;
+  }
+  .filter-row-2 .filter-group-label {
+    font-size: .68rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--gold-d);
+    font-weight: 700;
+    flex-shrink: 0;
+    width: 100%;
+    margin-bottom: -.1rem;
+  }
+  .filter-row-2 .filter-group-btn {
+    min-height: 38px;
+    padding: .42rem .85rem;
+    flex-shrink: 0;
+    font-size: .78rem;
+  }
+
+  /* ─── Barra inferior: resultado + limpiar ───────────── */
+  .filter-row-2 > div:last-child {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-left: 0 !important;
+    padding-top: .6rem;
+    border-top: 1px solid var(--border);
+    flex-shrink: unset;
+  }
+  #resultsCount {
+    font-size: .78rem;
+    color: var(--text2);
+  }
+  #clearFilters {
+    font-size: .75rem;
+    padding: .35rem .85rem;
+  }
+
+  /* ─── Animaciones en móvil — solo translateY ─────────── */
   .anim-scale {
     transform: translateY(16px) !important;
   }
@@ -1787,13 +1894,30 @@ input, select, textarea { font-family: inherit; }
     transform: translateY(0) !important;
   }
 
-  /* Rings más grandes y visibles en móvil */
+  /* ─── Decoración carousel en móvil ─────────────────── */
   .carousel-deco {
     width: 75% !important;
     opacity: .65 !important;
     right: 50% !important;
     transform: translate(50%, -50%) !important;
   }
+}
+
+/* ── Tablet (641px – 900px): ajustes intermedios ─────────── */
+@media(min-width:641px) and (max-width:900px) {
+  .filter-row-1-types {
+    flex-wrap: wrap;
+    gap: .4rem;
+  }
+  .filter-row-1-types .filter-btn {
+    min-height: 38px;
+    padding: .45rem .85rem;
+  }
+  .filter-row-2 .filter-group-btn {
+    min-height: 36px;
+    padding: .38rem .75rem;
+  }
+  #srch-poda { min-width: 200px; }
 }
 
 /* ═══════════════════════════════════════════════════════

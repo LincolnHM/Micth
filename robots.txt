@@ -35,4 +35,5 @@ Allow: /images/
 
 # ── Sitemaps ──────────────────────────────────────────────────────────────────
 Sitemap: https://michtdecants.com/sitemap.xml
+Sitemap: https://michtdecants.com/sitemap-pages.xml
 Sitemap: https://michtdecants.com/sitemap-images.xml

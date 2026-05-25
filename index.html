@@ -31,8 +31,9 @@
   <meta property="og:title"       content="Micht Decants | Decants de Perfumes Originales en Perú">
   <meta property="og:description" content="Decants de perfumes árabes y de diseñador desde S/ 12. Fragancias Lattafa, Armaf, Afnan en 3ml, 5ml y 10ml. Envíos a todo el Perú · Micht Decants.">
   <meta property="og:image"       content="https://michtdecants.com/imgGato/web.png">
-  <meta property="og:image:width"  content="512">
-  <meta property="og:image:height" content="512">
+  <meta property="og:image:type"   content="image/png">
+  <meta property="og:image:width"  content="1402">
+  <meta property="og:image:height" content="1122">
   <meta property="og:image:alt"   content="Logo de Micht Decants — tienda de decants de perfumes en Perú">
 
   <!-- ── Twitter / X Card ──────────────────────────────────────────────────── -->
@@ -52,8 +53,36 @@
     "alternateName": "Micht Decants Perfumería",
     "description": "Tienda especializada en decants (muestras) de perfumes árabes y de diseñador en presentaciones de 3 ml, 5 ml y 10 ml. Marcas: Lattafa, Armaf, Afnan, Dior, Chanel y más.",
     "url": "https://michtdecants.com",
-    "logo": "https://michtdecants.com/imgGato/web.png",
-    "image": "https://michtdecants.com/imgGato/web.png",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://michtdecants.com/imgGato/web.png",
+      "width": 1402,
+      "height": 1122
+    },
+    "image": [
+      {
+        "@type": "ImageObject",
+        "url": "https://michtdecants.com/imgGato/web.png",
+        "width": 1402,
+        "height": 1122,
+        "caption": "Logo Micht Decants — Tienda de decants de perfumes en Perú"
+      },
+      {
+        "@type": "ImageObject",
+        "url": "https://michtdecants.com/img%20PERFUMES/Dior%20Sauvage.jpg",
+        "caption": "Decant Dior Sauvage — Micht Decants Perú"
+      },
+      {
+        "@type": "ImageObject",
+        "url": "https://michtdecants.com/img%20PERFUMES/Khamrah.webp",
+        "caption": "Decant Lattafa Khamrah — Micht Decants Perú"
+      },
+      {
+        "@type": "ImageObject",
+        "url": "https://michtdecants.com/img%20PERFUMES/9PM.jpg",
+        "caption": "Decant Afnan 9PM — Micht Decants Perú"
+      }
+    ],
     "telephone": "+51917452643",
     "priceRange": "S/ 12 – S/ 120",
     "currenciesAccepted": "PEN",
@@ -306,7 +335,13 @@
     <div class="container">
       <!-- Botón toggle solo visible en móvil -->
       <button class="filters-toggle-btn" id="filtersToggleBtn" aria-expanded="false" aria-controls="filtersCollapsible">
-        <span>Filtros <span class="ftb-badge" id="filtersActiveBadge" style="display:none">0</span></span>
+        <span class="ftb-left">
+          <svg class="ftb-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="16" y2="12"/><line x1="4" y1="18" x2="12" y2="18"/>
+          </svg>
+          <span>Filtros</span>
+          <span class="ftb-badge" id="filtersActiveBadge" style="display:none">0</span>
+        </span>
         <svg class="ftb-chevron" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M6 9l6 6 6-6"/></svg>
       </button>
 
@@ -477,6 +512,19 @@
       </div>
     </div>
   </section>
+
+  <!-- ── Imágenes indexables por Google (ocultas visualmente, visibles para bots) ── -->
+  <div aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;">
+    <img src="/img%20PERFUMES/Dior%20Sauvage.jpg"          alt="Decant Dior Sauvage 3ml 5ml 10ml — Micht Decants Perú" width="400" height="400">
+    <img src="/img%20PERFUMES/Khamrah.webp"                alt="Decant Lattafa Khamrah 3ml 5ml 10ml — Micht Decants Perú" width="400" height="400">
+    <img src="/img%20PERFUMES/9PM.jpg"                     alt="Decant Afnan 9PM 3ml 5ml 10ml — Micht Decants Perú" width="400" height="400">
+    <img src="/img%20PERFUMES/Aventus%20Creed.png"         alt="Decant Creed Aventus 3ml 5ml 10ml — Micht Decants Perú" width="400" height="400">
+    <img src="/img%20PERFUMES/Bleu%20de%20Chanel%20Parfum.webp" alt="Decant Bleu de Chanel Parfum 3ml 5ml 10ml — Micht Decants Perú" width="400" height="400">
+    <img src="/img%20PERFUMES/Hawas%20For%20Him.webp"      alt="Decant Rasasi Hawas For Him 3ml 5ml 10ml — Micht Decants Perú" width="400" height="400">
+    <img src="/img%20PERFUMES/Odyssey%20Mega.jpg"          alt="Decant Armaf Odyssey Mega 3ml 5ml 10ml — Micht Decants Perú" width="400" height="400">
+    <img src="/img%20PERFUMES/Amber%20Oud%20Gold%20Edition.jpg" alt="Decant Al Haramain Amber Oud Gold Edition — Micht Decants Perú" width="400" height="400">
+    <img src="/imgGato/web.png"                            alt="Logo Micht Decants tienda de decants de perfumes en Perú" width="1402" height="1122">
+  </div>
 
   <!-- ── Footer ────────────────────────────────────────────────────────────── -->
   <footer class="footer">

@@ -229,8 +229,16 @@ function renderPagination(current, total) {
       // Esperar que GSAP procese las nuevas tarjetas antes de hacer scroll
       // (el MutationObserver de GSAP tiene 65ms de debounce)
       setTimeout(() => {
-        if (typeof scrollToSection === 'function') scrollToSection('catalogo');
-        else document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
+        const filtersEl  = document.getElementById('catalogo');
+        const bannerEl   = document.getElementById('catalogBanner');
+        const productsEl = document.getElementById('productsGrid');
+        // Scroll al primer elemento visible debajo de los filtros sticky
+        const anchor = (bannerEl && bannerEl.offsetHeight > 0) ? bannerEl : productsEl;
+        if (anchor) {
+          const headerH  = 64;
+          const filtersH = filtersEl ? filtersEl.offsetHeight : 0;
+          window.scrollTo({ top: Math.max(0, anchor.offsetTop - headerH - filtersH), behavior: 'smooth' });
+        }
       }, 90);
     });
   });

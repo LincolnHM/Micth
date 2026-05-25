@@ -1,28 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  <!-- Página de Inicio -->
-  <url>
-    <loc>https://michtdecants.com/</loc>
-    <lastmod>2026-05-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
+  <!-- Sitemap de páginas principales -->
+  <sitemap>
+    <loc>https://michtdecants.com/sitemap-pages.xml</loc>
+    <lastmod>2026-05-25</lastmod>
+  </sitemap>
 
-  <!-- Nosotros -->
-  <url>
-    <loc>https://michtdecants.com/nosotros/</loc>
-    <lastmod>2026-05-21</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
+  <!-- Sitemap de imágenes de productos -->
+  <sitemap>
+    <loc>https://michtdecants.com/sitemap-images.xml</loc>
+    <lastmod>2026-05-25</lastmod>
+  </sitemap>
 
-  <!-- Contacto -->
-  <url>
-    <loc>https://michtdecants.com/contacto/</loc>
-    <lastmod>2026-05-21</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-</urlset>
+</sitemapindex>
