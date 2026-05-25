@@ -66,6 +66,7 @@
         <nav class="admin-nav">
           <button class="admin-nav-btn active" data-section="products">Perfumes</button>
           <button class="admin-nav-btn" data-section="orders">Pedidos</button>
+          <button class="admin-nav-btn" data-section="accounting">Contabilidad</button>
           <button class="admin-nav-btn" data-section="settings">Ajustes</button>
         </nav>
         <button class="btn-logout" id="logoutBtn">Cerrar sesión</button>
@@ -155,6 +156,65 @@
         </div>
       </div>
 
+
+      <!-- ── Sección: Contabilidad ────────────────────────────────────────────── -->
+      <div class="admin-section" id="section-accounting">
+
+        <div class="admin-section-header">
+          <h2>Contabilidad</h2>
+          <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:.4rem">
+              <label for="accountingYear" style="font-size:.8rem;color:var(--text2)">Año:</label>
+              <select id="accountingYear"
+                      style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:.4rem .7rem;border-radius:var(--r);font-size:.82rem;cursor:pointer;outline:none">
+              </select>
+            </div>
+            <button class="btn-add" id="addExpenseBtn" style="font-size:.78rem;padding:.42rem .9rem">+ Registrar Gasto</button>
+          </div>
+        </div>
+
+        <!-- Tarjetas de resumen del año -->
+        <div id="accountingSummary" class="order-stats-bar" style="grid-template-columns:repeat(auto-fill,minmax(155px,1fr));margin-bottom:1.25rem"></div>
+
+        <!-- Gráfico de barras mensuales -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.25rem 1.5rem;margin-bottom:1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;flex-wrap:wrap;gap:.5rem">
+            <h3 style="font-family:'Playfair Display',serif;color:var(--white);font-size:.95rem;margin:0">Ingresos por Mes (S/)</h3>
+            <div style="display:flex;gap:1rem;font-size:.73rem;color:var(--text3)">
+              <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#c9a84c"></span>Mejor mes</span>
+              <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#4da6ff"></span>Mes actual</span>
+              <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#5a5a5a"></span>Otros</span>
+            </div>
+          </div>
+          <canvas id="accountingChart" style="display:block;width:100%;height:200px"></canvas>
+        </div>
+
+        <!-- Tabla mensual detallada -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
+          <div style="padding:.9rem 1.2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+            <h3 style="font-family:'Playfair Display',serif;color:var(--white);font-size:.95rem;margin:0">Detalle Mensual</h3>
+            <span style="font-size:.73rem;color:var(--text3)">Haz clic en <strong style="color:var(--text2)">+</strong> en la columna Gastos para registrar un gasto del mes</span>
+          </div>
+          <div class="orders-table-wrap">
+            <table class="orders-table" style="min-width:560px">
+              <thead>
+                <tr>
+                  <th>Mes</th>
+                  <th style="text-align:center">Pedidos</th>
+                  <th style="text-align:center">Cancelados</th>
+                  <th style="text-align:right">Ingresos</th>
+                  <th style="text-align:right">Gastos</th>
+                  <th style="text-align:right">Neto</th>
+                </tr>
+              </thead>
+              <tbody id="accountingTableBody">
+                <tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">Cargando…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
 
       <!-- ── Sección: Ajustes ───────────────────────────────────────────────── -->
       <div class="admin-section" id="section-settings">

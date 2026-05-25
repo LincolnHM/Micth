@@ -62,6 +62,7 @@ async function showDashboard() {
   renderOrdersSection().catch(console.error);
   setupAdminEvents();
   setupOrderEvents();
+  setupAccountingEvents();
   setupNav();
 }
 
@@ -101,9 +102,10 @@ function setupNav() {
       btn.classList.add('active');
       const sec = document.getElementById('section-' + btn.dataset.section);
       if (sec) sec.classList.add('active');
-      if (btn.dataset.section === 'inventory') renderInventorySection().catch(console.error);
-      if (btn.dataset.section === 'orders')    renderOrdersSection().catch(console.error);
-      if (btn.dataset.section === 'orders')    updateOrderStats().catch(console.error);
+      if (btn.dataset.section === 'inventory')   renderInventorySection().catch(console.error);
+      if (btn.dataset.section === 'orders')      renderOrdersSection().catch(console.error);
+      if (btn.dataset.section === 'orders')      updateOrderStats().catch(console.error);
+      if (btn.dataset.section === 'accounting')  renderAccountingSection().catch(console.error);
     });
   });
 }
@@ -1132,3 +1134,323 @@ function showToast(msg) {
 }
 
 function escapeAttr(str) { return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+
+// ─── Sección: Contabilidad ────────────────────────────────────────────────────
+
+const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function getExpenses(year) {
+  try { return JSON.parse(localStorage.getItem(`micht_expenses_${year}`) || '[]'); }
+  catch { return []; }
+}
+
+function saveExpenses(year, expenses) {
+  localStorage.setItem(`micht_expenses_${year}`, JSON.stringify(expenses));
+}
+
+function getMonthlyStats(orders, year) {
+  const filtered = orders.filter(o => new Date(o.date).getFullYear() === year);
+  const expenses = getExpenses(year);
+  return Array.from({ length: 12 }, (_, m) => {
+    const monthOrders = filtered.filter(o => new Date(o.date).getMonth() === m);
+    const paid        = monthOrders.filter(o => o.status === 'pagado');
+    const cancelled   = monthOrders.filter(o => o.status === 'cancelado');
+    const revenue     = paid.reduce((s, o) => s + o.total, 0);
+    const monthExp    = expenses.filter(e => e.month === m).reduce((s, e) => s + e.amount, 0);
+    return { month: m, name: MONTH_NAMES[m], orders: monthOrders.length, paid: paid.length, cancelled: cancelled.length, revenue, expenses: monthExp, net: revenue - monthExp };
+  });
+}
+
+async function renderAccountingSection() {
+  const yearSel = document.getElementById('accountingYear');
+  if (!yearSel) return;
+
+  const allOrders = await CloudOrders.getAll();
+
+  // Poblar años disponibles
+  const rawYears  = allOrders.map(o => new Date(o.date).getFullYear()).filter(y => !isNaN(y));
+  const thisYear  = new Date().getFullYear();
+  const years     = [...new Set([thisYear, ...rawYears])].sort((a, b) => b - a);
+
+  if (!yearSel.dataset.filled) {
+    yearSel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+    yearSel.dataset.filled = '1';
+  }
+
+  const year  = parseInt(yearSel.value) || thisYear;
+  const stats = getMonthlyStats(allOrders, year);
+  const now   = new Date();
+
+  // Calcular totales
+  const totalRevenue  = stats.reduce((s, m) => s + m.revenue, 0);
+  const totalExpenses = stats.reduce((s, m) => s + m.expenses, 0);
+  const totalNet      = totalRevenue - totalExpenses;
+  const bestMonth     = stats.reduce((b, m) => m.revenue > b.revenue ? m : b, stats[0]);
+  const currentMonth  = stats[now.getMonth()];
+  const paidTotal     = stats.reduce((s, m) => s + m.paid, 0);
+  const activeMonths  = stats.filter(m => m.revenue > 0).length || 1;
+
+  // ── Tarjetas de resumen ──────────────────────────────────────────────────────
+  const summary = document.getElementById('accountingSummary');
+  summary.innerHTML = [
+    { label: `Total ${year}`, val: `S/ ${totalRevenue.toFixed(0)}`, sub: `${paidTotal} pedidos pagados`, color: 'var(--gold)' },
+    { label: 'Mejor Mes',    val: bestMonth.revenue > 0 ? bestMonth.name : '—', sub: bestMonth.revenue > 0 ? `S/ ${bestMonth.revenue.toFixed(0)}` : 'Sin ventas aún', color: 'var(--green)' },
+    { label: year === thisYear ? 'Mes Actual' : `Dic ${year}`, val: `S/ ${(year === thisYear ? currentMonth : stats[11]).revenue.toFixed(0)}`, sub: `${(year === thisYear ? currentMonth : stats[11]).paid} pagados`, color: 'var(--gold-d)' },
+    { label: 'Gastos Totales', val: `S/ ${totalExpenses.toFixed(0)}`, sub: 'registrados manualmente', color: '#ef5350' },
+    { label: 'Neto (Ingr.−Gastos)', val: `S/ ${totalNet.toFixed(0)}`, sub: `Prom/mes: S/ ${(totalRevenue / activeMonths).toFixed(0)}`, color: totalNet >= 0 ? 'var(--green)' : '#ef5350' }
+  ].map(c => `
+    <div class="stat-card" style="text-align:left;padding:1rem 1.1rem">
+      <div class="stat-label" style="margin-bottom:.35rem">${c.label}</div>
+      <div class="stat-val" style="color:${c.color};font-size:1.25rem;line-height:1.2">${c.val}</div>
+      <div style="font-size:.7rem;color:var(--text3);margin-top:.3rem">${c.sub}</div>
+    </div>`).join('');
+
+  // ── Gráfico de barras ────────────────────────────────────────────────────────
+  setTimeout(() => drawAccountingChart(stats, year), 0);
+
+  // ── Tabla mensual ────────────────────────────────────────────────────────────
+  const tbody = document.getElementById('accountingTableBody');
+  tbody.innerHTML = stats.map(m => {
+    const isCurrent = m.month === now.getMonth() && year === thisYear;
+    const isBest    = m.revenue > 0 && m.month === bestMonth.month;
+    return `
+    <tr style="${isCurrent ? 'background:rgba(201,168,76,.06)' : ''}">
+      <td>
+        <span style="font-weight:${isCurrent ? '700' : '400'};color:${isCurrent ? 'var(--gold)' : 'var(--text)'}">
+          ${m.name}${isCurrent ? '&nbsp;<span style="font-size:.66rem;color:var(--gold-d);font-weight:400">(actual)</span>' : ''}
+        </span>
+        ${isBest ? '&nbsp;<span style="font-size:.68rem;background:rgba(76,175,80,.15);color:#4caf50;padding:.1rem .45rem;border-radius:3px;font-weight:600">⭐ mejor</span>' : ''}
+      </td>
+      <td style="text-align:center;color:var(--text2)">${m.orders || '—'}</td>
+      <td style="text-align:center;color:${m.cancelled ? '#ef5350' : 'var(--text3)'}">${m.cancelled || '—'}</td>
+      <td style="text-align:right;font-weight:600;color:${m.revenue > 0 ? 'var(--green)' : 'var(--text3)'}">${m.revenue > 0 ? `S/ ${m.revenue.toFixed(2)}` : '—'}</td>
+      <td style="text-align:right">
+        <span style="color:${m.expenses > 0 ? '#ef5350' : 'var(--text3)'}">${m.expenses > 0 ? `S/ ${m.expenses.toFixed(2)}` : '—'}</span>
+        <button class="btn-expense-detail" data-month="${m.month}" data-year="${year}"
+                style="margin-left:.45rem;font-size:.7rem;padding:.15rem .5rem;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:3px;cursor:pointer;transition:all .15s"
+                onmouseover="this.style.borderColor='var(--gold-d)';this.style.color='var(--gold)'"
+                onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'"
+                title="Ver / agregar gastos de ${m.name}">+</button>
+      </td>
+      <td style="text-align:right;font-weight:700;color:${m.net > 0 ? 'var(--gold)' : m.net < 0 ? '#ef5350' : 'var(--text3)'}">
+        ${(m.revenue > 0 || m.expenses > 0) ? `S/ ${m.net.toFixed(2)}` : '—'}
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Fila de totales
+  tbody.innerHTML += `
+    <tr style="background:var(--bg2);border-top:2px solid var(--border)">
+      <td style="font-weight:700;color:var(--text);font-size:.85rem">TOTAL ${year}</td>
+      <td style="text-align:center;font-weight:700;color:var(--gold)">${stats.reduce((s,m)=>s+m.orders,0)}</td>
+      <td style="text-align:center;font-weight:700;color:#ef5350">${stats.reduce((s,m)=>s+m.cancelled,0) || '—'}</td>
+      <td style="text-align:right;font-weight:700;color:var(--green)">S/ ${totalRevenue.toFixed(2)}</td>
+      <td style="text-align:right;font-weight:700;color:#ef5350">${totalExpenses > 0 ? `S/ ${totalExpenses.toFixed(2)}` : '—'}</td>
+      <td style="text-align:right;font-weight:700;color:var(--gold)">S/ ${totalNet.toFixed(2)}</td>
+    </tr>`;
+
+  // Eventos de detalle de gastos
+  tbody.querySelectorAll('.btn-expense-detail').forEach(btn => {
+    btn.addEventListener('click', () => openExpenseModal(parseInt(btn.dataset.month), parseInt(btn.dataset.year)));
+  });
+}
+
+function drawAccountingChart(stats, year) {
+  const canvas = document.getElementById('accountingChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const W = canvas.parentElement.offsetWidth - 48;
+  if (W <= 0) return;
+  const H   = 200;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+
+  const padL = 52, padR = 8, padT = 22, padB = 38;
+  const cW = W - padL - padR;
+  const cH = H - padT - padB;
+  const maxRev = Math.max(...stats.map(m => m.revenue), 1);
+  const barW   = cW / 12;
+  const barGap = barW * 0.28;
+  const bw     = barW - barGap;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid + labels eje Y
+  for (let i = 0; i <= 4; i++) {
+    const y   = padT + cH - cH * i / 4;
+    const val = Math.round(maxRev * i / 4);
+    ctx.font      = `10px Inter, sans-serif`;
+    ctx.fillStyle = '#666';
+    ctx.textAlign = 'right';
+    ctx.fillText(`S/${val}`, padL - 5, y + 4);
+    ctx.beginPath();
+    ctx.strokeStyle = '#2e2e2e';
+    ctx.lineWidth   = 0.8;
+    ctx.moveTo(padL, y);
+    ctx.lineTo(padL + cW, y);
+    ctx.stroke();
+  }
+
+  const nowMonth  = new Date().getMonth();
+  const thisYear  = new Date().getFullYear();
+  const bestRev   = Math.max(...stats.map(m => m.revenue));
+
+  stats.forEach((m, i) => {
+    const x    = padL + i * barW + barGap / 2;
+    const barH = (m.revenue / maxRev) * cH;
+    const y    = padT + cH - barH;
+
+    const isBest    = m.revenue > 0 && m.revenue === bestRev;
+    const isCurrent = i === nowMonth && year === thisYear;
+
+    if (m.revenue === 0) {
+      ctx.fillStyle = '#252525';
+      ctx.fillRect(x, padT + cH - 3, bw, 3);
+    } else {
+      const grad = ctx.createLinearGradient(0, y, 0, padT + cH);
+      if (isBest) {
+        grad.addColorStop(0, '#c9a84c');
+        grad.addColorStop(1, '#7a5c1e');
+      } else if (isCurrent) {
+        grad.addColorStop(0, '#4da6ff');
+        grad.addColorStop(1, '#1a4a7a');
+      } else {
+        grad.addColorStop(0, '#5a5a5a');
+        grad.addColorStop(1, '#2a2a2a');
+      }
+      ctx.fillStyle = grad;
+      const r = Math.min(3, bw / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + bw - r, y);
+      ctx.quadraticCurveTo(x + bw, y, x + bw, y + r);
+      ctx.lineTo(x + bw, padT + cH);
+      ctx.lineTo(x, padT + cH);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+      ctx.fill();
+
+      if (barH > 14) {
+        ctx.fillStyle   = 'rgba(255,255,255,.85)';
+        ctx.font        = '9px Inter, sans-serif';
+        ctx.textAlign   = 'center';
+        ctx.fillText(`${m.revenue.toFixed(0)}`, x + bw / 2, y - 4);
+      }
+    }
+
+    // Etiqueta mes
+    ctx.fillStyle = isCurrent ? '#c9a84c' : '#666';
+    ctx.font      = `${isCurrent ? '600 ' : ''}10px Inter, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(m.name.slice(0, 3), x + bw / 2, padT + cH + 16);
+  });
+}
+
+function openExpenseModal(month, year) {
+  let overlay = document.getElementById('expenseOverlay');
+  if (overlay) overlay.remove();
+
+  const expenses  = getExpenses(year).filter(e => e.month === month);
+  const total     = expenses.reduce((s, e) => s + e.amount, 0);
+  const monthName = MONTH_NAMES[month];
+
+  overlay = document.createElement('div');
+  overlay.id = 'expenseOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;transition:opacity .22s ease';
+
+  overlay.innerHTML = `
+    <div style="background:#1a1a1a;border:1px solid var(--gold-d);border-radius:10px;padding:1.5rem;max-width:440px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:1rem;max-height:90vh;overflow-y:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem">
+        <h3 style="margin:0;color:var(--gold);font-family:'Playfair Display',serif;font-size:1rem">Gastos — ${monthName} ${year}</h3>
+        <button id="closeExpenseModal" style="background:none;border:none;color:#888;font-size:1.2rem;cursor:pointer;line-height:1;padding:0 .2rem">✕</button>
+      </div>
+
+      <div id="expenseList" style="display:flex;flex-direction:column;gap:.45rem;min-height:30px">
+        ${expenses.length ? expenses.map((e, i) => `
+          <div style="display:flex;align-items:center;gap:.5rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:.5rem .75rem">
+            <span style="flex:1;font-size:.83rem;color:var(--text2)">${sanitize(e.description)}</span>
+            <span style="font-size:.83rem;font-weight:700;color:#ef5350;white-space:nowrap">S/ ${e.amount.toFixed(2)}</span>
+            <button class="del-expense-btn" data-idx="${i}"
+                    style="background:none;border:none;color:#555;cursor:pointer;font-size:1.1rem;padding:0 .2rem;line-height:1;transition:color .15s"
+                    onmouseover="this.style.color='#ef5350'" onmouseout="this.style.color='#555'">×</button>
+          </div>`).join('')
+        : '<p style="color:var(--text3);font-size:.82rem;text-align:center;padding:.4rem 0">Sin gastos registrados este mes</p>'}
+      </div>
+
+      ${total > 0 ? `<div style="text-align:right;font-size:.85rem;color:#ef5350;font-weight:700;border-top:1px solid var(--border);padding-top:.65rem">Total gastos: S/ ${total.toFixed(2)}</div>` : ''}
+
+      <div style="border-top:1px solid var(--border);padding-top:.8rem">
+        <p style="font-size:.78rem;color:var(--text2);margin-bottom:.55rem;font-weight:600">Agregar nuevo gasto</p>
+        <div style="display:flex;gap:.45rem;flex-wrap:wrap">
+          <input type="text" id="expenseDesc" placeholder="Descripción (ej: Empaques, Envíos…)" maxlength="100"
+                 style="flex:2;min-width:140px;padding:.42rem .65rem;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:var(--r);font-size:.82rem;outline:none"
+                 onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='var(--border)'">
+          <input type="number" id="expenseAmount" placeholder="S/ 0.00" min="0.01" step="0.5" max="99999"
+                 style="width:90px;padding:.42rem .55rem;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:var(--r);font-size:.82rem;outline:none"
+                 onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='var(--border)'">
+          <button id="saveExpenseBtn"
+                  style="padding:.42rem 1rem;background:var(--gold);color:#111;border:none;border-radius:var(--r);font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .2s"
+                  onmouseover="this.style.background='var(--gold-l)'" onmouseout="this.style.background='var(--gold)'">Agregar</button>
+        </div>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+
+  function closeModal() {
+    overlay.style.opacity = '0';
+    setTimeout(() => { overlay.remove(); renderAccountingSection().catch(console.error); }, 240);
+  }
+
+  overlay.querySelector('#closeExpenseModal').addEventListener('click', closeModal);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+
+  // Eliminar gasto
+  overlay.querySelectorAll('.del-expense-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const all         = getExpenses(year);
+      const monthItems  = all.filter(e => e.month === month);
+      const target      = monthItems[parseInt(btn.dataset.idx)];
+      const newAll      = all.filter(e => e !== target);
+      saveExpenses(year, newAll);
+      showToast('Gasto eliminado ✓');
+      overlay.remove();
+      openExpenseModal(month, year);
+    });
+  });
+
+  // Guardar gasto
+  overlay.querySelector('#saveExpenseBtn').addEventListener('click', () => {
+    const desc   = overlay.querySelector('#expenseDesc').value.trim();
+    const amount = parseFloat(overlay.querySelector('#expenseAmount').value);
+    if (!desc)               { showToast('Ingresa una descripción.'); return; }
+    if (isNaN(amount) || amount <= 0) { showToast('Ingresa un monto válido.'); return; }
+    const all = getExpenses(year);
+    all.push({ month, description: desc, amount, date: new Date().toISOString() });
+    saveExpenses(year, all);
+    showToast('Gasto registrado ✓');
+    overlay.remove();
+    openExpenseModal(month, year);
+  });
+}
+
+function setupAccountingEvents() {
+  document.getElementById('accountingYear')?.addEventListener('change', () => {
+    const yearSel = document.getElementById('accountingYear');
+    if (yearSel) yearSel.dataset.filled = ''; // forzar repoblación si cambia año
+    renderAccountingSection().catch(console.error);
+  });
+
+  document.getElementById('addExpenseBtn')?.addEventListener('click', () => {
+    const year  = parseInt(document.getElementById('accountingYear')?.value) || new Date().getFullYear();
+    const month = new Date().getMonth();
+    openExpenseModal(month, year);
+  });
+}
