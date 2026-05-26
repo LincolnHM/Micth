@@ -114,12 +114,22 @@ const CloudOrders = {
         .order('created_at', { ascending: false });
       if (error) { console.error('Supabase error:', error); return this._localGetAll(); }
       const supabaseOrders = data.map(orderFromDB);
+      const localOrders    = Orders.getAll();
+      // Construir mapa de status local para sincronización rápida
+      const localStatusMap = {};
+      localOrders.forEach(o => { localStatusMap[o.id] = o.status; });
+      // Aplicar status de localStorage sobre Supabase si difieren
+      // (cubre el caso donde el update a Supabase fue lento o falló)
+      const mergedSupabase = supabaseOrders.map(so => {
+        const localStatus = localStatusMap[so.id];
+        if (localStatus && localStatus !== so.status) return { ...so, status: localStatus };
+        return so;
+      });
       // Incluir pedidos en localStorage que aún no llegaron a Supabase
-      const localOrders  = Orders.getAll();
-      const supabaseIds  = new Set(supabaseOrders.map(o => o.id));
+      const supabaseIds  = new Set(mergedSupabase.map(o => o.id));
       const pendingLocal = localOrders.filter(o => !supabaseIds.has(o.id));
-      if (!pendingLocal.length) return supabaseOrders;
-      return [...supabaseOrders, ...pendingLocal]
+      if (!pendingLocal.length) return mergedSupabase;
+      return [...mergedSupabase, ...pendingLocal]
         .sort((a, b) => new Date(b.date) - new Date(a.date));
     }
     return this._localGetAll();
@@ -160,7 +170,7 @@ const CloudOrders = {
   },
 
   async updateStatus(id, status) {
-    // Descontar ml del stock cuando se confirma el pago
+    // Descontar stock cuando se confirma el pago
     if (status === 'pagado') {
       const order = await this.getById(id);
       if (order && order.status !== 'pagado') {
@@ -169,9 +179,12 @@ const CloudOrders = {
           const product = await CloudProducts.getById(pid);
           if (!product) continue;
 
-          // Perfume entero (tipo entero) → marcar agotado
+          // Perfume entero (tipo entero) → el stock ya se descontó al registrar el pedido
+          // Solo sincronizar inStock según la cantidad actual
           if (product.type === 'entero') {
-            if (product.inStock) await CloudProducts.update(pid, { inStock: false });
+            if ((product.stockQuantity || 0) <= 0 && product.inStock) {
+              await CloudProducts.update(pid, { inStock: false });
+            }
             continue;
           }
 
@@ -189,14 +202,17 @@ const CloudOrders = {
         }
       }
     }
+    // Actualizar localStorage siempre (fuente de verdad local)
+    Orders.updateStatus(id, status);
     if (db) {
       const { error } = await db
         .from('pedidos')
         .update({ status, updated_at: new Date().toISOString() })
         .eq('id', id);
-      if (error) { console.error('Supabase error:', error); Orders.updateStatus(id, status); }
-    } else {
-      Orders.updateStatus(id, status);
+      if (error) {
+        console.error('Supabase error al cambiar estado:', error);
+        // El localStorage ya fue actualizado arriba, el error no bloquea la UI
+      }
     }
   },
 
@@ -253,9 +269,13 @@ const CloudOrders = {
 //   featured            BOOLEAN DEFAULT false,
 //   bottle_remaining_ml NUMERIC DEFAULT 0,
 //   bottle_total_ml     NUMERIC DEFAULT 0,
+//   stock_quantity      INTEGER DEFAULT 0,
 //   created_at          TIMESTAMPTZ DEFAULT NOW(),
 //   updated_at          TIMESTAMPTZ
 // );
+//
+// -- Si ya tienes la tabla creada, ejecuta esto para agregar la columna:
+// ALTER TABLE productos ADD COLUMN IF NOT EXISTS stock_quantity INTEGER DEFAULT 0;
 // -- SEGURIDAD: habilitar RLS y crear políticas
 // ALTER TABLE productos ENABLE ROW LEVEL SECURITY;
 // -- Clientes anónimos pueden LEER productos (ver catálogo)
@@ -287,6 +307,7 @@ function productFromDB(row) {
     bottleTotalMl:     parseFloat(row.bottle_total_ml)     || 0,
     availableAsEntero: row.available_as_entero             || false,
     enteroPrice:       parseFloat(row.entero_price)        || 0,
+    stockQuantity:     parseInt(row.stock_quantity)        || 0,
     date:              row.created_at,
     updatedAt:         row.updated_at
   };
@@ -314,7 +335,8 @@ function productToDB(product) {
     bottle_remaining_ml: product.bottleRemainingMl || 0,
     bottle_total_ml:     product.bottleTotalMl     || 0,
     available_as_entero: product.availableAsEntero || false,
-    entero_price:        product.enteroPrice       || 0
+    entero_price:        product.enteroPrice       || 0,
+    stock_quantity:      product.stockQuantity     || 0
   };
 }
 
@@ -326,7 +348,7 @@ const _PRODUCT_FIELD_MAP = {
   imageUrl: 'image_url', sizes: 'sizes', inStock: 'in_stock',
   featured: 'featured', bottleRemainingMl: 'bottle_remaining_ml',
   bottleTotalMl: 'bottle_total_ml', availableAsEntero: 'available_as_entero',
-  enteroPrice: 'entero_price'
+  enteroPrice: 'entero_price', stockQuantity: 'stock_quantity'
 };
 
 // ─── API de productos (async, usa Supabase si está configurado) ───────────────

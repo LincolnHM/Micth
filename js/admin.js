@@ -253,6 +253,22 @@ async function renderAdminProducts() {
           </div>
         </div>
 
+        <!-- Stock tracker — solo para Perfumes Enteros -->
+        ${isEntero ? `
+        <div class="ml-tracker">
+          <div class="ml-label">
+            <span>Stock (unidades):</span>
+            <span class="ml-values"><strong>${p.stockQuantity || 0} und.</strong> disponibles</span>
+          </div>
+          <div class="ml-controls">
+            <label>Unidades en stock:
+              <input type="number" class="stock-qty-input" data-id="${p.id}"
+                     value="${p.stockQuantity || 0}" min="0" max="9999" step="1">
+            </label>
+            <button class="btn-save-stock-qty" data-id="${p.id}">Guardar stock</button>
+          </div>
+        </div>` : ''}
+
         <!-- ML tracker — solo para decants -->
         ${!isEntero ? `
         <div class="ml-tracker">
@@ -355,6 +371,19 @@ async function renderAdminProducts() {
       await CloudProducts.update(id, updates);
       renderAdminProducts().catch(console.error);
       showToast('Mililitros actualizados ✓');
+    });
+  });
+
+  container.querySelectorAll('.btn-save-stock-qty').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id   = parseInt(btn.dataset.id);
+      const card = btn.closest('.admin-card');
+      const inp  = card.querySelector('.stock-qty-input');
+      const qty  = parseInt(inp?.value ?? '0');
+      if (isNaN(qty) || qty < 0) { showToast('La cantidad debe ser un número positivo.'); return; }
+      await CloudProducts.update(id, { stockQuantity: qty, inStock: qty > 0 });
+      renderAdminProducts().catch(console.error);
+      showToast(`Stock actualizado: ${qty} unidad${qty !== 1 ? 'es' : ''} ✓`);
     });
   });
 
@@ -800,14 +829,16 @@ async function saveManualOrder() {
   try {
     await CloudOrders.create({ customerName: name, customerPhone: phone, customerDni: dni, deliveryType: dtype, notes, items, total });
 
-    // Descontar stock de perfumes enteros al registrar el pedido
+    // Descontar stock al registrar el pedido
     const agotados = [];
     for (const item of items) {
       const product = Products.getById(item.productId);
       if (!product) continue;
       if (product.type === 'entero') {
-        await CloudProducts.update(item.productId, { inStock: false });
-        agotados.push(product.name);
+        const qty    = item.quantity || 1;
+        const newQty = Math.max(0, (product.stockQuantity || 0) - qty);
+        await CloudProducts.update(item.productId, { stockQuantity: newQty, inStock: newQty > 0 });
+        if (newQty === 0) agotados.push(product.name);
       } else if (product.availableAsEntero && item.size === 'Unidad') {
         await CloudProducts.update(item.productId, { availableAsEntero: false, bottleRemainingMl: 0, inStock: false });
         agotados.push(product.name);
