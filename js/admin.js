@@ -2,6 +2,7 @@
 
 let _adminProductSearch = '';
 let _adminProductTypeFilter = 'all';
+let _customerHistory = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!SUPABASE_READY) {
@@ -683,7 +684,7 @@ function setupOrderEvents() {
   document.getElementById('addOrderItemBtn')?.addEventListener('click', addOrderItemRow);
 }
 
-function openRegisterOrderModal() {
+async function openRegisterOrderModal() {
   document.getElementById('regCustomerName').value  = '';
   document.getElementById('regCustomerPhone').value = '';
   document.getElementById('regCustomerDni').value   = '';
@@ -692,6 +693,87 @@ function openRegisterOrderModal() {
   document.getElementById('regOrderItems').innerHTML = '';
   addOrderItemRow();
   document.getElementById('registerOrderModal').classList.add('open');
+
+  // Cargar historial de clientes para autocomplete
+  try {
+    const orders = await CloudOrders.getAll();
+    const seen = new Set();
+    _customerHistory = [];
+    orders.forEach(o => {
+      if (!o.customerName) return;
+      const key = (o.customerName + '|' + (o.customerPhone || '')).toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        _customerHistory.push({ name: o.customerName, phone: o.customerPhone || '', dni: o.customerDni || '' });
+      }
+    });
+  } catch(e) { _customerHistory = []; }
+
+  _setupCustomerAutocomplete();
+}
+
+function _setupCustomerAutocomplete() {
+  const input = document.getElementById('regCustomerName');
+  if (!input) return;
+
+  // Contenedor del autocomplete
+  let dropdown = document.getElementById('custAutocomplete');
+  if (!dropdown) {
+    dropdown = document.createElement('div');
+    dropdown.id = 'custAutocomplete';
+    dropdown.className = 'cust-autocomplete-dropdown';
+    input.parentNode.style.position = 'relative';
+    input.parentNode.appendChild(dropdown);
+  }
+  dropdown.innerHTML = '';
+  dropdown.style.display = 'none';
+
+  function renderCustDropdown(query) {
+    const q = query.toLowerCase().trim();
+    if (!q) { dropdown.style.display = 'none'; return; }
+    const matches = _customerHistory
+      .filter(c => c.name.toLowerCase().includes(q))
+      .slice(0, 7);
+    if (!matches.length) { dropdown.style.display = 'none'; return; }
+
+    dropdown.innerHTML = matches.map((c, i) => `
+      <div class="cust-opt" data-name="${escapeAttr(c.name)}" data-phone="${escapeAttr(c.phone)}" data-dni="${escapeAttr(c.dni)}">
+        <div class="cust-opt-name">${c.name}</div>
+        <div class="cust-opt-meta">${c.phone ? '📞 ' + c.phone : ''}${c.dni ? ' · DNI ' + c.dni : ''}</div>
+      </div>`).join('');
+
+    dropdown.querySelectorAll('.cust-opt').forEach(opt => {
+      opt.addEventListener('mousedown', e => {
+        e.preventDefault();
+        input.value = opt.dataset.name;
+        const phoneEl = document.getElementById('regCustomerPhone');
+        const dniEl   = document.getElementById('regCustomerDni');
+        if (opt.dataset.phone && phoneEl) phoneEl.value = opt.dataset.phone;
+        if (opt.dataset.dni   && dniEl)   dniEl.value   = opt.dataset.dni;
+        dropdown.style.display = 'none';
+        showToast('✓ Datos del cliente cargados automáticamente');
+      });
+    });
+    dropdown.style.display = 'block';
+  }
+
+  // Re-registrar listeners clonando el input para limpiar anteriores
+  const fresh = input.cloneNode(true);
+  input.parentNode.replaceChild(fresh, input);
+  const nameInput = document.getElementById('regCustomerName');
+
+  nameInput.addEventListener('input',  () => renderCustDropdown(nameInput.value));
+  nameInput.addEventListener('focus',  () => renderCustDropdown(nameInput.value));
+  nameInput.addEventListener('blur',   () => setTimeout(() => { dropdown.style.display = 'none'; }, 200));
+  nameInput.addEventListener('keydown', e => {
+    const items = [...dropdown.querySelectorAll('.cust-opt')];
+    const cur = dropdown.querySelector('.cust-opt.focused');
+    const idx = cur ? items.indexOf(cur) : -1;
+    if (e.key === 'ArrowDown') { e.preventDefault(); cur?.classList.remove('focused'); items[Math.min(idx + 1, items.length - 1)]?.classList.add('focused'); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); cur?.classList.remove('focused'); items[Math.max(idx - 1, 0)]?.classList.add('focused'); }
+    else if (e.key === 'Enter' && cur) { e.preventDefault(); cur.dispatchEvent(new MouseEvent('mousedown')); }
+    else if (e.key === 'Escape') { dropdown.style.display = 'none'; }
+  });
 }
 
 function addOrderItemRow() {
@@ -821,6 +903,24 @@ async function saveManualOrder() {
   });
 
   if (!items.length) { alert('Agrega al menos un producto al pedido.'); return; }
+
+  // Validar stock antes de guardar
+  const stockErrors = [];
+  items.forEach(item => {
+    const product = Products.getById(item.productId);
+    if (!product) return;
+    if (!product.inStock) {
+      stockErrors.push(`${item.brand} – ${item.productName}: AGOTADO`);
+    } else if (product.type === 'entero' && typeof product.stockQuantity === 'number') {
+      if (item.quantity > product.stockQuantity) {
+        stockErrors.push(`${item.brand} – ${item.productName}: solo quedan ${product.stockQuantity} unidad(es)`);
+      }
+    }
+  });
+  if (stockErrors.length) {
+    alert('⚠ Stock insuficiente:\n\n' + stockErrors.join('\n') + '\n\nAjusta las cantidades antes de guardar.');
+    return;
+  }
 
   const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const saveBtn = document.getElementById('saveOrderBtn');

@@ -21,6 +21,12 @@
   status = 200
   force  = true
 
+# Catch-all: cualquier ruta no encontrada → página 404 personalizada
+[[redirects]]
+  from   = "/*"
+  to     = "/404.html"
+  status = 404
+
 # ── Headers de seguridad y caché ───────────────────────────────────────────────
 
 [[headers]]
