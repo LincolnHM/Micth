@@ -126,8 +126,17 @@ const CloudOrders = {
         return so;
       });
       // Incluir pedidos en localStorage que aún no llegaron a Supabase
+      // Solo incluir los muy recientes (< 10 min) para evitar "zombies" de borrados
       const supabaseIds  = new Set(mergedSupabase.map(o => o.id));
-      const pendingLocal = localOrders.filter(o => !supabaseIds.has(o.id));
+      const tenMinAgo    = Date.now() - 10 * 60 * 1000;
+      const pendingLocal = localOrders.filter(o =>
+        !supabaseIds.has(o.id) && new Date(o.date).getTime() > tenMinAgo
+      );
+      // Limpiar zombies del localStorage (órdenes que ya no están en Supabase y son antiguas)
+      const zombies = localOrders.filter(o =>
+        !supabaseIds.has(o.id) && new Date(o.date).getTime() <= tenMinAgo
+      );
+      if (zombies.length) Orders.save(localOrders.filter(o => !zombies.some(z => z.id === o.id)));
       if (!pendingLocal.length) return mergedSupabase;
       return [...mergedSupabase, ...pendingLocal]
         .sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -217,11 +226,10 @@ const CloudOrders = {
   },
 
   async delete(id) {
+    Orders.delete(id); // Eliminar de localStorage siempre, antes de Supabase
     if (db) {
       const { error } = await db.from('pedidos').delete().eq('id', id);
-      if (error) { console.error('Supabase error:', error); Orders.delete(id); }
-    } else {
-      Orders.delete(id);
+      if (error) console.error('Supabase error al eliminar pedido:', error);
     }
   },
 

@@ -666,6 +666,16 @@ function setupOrderEvents() {
     });
   });
 
+  // Actualizar pedidos
+  document.getElementById('refreshOrdersBtn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('refreshOrdersBtn');
+    if (btn) { btn.disabled = true; btn.style.opacity = '.5'; }
+    await renderOrdersSection().catch(console.error);
+    await updateOrderStats().catch(console.error);
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    showToast('Pedidos actualizados ✓');
+  });
+
   // Registrar pedido manual
   document.getElementById('registerOrderBtn')?.addEventListener('click', openRegisterOrderModal);
 

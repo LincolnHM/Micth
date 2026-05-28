@@ -273,6 +273,10 @@ const Checkout = {
       total: orderTotal
     };
 
+    // Guardar pedido ANTES de abrir WhatsApp para que la solicitud Supabase
+    // esté en vuelo antes de cualquier posible navegación de página
+    CloudOrders.create(orderData).catch(err => console.error('Error al registrar pedido:', err));
+
     // Abrir WhatsApp — función SÍNCRONA para preservar el gesto del usuario en móvil
     const message = encodeURIComponent(this.buildWhatsAppMessage());
     const url     = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
@@ -282,9 +286,6 @@ const Checkout = {
     this.close();
     Cart.clear();
     _showOrderSuccessModal(orderData);
-
-    // Guardar en Supabase en segundo plano (fire-and-forget, no bloquea)
-    CloudOrders.create(orderData).catch(err => console.error('Error al registrar pedido:', err));
   }
 };
 
