@@ -28,8 +28,9 @@
 //
 // -- SEGURIDAD: habilitar RLS y crear políticas
 // ALTER TABLE pedidos ENABLE ROW LEVEL SECURITY;
-// -- Clientes anónimos solo pueden INSERTAR (crear pedidos)
-// CREATE POLICY "anon_insert_pedidos" ON pedidos FOR INSERT TO anon WITH CHECK (true);
+// -- Cualquier usuario (anon o autenticado) puede INSERTAR pedidos
+// CREATE POLICY "anon_insert_pedidos"          ON pedidos FOR INSERT TO anon          WITH CHECK (true);
+// CREATE POLICY "authenticated_insert_pedidos" ON pedidos FOR INSERT TO authenticated WITH CHECK (true);
 // -- Solo el admin autenticado puede leer, actualizar y eliminar
 // CREATE POLICY "admin_select_pedidos" ON pedidos FOR SELECT TO authenticated USING (true);
 // CREATE POLICY "admin_update_pedidos" ON pedidos FOR UPDATE TO authenticated USING (true);
@@ -48,8 +49,18 @@ const SUPABASE_READY = (
   typeof supabase !== 'undefined'
 );
 
+// En páginas de admin se conserva la sesión autenticada.
+// En tienda/nosotros/contacto se fuerza rol anónimo para que los pedidos
+// de clientes nunca sean bloqueados por RLS aunque el admin esté logueado.
+const _isAdminPage = typeof window !== 'undefined' &&
+  window.location.pathname.toLowerCase().includes('admin');
+
 const db = SUPABASE_READY
-  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY,
+      _isAdminPage
+        ? {}
+        : { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
+    )
   : null;
 
 // Conexión silenciosa — no exponer detalles del stack en consola pública
@@ -164,16 +175,18 @@ const CloudOrders = {
       date:   new Date().toISOString(),
       status: 'pendiente'
     };
+    // Guardar en localStorage primero — garantiza que no se pierde el pedido
+    try { this._localCreate(newOrder); } catch {}
+
     if (db) {
       const { error } = await db.from('pedidos').insert(orderToDB(newOrder));
       if (error) {
-        console.error('Supabase error al guardar pedido:', error);
-        try { this._localCreate(newOrder); } catch {}
-      } else {
-        try { this._localCreate(newOrder); } catch {}
+        console.error('[MICHT] Error Supabase al guardar pedido:', error.message, error);
+        // Notificar visualmente si hay una función toast disponible
+        const _toast = typeof showToast === 'function' ? showToast
+          : typeof showCartToast === 'function' ? showCartToast : null;
+        if (_toast) _toast('⚠ Pedido guardado localmente. Error al sincronizar: ' + (error.message || error.code));
       }
-    } else {
-      try { this._localCreate(newOrder); } catch {}
     }
     return newOrder.id;
   },
