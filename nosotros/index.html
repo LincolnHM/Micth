@@ -54,7 +54,7 @@
            onmouseover="this.style.background='#e8c96a'" onmouseout="this.style.background='var(--gold)'">
           Ver tienda →
         </a>
-        <a href="../" id="nosotrosCartBtn" class="floating-cart-btn" aria-label="Ver carrito">
+        <a href="../?cart=1" id="nosotrosCartBtn" class="floating-cart-btn" aria-label="Ver carrito">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
           </svg>
@@ -306,6 +306,33 @@
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && menu.classList.contains('open')) closeMenu(); });
     })();
   </script>
+  <!-- ── Carrito lateral ───────────────────────────────────────────────────── -->
+  <aside class="cart-sidebar" id="cartSidebar" aria-label="Carrito de compras">
+    <div class="cart-header">
+      <h3>Tu Carrito</h3>
+      <div class="cart-header-actions">
+        <button class="cart-clear-btn" id="clearCartBtn" aria-label="Vaciar todo el carrito" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+          </svg>
+          Vaciar
+        </button>
+        <button class="close-btn" id="closeCart" aria-label="Cerrar carrito">×</button>
+      </div>
+    </div>
+    <div class="cart-items" id="cartItems" aria-live="polite"></div>
+    <div class="cart-footer">
+      <div class="cart-total">
+        <span>Total</span>
+        <span id="cartTotal">S/ 0.00</span>
+      </div>
+      <button class="btn-primary" id="checkoutBtn">Proceder al Pedido →</button>
+    </div>
+  </aside>
+
+  <div class="overlay" id="overlay" aria-hidden="true"></div>
+
+  <script src="../js/cart-mini.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
   <script>

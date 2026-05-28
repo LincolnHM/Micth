@@ -755,9 +755,10 @@ function _setupCustomerAutocomplete() {
     dropdown.querySelectorAll('.cust-opt').forEach(opt => {
       opt.addEventListener('mousedown', e => {
         e.preventDefault();
-        input.value = opt.dataset.name;
+        const nameEl  = document.getElementById('regCustomerName');
         const phoneEl = document.getElementById('regCustomerPhone');
         const dniEl   = document.getElementById('regCustomerDni');
+        if (nameEl)  nameEl.value  = opt.dataset.name;
         if (opt.dataset.phone && phoneEl) phoneEl.value = opt.dataset.phone;
         if (opt.dataset.dni   && dniEl)   dniEl.value   = opt.dataset.dni;
         dropdown.style.display = 'none';

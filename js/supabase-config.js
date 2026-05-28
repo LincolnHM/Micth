@@ -375,12 +375,18 @@ const CloudProducts = {
       const storedProducts = Products.getAll();
       const supabaseProducts = data.map(row => {
         const p = productFromDB(row);
-        // La imagen del mapa local siempre tiene prioridad (evita imágenes incorrectas en Supabase)
-        const mapImg = typeof PRODUCT_IMAGE_MAP !== 'undefined' && PRODUCT_IMAGE_MAP[p.name];
-        if (mapImg) p.imageUrl = mapImg;
-        else if (!p.imageUrl) p.imageUrl = buildProductImage(p);
-        // Normalizar paths relativos guardados antes de la corrección de rutas
-        else if (p.imageUrl && !p.imageUrl.startsWith('/') && !p.imageUrl.startsWith('http') && !p.imageUrl.startsWith('data:')) {
+        // 1. PRODUCT_IMAGE_MAP por nombre (mayor prioridad — decants)
+        const mapImg     = typeof PRODUCT_IMAGE_MAP  !== 'undefined' && PRODUCT_IMAGE_MAP[p.name];
+        // 2. DEFAULT_PRODUCTS por ID (cubre enteros y otros no presentes en el mapa)
+        const defaultImg = typeof DEFAULT_PRODUCTS   !== 'undefined' &&
+          DEFAULT_PRODUCTS.find(d => d.id === p.id)?.imageUrl;
+        if (mapImg) {
+          p.imageUrl = mapImg;
+        } else if (defaultImg) {
+          p.imageUrl = defaultImg;
+        } else if (!p.imageUrl) {
+          p.imageUrl = buildProductImage(p);
+        } else if (p.imageUrl && !p.imageUrl.startsWith('/') && !p.imageUrl.startsWith('http') && !p.imageUrl.startsWith('data:')) {
           p.imageUrl = '/' + p.imageUrl;
         }
         // Si las columnas aún no existen en Supabase, preservar valores de localStorage
@@ -412,10 +418,16 @@ const CloudProducts = {
         .from('productos').select('*').eq('id', id).single();
       if (error || !data) return Products.getById(id);
       const p = productFromDB(data);
-      const mapImg = typeof PRODUCT_IMAGE_MAP !== 'undefined' && PRODUCT_IMAGE_MAP[p.name];
-      if (mapImg) p.imageUrl = mapImg;
-      else if (!p.imageUrl) p.imageUrl = buildProductImage(p);
-      else if (p.imageUrl && !p.imageUrl.startsWith('/') && !p.imageUrl.startsWith('http') && !p.imageUrl.startsWith('data:')) {
+      const mapImg     = typeof PRODUCT_IMAGE_MAP !== 'undefined' && PRODUCT_IMAGE_MAP[p.name];
+      const defaultImg = typeof DEFAULT_PRODUCTS  !== 'undefined' &&
+        DEFAULT_PRODUCTS.find(d => d.id === p.id)?.imageUrl;
+      if (mapImg) {
+        p.imageUrl = mapImg;
+      } else if (defaultImg) {
+        p.imageUrl = defaultImg;
+      } else if (!p.imageUrl) {
+        p.imageUrl = buildProductImage(p);
+      } else if (p.imageUrl && !p.imageUrl.startsWith('/') && !p.imageUrl.startsWith('http') && !p.imageUrl.startsWith('data:')) {
         p.imageUrl = '/' + p.imageUrl;
       }
       if (!('available_as_entero' in data)) {

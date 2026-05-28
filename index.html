@@ -807,7 +807,7 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
   <script src="js/data.js?v=11"></script>
-  <script src="js/supabase-config.js?v=11"></script>
+  <script src="js/supabase-config.js?v=12"></script>
   <script src="js/carousel.js"></script>
   <script src="js/store.js?v=11"></script>
   <script src="js/checkout.js"></script>
@@ -915,6 +915,19 @@
     // Auto-print si viene desde el admin (?export=pdf)
     if (new URLSearchParams(location.search).get('export') === 'pdf') {
       document.addEventListener('catalogLoaded', () => setTimeout(() => window.print(), 500));
+    }
+
+    // Abrir carrito automáticamente si viene de nosotros/contacto (?cart=1)
+    if (new URLSearchParams(location.search).get('cart') === '1') {
+      document.addEventListener('catalogLoaded', () => {
+        if (typeof Cart !== 'undefined') Cart.showCart();
+      });
+      // Fallback: intentar abrir 800ms después si el evento no disparó
+      setTimeout(() => {
+        if (typeof Cart !== 'undefined' && !document.getElementById('cartSidebar')?.classList.contains('open')) {
+          Cart.showCart();
+        }
+      }, 800);
     }
 
     // ── Cerrar menú móvil (helper) ────────────────────────────────────────────

@@ -934,8 +934,10 @@ input, select, textarea { font-family: inherit; }
 .ml-controls label { font-size: .72rem; color: var(--text2); display: flex; flex-direction: column; gap: .25rem; }
 .ml-controls input { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: .35rem .6rem; border-radius: var(--r); font-size: .82rem; width: 100px; }
 .ml-controls input:focus { outline: none; border-color: var(--gold-d); }
-.btn-save-ml { background: var(--gold); color: #000; font-weight: 700; padding: .38rem .85rem; border-radius: var(--r); font-size: .75rem; transition: background var(--tr); }
-.btn-save-ml:hover { background: var(--gold-l); }
+.btn-save-ml,
+.btn-save-stock-qty { background: var(--gold); color: #000; font-weight: 700; padding: .38rem .85rem; border-radius: var(--r); font-size: .75rem; transition: background var(--tr); border: none; cursor: pointer; }
+.btn-save-ml:hover,
+.btn-save-stock-qty:hover { background: var(--gold-l); }
 
 .sizes-admin { font-size: .78rem; display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; }
 .sizes-admin strong { color: var(--text2); margin-right: .2rem; }
@@ -1285,7 +1287,8 @@ input, select, textarea { font-family: inherit; }
   /* Sección inventario: controles ml en columna */
   .ml-controls label { width: 100%; }
   .ml-controls input { width: 100%; }
-  .btn-save-ml { width: 100%; }
+  .btn-save-ml,
+  .btn-save-stock-qty { width: 100%; }
 }
 
 @media (max-width: 420px) {
