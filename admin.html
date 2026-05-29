@@ -304,6 +304,46 @@
           </form>
         </div>
 
+        <div class="campaign-admin-card" style="margin-top:1.25rem">
+          <div style="display:flex;justify-content:space-between;gap:.75rem;align-items:flex-start;flex-wrap:wrap">
+            <div>
+              <h3 style="font-family:'Playfair Display',serif;color:var(--white);margin-bottom:.35rem">Campañas por Fechas Importantes</h3>
+              <p style="color:var(--text2);font-size:.82rem;max-width:620px;line-height:1.6">
+                Activa un diseño especial para fechas importantes en Perú o deja el modo automático para que se cambie solo según calendario.
+              </p>
+            </div>
+            <div style="display:flex;gap:.45rem;flex-wrap:wrap">
+              <button id="autoCampaignBtn" class="btn-campaign-auto" type="button">Modo automático</button>
+              <button id="disableCampaignBtn" class="btn-campaign-reset" type="button">Desactivar campaña</button>
+            </div>
+          </div>
+
+          <div class="campaign-status-box">
+            <p class="campaign-status-title">Campaña activa</p>
+            <p id="campaignStatusText" class="campaign-status-value">Cargando...</p>
+            <p id="campaignUpdatedAt" class="campaign-status-meta"></p>
+          </div>
+
+          <div id="campaignButtonsGrid" class="campaign-buttons-grid">
+            <button class="campaign-apply-btn" type="button" data-campaign="dia-madre">
+              <strong>Día de la Madre</strong>
+              <span>Tonos rosados y cálidos</span>
+            </button>
+            <button class="campaign-apply-btn" type="button" data-campaign="dia-padre">
+              <strong>Día del Padre</strong>
+              <span>Azules elegantes</span>
+            </button>
+            <button class="campaign-apply-btn" type="button" data-campaign="san-juan">
+              <strong>San Juan</strong>
+              <span>Verde amazónico festivo</span>
+            </button>
+            <button class="campaign-apply-btn" type="button" data-campaign="navidad">
+              <strong>Navidad</strong>
+              <span>Rojo y verde navideño</span>
+            </button>
+          </div>
+        </div>
+
         <div style="margin-top:2rem;background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.5rem;max-width:420px">
           <h3 style="font-family:'Playfair Display',serif;color:var(--white);margin-bottom:.75rem">Enlace a la tienda</h3>
           <p style="color:var(--text2);font-size:.85rem;margin-bottom:.75rem">

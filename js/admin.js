@@ -4,6 +4,14 @@ let _adminProductSearch = '';
 let _adminProductTypeFilter = 'all';
 let _customerHistory = [];
 
+const CAMPAIGN_LABELS = {
+  'default': 'Diseño normal',
+  'dia-madre': 'Día de la Madre',
+  'dia-padre': 'Día del Padre',
+  'san-juan': 'San Juan',
+  'navidad': 'Navidad'
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
   if (!SUPABASE_READY) {
     // Sin Supabase no hay acceso — evita la puerta trasera por sessionStorage
@@ -1168,6 +1176,116 @@ function setupAdminEvents() {
     msg.style.display = 'block';
     e.target.reset();
   });
+
+  setupCampaignEvents();
+}
+
+async function refreshCampaignAdminUI() {
+  const statusEl = document.getElementById('campaignStatusText');
+  if (!statusEl || typeof SiteTheme === 'undefined') return;
+
+  const updatedAtEl = document.getElementById('campaignUpdatedAt');
+  const autoBtn = document.getElementById('autoCampaignBtn');
+  const settings = await SiteTheme.getSettings();
+  const activeCampaign = settings.campaign || 'default';
+  const mode = settings.mode === 'auto' ? 'auto' : 'manual';
+  const modeLabel = mode === 'auto' ? 'Automático' : 'Manual';
+  statusEl.textContent = `${CAMPAIGN_LABELS[activeCampaign] || 'Diseño normal'} · ${modeLabel}`;
+
+  if (autoBtn) {
+    autoBtn.classList.toggle('active', mode === 'auto');
+    autoBtn.textContent = mode === 'auto' ? 'Modo automático activo' : 'Modo automático';
+  }
+
+  if (updatedAtEl) {
+    if (settings.updatedAt) {
+      const d = new Date(settings.updatedAt);
+      updatedAtEl.textContent = `Última actualización: ${d.toLocaleString('es-PE')} · Campaña del día: ${CAMPAIGN_LABELS[activeCampaign] || 'Diseño normal'}`;
+    } else {
+      updatedAtEl.textContent = 'Última actualización: no registrada';
+    }
+  }
+
+  document.querySelectorAll('.campaign-apply-btn').forEach(btn => {
+    const isActive = btn.dataset.campaign === activeCampaign;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+}
+
+function setupCampaignEvents() {
+  const wrap = document.getElementById('campaignButtonsGrid');
+  if (!wrap || wrap.dataset.ready === '1') {
+    refreshCampaignAdminUI().catch(console.error);
+    return;
+  }
+  wrap.dataset.ready = '1';
+
+  wrap.querySelectorAll('.campaign-apply-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const campaign = btn.dataset.campaign;
+      if (!campaign || typeof SiteTheme === 'undefined') return;
+
+      btn.disabled = true;
+      const prev = btn.innerHTML;
+      btn.innerHTML = '<strong>Aplicando...</strong><span>Actualizando la tienda</span>';
+
+      try {
+        const result = await SiteTheme.setActiveCampaign(campaign);
+        await refreshCampaignAdminUI();
+        if (result?.synced) showToast(`Campaña activada: ${CAMPAIGN_LABELS[campaign]} ✓`);
+        else showToast(`Campaña activada en este navegador: ${CAMPAIGN_LABELS[campaign]} ✓`);
+      } catch (err) {
+        console.error(err);
+        showToast('No se pudo activar la campaña. Inténtalo de nuevo.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = prev;
+      }
+    });
+  });
+
+  document.getElementById('disableCampaignBtn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('disableCampaignBtn');
+    if (!btn || typeof SiteTheme === 'undefined') return;
+    btn.disabled = true;
+    const prev = btn.textContent;
+    btn.textContent = 'Desactivando...';
+    try {
+      const result = await SiteTheme.setActiveCampaign('default');
+      await refreshCampaignAdminUI();
+      if (result?.synced) showToast('Campaña desactivada. Diseño normal restaurado ✓');
+      else showToast('Diseño normal restaurado en este navegador ✓');
+    } catch (err) {
+      console.error(err);
+      showToast('No se pudo desactivar la campaña.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = prev;
+    }
+  });
+
+  document.getElementById('autoCampaignBtn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('autoCampaignBtn');
+    if (!btn || typeof SiteTheme === 'undefined') return;
+    btn.disabled = true;
+    const prev = btn.textContent;
+    btn.textContent = 'Activando...';
+    try {
+      const result = await SiteTheme.setAutomaticMode();
+      await refreshCampaignAdminUI();
+      if (result?.synced) showToast('Modo automático activado ✓');
+      else showToast('Modo automático activado en este navegador ✓');
+    } catch (err) {
+      console.error(err);
+      showToast('No se pudo activar el modo automático.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = prev;
+    }
+  });
+
+  refreshCampaignAdminUI().catch(console.error);
 }
 
 // ─── Modal de confirmación (totalmente dinámico, sin dependencia de HTML) ────

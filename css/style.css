@@ -32,6 +32,155 @@
   --font-sans:  'Inter', system-ui, sans-serif;
 }
 
+/* ─── Campanas visuales ───────────────────────────────── */
+body[data-campaign="dia-madre"] {
+  --gold: #d86a8f;
+  --gold-l: #f08fb0;
+  --gold-d: #b14d71;
+  --gold-dim: rgba(216,106,143,.14);
+}
+body[data-campaign="dia-padre"] {
+  --gold: #6f9ed8;
+  --gold-l: #94bbea;
+  --gold-d: #4f79ad;
+  --gold-dim: rgba(111,158,216,.14);
+}
+body[data-campaign="san-juan"] {
+  --gold: #51ad71;
+  --gold-l: #75c793;
+  --gold-d: #3f8d5a;
+  --gold-dim: rgba(81,173,113,.16);
+}
+body[data-campaign="navidad"] {
+  --gold: #d25353;
+  --gold-l: #e17878;
+  --gold-d: #9c3939;
+  --gold-dim: rgba(210,83,83,.14);
+}
+
+.seasonal-ribbon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  padding: .5rem 1rem;
+  border-bottom: 1px solid rgba(201,168,76,.28);
+  background: linear-gradient(90deg, var(--gold-dim, rgba(201,168,76,.14)), transparent);
+  color: var(--gold);
+  font-size: .76rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.seasonal-ribbon strong {
+  color: var(--white);
+  letter-spacing: .04em;
+  text-transform: none;
+  font-weight: 600;
+}
+
+.seasonal-hero-banner {
+  padding: 1rem 0 .4rem;
+}
+.seasonal-hero-box {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(201,168,76,.26);
+  background: linear-gradient(135deg, rgba(201,168,76,.12), rgba(201,168,76,.03));
+  min-height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.2rem 1.3rem;
+}
+.seasonal-hero-copy {
+  max-width: 560px;
+  position: relative;
+  z-index: 2;
+}
+.seasonal-hero-kicker {
+  font-size: .65rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: .45rem;
+}
+.seasonal-hero-copy h2 {
+  font-family: var(--font-serif);
+  color: var(--white);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  line-height: 1.1;
+  margin-bottom: .45rem;
+}
+.seasonal-hero-copy p {
+  color: var(--text2);
+  font-size: .85rem;
+  line-height: 1.6;
+}
+.seasonal-hero-art {
+  width: 120px;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.2);
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  opacity: .9;
+  position: relative;
+  z-index: 2;
+}
+
+.seasonal-art-mother {
+  background: linear-gradient(135deg, rgba(255,171,201,.22), rgba(216,106,143,.1));
+}
+.seasonal-art-mother .seasonal-hero-art {
+  background-image:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(255,255,255,.08) 60%),
+    linear-gradient(145deg, rgba(216,106,143,.9), rgba(176,70,112,.95));
+}
+
+.seasonal-art-father {
+  background: linear-gradient(135deg, rgba(128,175,226,.2), rgba(79,121,173,.12));
+}
+.seasonal-art-father .seasonal-hero-art {
+  background-image:
+    radial-gradient(circle at 20% 25%, rgba(255,255,255,.8), rgba(255,255,255,.05) 58%),
+    linear-gradient(145deg, rgba(111,158,216,.95), rgba(52,77,122,.9));
+}
+
+.seasonal-art-sanjuan {
+  background: linear-gradient(135deg, rgba(102,194,132,.2), rgba(63,141,90,.12));
+}
+.seasonal-art-sanjuan .seasonal-hero-art {
+  background-image:
+    radial-gradient(circle at 26% 34%, rgba(228,255,227,.88), rgba(255,255,255,.06) 60%),
+    linear-gradient(150deg, rgba(81,173,113,.95), rgba(34,96,55,.92));
+}
+
+.seasonal-art-navidad {
+  background: linear-gradient(135deg, rgba(220,95,95,.2), rgba(156,57,57,.12));
+}
+.seasonal-art-navidad .seasonal-hero-art {
+  background-image:
+    radial-gradient(circle at 24% 30%, rgba(255,238,205,.85), rgba(255,255,255,.04) 58%),
+    linear-gradient(145deg, rgba(210,83,83,.95), rgba(107,33,33,.92));
+}
+
+@media (max-width: 700px) {
+  .seasonal-hero-box {
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 0;
+    padding: 1rem;
+  }
+  .seasonal-hero-art {
+    width: 100%;
+    height: 84px;
+  }
+}
+
 /* ─── Reset ──────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
@@ -1053,6 +1202,109 @@ input, select, textarea { font-family: inherit; }
 .btn-change-pass:hover { background: var(--gold-l); }
 .msg-error   { color: var(--red);   background: rgba(239,83,80,.1); border-radius: var(--r); padding: .45rem .7rem; font-size: .78rem; display: none; }
 .msg-success { color: var(--green); background: rgba(76,175,80,.1); border-radius: var(--r); padding: .45rem .7rem; font-size: .78rem; display: none; }
+
+.campaign-admin-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 1.35rem;
+}
+.campaign-status-box {
+  margin-top: .85rem;
+  padding: .8rem .95rem;
+  border: 1px solid var(--border-l);
+  border-radius: var(--r);
+  background: var(--bg2);
+}
+.campaign-status-title {
+  font-size: .7rem;
+  color: var(--text3);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.campaign-status-value {
+  font-size: .98rem;
+  color: var(--gold);
+  font-weight: 700;
+  margin-top: .2rem;
+}
+.campaign-status-meta {
+  font-size: .72rem;
+  color: var(--text2);
+  margin-top: .22rem;
+}
+.campaign-buttons-grid {
+  margin-top: .9rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: .65rem;
+}
+.campaign-apply-btn {
+  text-align: left;
+  padding: .8rem .85rem;
+  border-radius: var(--r);
+  border: 1px solid var(--border-l);
+  background: var(--bg2);
+  color: var(--text2);
+  transition: border-color var(--tr), background var(--tr), color var(--tr), transform var(--tr);
+}
+.campaign-apply-btn strong {
+  display: block;
+  color: var(--text);
+  font-size: .82rem;
+  margin-bottom: .2rem;
+}
+.campaign-apply-btn span {
+  display: block;
+  font-size: .72rem;
+  color: var(--text3);
+}
+.campaign-apply-btn:hover {
+  border-color: rgba(201,168,76,.45);
+  background: rgba(201,168,76,.08);
+  transform: translateY(-1px);
+}
+.campaign-apply-btn.active {
+  border-color: rgba(201,168,76,.7);
+  background: rgba(201,168,76,.16);
+}
+.campaign-apply-btn.active strong,
+.campaign-apply-btn.active span {
+  color: var(--gold);
+}
+.btn-campaign-reset {
+  font-size: .75rem;
+  color: var(--text2);
+  background: transparent;
+  border: 1px solid var(--border-l);
+  border-radius: var(--r);
+  padding: .4rem .8rem;
+  transition: all var(--tr);
+}
+.btn-campaign-reset:hover {
+  border-color: rgba(239,83,80,.45);
+  color: #ef5350;
+  background: rgba(239,83,80,.08);
+}
+.btn-campaign-auto {
+  font-size: .75rem;
+  color: var(--text2);
+  background: transparent;
+  border: 1px solid var(--border-l);
+  border-radius: var(--r);
+  padding: .4rem .8rem;
+  transition: all var(--tr);
+}
+.btn-campaign-auto:hover {
+  border-color: rgba(201,168,76,.5);
+  color: var(--gold);
+  background: rgba(201,168,76,.08);
+}
+.btn-campaign-auto.active {
+  border-color: rgba(201,168,76,.72);
+  color: var(--gold);
+  background: rgba(201,168,76,.16);
+}
 
 /* ═══════════════════════════════════════════════════════
    CHATBOT IA

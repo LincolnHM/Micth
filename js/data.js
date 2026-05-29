@@ -4,6 +4,7 @@ const STORAGE_KEY  = 'micht_products_v2';
 const ORDERS_KEY   = 'micht_orders';
 const AUTH_KEY     = 'micht_admin_hash';
 const SESSION_KEY  = 'micht_session';
+const SITE_THEME_KEY = 'micht_site_theme';
 
 function escapeXml(value) {
   return String(value)
@@ -1596,6 +1597,173 @@ const Orders = {
       revenue:   all.filter(o => ['pagado','enviado','entregado'].includes(o.status))
                     .reduce((s, o) => s + o.total, 0)
     };
+  }
+};
+
+// ─── Configuracion de campanas visuales ─────────────────────────────────────
+
+const VALID_CAMPAIGNS = new Set(['default', 'dia-madre', 'dia-padre', 'san-juan', 'navidad']);
+
+function getNthWeekdayOfMonth(year, monthIndex, weekday, nth) {
+  const first = new Date(year, monthIndex, 1);
+  const offset = (weekday - first.getDay() + 7) % 7;
+  return 1 + offset + (nth - 1) * 7;
+}
+
+function computePeruCampaignByDate(dateValue = new Date()) {
+  const date  = new Date(dateValue);
+  const year  = date.getFullYear();
+  const month = date.getMonth();
+  const day   = date.getDate();
+
+  // Navidad: todo diciembre para campaña comercial completa.
+  if (month === 11) return 'navidad';
+
+  // Día de la Madre: segundo domingo de mayo (empieza 7 días antes).
+  if (month === 4) {
+    const mothersDay = getNthWeekdayOfMonth(year, 4, 0, 2);
+    if (day >= mothersDay - 6 && day <= mothersDay) return 'dia-madre';
+  }
+
+  if (month === 5) {
+    // Día del Padre: tercer domingo de junio (empieza 7 días antes).
+    const fathersDay = getNthWeekdayOfMonth(year, 5, 0, 3);
+    if (day >= fathersDay - 6 && day <= fathersDay) return 'dia-padre';
+
+    // San Juan: 24 de junio (empieza 7 días antes = día 17).
+    // Solo aplica si ya terminó la ventana del Padre.
+    if (day >= 17 && day <= 24) return 'san-juan';
+  }
+
+  return 'default';
+}
+
+function normalizeCampaign(value) {
+  const campaign = String(value || '').trim().toLowerCase();
+  return VALID_CAMPAIGNS.has(campaign) ? campaign : 'default';
+}
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+const SiteTheme = {
+  async getSettings() {
+    // Priorizar nube para que el cambio se refleje a todos los visitantes.
+    if (typeof db !== 'undefined' && db) {
+      const { data, error } = await db
+        .from('site_settings')
+        .select('value, updated_at')
+        .eq('key', 'active_campaign')
+        .maybeSingle();
+
+      if (!error && data) {
+        const value = (data.value && typeof data.value === 'object') ? data.value : {};
+        const settings = {
+          campaign: normalizeCampaign(value.campaign),
+          mode: value.mode === 'auto' ? 'auto' : 'manual',
+          updatedAt: value.updatedAt || data.updated_at || null
+        };
+        if (settings.mode === 'auto') {
+          settings.campaign = computePeruCampaignByDate();
+        }
+        this._saveLocal(settings);
+        return settings;
+      }
+    }
+    const fallback = this._readLocal();
+    if (fallback.mode === 'auto') {
+      fallback.campaign = computePeruCampaignByDate();
+    }
+    return fallback;
+  },
+
+  async getActiveCampaign() {
+    const settings = await this.getSettings();
+    return settings.campaign;
+  },
+
+  async setActiveCampaign(campaign) {
+    const normalized = normalizeCampaign(campaign);
+    const payload = { campaign: normalized, mode: 'manual', updatedAt: nowIso() };
+
+    // Guardar local primero para respuesta inmediata y sync entre pestañas.
+    this._saveLocal(payload);
+
+    if (typeof db !== 'undefined' && db) {
+      const { error } = await db
+        .from('site_settings')
+        .upsert(
+          {
+            key: 'active_campaign',
+            value: payload,
+            updated_at: nowIso()
+          },
+          { onConflict: 'key' }
+        );
+
+      if (!error) {
+        return { ...payload, synced: true };
+      }
+      return { ...payload, synced: false, error };
+    }
+
+    return { ...payload, synced: false };
+  },
+
+  async setAutomaticMode() {
+    const payload = {
+      campaign: computePeruCampaignByDate(),
+      mode: 'auto',
+      updatedAt: nowIso()
+    };
+
+    this._saveLocal(payload);
+
+    if (typeof db !== 'undefined' && db) {
+      const { error } = await db
+        .from('site_settings')
+        .upsert(
+          {
+            key: 'active_campaign',
+            value: payload,
+            updated_at: nowIso()
+          },
+          { onConflict: 'key' }
+        );
+
+      if (!error) {
+        return { ...payload, synced: true };
+      }
+      return { ...payload, synced: false, error };
+    }
+
+    return { ...payload, synced: false };
+  },
+
+  _readLocal() {
+    try {
+      const raw = localStorage.getItem(SITE_THEME_KEY);
+      if (!raw) return { campaign: 'default', updatedAt: null };
+      const parsed = JSON.parse(raw);
+      return {
+        campaign: normalizeCampaign(parsed?.campaign),
+        mode: parsed?.mode === 'auto' ? 'auto' : 'manual',
+        updatedAt: parsed?.updatedAt || null
+      };
+    } catch {
+      return { campaign: 'default', mode: 'manual', updatedAt: null };
+    }
+  },
+
+  _saveLocal(settings) {
+    const payload = {
+      campaign: normalizeCampaign(settings?.campaign),
+      mode: settings?.mode === 'auto' ? 'auto' : 'manual',
+      updatedAt: settings?.updatedAt || nowIso()
+    };
+    localStorage.setItem(SITE_THEME_KEY, JSON.stringify(payload));
+    return payload;
   }
 };
 
