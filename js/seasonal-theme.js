@@ -138,6 +138,55 @@
     renderCampaignHero(normalized);
   }
 
+  // ─── Animación de íconos al agregar al carrito ─────────────────────────────
+
+  const CAMPAIGN_ICONS = {
+    'dia-madre': ['🌸', '🌺', '💐', '🌷'],
+    'dia-padre': ['⭐', '💫', '🎩', '✨'],
+    'san-juan':  ['🌿', '✨', '🌟', '🍃'],
+    'navidad':   ['❄️', '🎁', '⭐', '🎄']
+  };
+
+  function burstDecor(originEl, campaign) {
+    const icons = CAMPAIGN_ICONS[campaign];
+    if (!icons) return;
+    const rect  = originEl.getBoundingClientRect();
+    const cx    = rect.left + rect.width  / 2;
+    const cy    = rect.top  + rect.height / 2;
+    const count = 6;
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('span');
+      el.textContent = icons[i % icons.length];
+      el.style.cssText =
+        'position:fixed;left:' + cx + 'px;top:' + cy + 'px;' +
+        'font-size:' + (1 + Math.random() * 0.6).toFixed(2) + 'rem;' +
+        'pointer-events:none;z-index:99999;line-height:1;' +
+        'transform:translate(-50%,-50%);';
+      document.body.appendChild(el);
+      const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+      const dist  = 45 + Math.random() * 55;
+      const tx    = Math.cos(angle) * dist;
+      const ty    = Math.sin(angle) * dist - 28;
+      el.animate(
+        [
+          { transform: 'translate(-50%,-50%) scale(0)',    opacity: 1 },
+          { transform: 'translate(calc(-50% + ' + tx + 'px),calc(-50% + ' + ty + 'px)) scale(1.2)',            opacity: 1, offset: 0.5 },
+          { transform: 'translate(calc(-50% + ' + (tx*1.5) + 'px),calc(-50% + ' + ((ty*1.5)+12) + 'px)) scale(0.6)', opacity: 0 }
+        ],
+        { duration: 700, easing: 'cubic-bezier(.25,.46,.45,.94)' }
+      ).onfinish = () => el.remove();
+    }
+  }
+
+  function setupBurstListener() {
+    document.addEventListener('click', e => {
+      const campaign = document.body.dataset.campaign;
+      if (!campaign || !CAMPAIGN_ICONS[campaign]) return;
+      const btn = e.target.closest('.size-btn:not([disabled]), .pd-size-btn-new, #pdCartBtn');
+      if (btn) burstDecor(btn, campaign);
+    }, true);
+  }
+
   function readLocalCampaign() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -170,6 +219,7 @@
   });
 
   document.addEventListener('DOMContentLoaded', () => {
+    setupBurstListener();
     loadCampaign().catch(console.error);
   });
 })();

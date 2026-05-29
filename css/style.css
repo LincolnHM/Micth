@@ -32,31 +32,7 @@
   --font-sans:  'Inter', system-ui, sans-serif;
 }
 
-/* ─── Campanas visuales ───────────────────────────────── */
-body[data-campaign="dia-madre"] {
-  --gold: #d86a8f;
-  --gold-l: #f08fb0;
-  --gold-d: #b14d71;
-  --gold-dim: rgba(216,106,143,.14);
-}
-body[data-campaign="dia-padre"] {
-  --gold: #6f9ed8;
-  --gold-l: #94bbea;
-  --gold-d: #4f79ad;
-  --gold-dim: rgba(111,158,216,.14);
-}
-body[data-campaign="san-juan"] {
-  --gold: #51ad71;
-  --gold-l: #75c793;
-  --gold-d: #3f8d5a;
-  --gold-dim: rgba(81,173,113,.16);
-}
-body[data-campaign="navidad"] {
-  --gold: #d25353;
-  --gold-l: #e17878;
-  --gold-d: #9c3939;
-  --gold-dim: rgba(210,83,83,.14);
-}
+/* ─── Campanas visuales (colores del sitio sin cambios) ─── */
 
 .seasonal-ribbon {
   display: flex;
