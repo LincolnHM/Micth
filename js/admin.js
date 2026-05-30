@@ -115,6 +115,7 @@ function setupNav() {
       if (btn.dataset.section === 'orders')      renderOrdersSection().catch(console.error);
       if (btn.dataset.section === 'orders')      updateOrderStats().catch(console.error);
       if (btn.dataset.section === 'accounting')  renderAccountingSection().catch(console.error);
+      if (btn.dataset.section === 'stats')       renderStatsSection().catch(console.error);
     });
   });
 }
@@ -653,12 +654,75 @@ async function openOrderDetail(id) {
         <strong style="color:var(--gold)">S/ ${(i.price * i.quantity).toFixed(2)}</strong>
       </li>`).join('')}
     </ul>
-    <div style="display:flex;justify-content:space-between;margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--border-l)">
-      <strong style="color:var(--text)">Total</strong>
-      <strong style="color:var(--gold);font-size:1.05rem">S/ ${order.total.toFixed(2)}</strong>
+    <div style="margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--border-l)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
+        <strong style="color:var(--text)">Total del pedido</strong>
+        <strong style="color:var(--gold);font-size:1.05rem" id="orderDetailTotalDisplay">S/ ${order.total.toFixed(2)}</strong>
+      </div>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <label style="font-size:.75rem;color:var(--text2);white-space:nowrap">Modificar total:</label>
+        <div style="display:flex;gap:.4rem;flex:1">
+          <div style="position:relative;flex:1">
+            <span style="position:absolute;left:.6rem;top:50%;transform:translateY(-50%);color:var(--text2);font-size:.82rem;pointer-events:none">S/</span>
+            <input type="number" id="orderTotalInput" value="${order.total.toFixed(2)}"
+              min="0" max="99999" step="0.01"
+              style="width:100%;padding:.4rem .4rem .4rem 1.8rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;box-sizing:border-box">
+          </div>
+          <button id="saveOrderTotalBtn" data-id="${escapeAttr(order.id)}"
+            style="padding:.4rem .9rem;background:var(--gold);color:#111;border:none;border-radius:var(--r);font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s"
+            onmouseover="this.style.background='#e0c050'" onmouseout="this.style.background='var(--gold)'">
+            Guardar
+          </button>
+        </div>
+      </div>
+      <p style="font-size:.7rem;color:var(--text3);margin:.4rem 0 0">Solo afecta la contabilidad, no cambia los precios de los productos.</p>
     </div>
-    ${order.notes ? `<div class="order-detail-row"><span class="lbl">Notas</span><span class="val">${sanitize(order.notes)}</span></div>` : ''}
+    ${order.notes ? `<div class="order-detail-row" style="margin-top:.5rem"><span class="lbl">Notas</span><span class="val">${sanitize(order.notes)}</span></div>` : ''}
   `;
+
+  // Guardar nuevo total
+  body.querySelector('#saveOrderTotalBtn')?.addEventListener('click', async () => {
+    const btn   = body.querySelector('#saveOrderTotalBtn');
+    const input = body.querySelector('#orderTotalInput');
+    const newTotal = parseFloat(input.value);
+
+    if (isNaN(newTotal) || newTotal < 0) {
+      showToast('Ingresa un total válido mayor a 0.');
+      return;
+    }
+
+    btn.disabled    = true;
+    btn.textContent = 'Guardando…';
+
+    try {
+      // Actualizar en Supabase
+      if (db) {
+        const { error } = await db
+          .from('pedidos')
+          .update({ total: newTotal, updated_at: new Date().toISOString() })
+          .eq('id', order.id);
+        if (error) throw error;
+      }
+      // Actualizar en localStorage
+      const local = Orders.getAll();
+      const idx   = local.findIndex(o => o.id === order.id);
+      if (idx !== -1) { local[idx].total = newTotal; Orders.save(local); }
+
+      // Actualizar el display en el modal
+      const display = body.querySelector('#orderDetailTotalDisplay');
+      if (display) display.textContent = `S/ ${newTotal.toFixed(2)}`;
+
+      showToast(`Total del pedido ${order.id} actualizado a S/ ${newTotal.toFixed(2)} ✓`);
+      // Refrescar tabla de pedidos en fondo
+      renderOrdersSection().catch(console.error);
+    } catch (err) {
+      console.error('Error al actualizar total:', err);
+      showToast('Error al guardar. Intenta de nuevo.');
+    }
+
+    btn.disabled    = false;
+    btn.textContent = 'Guardar';
+  });
 
   modal.classList.add('open');
 }
@@ -1922,4 +1986,130 @@ function drawDailyChart(dailyStats, year, month) {
       ctx.fillText(`${d.day}`, x + bw / 2, padT + cH + 14);
     }
   });
+}
+
+// ─── Sección: Estadísticas ────────────────────────────────────────────────────
+
+async function renderStatsSection() {
+  const container = document.getElementById('statsContent');
+  if (!container) return;
+  container.innerHTML = '<p style="color:var(--text2);text-align:center;padding:2rem">Cargando estadísticas…</p>';
+
+  const orders = await CloudOrders.getAll();
+
+  if (!orders.length) {
+    container.innerHTML = '<p style="color:var(--text2);text-align:center;padding:2rem">Aún no hay pedidos registrados.</p>';
+    return;
+  }
+
+  // ── Perfumes más comprados ────────────────────────────────────────────────
+  const productMap = {};
+  orders.forEach(order => {
+    (order.items || []).forEach(item => {
+      const key = item.productId ? String(item.productId) : (item.productName || '?');
+      if (!productMap[key]) {
+        productMap[key] = { name: item.productName || key, brand: item.brand || '', qty: 0, revenue: 0 };
+      }
+      productMap[key].qty     += (item.quantity || 1);
+      productMap[key].revenue += (item.price || 0) * (item.quantity || 1);
+    });
+  });
+  const topProducts = Object.values(productMap)
+    .sort((a, b) => b.qty - a.qty)
+    .slice(0, 15);
+
+  // ── Clientes que más compran ──────────────────────────────────────────────
+  const customerMap = {};
+  orders.forEach(order => {
+    const key = order.customerDni || order.customerName || '?';
+    if (!customerMap[key]) {
+      customerMap[key] = {
+        name:   order.customerName  || '—',
+        dni:    order.customerDni   || '—',
+        phone:  order.customerPhone || '—',
+        orders: 0,
+        total:  0
+      };
+    }
+    customerMap[key].orders++;
+    customerMap[key].total += (order.total || 0);
+    if (order.customerName)  customerMap[key].name  = order.customerName;
+    if (order.customerPhone) customerMap[key].phone = order.customerPhone;
+  });
+  const topCustomers = Object.values(customerMap)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 15);
+
+  const thStyle  = 'padding:.6rem .8rem;color:var(--text2);font-size:.78rem;font-weight:600;text-align:left;border-bottom:1px solid var(--border)';
+  const tdStyle  = 'padding:.55rem .8rem;font-size:.82rem;border-bottom:1px solid var(--border)';
+  const tdR      = tdStyle + ';text-align:right';
+  const rankStyle= tdStyle + ';color:var(--text3);font-weight:700';
+
+  container.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+
+      <!-- Perfumes más vendidos -->
+      <div style="background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden">
+        <div style="padding:1rem 1.2rem;border-bottom:1px solid var(--border)">
+          <h3 style="margin:0;font-size:.95rem;color:var(--gold)">Perfumes más vendidos</h3>
+          <p style="margin:.2rem 0 0;font-size:.75rem;color:var(--text2)">Por unidades vendidas</p>
+        </div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr>
+              <th style="${thStyle}">#</th>
+              <th style="${thStyle}">Perfume</th>
+              <th style="${thStyle};text-align:right">Unid.</th>
+              <th style="${thStyle};text-align:right">Facturado</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${topProducts.length ? topProducts.map((p, i) => `
+              <tr>
+                <td style="${rankStyle}">${i + 1}</td>
+                <td style="${tdStyle}">
+                  <strong style="display:block">${sanitize(p.name)}</strong>
+                  <small style="color:var(--text2)">${sanitize(p.brand)}</small>
+                </td>
+                <td style="${tdR};color:var(--gold);font-weight:700">${p.qty}</td>
+                <td style="${tdR}">S/ ${p.revenue.toFixed(2)}</td>
+              </tr>
+            `).join('') : `<tr><td colspan="4" style="padding:1.5rem;text-align:center;color:var(--text2)">Sin datos</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Clientes que más compran -->
+      <div style="background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden">
+        <div style="padding:1rem 1.2rem;border-bottom:1px solid var(--border)">
+          <h3 style="margin:0;font-size:.95rem;color:var(--gold)">Clientes que más compran</h3>
+          <p style="margin:.2rem 0 0;font-size:.75rem;color:var(--text2)">Por total gastado</p>
+        </div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr>
+              <th style="${thStyle}">#</th>
+              <th style="${thStyle}">Cliente</th>
+              <th style="${thStyle};text-align:right">Pedidos</th>
+              <th style="${thStyle};text-align:right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${topCustomers.length ? topCustomers.map((c, i) => `
+              <tr>
+                <td style="${rankStyle}">${i + 1}</td>
+                <td style="${tdStyle}">
+                  <strong style="display:block">${sanitize(c.name)}</strong>
+                  <small style="color:var(--text2)">DNI: ${sanitize(c.dni)} · ${sanitize(c.phone)}</small>
+                </td>
+                <td style="${tdR};color:var(--gold);font-weight:700">${c.orders}</td>
+                <td style="${tdR};font-weight:600">S/ ${c.total.toFixed(2)}</td>
+              </tr>
+            `).join('') : `<tr><td colspan="4" style="padding:1.5rem;text-align:center;color:var(--text2)">Sin datos</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  `;
 }

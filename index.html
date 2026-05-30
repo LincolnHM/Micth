@@ -281,6 +281,34 @@
         <a href="nosotros/">Nosotros</a>
         <a href="contacto/">Contacto</a>
       </nav>
+      <!-- ── Auth buttons ──────────────────────────────────── -->
+      <div class="header-auth" id="headerAuth">
+        <!-- No logueado -->
+        <button class="header-auth-btn header-auth-login" id="headerLoginBtn" aria-label="Iniciar sesión">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Ingresar
+        </button>
+        <button class="header-auth-btn header-auth-register" id="headerRegisterBtn" aria-label="Crear cuenta">
+          Crear cuenta
+        </button>
+
+        <!-- Logueado -->
+        <div class="header-user-display" id="headerUserDisplay" style="display:none">
+          <span class="header-discount-badge" id="headerDiscountBadge" title="10% OFF en tu primera compra" style="display:none">10% OFF</span>
+          <div class="header-user-avatar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <span class="header-user-name" id="headerUserName">Hola</span>
+          <button class="header-history-btn" id="headerHistoryBtn" title="Mis compras" aria-label="Mis compras">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            Mis compras
+          </button>
+          <button class="header-logout-btn" id="headerLogoutBtn" title="Cerrar sesión" aria-label="Cerrar sesión">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14" aria-hidden="true"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+
       <div class="header-right">
         <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" aria-expanded="false">
           <span></span><span></span><span></span>
@@ -297,6 +325,19 @@
     </div>
   </header>
 
+  <!-- ── Banner promocional de descuento ───────────────────────────────────── -->
+  <div class="promo-banner" id="promoBanner" style="display:none" role="complementary" aria-label="Oferta de bienvenida">
+    <div class="promo-banner-inner">
+      <span class="promo-banner-icon" aria-hidden="true">🎁</span>
+      <p class="promo-banner-text" id="promoBannerText">
+        Regístrate y obtén <strong>10% OFF</strong> en tu primera compra
+      </p>
+      <button class="promo-banner-cta" id="promoBannerCta">Crear cuenta gratis</button>
+      <button class="promo-banner-close" id="promoBannerClose" aria-label="Cerrar anuncio">×</button>
+    </div>
+  </div>
+  <!-- ── /Banner promocional ────────────────────────────────────────────────── -->
+
   <!-- ── Mobile menu overlay ─────────────────────────────────────────────── -->
   <div class="mobile-menu" id="mobileMenu" aria-hidden="true" role="dialog" aria-label="Menú principal">
     <span class="mobile-menu-brand">MICHT DECANTS</span>
@@ -306,6 +347,24 @@
       <a href="nosotros/" class="mobile-nav-link">Nosotros</a>
       <a href="contacto/" class="mobile-nav-link">Contacto</a>
     </nav>
+
+    <!-- Auth en móvil -->
+    <div class="mobile-auth-section">
+      <!-- No logueado -->
+      <button class="mobile-auth-btn mobile-auth-login" id="mobileLoginBtn">Iniciar sesión</button>
+      <button class="mobile-auth-btn mobile-auth-register" id="mobileRegisterBtn">Crear cuenta</button>
+
+      <!-- Logueado -->
+      <div class="mobile-user-display" id="mobileUserDisplay" style="display:none">
+        <div class="mobile-user-info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Hola, <strong id="mobileUserName">Usuario</strong></span>
+        </div>
+        <button class="mobile-auth-btn" id="mobileHistoryBtn" style="background:var(--card);border:1px solid var(--border);color:var(--text)">Mis compras</button>
+        <button class="mobile-auth-btn mobile-auth-logout" id="mobileLogoutBtn">Cerrar sesión</button>
+      </div>
+    </div>
+
     <div class="mobile-menu-footer">Soritor, Perú · @michtdecants</div>
   </div>
 
@@ -802,6 +861,140 @@
     </div>
   </div>
 
+  <!-- ── Modales de autenticación ────────────────────────────────────────── -->
+  <div class="auth-modal-overlay" id="authModalOverlay" role="dialog" aria-modal="true">
+
+    <!-- ── Modal: Iniciar Sesión ──────────────────────────────────────── -->
+    <div class="auth-modal" id="authLoginModal" aria-label="Iniciar sesión">
+      <button class="auth-modal-close" aria-label="Cerrar">×</button>
+      <div class="auth-modal-logo">
+        <span class="auth-logo-text">MICHT <span>Decants</span></span>
+      </div>
+      <h2 class="auth-modal-title" id="authLoginTitle">Iniciar sesión</h2>
+      <p class="auth-modal-sub">Accede a tu cuenta para disfrutar tu descuento de bienvenida</p>
+
+      <form id="authLoginForm" novalidate autocomplete="on">
+        <!-- Campos de login -->
+        <div id="authLoginFields">
+          <div class="auth-form-group">
+            <label for="authLoginEmail">Correo electrónico</label>
+            <input type="email" id="authLoginEmail" name="email" placeholder="ejemplo@correo.com" autocomplete="email" required>
+          </div>
+          <div class="auth-form-group">
+            <label for="authLoginPass">Contraseña</label>
+            <div class="auth-pass-wrap">
+              <input type="password" id="authLoginPass" name="password" placeholder="Tu contraseña" autocomplete="current-password" required>
+              <button type="button" class="auth-toggle-pass" data-target="authLoginPass" aria-label="Ver contraseña">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <p class="auth-forgot-link"><a href="#" id="authForgotLink">¿Olvidaste tu contraseña?</a></p>
+        </div>
+
+        <!-- Recuperar contraseña (oculto por defecto) -->
+        <div id="authForgotFields" style="display:none">
+          <p class="auth-modal-sub" style="margin-bottom:1rem">Te enviaremos un enlace a tu correo para restablecer tu contraseña.</p>
+          <div class="auth-form-group">
+            <label for="authForgotEmail">Correo electrónico</label>
+            <input type="email" id="authForgotEmail" placeholder="ejemplo@correo.com" autocomplete="email">
+          </div>
+          <p class="auth-forgot-link"><a href="#" id="authBackToLogin">← Volver al login</a></p>
+          <p class="auth-form-error" id="authForgotErr"></p>
+        </div>
+
+        <p class="auth-form-error" id="authLoginErr"></p>
+        <button type="submit" class="auth-submit-btn" id="authLoginBtn">Ingresar</button>
+      </form>
+
+      <p class="auth-switch-text">
+        ¿No tienes cuenta?
+        <button class="auth-switch-btn" id="authSwitchToRegister">Crear cuenta gratis</button>
+      </p>
+    </div>
+
+    <!-- ── Modal: Crear Cuenta ────────────────────────────────────────── -->
+    <div class="auth-modal auth-modal-register" id="authRegisterModal" aria-label="Crear cuenta">
+      <button class="auth-modal-close" aria-label="Cerrar">×</button>
+      <div class="auth-modal-logo">
+        <span class="auth-logo-text">MICHT <span>Decants</span></span>
+      </div>
+      <h2 class="auth-modal-title">Crear cuenta</h2>
+      <p class="auth-modal-sub">Regístrate y obtén <strong style="color:var(--gold)">10% OFF en tu primera compra</strong></p>
+
+      <form id="authRegisterForm" novalidate autocomplete="on">
+        <div class="auth-form-row">
+          <div class="auth-form-group">
+            <label for="authRegNombre">Nombre completo <span class="auth-req">*</span></label>
+            <input type="text" id="authRegNombre" name="nombre" placeholder="Nombre y Apellido" autocomplete="name" maxlength="100" required>
+          </div>
+          <div class="auth-form-group">
+            <label for="authRegDni">DNI <span class="auth-req">*</span></label>
+            <input type="text" id="authRegDni" name="dni" inputmode="numeric" placeholder="12345678" maxlength="8" autocomplete="off" required>
+          </div>
+        </div>
+        <div class="auth-form-row">
+          <div class="auth-form-group">
+            <label for="authRegTelefono">Celular <span class="auth-req">*</span></label>
+            <input type="tel" id="authRegTelefono" name="telefono" inputmode="numeric" placeholder="987654321" maxlength="9" autocomplete="tel" required>
+          </div>
+          <div class="auth-form-group">
+            <label for="authRegEmail">Correo electrónico <span class="auth-req">*</span></label>
+            <input type="email" id="authRegEmail" name="email" placeholder="ejemplo@correo.com" autocomplete="email" required>
+          </div>
+        </div>
+        <div class="auth-form-row">
+          <div class="auth-form-group">
+            <label for="authRegPass">Contraseña <span class="auth-req">*</span></label>
+            <div class="auth-pass-wrap">
+              <input type="password" id="authRegPass" name="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" maxlength="100" required>
+              <button type="button" class="auth-toggle-pass" data-target="authRegPass" aria-label="Ver contraseña">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="auth-form-group">
+            <label for="authRegPass2">Repetir contraseña <span class="auth-req">*</span></label>
+            <div class="auth-pass-wrap">
+              <input type="password" id="authRegPass2" name="password2" placeholder="Repite tu contraseña" autocomplete="new-password" maxlength="100" required>
+              <button type="button" class="auth-toggle-pass" data-target="authRegPass2" aria-label="Ver contraseña">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-terms">
+          Al crear tu cuenta aceptas que tu DNI se usará para validar el descuento de bienvenida (un uso por persona).
+        </div>
+
+        <p class="auth-form-error" id="authRegErr"></p>
+        <button type="submit" class="auth-submit-btn" id="authRegBtn">Crear Cuenta</button>
+      </form>
+
+      <p class="auth-switch-text">
+        ¿Ya tienes cuenta?
+        <button class="auth-switch-btn" id="authSwitchToLogin">Iniciar sesión</button>
+      </p>
+    </div>
+
+  </div>
+  <!-- ── /Modales de autenticación ─────────────────────────────────────────── -->
+
+  <!-- ── Modal: Historial de compras ──────────────────────────────────────── -->
+  <div class="history-overlay" id="historyOverlay" role="dialog" aria-modal="true" aria-label="Mis compras" style="display:none">
+    <div class="history-modal">
+      <div class="history-modal-header">
+        <h2 class="history-modal-title">Mis compras</h2>
+        <button class="auth-modal-close" id="historyCloseBtn" aria-label="Cerrar">×</button>
+      </div>
+      <div id="historyContent" class="history-modal-body">
+        <p style="text-align:center;padding:2rem;color:var(--text2)">Cargando…</p>
+      </div>
+    </div>
+  </div>
+  <!-- ── /Modal: Historial de compras ─────────────────────────────────────── -->
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.8.1/dist/vanilla-tilt.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
@@ -812,6 +1005,7 @@
   <script src="js/carousel.js"></script>
   <script src="js/store.js?v=11"></script>
   <script src="js/checkout.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/config.js"></script>
   <script src="js/chatbot.js"></script>
   <script src="js/animations.js"></script>

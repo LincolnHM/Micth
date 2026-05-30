@@ -111,6 +111,15 @@ const Checkout = {
   _step: 1,
   _sending: false,
 
+  // Retorna el total efectivo (con descuento si aplica)
+  _effectiveTotal() {
+    const base = Cart.total();
+    if (typeof UserAuth !== 'undefined' && UserAuth.hasFirstDiscount()) {
+      return parseFloat((base * 0.90).toFixed(2));
+    }
+    return base;
+  },
+
   open() {
     const modal = document.getElementById('checkoutModal');
     modal.classList.add('open');
@@ -118,6 +127,21 @@ const Checkout = {
     this._showStep(1);
     this.renderSummary();
     this.populateDepartments();
+
+    // Pre-rellenar datos del usuario si está logueado
+    if (typeof UserAuth !== 'undefined' && UserAuth.isLoggedIn()) {
+      const profile = UserAuth.getProfile();
+      if (profile) {
+        const nameInput  = document.getElementById('nameInput');
+        const dniInput   = document.getElementById('dniInput');
+        const phoneInput = document.getElementById('phoneInput');
+        if (nameInput  && !nameInput.value  && profile.nombre_completo) nameInput.value  = profile.nombre_completo;
+        if (dniInput   && !dniInput.value   && profile.dni)             dniInput.value   = profile.dni;
+        if (phoneInput && !phoneInput.value && profile.telefono)        phoneInput.value = profile.telefono;
+        const pickupInput = document.getElementById('pickupNameInput');
+        if (pickupInput && !pickupInput.value && profile.nombre_completo) pickupInput.value = profile.nombre_completo;
+      }
+    }
   },
 
   close() {
@@ -135,7 +159,7 @@ const Checkout = {
     document.getElementById('mstepLine').classList.toggle('active', n >= 2);
     document.getElementById('checkoutTitle').textContent = n === 1 ? 'Finalizar Pedido' : 'Pagar con Yape';
     if (n === 2) {
-      document.getElementById('yapeTotalAmount').textContent = `S/ ${Cart.total().toFixed(2)}`;
+      document.getElementById('yapeTotalAmount').textContent = `S/ ${this._effectiveTotal().toFixed(2)}`;
       document.querySelector('.modal-content').scrollTo({ top: 0, behavior: 'smooth' });
     }
   },
@@ -148,8 +172,34 @@ const Checkout = {
   },
 
   renderSummary() {
-    const el = document.getElementById('modalOrderSummary');
+    const el        = document.getElementById('modalOrderSummary');
+    const base      = Cart.total();
+    const hasDisc   = typeof UserAuth !== 'undefined' && UserAuth.hasFirstDiscount();
+    const effective = this._effectiveTotal();
+    const discount  = hasDisc ? parseFloat((base - effective).toFixed(2)) : 0;
+
+    const discountBanner = hasDisc ? `
+      <div class="checkout-discount-banner">
+        <span class="checkout-discount-badge">10% OFF</span>
+        <span class="checkout-discount-text"><strong>¡Descuento de primera compra aplicado!</strong> Ahorra S/ ${discount.toFixed(2)}</span>
+      </div>` : '';
+
+    const discountRow = hasDisc ? `
+      <div class="order-discount-row">
+        <span>Descuento 10% (primera compra)</span>
+        <span>- S/ ${discount.toFixed(2)}</span>
+      </div>
+      <div class="order-total-row-final">
+        <strong>Total a pagar</strong>
+        <strong>S/ ${effective.toFixed(2)}</strong>
+      </div>` : `
+      <div class="order-total-row">
+        <strong>Total</strong>
+        <strong>S/ ${base.toFixed(2)}</strong>
+      </div>`;
+
     el.innerHTML = `
+      ${discountBanner}
       <h4>Resumen del Pedido</h4>
       <ul class="order-list">
         ${Cart.items.map(i => `
@@ -159,10 +209,8 @@ const Checkout = {
           </li>
         `).join('')}
       </ul>
-      <div class="order-total-row">
-        <strong>Total</strong>
-        <strong>S/ ${Cart.total().toFixed(2)}</strong>
-      </div>
+      ${hasDisc ? `<div class="order-total-row" style="text-decoration:line-through;color:var(--text3);font-size:.85rem"><span>Subtotal</span><span>S/ ${base.toFixed(2)}</span></div>` : ''}
+      ${discountRow}
     `;
   },
 
@@ -180,13 +228,25 @@ const Checkout = {
   },
 
   buildWhatsAppMessage() {
-    const lines = ['🛍️ *NUEVO PEDIDO – MICHT Perfumes*\n'];
+    const lines      = ['🛍️ *NUEVO PEDIDO – MICHT Perfumes*\n'];
+    const base       = Cart.total();
+    const hasDisc    = typeof UserAuth !== 'undefined' && UserAuth.hasFirstDiscount();
+    const effective  = this._effectiveTotal();
 
     lines.push('*Productos:*');
     Cart.items.forEach(i => {
       lines.push(`  • ${i.brand} – ${i.productName} (${i.size}) × ${i.quantity} = S/ ${(i.price * i.quantity).toFixed(2)}`);
     });
-    lines.push(`\n*Total: S/ ${Cart.total().toFixed(2)}*`);
+
+    if (hasDisc) {
+      const profile = UserAuth.getProfile();
+      lines.push(`\n~~Subtotal: S/ ${base.toFixed(2)}~~`);
+      lines.push(`🎁 *Descuento 10% primera compra* (DNI: ${profile?.dni || ''}): -S/ ${(base - effective).toFixed(2)}`);
+      lines.push(`\n*TOTAL A PAGAR: S/ ${effective.toFixed(2)}*`);
+    } else {
+      lines.push(`\n*Total: S/ ${base.toFixed(2)}*`);
+    }
+
     lines.push('\n💸 *Método de pago:* Yape ✅');
     lines.push('_(Por favor 📸 envíanos una captura de pantalla de tu pago Yape para confirmar el pedido)_');
 
@@ -250,8 +310,9 @@ const Checkout = {
     if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = 'Enviando...'; }
 
     // Capturar datos del pedido ANTES de limpiar el carrito
-    const isShipping = this.deliveryType === 'shipping';
-    const orderItems = Cart.items.map(i => ({
+    const isShipping    = this.deliveryType === 'shipping';
+    const hasDiscount   = typeof UserAuth !== 'undefined' && UserAuth.hasFirstDiscount();
+    const orderItems    = Cart.items.map(i => ({
       productId:   i.productId,
       productName: i.productName,
       brand:       i.brand,
@@ -259,19 +320,25 @@ const Checkout = {
       price:       i.price,
       quantity:    i.quantity
     }));
-    const orderTotal = Cart.total();
+    const orderTotal    = this._effectiveTotal();
+    const profile       = (typeof UserAuth !== 'undefined') ? UserAuth.getProfile() : null;
     const orderData = {
       customerName:  isShipping ? document.getElementById('nameInput').value.trim()   : document.getElementById('pickupNameInput').value.trim(),
-      customerPhone: isShipping ? document.getElementById('phoneInput').value.trim()  : '',
-      customerDni:   isShipping ? document.getElementById('dniInput').value.trim()    : '',
+      customerPhone: isShipping ? document.getElementById('phoneInput').value.trim()  : (profile?.telefono || ''),
+      customerDni:   isShipping ? document.getElementById('dniInput').value.trim()    : (profile?.dni || ''),
       deliveryType:  isShipping ? 'envio' : 'recojo',
       department:    isShipping ? document.getElementById('departmentSelect').value   : '',
       province:      isShipping ? document.getElementById('provinceSelect').value     : '',
       shalomOffice:  isShipping ? document.getElementById('shalomInput').value.trim() : '',
-      notes: '',
-      items: orderItems,
-      total: orderTotal
+      notes:         hasDiscount ? 'DESCUENTO 10% PRIMERA COMPRA aplicado' : '',
+      items:         orderItems,
+      total:         orderTotal
     };
+
+    // Marcar descuento como usado (si aplica) antes de que la página cambie
+    if (hasDiscount) {
+      UserAuth.markDiscountUsed().catch(() => {});
+    }
 
     // Guardar pedido ANTES de abrir WhatsApp para que la solicitud Supabase
     // esté en vuelo antes de cualquier posible navegación de página
