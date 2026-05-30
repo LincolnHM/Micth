@@ -61,15 +61,15 @@
 .seasonal-hero-box {
   position: relative;
   overflow: hidden;
-  border-radius: 18px;
+  border-radius: 20px;
   border: 1px solid rgba(201,168,76,.26);
   background: linear-gradient(135deg, rgba(201,168,76,.12), rgba(201,168,76,.03));
-  min-height: 170px;
+  min-height: 180px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1.2rem 1.3rem;
+  gap: 1.2rem;
+  padding: 1.8rem 2rem;
 }
 .seasonal-hero-copy {
   max-width: 560px;
@@ -96,52 +96,226 @@
   line-height: 1.6;
 }
 .seasonal-hero-art {
-  width: 120px;
+  width: 134px;
   aspect-ratio: 1;
-  border-radius: 16px;
+  border-radius: 22px;
   border: 1px solid rgba(255,255,255,.2);
-  background-size: cover;
-  background-position: center;
   flex-shrink: 0;
-  opacity: .9;
   position: relative;
   z-index: 2;
+  overflow: hidden;
 }
 
+/* ── DÍA DE LA MADRE ────────────────────────────────────── */
 .seasonal-art-mother {
-  background: linear-gradient(135deg, rgba(255,171,201,.22), rgba(216,106,143,.1));
+  background:
+    radial-gradient(ellipse at  8% 55%, rgba(255,120,165,.28) 0%, transparent 45%),
+    radial-gradient(ellipse at 88% 12%, rgba(255,171,201,.22) 0%, transparent 40%),
+    radial-gradient(ellipse at 65% 88%, rgba(216,106,143,.18) 0%, transparent 38%),
+    linear-gradient(135deg, rgba(55,12,28,.97) 0%, rgba(30,5,18,.99) 100%);
+  border-color: rgba(216,106,143,.5);
+  box-shadow: 0 2px 32px rgba(216,106,143,.18), inset 0 0 60px rgba(216,106,143,.06);
 }
+.seasonal-art-mother::before {
+  content: '';
+  position: absolute; top: -60%; right: -15%; width: 55%; height: 220%;
+  background: linear-gradient(160deg, rgba(255,171,201,.09) 0%, transparent 55%);
+  transform: rotate(-12deg); pointer-events: none;
+}
+.seasonal-art-mother::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(255,171,201,.65) 1.5px, transparent 1.5px),
+    radial-gradient(circle, rgba(255,171,201,.45) 1px,   transparent 1px),
+    radial-gradient(circle, rgba(255,210,230,.5)  1px,   transparent 1px);
+  background-size: 78px 78px, 48px 48px, 62px 62px;
+  background-position: 8px 12px, 38px 38px, 55px 8px;
+  opacity: .28; pointer-events: none;
+}
+.seasonal-art-mother .seasonal-hero-kicker { color: #f0a0c0; }
 .seasonal-art-mother .seasonal-hero-art {
-  background-image:
-    radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(255,255,255,.08) 60%),
-    linear-gradient(145deg, rgba(216,106,143,.9), rgba(176,70,112,.95));
+  background:
+    radial-gradient(circle at 38% 32%, rgba(255,255,255,.9)  0%, transparent 22%),
+    radial-gradient(circle at 28% 28%, rgba(255,220,238,.65) 0%, transparent 42%),
+    radial-gradient(circle at 72% 72%, rgba(255,140,180,.7)  0%, transparent 42%),
+    radial-gradient(circle at 50% 50%, rgba(232,80,135,.97)  0%, rgba(155,35,85,.99) 100%);
+  border-color: rgba(255,171,201,.65);
+  box-shadow: 0 0 28px rgba(216,106,143,.55), 0 0 10px rgba(255,171,201,.35), inset 0 1px 0 rgba(255,255,255,.28);
+  animation: camp-glow-m 3s ease-in-out infinite;
+}
+@keyframes camp-glow-m {
+  0%,100% { box-shadow: 0 0 28px rgba(216,106,143,.55), 0 0 10px rgba(255,171,201,.35), inset 0 1px 0 rgba(255,255,255,.28); }
+  50%     { box-shadow: 0 0 44px rgba(216,106,143,.72), 0 0 18px rgba(255,171,201,.5),  inset 0 1px 0 rgba(255,255,255,.28); }
+}
+.seasonal-art-mother .seasonal-hero-art::before {
+  content: ''; position: absolute; inset: 10px; border-radius: 13px;
+  border: 1px solid rgba(255,171,201,.45); pointer-events: none;
+}
+.seasonal-art-mother .seasonal-hero-art::after {
+  content: ''; position: absolute; inset: 22px; border-radius: 9px;
+  border: 1px solid rgba(255,171,201,.22);
+  background: radial-gradient(circle at 42% 38%, rgba(255,255,255,.22) 0%, transparent 55%);
+  pointer-events: none;
 }
 
+/* ── DÍA DEL PADRE ──────────────────────────────────────── */
 .seasonal-art-father {
-  background: linear-gradient(135deg, rgba(128,175,226,.2), rgba(79,121,173,.12));
+  background:
+    radial-gradient(ellipse at 10% 45%, rgba(90,140,210,.26)  0%, transparent 45%),
+    radial-gradient(ellipse at 85% 15%, rgba(120,175,235,.20) 0%, transparent 40%),
+    radial-gradient(ellipse at 60% 85%, rgba(70,115,185,.18)  0%, transparent 38%),
+    linear-gradient(135deg, rgba(10,20,48,.97) 0%, rgba(5,12,35,.99) 100%);
+  border-color: rgba(111,158,216,.5);
+  box-shadow: 0 2px 32px rgba(79,121,173,.2), inset 0 0 60px rgba(79,121,173,.06);
 }
+.seasonal-art-father::before {
+  content: '';
+  position: absolute; top: -50%; right: -10%; width: 50%; height: 200%;
+  background: linear-gradient(155deg, rgba(128,175,226,.08) 0%, transparent 55%);
+  transform: rotate(-10deg); pointer-events: none;
+}
+.seasonal-art-father::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(128,175,226,.6) 1.5px, transparent 1.5px),
+    radial-gradient(circle, rgba(128,175,226,.4) 1px,   transparent 1px),
+    radial-gradient(circle, rgba(180,210,245,.5) 1px,   transparent 1px);
+  background-size: 72px 72px, 45px 45px, 58px 58px;
+  background-position: 5px 18px, 35px 35px, 50px 6px;
+  opacity: .22; pointer-events: none;
+}
+.seasonal-art-father .seasonal-hero-kicker { color: #9ec4e8; }
 .seasonal-art-father .seasonal-hero-art {
-  background-image:
-    radial-gradient(circle at 20% 25%, rgba(255,255,255,.8), rgba(255,255,255,.05) 58%),
-    linear-gradient(145deg, rgba(111,158,216,.95), rgba(52,77,122,.9));
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255,255,255,.82) 0%, transparent 20%),
+    radial-gradient(circle at 25% 25%, rgba(190,220,248,.65) 0%, transparent 40%),
+    radial-gradient(circle at 75% 70%, rgba(100,155,218,.7)  0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(85,140,210,.97)  0%, rgba(35,65,125,.99) 100%);
+  border-color: rgba(128,175,226,.65);
+  box-shadow: 0 0 28px rgba(79,121,173,.55), 0 0 10px rgba(128,175,226,.35), inset 0 1px 0 rgba(255,255,255,.28);
+  animation: camp-glow-f 3.5s ease-in-out infinite;
+}
+@keyframes camp-glow-f {
+  0%,100% { box-shadow: 0 0 28px rgba(79,121,173,.55), 0 0 10px rgba(128,175,226,.35), inset 0 1px 0 rgba(255,255,255,.28); }
+  50%     { box-shadow: 0 0 44px rgba(79,121,173,.72), 0 0 18px rgba(128,175,226,.5),  inset 0 1px 0 rgba(255,255,255,.28); }
+}
+.seasonal-art-father .seasonal-hero-art::before {
+  content: ''; position: absolute; inset: 10px; border-radius: 13px;
+  border: 1px solid rgba(128,175,226,.45); pointer-events: none;
+}
+.seasonal-art-father .seasonal-hero-art::after {
+  content: ''; position: absolute; inset: 22px; border-radius: 9px;
+  border: 1px solid rgba(128,175,226,.22);
+  background: radial-gradient(circle at 40% 36%, rgba(255,255,255,.22) 0%, transparent 55%);
+  pointer-events: none;
 }
 
+/* ── SAN JUAN ───────────────────────────────────────────── */
 .seasonal-art-sanjuan {
-  background: linear-gradient(135deg, rgba(102,194,132,.2), rgba(63,141,90,.12));
+  background:
+    radial-gradient(ellipse at  8% 55%, rgba(80,190,110,.28)  0%, transparent 45%),
+    radial-gradient(ellipse at 85% 12%, rgba(110,210,140,.22) 0%, transparent 40%),
+    radial-gradient(ellipse at 60% 88%, rgba(60,160,90,.18)   0%, transparent 38%),
+    linear-gradient(135deg, rgba(8,28,14,.97) 0%, rgba(4,18,8,.99) 100%);
+  border-color: rgba(81,173,113,.5);
+  box-shadow: 0 2px 32px rgba(63,141,90,.2), inset 0 0 60px rgba(63,141,90,.06);
 }
-.seasonal-art-sanjuan .seasonal-hero-art {
+.seasonal-art-sanjuan::before {
+  content: '';
+  position: absolute; top: -55%; right: -12%; width: 52%; height: 210%;
+  background: linear-gradient(150deg, rgba(102,194,132,.09) 0%, transparent 55%);
+  transform: rotate(-14deg); pointer-events: none;
+}
+.seasonal-art-sanjuan::after {
+  content: '';
+  position: absolute; inset: 0;
   background-image:
-    radial-gradient(circle at 26% 34%, rgba(228,255,227,.88), rgba(255,255,255,.06) 60%),
-    linear-gradient(150deg, rgba(81,173,113,.95), rgba(34,96,55,.92));
+    radial-gradient(circle, rgba(102,194,132,.65) 1.5px, transparent 1.5px),
+    radial-gradient(circle, rgba(102,194,132,.45) 1px,   transparent 1px),
+    radial-gradient(circle, rgba(170,230,190,.5)  1px,   transparent 1px);
+  background-size: 75px 75px, 46px 46px, 60px 60px;
+  background-position: 10px 14px, 36px 36px, 52px 7px;
+  opacity: .28; pointer-events: none;
+}
+.seasonal-art-sanjuan .seasonal-hero-kicker { color: #78c895; }
+.seasonal-art-sanjuan .seasonal-hero-art {
+  background:
+    radial-gradient(circle at 38% 30%, rgba(255,255,255,.88) 0%, transparent 22%),
+    radial-gradient(circle at 28% 28%, rgba(200,248,215,.65) 0%, transparent 42%),
+    radial-gradient(circle at 72% 72%, rgba(80,185,115,.72)  0%, transparent 42%),
+    radial-gradient(circle at 50% 50%, rgba(65,168,98,.97)   0%, rgba(22,80,42,.99) 100%);
+  border-color: rgba(102,194,132,.65);
+  box-shadow: 0 0 28px rgba(63,141,90,.55), 0 0 10px rgba(102,194,132,.35), inset 0 1px 0 rgba(255,255,255,.28);
+  animation: camp-glow-s 3.2s ease-in-out infinite;
+}
+@keyframes camp-glow-s {
+  0%,100% { box-shadow: 0 0 28px rgba(63,141,90,.55), 0 0 10px rgba(102,194,132,.35), inset 0 1px 0 rgba(255,255,255,.28); }
+  50%     { box-shadow: 0 0 44px rgba(63,141,90,.72), 0 0 18px rgba(102,194,132,.5),  inset 0 1px 0 rgba(255,255,255,.28); }
+}
+.seasonal-art-sanjuan .seasonal-hero-art::before {
+  content: ''; position: absolute; inset: 10px; border-radius: 13px;
+  border: 1px solid rgba(102,194,132,.45); pointer-events: none;
+}
+.seasonal-art-sanjuan .seasonal-hero-art::after {
+  content: ''; position: absolute; inset: 22px; border-radius: 9px;
+  border: 1px solid rgba(102,194,132,.22);
+  background: radial-gradient(circle at 42% 38%, rgba(255,255,255,.22) 0%, transparent 55%);
+  pointer-events: none;
 }
 
+/* ── NAVIDAD ────────────────────────────────────────────── */
 .seasonal-art-navidad {
-  background: linear-gradient(135deg, rgba(220,95,95,.2), rgba(156,57,57,.12));
+  background:
+    radial-gradient(ellipse at  8% 55%, rgba(220,80,80,.28)  0%, transparent 45%),
+    radial-gradient(ellipse at 88% 12%, rgba(240,130,80,.20) 0%, transparent 40%),
+    radial-gradient(ellipse at 65% 85%, rgba(195,55,55,.18)  0%, transparent 38%),
+    linear-gradient(135deg, rgba(40,6,6,.97) 0%, rgba(25,3,3,.99) 100%);
+  border-color: rgba(210,83,83,.5);
+  box-shadow: 0 2px 32px rgba(156,57,57,.2), inset 0 0 60px rgba(156,57,57,.06);
 }
-.seasonal-art-navidad .seasonal-hero-art {
+.seasonal-art-navidad::before {
+  content: '';
+  position: absolute; top: -55%; right: -12%; width: 52%; height: 210%;
+  background: linear-gradient(150deg, rgba(240,130,80,.09) 0%, transparent 55%);
+  transform: rotate(-14deg); pointer-events: none;
+}
+.seasonal-art-navidad::after {
+  content: '';
+  position: absolute; inset: 0;
   background-image:
-    radial-gradient(circle at 24% 30%, rgba(255,238,205,.85), rgba(255,255,255,.04) 58%),
-    linear-gradient(145deg, rgba(210,83,83,.95), rgba(107,33,33,.92));
+    radial-gradient(circle, rgba(210,83,83,.65)  1.5px, transparent 1.5px),
+    radial-gradient(circle, rgba(240,160,80,.5)  1px,   transparent 1px),
+    radial-gradient(circle, rgba(255,210,150,.5) 1px,   transparent 1px);
+  background-size: 75px 75px, 45px 45px, 60px 60px;
+  background-position: 10px 14px, 36px 36px, 52px 7px;
+  opacity: .28; pointer-events: none;
+}
+.seasonal-art-navidad .seasonal-hero-kicker { color: #e8a070; }
+.seasonal-art-navidad .seasonal-hero-art {
+  background:
+    radial-gradient(circle at 38% 30%, rgba(255,240,200,.88) 0%, transparent 22%),
+    radial-gradient(circle at 28% 28%, rgba(248,200,160,.65) 0%, transparent 42%),
+    radial-gradient(circle at 72% 72%, rgba(210,80,80,.75)   0%, transparent 42%),
+    radial-gradient(circle at 50% 50%, rgba(205,65,65,.97)   0%, rgba(100,22,22,.99) 100%);
+  border-color: rgba(220,140,80,.65);
+  box-shadow: 0 0 28px rgba(156,57,57,.55), 0 0 10px rgba(220,140,80,.35), inset 0 1px 0 rgba(255,240,200,.28);
+  animation: camp-glow-n 2.8s ease-in-out infinite;
+}
+@keyframes camp-glow-n {
+  0%,100% { box-shadow: 0 0 28px rgba(156,57,57,.55), 0 0 10px rgba(220,140,80,.35), inset 0 1px 0 rgba(255,240,200,.28); }
+  50%     { box-shadow: 0 0 44px rgba(156,57,57,.72), 0 0 18px rgba(220,140,80,.5),  inset 0 1px 0 rgba(255,240,200,.28); }
+}
+.seasonal-art-navidad .seasonal-hero-art::before {
+  content: ''; position: absolute; inset: 10px; border-radius: 13px;
+  border: 1px solid rgba(220,140,80,.45); pointer-events: none;
+}
+.seasonal-art-navidad .seasonal-hero-art::after {
+  content: ''; position: absolute; inset: 22px; border-radius: 9px;
+  border: 1px solid rgba(220,140,80,.22);
+  background: radial-gradient(circle at 42% 38%, rgba(255,240,200,.25) 0%, transparent 55%);
+  pointer-events: none;
 }
 
 @media (max-width: 700px) {
