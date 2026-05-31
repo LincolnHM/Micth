@@ -25,14 +25,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     showNoDbScreen();
     return;
   }
+
   const { data: { session } } = await db.auth.getSession();
   if (session) {
-    if (!isAdminUser(session.user)) {
-      // Usuario normal que llegó aquí — bloquearlo inmediatamente
+    // getUser() pide datos frescos al servidor (no usa el JWT cacheado)
+    // Esto garantiza que app_metadata esté actualizado
+    const { data: { user }, error: userErr } = await db.auth.getUser();
+    if (userErr || !isAdminUser(user)) {
       await db.auth.signOut();
       showLoginScreen();
       const err = document.getElementById('loginError');
-      if (err) { err.textContent = 'Acceso denegado. Esta cuenta no tiene permisos de administrador.'; err.style.display = 'block'; }
+      if (err) {
+        err.textContent = 'Acceso denegado. Esta cuenta no tiene permisos de administrador.';
+        err.style.display = 'block';
+      }
     } else {
       await showDashboard();
     }
@@ -116,8 +122,9 @@ async function handleLogin(e) {
     return;
   }
 
-  // Verificar que sea una cuenta admin (marcada en Supabase con role:"admin")
-  if (!isAdminUser(loginData?.user)) {
+  // Pedir datos frescos del servidor para verificar app_metadata actualizado
+  const { data: { user: freshUser } } = await db.auth.getUser();
+  if (!isAdminUser(freshUser)) {
     await db.auth.signOut();
     err.textContent = 'Esta cuenta no tiene permisos de administrador.';
     err.style.display = 'block';
