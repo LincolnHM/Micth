@@ -123,7 +123,7 @@ const CloudOrders = {
         .from('pedidos')
         .select('*')
         .order('created_at', { ascending: false });
-      if (error) { console.error('Supabase error:', error); return this._localGetAll(); }
+      if (error) { console.error('Supabase error:', error?.code, error?.message); return this._localGetAll(); }
       const supabaseOrders = data.map(orderFromDB);
       const localOrders    = Orders.getAll();
       // Construir mapa de status local para sincronización rápida
@@ -181,7 +181,7 @@ const CloudOrders = {
     if (db) {
       const { error } = await db.from('pedidos').insert(orderToDB(newOrder));
       if (error) {
-        console.error('[MICHT] Error Supabase al guardar pedido:', error.message, error);
+        console.error('[MICHT] Error Supabase al guardar pedido:', error.code, error.message);
         // Notificar visualmente si hay una función toast disponible
         const _toast = typeof showToast === 'function' ? showToast
           : typeof showCartToast === 'function' ? showCartToast : null;
@@ -196,13 +196,17 @@ const CloudOrders = {
     if (status === 'pagado') {
       const order = await this.getById(id);
       if (order && order.status !== 'pagado') {
+        // Obtener TODOS los productos de una vez (un solo query) en lugar de
+        // hacer N queries individuales con getById dentro del loop
+        const allProducts = await CloudProducts.getAll();
+        const prodLookup  = {};
+        allProducts.forEach(p => { prodLookup[p.id] = p; });
+
         for (const item of (order.items || [])) {
           const pid     = parseInt(item.productId);
-          const product = await CloudProducts.getById(pid);
+          const product = prodLookup[pid];
           if (!product) continue;
 
-          // Perfume entero (tipo entero) → el stock ya se descontó al registrar el pedido
-          // Solo sincronizar inStock según la cantidad actual
           if (product.type === 'entero') {
             if ((product.stockQuantity || 0) <= 0 && product.inStock) {
               await CloudProducts.update(pid, { inStock: false });
@@ -210,13 +214,11 @@ const CloudOrders = {
             continue;
           }
 
-          // Decant vendido como entero (Unidad) → limpiar estado
           if (product.availableAsEntero && item.size === 'Unidad') {
             await CloudProducts.update(pid, { availableAsEntero: false, bottleRemainingMl: 0, inStock: false });
             continue;
           }
 
-          // Decant normal → descontar ml
           const mlUsed = parseInt(item.size) * (item.quantity || 1);
           if (isNaN(mlUsed) || mlUsed <= 0) continue;
           const newRemain = Math.max(0, (product.bottleRemainingMl || 0) - mlUsed);
@@ -232,7 +234,7 @@ const CloudOrders = {
         .update({ status, updated_at: new Date().toISOString() })
         .eq('id', id);
       if (error) {
-        console.error('Supabase error al cambiar estado:', error);
+        console.error('Supabase error al cambiar estado:', error?.code);
         // El localStorage ya fue actualizado arriba, el error no bloquea la UI
       }
     }
@@ -242,7 +244,7 @@ const CloudOrders = {
     Orders.delete(id); // Eliminar de localStorage siempre, antes de Supabase
     if (db) {
       const { error } = await db.from('pedidos').delete().eq('id', id);
-      if (error) console.error('Supabase error al eliminar pedido:', error);
+      if (error) console.error('Supabase error al eliminar pedido:', error?.code);
     }
   },
 
@@ -382,7 +384,7 @@ const CloudProducts = {
         .from('productos')
         .select('*')
         .order('id', { ascending: true });
-      if (error) { console.error('Supabase error:', error); return Products.getAll(); }
+      if (error) { console.error('Supabase error:', error?.code, error?.message); return Products.getAll(); }
       if (!data || !data.length) return this._seedFromDefaults();
       // Leer localStorage antes del map para preservar campos que aún no están en Supabase
       const storedProducts = Products.getAll();
@@ -466,7 +468,7 @@ const CloudProducts = {
     };
     if (db) {
       const { error } = await db.from('productos').insert(productToDB(newProduct));
-      if (error) console.error('Supabase error:', error);
+      if (error) console.error('Supabase error:', error?.code, error?.message);
     }
     const local = Products.getAll();
     local.push(newProduct);
@@ -485,7 +487,7 @@ const CloudProducts = {
       });
       const { error } = await db.from('productos').update(patch).eq('id', id);
       if (error) {
-        console.error('Supabase update error:', error);
+        console.error('Supabase update error:', error?.code);
         return error;
       }
     }
@@ -495,7 +497,7 @@ const CloudProducts = {
   async delete(id) {
     if (db) {
       const { error } = await db.from('productos').delete().eq('id', id);
-      if (error) console.error('Supabase error:', error);
+      if (error) console.error('Supabase error:', error?.code, error?.message);
     }
     Products.delete(id);
   },
@@ -506,7 +508,7 @@ const CloudProducts = {
       const rows = products.map(productToDB);
       for (let i = 0; i < rows.length; i += 20) {
         const { error } = await db.from('productos').insert(rows.slice(i, i + 20));
-        if (error) console.error('Supabase seed error:', error);
+        if (error) console.error('Supabase seed error:', error?.code);
       }
     }
     Products.save(products);

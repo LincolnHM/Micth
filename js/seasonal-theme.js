@@ -126,17 +126,31 @@
     }
 
     const hero = ensureCampaignHero();
-    hero.innerHTML =
-      '<div class="container">' +
-      '  <div class="seasonal-hero-box ' + cfg.artClass + '">' +
-      '    <div class="seasonal-hero-copy">' +
-      '      <p class="seasonal-hero-kicker">Campana especial</p>' +
-      '      <h2>' + cfg.headline + '</h2>' +
-      '      <p>' + cfg.subtitle + '</p>' +
-      '    </div>' +
-      '    <div class="seasonal-hero-art" aria-hidden="true"></div>' +
-      '  </div>' +
-      '</div>';
+    // Usamos DOM seguro en lugar de innerHTML para evitar XSS
+    const container = document.createElement('div');
+    container.className = 'container';
+    const box = document.createElement('div');
+    box.className = 'seasonal-hero-box ' + cfg.artClass;
+    const copy = document.createElement('div');
+    copy.className = 'seasonal-hero-copy';
+    const kicker = document.createElement('p');
+    kicker.className = 'seasonal-hero-kicker';
+    kicker.textContent = 'Campaña especial';
+    const heading = document.createElement('h2');
+    heading.textContent = cfg.headline;
+    const sub = document.createElement('p');
+    sub.textContent = cfg.subtitle;
+    const art = document.createElement('div');
+    art.className = 'seasonal-hero-art';
+    art.setAttribute('aria-hidden', 'true');
+    copy.appendChild(kicker);
+    copy.appendChild(heading);
+    copy.appendChild(sub);
+    box.appendChild(copy);
+    box.appendChild(art);
+    container.appendChild(box);
+    hero.innerHTML = '';
+    hero.appendChild(container);
   }
 
   function renderRibbon(campaign) {
@@ -187,7 +201,11 @@
       document.head.appendChild(s);
     }
 
+    const MAX_DROPS = 30; // Límite de drops simultáneos en DOM
+
     function spawnDrop() {
+      // Control de memoria: no crear más drops si ya hay muchos
+      if (document.querySelectorAll('.emoji-rain-drop').length >= MAX_DROPS) return;
       const el  = document.createElement('span');
       el.className   = 'emoji-rain-drop';
       el.textContent = icons[Math.floor(Math.random() * icons.length)];
@@ -200,11 +218,11 @@
     }
 
     // Oleada inicial
-    for (let i = 0; i < 12; i++) setTimeout(spawnDrop, i * 120);
-    // Lluvia continua (suave)
+    for (let i = 0; i < 10; i++) setTimeout(spawnDrop, i * 150);
+    // Lluvia continua — menor frecuencia para reducir CPU
     _rainInterval = setInterval(() => {
-      if (Math.random() < 0.7) spawnDrop();
-    }, 600);
+      if (Math.random() < 0.6) spawnDrop();
+    }, 800);
   }
 
   function stopEmojiRain() {

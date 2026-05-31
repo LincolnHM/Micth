@@ -518,10 +518,35 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text);
 img  { max-width: 100%; display: block; }
 a    { color: var(--gold); text-decoration: none; transition: color var(--tr); }
 a:hover { color: var(--gold-l); }
-button { cursor: pointer; border: none; outline: none; font-family: inherit; background: none; }
-input, select, textarea { font-family: inherit; }
+
+/* touch-action elimina el 300ms delay en móvil en todos los elementos interactivos */
+button, a, [role="button"], select, label {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+button { border: none; outline: none; font-family: inherit; background: none; }
+input, select, textarea { font-family: inherit; touch-action: manipulation; }
+
+/* Focus visible para navegación por teclado */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+:focus:not(:focus-visible) { outline: none; }
+
+/* Reducir animaciones si el usuario lo prefiere */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
 .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
 .hidden { display: none !important; }
+/* Accesibilidad: solo para lectores de pantalla */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
 /* ─── Header ──────────────────────────────────────────── */
 .header {
@@ -845,23 +870,46 @@ input, select, textarea { font-family: inherit; }
   border: 1px solid var(--border);
   border-radius: var(--r-lg); overflow: hidden;
   display: flex; flex-direction: column;
-  transition: transform .45s cubic-bezier(.43,.13,.23,.96),
-              box-shadow .45s cubic-bezier(.43,.13,.23,.96),
-              border-color .45s cubic-bezier(.43,.13,.23,.96);
+  transition: transform .35s cubic-bezier(.22,.61,.36,1),
+              box-shadow .35s cubic-bezier(.22,.61,.36,1),
+              border-color .35s ease;
   will-change: transform;
+  position: relative;
 }
+/* Shimmer dorado en hover */
+.product-card::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: var(--r-lg);
+  background: linear-gradient(135deg, rgba(201,168,76,.0) 0%, rgba(201,168,76,.06) 50%, rgba(201,168,76,.0) 100%);
+  opacity: 0;
+  transition: opacity .35s ease;
+  pointer-events: none;
+}
+.product-card:hover::after { opacity: 1; }
 .product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 32px rgba(201,168,76,.14), 0 4px 12px rgba(0,0,0,.35);
-  border-color: rgba(201,168,76,.4);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0,0,0,.4), 0 0 0 1px rgba(201,168,76,.35), 0 8px 16px rgba(201,168,76,.08);
+  border-color: rgba(201,168,76,.45);
 }
-.product-card.out-of-stock { opacity: .55; }
-.product-card.featured { border-color: rgba(201,168,76,.2); }
+.product-card:active { transform: translateY(-1px); }
+.product-card.out-of-stock { opacity: .5; }
+.product-card.featured {
+  border-color: rgba(201,168,76,.25);
+  box-shadow: 0 4px 16px rgba(201,168,76,.08);
+}
 
 /* Imagen */
-.product-img-wrap { position: relative; aspect-ratio: 4/3; background: #ffffff; overflow: hidden; }
-.product-img { width: 100%; height: 100%; object-fit: contain; object-position: center; padding: .4rem; box-sizing: border-box; transition: transform .6s cubic-bezier(.43,.13,.23,.96); }
-.product-card:hover .product-img { transform: scale(1.07); }
+.product-img-wrap {
+  position: relative; aspect-ratio: 4/3; overflow: hidden;
+  background: linear-gradient(135deg, #f8f6f0 0%, #ede8de 100%);
+}
+.product-img {
+  width: 100%; height: 100%; object-fit: contain; object-position: center;
+  padding: .5rem; box-sizing: border-box;
+  transition: transform .5s cubic-bezier(.22,.61,.36,1);
+}
+.product-card:hover .product-img { transform: scale(1.08); }
 
 .product-img-placeholder {
   width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
@@ -911,18 +959,34 @@ input, select, textarea { font-family: inherit; }
 .note-val   { color: var(--text2); line-height: 1.4; }
 
 /* Footer de producto */
-.product-footer { margin-top: auto; padding-top: .75rem; border-top: 1px solid var(--border); }
-.price-from { font-size: .8rem; color: var(--text2); margin-bottom: .55rem; }
-.price-from strong { color: var(--gold); font-size: 1rem; font-family: var(--font-serif); }
-.price-consultar { font-size: .8rem; color: var(--text3); font-style: italic; margin-bottom: .55rem; }
+.product-footer {
+  margin-top: auto;
+  padding-top: .7rem;
+  border-top: 1px solid var(--border);
+}
+.price-from {
+  font-size: .75rem; color: var(--text2); margin-bottom: .5rem;
+  display: flex; align-items: baseline; gap: .3rem;
+}
+.price-from strong {
+  color: var(--gold);
+  font-size: 1.15rem;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+.price-consultar { font-size: .8rem; color: var(--text3); font-style: italic; margin-bottom: .5rem; }
 
 .sizes-row { display: flex; gap: .4rem; flex-wrap: wrap; }
 .size-btn {
   display: flex; flex-direction: column; align-items: center; gap: .1rem;
   background: var(--bg2); border: 1px solid var(--border-l);
   color: var(--text2); border-radius: var(--r);
-  padding: .45rem .75rem; font-size: .72rem;
+  padding: .5rem .75rem; font-size: .72rem;
   transition: all var(--tr); min-width: 52px;
+  /* Mínimo 44px altura para touch target correcto */
+  min-height: 44px;
+  justify-content: center;
 }
 .size-btn .size-ml  { font-weight: 600; color: var(--text); font-size: .75rem; }
 .size-btn .size-price { color: var(--gold); font-weight: 700; font-size: .72rem; }
@@ -4507,18 +4571,22 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 }
 
 .header-logout-btn {
-  width: 28px; height: 28px;
+  /* Touch target mínimo 44×44px (Apple HIG / WCAG) */
+  width: 36px; height: 36px;
   border-radius: 50%;
   background: transparent;
   border: 1px solid rgba(255,255,255,.1);
   color: var(--text2);
-  cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: all var(--tr);
+  /* Expandir área táctil sin cambiar visual */
+  padding: 4px;
+  margin: -4px;
 }
 .header-logout-btn:hover {
   border-color: var(--red);
   color: var(--red);
+  background: rgba(239,83,80,.08);
 }
 
 .header-discount-badge {

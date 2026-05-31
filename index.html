@@ -318,9 +318,11 @@
                 <svg class="hud-item-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
               <div class="hud-pass-panel" id="headerPassPanel">
-                <input type="password" id="hudNewPass" placeholder="Nueva contraseña (mín. 8 car.)" maxlength="100" autocomplete="new-password">
-                <input type="password" id="hudNewPass2" placeholder="Confirmar contraseña" maxlength="100" autocomplete="new-password">
-                <p class="hud-pass-err" id="hudPassErr"></p>
+                <label for="hudNewPass" class="sr-only">Nueva contraseña</label>
+                <input type="password" id="hudNewPass" placeholder="Nueva contraseña (mín. 8 car.)" maxlength="100" autocomplete="new-password" aria-label="Nueva contraseña, mínimo 8 caracteres">
+                <label for="hudNewPass2" class="sr-only">Confirmar contraseña</label>
+                <input type="password" id="hudNewPass2" placeholder="Confirmar contraseña" maxlength="100" autocomplete="new-password" aria-label="Confirmar contraseña">
+                <p class="hud-pass-err" id="hudPassErr" aria-live="polite" role="alert"></p>
                 <button class="hud-save-btn" id="hudSavePassBtn">Guardar contraseña</button>
               </div>
 
@@ -934,10 +936,10 @@
             <input type="email" id="authForgotEmail" placeholder="ejemplo@correo.com" autocomplete="email">
           </div>
           <p class="auth-forgot-link"><a href="#" id="authBackToLogin">← Volver al login</a></p>
-          <p class="auth-form-error" id="authForgotErr"></p>
+          <p class="auth-form-error" id="authForgotErr" aria-live="polite" role="alert"></p>
         </div>
 
-        <p class="auth-form-error" id="authLoginErr"></p>
+        <p class="auth-form-error" id="authLoginErr" aria-live="polite" role="alert"></p>
         <button type="submit" class="auth-submit-btn" id="authLoginBtn">Ingresar</button>
       </form>
 
@@ -1002,7 +1004,7 @@
           Al crear tu cuenta aceptas que tu DNI se usará para validar el descuento de bienvenida (un uso por persona).
         </div>
 
-        <p class="auth-form-error" id="authRegErr"></p>
+        <p class="auth-form-error" id="authRegErr" aria-live="polite" role="alert"></p>
         <button type="submit" class="auth-submit-btn" id="authRegBtn">Crear Cuenta</button>
       </form>
 

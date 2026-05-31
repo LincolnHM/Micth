@@ -277,8 +277,7 @@ const UserAuth = {
       el.loginBtn.style.display    = loggedIn ? 'none' : '';
       el.regBtn.style.display      = loggedIn ? 'none' : '';
       el.userDisplay.style.display = loggedIn ? 'flex' : 'none';
-      const hudName = document.getElementById('headerUserName');
-      if (hudName && firstName) hudName.textContent = firstName;
+      if (el.userName && firstName) el.userName.textContent = firstName;
     }
 
     // Descuento badge en header
@@ -390,8 +389,9 @@ async function openHistoryModal() {
       day: '2-digit', month: '2-digit', year: '2-digit',
       hour: '2-digit', minute: '2-digit'
     });
-    const items    = (order.items || [])
-      .map(i => `${i.productName || ''} ${i.size || ''} ×${i.quantity || 1}`)
+    const _esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const items = (order.items || [])
+      .map(i => `${_esc(i.productName)} ${_esc(i.size)} ×${parseInt(i.quantity) || 1}`)
       .join(' · ');
     const delivery = order.delivery_type === 'envio' ? '📦 Envío' : '🏪 Recojo';
 
@@ -446,7 +446,7 @@ async function _handleChangePassword(newPass, newPass2, errEl, btn, onSuccess) {
     errEl.style.color = 'var(--gold)';
     errEl.textContent = '¡Contraseña actualizada!';
     showAuthToast('Contraseña cambiada correctamente.', 'success');
-    if (onSuccess) setTimeout(onSuccess, 1500);
+    if (typeof onSuccess === 'function') setTimeout(onSuccess, 1500);
   }
 }
 

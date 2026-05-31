@@ -91,14 +91,20 @@ function showNoDbScreen() {
   document.getElementById('loginSection').appendChild(box);
 }
 
+let _dashboardReady = false;
+
 async function showDashboard() {
   document.getElementById('loginSection').style.display    = 'none';
   document.getElementById('dashboardSection').style.display = 'block';
-  setupAdminEvents();
-  setupOrderEvents();
-  setupAccountingEvents();
-  setupNav();
-  // Lanzar en paralelo sin bloquear — cada función muestra su propio loader
+
+  if (!_dashboardReady) {
+    _dashboardReady = true;
+    setupAdminEvents();
+    setupOrderEvents();
+    setupAccountingEvents();
+    setupNav();
+  }
+
   renderAdminProducts().catch(console.error);
   renderOrdersSection().catch(console.error);
 }
@@ -167,6 +173,7 @@ function _normAdminImg(url) {
 
 async function renderAdminProducts() {
   const container = document.getElementById('adminProductList');
+  if (!container) return;
   let products    = await CloudProducts.getAll();
   if (_adminProductTypeFilter === 'entero') {
     products = products.filter(p => p.type === 'entero');
@@ -1154,7 +1161,7 @@ function addSizeRow(ml = '', price = '') {
     <input type="number" class="size-price" placeholder="Precio S/" value="${price}" min="0" max="9999" step="0.5">
     <button type="button" class="remove-size-btn">×</button>
   `;
-  row.querySelector('.remove-size-btn').addEventListener('click', () => row.remove());
+  row.querySelector('.remove-size-btn')?.addEventListener('click', () => row.remove());
   container.appendChild(row);
 }
 
@@ -1178,18 +1185,18 @@ function setupAdminEvents() {
     });
   });
 
-  document.getElementById('addProductBtn').addEventListener('click', () => openProductModal());
+  document.getElementById('addProductBtn')?.addEventListener('click', () => openProductModal());
 
-  document.getElementById('closeProductModal').addEventListener('click', () => {
-    document.getElementById('productModal').classList.remove('open');
+  document.getElementById('closeProductModal')?.addEventListener('click', () => {
+    document.getElementById('productModal')?.classList.remove('open');
   });
-  document.getElementById('cancelProductModal').addEventListener('click', () => {
-    document.getElementById('productModal').classList.remove('open');
+  document.getElementById('cancelProductModal')?.addEventListener('click', () => {
+    document.getElementById('productModal')?.classList.remove('open');
   });
 
-  document.getElementById('addSizeBtn').addEventListener('click', () => addSizeRow());
+  document.getElementById('addSizeBtn')?.addEventListener('click', () => addSizeRow());
 
-  document.getElementById('saveProductBtn').addEventListener('click', async () => {
+  document.getElementById('saveProductBtn')?.addEventListener('click', async () => {
     const id          = document.getElementById('editId').value;
     const name        = document.getElementById('editName').value.trim();
     const brand       = document.getElementById('editBrand').value.trim();
@@ -1205,6 +1212,19 @@ function setupAdminEvents() {
     const imageUrl       = document.getElementById('editImageUrl').value.trim();
 
     if (!name || !brand) { alert('Nombre y marca son obligatorios.'); return; }
+
+    // Validar URL de imagen: solo http/https/data (bloquea javascript: y otros)
+    if (imageUrl) {
+      const allowedProtocols = /^(https?:|data:image\/)/i;
+      if (!allowedProtocols.test(imageUrl)) {
+        alert('URL de imagen inválida. Usa solo HTTP, HTTPS o imágenes en base64.');
+        return;
+      }
+      if (imageUrl.length > 5000) {
+        alert('URL de imagen demasiado larga.');
+        return;
+      }
+    }
 
     const sizes = {};
     document.querySelectorAll('.size-row').forEach(row => {
@@ -1238,13 +1258,13 @@ function setupAdminEvents() {
   const imgChange = document.getElementById('imgChangeBtn');
   const imgRemove = document.getElementById('imgRemoveBtn');
 
-  imgZone.addEventListener('click', () => imgInput.click());
-  imgZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') imgInput.click(); });
-  imgInput.addEventListener('change', () => { if (imgInput.files[0]) handleImageFile(imgInput.files[0]); });
+  imgZone?.addEventListener('click', () => imgInput?.click());
+  imgZone?.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') imgInput?.click(); });
+  imgInput?.addEventListener('change', () => { if (imgInput.files[0]) handleImageFile(imgInput.files[0]); });
 
-  imgZone.addEventListener('dragover', e => { e.preventDefault(); imgZone.classList.add('drag-over'); });
-  imgZone.addEventListener('dragleave', () => imgZone.classList.remove('drag-over'));
-  imgZone.addEventListener('drop', e => {
+  imgZone?.addEventListener('dragover', e => { e.preventDefault(); imgZone.classList.add('drag-over'); });
+  imgZone?.addEventListener('dragleave', () => imgZone.classList.remove('drag-over'));
+  imgZone?.addEventListener('drop', e => {
     e.preventDefault();
     imgZone.classList.remove('drag-over');
     if (e.dataTransfer.files[0]) handleImageFile(e.dataTransfer.files[0]);
@@ -2051,9 +2071,15 @@ async function renderStatsSection(forceRefresh = false) {
   if (useCache) {
     ({ orders, products } = _statsCache);
   } else {
-    [orders, products] = await Promise.all([CloudOrders.getAll(), CloudProducts.getAll()]);
-    _statsCache   = { orders, products };
-    _statsCacheAt = now;
+    try {
+      [orders, products] = await Promise.all([CloudOrders.getAll(), CloudProducts.getAll()]);
+      _statsCache   = { orders, products };
+      _statsCacheAt = now;
+    } catch (err) {
+      console.error('Stats: error al cargar datos:', err);
+      container.innerHTML = '<p style="color:var(--text2);text-align:center;padding:2rem">Error al cargar. Haz clic en "↻ Actualizar" para reintentar.</p>';
+      return;
+    }
   }
 
   if (!orders.length) {
@@ -2146,15 +2172,6 @@ async function renderStatsSection(forceRefresh = false) {
   // ── Helpers ───────────────────────────────────────────────────────────────
   const medal = i => ['🥇','🥈','🥉'][i] || `${i+1}`;
 
-  const card = (title, sub, body) => `
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
-      <div style="padding:.85rem 1rem;border-bottom:1px solid var(--border)">
-        <p style="margin:0;font-size:.86rem;color:var(--gold);font-weight:600">${title}</p>
-        ${sub ? `<p style="margin:.1rem 0 0;font-size:.7rem;color:var(--text2)">${sub}</p>` : ''}
-      </div>
-      <div style="padding:.7rem 1rem">${body}</div>
-    </div>`;
-
   const bar = (label, val, max, color = 'var(--gold)') => {
     const pct = Math.round(val / max * 100);
     return `<div style="margin-bottom:.5rem">
@@ -2236,7 +2253,7 @@ async function renderStatsSection(forceRefresh = false) {
             </tr></thead>
             <tbody>${topClients.map((c,i) => `<tr>
               <td style="${td};font-size:.85rem">${medal(i)}</td>
-              <td style="${td}"><strong style="font-size:.76rem;display:block">${sanitize(c.name)}</strong><small style="color:var(--text2);font-size:.68rem">DNI: ${sanitize(c.dni)}</small></td>
+              <td style="${td}"><strong style="font-size:.76rem;display:block">${sanitize(c.name)}</strong><small style="color:var(--text2);font-size:.68rem">DNI: ••••${sanitize(c.dni).slice(-4)}</small></td>
               <td style="${tdr};color:var(--gold);font-weight:700">${c.orders}</td>
               <td style="${tdr}">S/${c.total.toFixed(0)}</td>
             </tr>`).join('')}</tbody>
