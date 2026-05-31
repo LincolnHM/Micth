@@ -606,17 +606,21 @@ async function renderOrdersSection() {
     let orders = await withTimeout(CloudOrders.getAll(), 15000, 'los pedidos');
     await updateOrderStats(orders);
 
-    // Aviso si los datos vienen del caché local (Supabase no respondió)
+    // Aviso diagnóstico — siempre visible para saber de dónde vienen los datos
     const dbWarningId = 'supabase-orders-warning';
     const existingWarn = document.getElementById(dbWarningId);
     if (existingWarn) existingWarn.remove();
+    const diagBox = document.createElement('div');
+    diagBox.id = dbWarningId;
     if (!CloudOrders._lastFetchFromSupabase) {
-      const warn = document.createElement('div');
-      warn.id = dbWarningId;
-      warn.style.cssText = 'background:rgba(255,165,0,.12);border:1px solid rgba(255,165,0,.4);border-radius:var(--r);padding:.6rem 1rem;margin-bottom:.75rem;font-size:.8rem;color:#ffb347;display:flex;align-items:center;gap:.5rem';
-      warn.innerHTML = '⚠ Mostrando pedidos guardados localmente — no se pudo conectar a Supabase. Revisa tu sesión o recarga la página.';
-      tbody.parentElement.insertBefore(warn, tbody.parentElement.firstChild);
+      diagBox.style.cssText = 'background:rgba(239,83,80,.12);border:1px solid rgba(239,83,80,.4);border-radius:var(--r);padding:.7rem 1rem;margin-bottom:.75rem;font-size:.82rem;color:#ef5350';
+      const errMsg = CloudOrders._lastFetchError ? `<br><small style="opacity:.8">Detalle: ${sanitize(CloudOrders._lastFetchError)}</small>` : '';
+      diagBox.innerHTML = `⛔ ERROR: Supabase no respondió — mostrando solo los ${orders.length} pedidos guardados localmente. Los pedidos de Supabase NO se pueden cargar.${errMsg}<br><button onclick="location.reload()" style="margin-top:.5rem;padding:.3rem .8rem;background:#ef5350;color:#fff;border:none;border-radius:4px;font-size:.78rem;cursor:pointer;font-weight:700">Recargar página</button>`;
+    } else {
+      diagBox.style.cssText = 'background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.3);border-radius:var(--r);padding:.5rem 1rem;margin-bottom:.75rem;font-size:.78rem;color:#81c784';
+      diagBox.innerHTML = `✓ Conectado a Supabase — ${CloudOrders._lastFetchCount} pedidos cargados correctamente`;
     }
+    tbody.parentElement.insertBefore(diagBox, tbody.parentElement.firstChild);
 
     if (orderStatusFilter !== 'all') orders = orders.filter(o => o.status === orderStatusFilter);
 

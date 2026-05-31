@@ -118,6 +118,8 @@ function generateOrderId() {
 const CloudOrders = {
 
   _lastFetchFromSupabase: false,
+  _lastFetchError: null,
+  _lastFetchCount: 0,
 
   async getAll() {
     if (db) {
@@ -129,6 +131,8 @@ const CloudOrders = {
       if (error) {
         console.error('Supabase error:', error?.code, error?.message);
         this._lastFetchFromSupabase = false;
+        this._lastFetchError = `${error.code || ''}: ${error.message || 'error desconocido'}`;
+        this._lastFetchCount = 0;
         return this._localGetAll();
       }
       const supabaseOrders = data.map(orderFromDB);
@@ -157,6 +161,8 @@ const CloudOrders = {
         : [];
       if (zombies.length) Orders.save(localOrders.filter(o => !zombies.some(z => z.id === o.id)));
       this._lastFetchFromSupabase = true;
+      this._lastFetchError = null;
+      this._lastFetchCount = supabaseOrders.length;
       if (!pendingLocal.length) return mergedSupabase;
       return [...mergedSupabase, ...pendingLocal]
         .sort((a, b) => new Date(b.date) - new Date(a.date));
