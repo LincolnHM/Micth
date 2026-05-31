@@ -6,31 +6,59 @@
   const CAMPAIGNS = {
     'dia-madre': {
       label: 'Día de la Madre',
-      ribbon: 'Celebra a mama con fragancias inolvidables',
-      headline: 'Edicion Dia de la Madre',
-      subtitle: 'Detalles delicados para sorprender a mama con un perfume especial.',
+      ribbon: 'Celebra a mamá con fragancias inolvidables 🌸',
+      headline: 'Edición Día de la Madre',
+      subtitle: 'Detalles delicados para sorprender a mamá con un perfume especial.',
       artClass: 'seasonal-art-mother'
     },
     'dia-padre': {
       label: 'Día del Padre',
-      ribbon: 'Regalos elegantes para papa',
-      headline: 'Edicion Dia del Padre',
+      ribbon: 'Regalos elegantes para papá 👔',
+      headline: 'Edición Día del Padre',
       subtitle: 'Aromas con presencia para regalar en esta fecha especial.',
       artClass: 'seasonal-art-father'
     },
     'san-juan': {
       label: 'San Juan',
-      ribbon: 'Edicion especial de fiesta amazonica',
+      ribbon: 'Edición especial de fiesta amazónica 🌿',
       headline: 'Fiesta de San Juan',
-      subtitle: 'Fragancias vibrantes para celebrar la alegria de nuestra Amazonia.',
+      subtitle: 'Fragancias vibrantes para celebrar la alegría de nuestra Amazonía.',
       artClass: 'seasonal-art-sanjuan'
     },
     'navidad': {
       label: 'Navidad',
-      ribbon: 'Especial navideno: perfumes para regalar',
-      headline: 'Temporada Navidena',
+      ribbon: 'Especial navideño: perfumes para regalar 🎄',
+      headline: 'Temporada Navideña',
       subtitle: 'Encuentra el regalo perfecto con ediciones para compartir en familia.',
       artClass: 'seasonal-art-navidad'
+    },
+    'fiestas-patrias': {
+      label: 'Fiestas Patrias',
+      ribbon: '¡Viva el Perú! Fragancias para celebrar 🇵🇪',
+      headline: 'Fiestas Patrias del Perú',
+      subtitle: 'Celebra el 28 y 29 de julio con fragancias únicas, orgullo peruano.',
+      artClass: 'seasonal-art-patrias'
+    },
+    'san-valentin': {
+      label: 'San Valentín',
+      ribbon: 'El regalo más especial: un perfume con amor ❤️',
+      headline: 'San Valentín',
+      subtitle: 'Sorprende a esa persona especial con una fragancia que no olvidará.',
+      artClass: 'seasonal-art-valentin'
+    },
+    'halloween': {
+      label: 'Halloween',
+      ribbon: 'Fragancias misteriosas para la noche más oscura 🎃',
+      headline: 'Halloween',
+      subtitle: 'Aromas oscuros y seductores para la noche más misteriosa del año.',
+      artClass: 'seasonal-art-halloween'
+    },
+    'anio-nuevo': {
+      label: 'Año Nuevo',
+      ribbon: '¡Feliz Año Nuevo! Empieza el año con tu mejor fragancia 🎆',
+      headline: 'Año Nuevo',
+      subtitle: 'El mejor inicio de año con una fragancia que te acompañe todo el camino.',
+      artClass: 'seasonal-art-anionuevo'
     }
   };
 
@@ -127,12 +155,72 @@
     ribbon.innerHTML = '<span>Campaña activa:</span><strong>' + cfg.label + '</strong><span>·</span><span>' + cfg.ribbon + '</span>';
   }
 
+  // ─── Lluvia de emojis ─────────────────────────────────────────────────────
+  let _rainInterval = null;
+
+  function startEmojiRain(campaign) {
+    stopEmojiRain();
+    const icons = CAMPAIGN_ICONS[campaign];
+    if (!icons) return;
+
+    // Inyectar estilos de animación una sola vez
+    if (!document.getElementById('emojiRainStyle')) {
+      const s = document.createElement('style');
+      s.id = 'emojiRainStyle';
+      s.textContent = `
+        @keyframes emojiRainFall {
+          0%   { transform: translateY(-60px) rotate(0deg); opacity: 1; }
+          85%  { opacity: 1; }
+          100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+        .emoji-rain-drop {
+          position: fixed;
+          top: -50px;
+          pointer-events: none;
+          z-index: 9998;
+          font-size: 1.5rem;
+          line-height: 1;
+          animation: emojiRainFall linear forwards;
+          user-select: none;
+        }
+      `;
+      document.head.appendChild(s);
+    }
+
+    function spawnDrop() {
+      const el  = document.createElement('span');
+      el.className   = 'emoji-rain-drop';
+      el.textContent = icons[Math.floor(Math.random() * icons.length)];
+      el.style.left     = (Math.random() * 100) + 'vw';
+      el.style.fontSize = (1 + Math.random() * 1.2).toFixed(2) + 'rem';
+      el.style.animationDuration = (4 + Math.random() * 5).toFixed(1) + 's';
+      el.style.animationDelay   = (Math.random() * 1.5).toFixed(2) + 's';
+      document.body.appendChild(el);
+      el.addEventListener('animationend', () => el.remove(), { once: true });
+    }
+
+    // Oleada inicial
+    for (let i = 0; i < 12; i++) setTimeout(spawnDrop, i * 120);
+    // Lluvia continua (suave)
+    _rainInterval = setInterval(() => {
+      if (Math.random() < 0.7) spawnDrop();
+    }, 600);
+  }
+
+  function stopEmojiRain() {
+    clearInterval(_rainInterval);
+    _rainInterval = null;
+    document.querySelectorAll('.emoji-rain-drop').forEach(el => el.remove());
+  }
+
   function applyCampaign(campaign) {
     const normalized = normalizeCampaign(campaign);
     if (normalized === 'default') {
       document.body.removeAttribute('data-campaign');
+      stopEmojiRain();
     } else {
       document.body.setAttribute('data-campaign', normalized);
+      startEmojiRain(normalized);
     }
     renderRibbon(normalized);
     renderCampaignHero(normalized);
@@ -141,10 +229,14 @@
   // ─── Animación de íconos al agregar al carrito ─────────────────────────────
 
   const CAMPAIGN_ICONS = {
-    'dia-madre': ['🌸', '🌺', '💐', '🌷'],
-    'dia-padre': ['⭐', '💫', '🎩', '✨'],
-    'san-juan':  ['🌿', '✨', '🌟', '🍃'],
-    'navidad':   ['❄️', '🎁', '⭐', '🎄']
+    'dia-madre':       ['🌸', '🌺', '💐', '🌷', '💝', '🩷'],
+    'dia-padre':       ['👔', '🎁', '🧔', '⌚', '👨', '💙'],
+    'san-juan':        ['🌿', '✨', '🌟', '🍃', '🎉', '🔥'],
+    'navidad':         ['❄️', '🎁', '⭐', '🎄', '🎅', '✨'],
+    'fiestas-patrias': ['🇵🇪', '🎆', '🦙', '❤️', '🤍', '🎉'],
+    'san-valentin':    ['❤️', '💕', '🌹', '💝', '🩷', '💌'],
+    'halloween':       ['🎃', '👻', '🕷️', '🦇', '🕸️', '🖤'],
+    'anio-nuevo':      ['🎆', '🥂', '✨', '🎉', '🌟', '🎊']
   };
 
   function burstDecor(originEl, campaign) {

@@ -13,11 +13,15 @@ let _adminProductTypeFilter = 'all';
 let _customerHistory = [];
 
 const CAMPAIGN_LABELS = {
-  'default': 'Diseño normal',
-  'dia-madre': 'Día de la Madre',
-  'dia-padre': 'Día del Padre',
-  'san-juan': 'San Juan',
-  'navidad': 'Navidad'
+  'default':         'Diseño normal',
+  'dia-madre':       'Día de la Madre',
+  'dia-padre':       'Día del Padre',
+  'san-juan':        'San Juan',
+  'navidad':         'Navidad',
+  'fiestas-patrias': 'Fiestas Patrias',
+  'san-valentin':    'San Valentín',
+  'halloween':       'Halloween',
+  'anio-nuevo':      'Año Nuevo'
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -2022,128 +2026,208 @@ function drawDailyChart(dailyStats, year, month) {
   });
 }
 
-// ─── Sección: Estadísticas ────────────────────────────────────────────────────
+// ─── Sección: Estadísticas completas ─────────────────────────────────────────
 
 async function renderStatsSection() {
   const container = document.getElementById('statsContent');
   if (!container) return;
-  container.innerHTML = '<p style="color:var(--text2);text-align:center;padding:2rem">Cargando estadísticas…</p>';
+  container.innerHTML = '<p style="color:var(--text2);text-align:center;padding:2.5rem">Cargando estadísticas…</p>';
 
-  const orders = await CloudOrders.getAll();
+  const [orders, products] = await Promise.all([
+    CloudOrders.getAll(),
+    CloudProducts.getAll()
+  ]);
 
   if (!orders.length) {
-    container.innerHTML = '<p style="color:var(--text2);text-align:center;padding:2rem">Aún no hay pedidos registrados.</p>';
+    container.innerHTML = '<p style="color:var(--text2);text-align:center;padding:2.5rem">Aún no hay pedidos registrados.</p>';
     return;
   }
 
-  // ── Perfumes más comprados ────────────────────────────────────────────────
-  const productMap = {};
-  orders.forEach(order => {
-    (order.items || []).forEach(item => {
-      const key = item.productId ? String(item.productId) : (item.productName || '?');
-      if (!productMap[key]) {
-        productMap[key] = { name: item.productName || key, brand: item.brand || '', qty: 0, revenue: 0 };
-      }
-      productMap[key].qty     += (item.quantity || 1);
-      productMap[key].revenue += (item.price || 0) * (item.quantity || 1);
+  // ── Lookup de productos ─────────────────────────────────────────────────
+  const prodLookup = {};
+  products.forEach(p => { prodLookup[p.id] = p; });
+
+  // ── KPIs ────────────────────────────────────────────────────────────────
+  const paidOrders    = orders.filter(o => o.status === 'pagado');
+  const totalRevenue  = paidOrders.reduce((s, o) => s + (o.total || 0), 0);
+  const avgTicket     = paidOrders.length ? totalRevenue / paidOrders.length : 0;
+  const discountCount = orders.filter(o => (o.notes || '').includes('DESCUENTO')).length;
+
+  // ── Top perfumes (decants) ───────────────────────────────────────────────
+  const perfMap = {};
+  orders.forEach(o => {
+    (o.items || []).forEach(item => {
+      const k = item.productId ? String(item.productId) : (item.productName || '?');
+      if (!perfMap[k]) perfMap[k] = { name: item.productName || k, brand: item.brand || '', qty: 0, rev: 0 };
+      perfMap[k].qty += (item.quantity || 1);
+      perfMap[k].rev += (item.price || 0) * (item.quantity || 1);
     });
   });
-  const topProducts = Object.values(productMap)
-    .sort((a, b) => b.qty - a.qty)
-    .slice(0, 15);
+  const topPerf = Object.values(perfMap).sort((a, b) => b.qty - a.qty).slice(0, 10);
+  const maxPerf = topPerf[0]?.qty || 1;
 
-  // ── Clientes que más compran ──────────────────────────────────────────────
-  const customerMap = {};
-  orders.forEach(order => {
-    const key = order.customerDni || order.customerName || '?';
-    if (!customerMap[key]) {
-      customerMap[key] = {
-        name:   order.customerName  || '—',
-        dni:    order.customerDni   || '—',
-        phone:  order.customerPhone || '—',
-        orders: 0,
-        total:  0
-      };
-    }
-    customerMap[key].orders++;
-    customerMap[key].total += (order.total || 0);
-    if (order.customerName)  customerMap[key].name  = order.customerName;
-    if (order.customerPhone) customerMap[key].phone = order.customerPhone;
+  // ── Por género ────────────────────────────────────────────────────────────
+  const gQty = { masculino: 0, femenino: 0, unisex: 0 };
+  orders.forEach(o => {
+    (o.items || []).forEach(item => {
+      const p = prodLookup[item.productId];
+      const g = (p?.gender || 'unisex').toLowerCase();
+      if (gQty[g] !== undefined) gQty[g] += (item.quantity || 1);
+      else gQty.unisex += (item.quantity || 1);
+    });
   });
-  const topCustomers = Object.values(customerMap)
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 15);
+  const totalG = Math.max(gQty.masculino + gQty.femenino + gQty.unisex, 1);
 
-  const thStyle  = 'padding:.6rem .8rem;color:var(--text2);font-size:.78rem;font-weight:600;text-align:left;border-bottom:1px solid var(--border)';
-  const tdStyle  = 'padding:.55rem .8rem;font-size:.82rem;border-bottom:1px solid var(--border)';
-  const tdR      = tdStyle + ';text-align:right';
-  const rankStyle= tdStyle + ';color:var(--text3);font-weight:700';
+  // ── Por tipo ──────────────────────────────────────────────────────────────
+  const typeQty = {};
+  orders.forEach(o => {
+    (o.items || []).forEach(item => {
+      const p = prodLookup[item.productId];
+      const t = p?.type || 'diseñador';
+      typeQty[t] = (typeQty[t] || 0) + (item.quantity || 1);
+    });
+  });
+  const totalT = Math.max(Object.values(typeQty).reduce((s, v) => s + v, 0), 1);
+
+  // ── Por tamaño ────────────────────────────────────────────────────────────
+  const sizeQty = {};
+  orders.forEach(o => {
+    (o.items || []).forEach(item => {
+      const sz = item.size || '?';
+      sizeQty[sz] = (sizeQty[sz] || 0) + (item.quantity || 1);
+    });
+  });
+  const topSizes  = Object.entries(sizeQty).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const maxSize   = topSizes[0]?.[1] || 1;
+
+  // ── Entrega ───────────────────────────────────────────────────────────────
+  let cRecojo = 0, cEnvio = 0;
+  orders.forEach(o => { o.deliveryType === 'envio' ? cEnvio++ : cRecojo++; });
+  const totalDel = Math.max(cRecojo + cEnvio, 1);
+
+  // ── Top departamentos ─────────────────────────────────────────────────────
+  const deptMap = {};
+  orders.filter(o => o.deliveryType === 'envio' && o.department).forEach(o => {
+    deptMap[o.department] = (deptMap[o.department] || 0) + 1;
+  });
+  const topDepts = Object.entries(deptMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const maxDept  = topDepts[0]?.[1] || 1;
+
+  // ── Top clientes ──────────────────────────────────────────────────────────
+  const clientMap = {};
+  orders.forEach(o => {
+    const k = o.customerDni || o.customerName || '?';
+    if (!clientMap[k]) clientMap[k] = { name: o.customerName || '—', dni: o.customerDni || '—', phone: o.customerPhone || '—', orders: 0, total: 0 };
+    clientMap[k].orders++;
+    clientMap[k].total += (o.total || 0);
+    if (o.customerName)  clientMap[k].name  = o.customerName;
+    if (o.customerPhone) clientMap[k].phone = o.customerPhone;
+  });
+  const topClients = Object.values(clientMap).sort((a, b) => b.total - a.total).slice(0, 10);
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  const medal = i => ['🥇','🥈','🥉'][i] || `${i+1}`;
+
+  const card = (title, sub, body) => `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+      <div style="padding:.85rem 1rem;border-bottom:1px solid var(--border)">
+        <p style="margin:0;font-size:.86rem;color:var(--gold);font-weight:600">${title}</p>
+        ${sub ? `<p style="margin:.1rem 0 0;font-size:.7rem;color:var(--text2)">${sub}</p>` : ''}
+      </div>
+      <div style="padding:.7rem 1rem">${body}</div>
+    </div>`;
+
+  const bar = (label, val, max, color = 'var(--gold)') => {
+    const pct = Math.round(val / max * 100);
+    return `<div style="margin-bottom:.5rem">
+      <div style="display:flex;justify-content:space-between;font-size:.76rem;margin-bottom:.18rem">
+        <span style="color:var(--text2)">${label}</span>
+        <span style="color:var(--text);font-weight:600">${val} <small style="color:var(--text3)">(${pct}%)</small></span>
+      </div>
+      <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px">
+        <div style="height:100%;width:${pct}%;background:${color};border-radius:3px"></div>
+      </div>
+    </div>`;
+  };
+
+  const th = 'padding:.45rem .65rem;color:var(--text2);font-size:.72rem;font-weight:600;text-align:left;border-bottom:1px solid var(--border)';
+  const td = 'padding:.45rem .65rem;font-size:.78rem;border-bottom:1px solid var(--border)';
+  const tdr = td + ';text-align:right';
 
   container.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+    <style>
+      .stats-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:.65rem; padding:.9rem .9rem 0; }
+      .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:.9rem; padding:.9rem; }
+      .kpi-box    { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:.8rem 1rem; }
+      .kpi-v      { font-size:1.45rem; font-weight:700; color:var(--gold); font-family:'Playfair Display',serif; line-height:1.1; }
+      .kpi-l      { font-size:.68rem; color:var(--text2); margin-top:.2rem; }
+      @media(max-width:540px){ .stats-kpis{ grid-template-columns:1fr 1fr; } .stats-grid{ grid-template-columns:1fr; padding:.65rem; } }
+    </style>
 
-      <!-- Perfumes más vendidos -->
-      <div style="background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden">
-        <div style="padding:1rem 1.2rem;border-bottom:1px solid var(--border)">
-          <h3 style="margin:0;font-size:.95rem;color:var(--gold)">Perfumes más vendidos</h3>
-          <p style="margin:.2rem 0 0;font-size:.75rem;color:var(--text2)">Por unidades vendidas</p>
-        </div>
-        <table style="width:100%;border-collapse:collapse">
-          <thead>
-            <tr>
-              <th style="${thStyle}">#</th>
-              <th style="${thStyle}">Perfume</th>
-              <th style="${thStyle};text-align:right">Unid.</th>
-              <th style="${thStyle};text-align:right">Facturado</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${topProducts.length ? topProducts.map((p, i) => `
-              <tr>
-                <td style="${rankStyle}">${i + 1}</td>
-                <td style="${tdStyle}">
-                  <strong style="display:block">${sanitize(p.name)}</strong>
-                  <small style="color:var(--text2)">${sanitize(p.brand)}</small>
-                </td>
-                <td style="${tdR};color:var(--gold);font-weight:700">${p.qty}</td>
-                <td style="${tdR}">S/ ${p.revenue.toFixed(2)}</td>
-              </tr>
-            `).join('') : `<tr><td colspan="4" style="padding:1.5rem;text-align:center;color:var(--text2)">Sin datos</td></tr>`}
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Clientes que más compran -->
-      <div style="background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden">
-        <div style="padding:1rem 1.2rem;border-bottom:1px solid var(--border)">
-          <h3 style="margin:0;font-size:.95rem;color:var(--gold)">Clientes que más compran</h3>
-          <p style="margin:.2rem 0 0;font-size:.75rem;color:var(--text2)">Por total gastado</p>
-        </div>
-        <table style="width:100%;border-collapse:collapse">
-          <thead>
-            <tr>
-              <th style="${thStyle}">#</th>
-              <th style="${thStyle}">Cliente</th>
-              <th style="${thStyle};text-align:right">Pedidos</th>
-              <th style="${thStyle};text-align:right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${topCustomers.length ? topCustomers.map((c, i) => `
-              <tr>
-                <td style="${rankStyle}">${i + 1}</td>
-                <td style="${tdStyle}">
-                  <strong style="display:block">${sanitize(c.name)}</strong>
-                  <small style="color:var(--text2)">DNI: ${sanitize(c.dni)} · ${sanitize(c.phone)}</small>
-                </td>
-                <td style="${tdR};color:var(--gold);font-weight:700">${c.orders}</td>
-                <td style="${tdR};font-weight:600">S/ ${c.total.toFixed(2)}</td>
-              </tr>
-            `).join('') : `<tr><td colspan="4" style="padding:1.5rem;text-align:center;color:var(--text2)">Sin datos</td></tr>`}
-          </tbody>
-        </table>
-      </div>
-
+    <div class="stats-kpis">
+      <div class="kpi-box"><div class="kpi-v">${orders.length}</div><div class="kpi-l">Total pedidos</div></div>
+      <div class="kpi-box"><div class="kpi-v">S/ ${totalRevenue.toFixed(0)}</div><div class="kpi-l">Facturado (pagados)</div></div>
+      <div class="kpi-box"><div class="kpi-v">S/ ${avgTicket.toFixed(1)}</div><div class="kpi-l">Ticket promedio</div></div>
+      <div class="kpi-box"><div class="kpi-v">${discountCount}</div><div class="kpi-l">Usaron 10% descuento</div></div>
     </div>
-  `;
+
+    <div class="stats-grid">
+
+      ${card('🏆 Decants más pedidos', 'Por unidades vendidas — todos los estados',
+        `<table style="width:100%;border-collapse:collapse">
+          <thead><tr><th style="${th}">#</th><th style="${th}">Perfume</th><th style="${th};text-align:right">Unid.</th><th style="${th};text-align:right">S/</th></tr></thead>
+          <tbody>${topPerf.map((p,i) => `<tr>
+            <td style="${td};font-size:.88rem">${medal(i)}</td>
+            <td style="${td}"><strong style="display:block;font-size:.78rem">${sanitize(p.name)}</strong><small style="color:var(--text2)">${sanitize(p.brand)}</small></td>
+            <td style="${tdr};color:var(--gold);font-weight:700">${p.qty}</td>
+            <td style="${tdr}">S/ ${p.rev.toFixed(0)}</td>
+          </tr>`).join('')}
+          </tbody>
+        </table>
+        <div style="margin-top:.6rem">${topPerf.map(p => bar(p.name, p.qty, maxPerf)).join('')}</div>`
+      )}
+
+      ${card('👥 Compras por género', 'Según el tipo de perfume pedido',
+        bar('👨 Para hombre', gQty.masculino, totalG, '#5b9cf6') +
+        bar('👩 Para mujer',  gQty.femenino,  totalG, '#f06292') +
+        bar('✨ Unisex',      gQty.unisex,    totalG, 'var(--gold)')
+      )}
+
+      ${card('🧴 Por tipo de fragancia', 'Árabe · Diseñador · Entero',
+        Object.entries(typeQty).sort((a,b)=>b[1]-a[1]).map(([t,v]) => {
+          const colors = { arabe:'#a78bfa', entero:'#34d399' };
+          return bar(t.charAt(0).toUpperCase()+t.slice(1), v, totalT, colors[t]||'var(--gold)');
+        }).join('')
+      )}
+
+      ${card('💧 Tamaños más pedidos', 'Decant favorito de tus clientes',
+        topSizes.map(([sz, v]) => bar(sz, v, maxSize)).join('') ||
+        '<p style="color:var(--text2);font-size:.8rem">Sin datos</p>'
+      )}
+
+      ${card('🚚 Método de entrega', 'Recojo vs envío Shalom',
+        bar('🏪 Recojo en tienda', cRecojo, totalDel, 'var(--gold)') +
+        bar('📦 Envío Shalom',     cEnvio,  totalDel, '#60a5fa')
+      )}
+
+      ${card('📍 Departamentos con envíos', 'Dónde llegan más pedidos',
+        topDepts.length
+          ? topDepts.map(([d,v]) => bar(d, v, maxDept)).join('')
+          : '<p style="color:var(--text2);font-size:.8rem;text-align:center;padding:.4rem 0">Sin envíos registrados</p>'
+      )}
+
+      ${card('⭐ Mejores clientes', 'Por total gastado en la tienda',
+        `<table style="width:100%;border-collapse:collapse">
+          <thead><tr><th style="${th}">#</th><th style="${th}">Cliente</th><th style="${th};text-align:right">Ped.</th><th style="${th};text-align:right">Total</th></tr></thead>
+          <tbody>${topClients.map((c,i) => `<tr>
+            <td style="${td};font-size:.88rem">${medal(i)}</td>
+            <td style="${td}"><strong style="display:block;font-size:.78rem">${sanitize(c.name)}</strong><small style="color:var(--text2)">DNI: ${sanitize(c.dni)}</small></td>
+            <td style="${tdr};color:var(--gold);font-weight:700">${c.orders}</td>
+            <td style="${tdr}">S/ ${c.total.toFixed(0)}</td>
+          </tr>`).join('')}
+          </tbody>
+        </table>`
+      )}
+
+    </div>`;
 }
