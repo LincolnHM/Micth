@@ -24,33 +24,68 @@ const CAMPAIGN_LABELS = {
   'anio-nuevo':      'Año Nuevo'
 };
 
+function withTimeout(promise, ms, label = 'operacion') {
+  let timerId;
+  const timeout = new Promise((_, reject) => {
+    timerId = setTimeout(() => reject(new Error(`Tiempo de espera agotado al cargar ${label}.`)), ms);
+  });
+  return Promise.race([
+    promise.finally(() => clearTimeout(timerId)),
+    timeout
+  ]);
+}
+
+function setAdminErrorState(containerId, title, message) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = `
+    <div style="text-align:center;color:var(--text2);padding:2rem;background:var(--card);border:1px solid rgba(239,83,80,.35);border-radius:var(--r-lg)">
+      <div style="font-size:1.4rem;color:var(--red);margin-bottom:.5rem">⚠</div>
+      <div style="color:var(--white);font-weight:600;margin-bottom:.25rem">${sanitize(title)}</div>
+      <div style="font-size:.84rem;line-height:1.6">${sanitize(message)}</div>
+    </div>`;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!SUPABASE_READY) {
-    showNoDbScreen();
-    return;
-  }
+  try {
+    if (!SUPABASE_READY) {
+      showNoDbScreen();
+      return;
+    }
 
-  const { data: { session } } = await db.auth.getSession();
-  if (!session) { showLoginScreen(); return; }
+    const sessionResult = await withTimeout(db.auth.getSession(), 12000, 'la sesión de admin');
+    const session = sessionResult?.data?.session;
+    if (!session) { showLoginScreen(); return; }
 
-  // Ruta rápida: el JWT ya tiene app_metadata si el token se renovó después
-  // de ejecutar el SQL. Si no lo tiene, se verifica con getUser() (más lento).
-  if (isAdminUser(session.user)) {
-    await showDashboard();
-  } else {
-    // Token viejo — verificar con datos frescos del servidor
-    const { data: { user }, error: userErr } = await db.auth.getUser();
-    if (userErr || !isAdminUser(user)) {
-      await db.auth.signOut();
-      showLoginScreen();
-      const errEl = document.getElementById('loginError');
-      if (errEl) { errEl.textContent = 'Acceso denegado. Esta cuenta no tiene permisos de administrador.'; errEl.style.display = 'block'; }
-    } else {
+    // Ruta rápida: el JWT ya tiene app_metadata si el token se renovó después
+    // de ejecutar el SQL. Si no lo tiene, se verifica con getUser() (más lento).
+    if (isAdminUser(session.user)) {
       await showDashboard();
+    } else {
+      // Token viejo — verificar con datos frescos del servidor
+      const userResult = await withTimeout(db.auth.getUser(), 12000, 'la verificación del usuario');
+      const user = userResult?.data?.user;
+      const userErr = userResult?.error;
+      if (userErr || !isAdminUser(user)) {
+        await db.auth.signOut();
+        showLoginScreen();
+        const errEl = document.getElementById('loginError');
+        if (errEl) { errEl.textContent = 'Acceso denegado. Esta cuenta no tiene permisos de administrador.'; errEl.style.display = 'block'; }
+      } else {
+        await showDashboard();
+      }
+    }
+  } catch (err) {
+    console.error('[MICHT] Error inicializando admin:', err);
+    showLoginScreen();
+    const errEl = document.getElementById('loginError');
+    if (errEl) {
+      errEl.textContent = 'No se pudo cargar el acceso al admin. Recarga la página e inténtalo otra vez.';
+      errEl.style.display = 'block';
     }
   }
 
-  document.getElementById('logoutBtn').addEventListener('click', async () => {
+  document.getElementById('logoutBtn')?.addEventListener('click', async () => {
     await db.auth.signOut();
     showLoginScreen();
   });
@@ -105,8 +140,14 @@ async function showDashboard() {
     setupNav();
   }
 
-  renderAdminProducts().catch(console.error);
-  renderOrdersSection().catch(console.error);
+  renderAdminProducts().catch(err => {
+    console.error('[MICHT] Error cargando perfumes:', err);
+    setAdminErrorState('adminProductList', 'No se pudieron cargar los perfumes', 'La carga falló o tardó demasiado. Vuelve a intentar desde el panel.');
+  });
+  renderOrdersSection().catch(err => {
+    console.error('[MICHT] Error cargando pedidos:', err);
+    setAdminErrorState('ordersTableBody', 'No se pudieron cargar los pedidos', 'La tabla no pudo completarse. Recarga el panel para intentar de nuevo.');
+  });
 }
 
 async function handleLogin(e) {
@@ -124,7 +165,7 @@ async function handleLogin(e) {
 
   const { data: loginData, error } = await db.auth.signInWithPassword({ email, password: pw });
 
-  if (btn) { btn.disabled = false; btn.textContent = 'Entrar'; }
+  if (btn) { btn.disabled = false; btn.textContent = 'Ingresar'; }
 
   if (error) {
     err.textContent = 'Correo o contraseña incorrectos.';
@@ -174,7 +215,9 @@ function _normAdminImg(url) {
 async function renderAdminProducts() {
   const container = document.getElementById('adminProductList');
   if (!container) return;
-  let products    = await CloudProducts.getAll();
+  container.innerHTML = '<div style="text-align:center;color:var(--text2);padding:2rem;background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg)">Cargando perfumes…</div>';
+
+  let products = await withTimeout(CloudProducts.getAll(), 15000, 'los perfumes');
   if (_adminProductTypeFilter === 'entero') {
     products = products.filter(p => p.type === 'entero');
   } else if (_adminProductTypeFilter === 'decant') {
@@ -529,35 +572,42 @@ async function renderInventorySection() {
 let orderStatusFilter = 'all';
 
 async function updateOrderStats() {
-  const stats = await CloudOrders.getStats();
   const bar = document.getElementById('orderStatsBar');
   if (!bar) return;
-  bar.innerHTML = `
-    <div class="stat-card"><div class="stat-val" style="color:var(--gold)">${stats.total}</div><div class="stat-label">Total</div></div>
-    <div class="stat-card"><div class="stat-val" style="color:var(--orange)">${stats.pendiente}</div><div class="stat-label">Pendientes</div></div>
-    <div class="stat-card"><div class="stat-val" style="color:var(--green)">${stats.pagado}</div><div class="stat-label">Pagados</div></div>
-    <div class="stat-card"><div class="stat-val" style="color:#ef5350">${stats.cancelado}</div><div class="stat-label">Cancelados</div></div>
-    <div class="stat-card"><div class="stat-val" style="color:var(--gold-d)">S/${stats.revenue.toFixed(0)}</div><div class="stat-label">Facturado</div></div>
-  `;
+  try {
+    const stats = await withTimeout(CloudOrders.getStats(), 15000, 'las estadísticas de pedidos');
+    bar.innerHTML = `
+      <div class="stat-card"><div class="stat-val" style="color:var(--gold)">${stats.total}</div><div class="stat-label">Total</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--orange)">${stats.pendiente}</div><div class="stat-label">Pendientes</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--green)">${stats.pagado}</div><div class="stat-label">Pagados</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#ef5350">${stats.cancelado}</div><div class="stat-label">Cancelados</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--gold-d)">S/${stats.revenue.toFixed(0)}</div><div class="stat-label">Facturado</div></div>
+    `;
+  } catch (err) {
+    console.error('[MICHT] Error cargando resumen de pedidos:', err);
+    bar.innerHTML = '<div class="stat-card" style="grid-column:1/-1;text-align:center;color:var(--text2)">No se pudo cargar el resumen de pedidos.</div>';
+  }
 }
 
 async function renderOrdersSection() {
-  updateOrderStats();
-  let orders = await CloudOrders.getAll();
-  if (orderStatusFilter !== 'all') orders = orders.filter(o => o.status === orderStatusFilter);
-
   const tbody = document.getElementById('ordersTableBody');
   if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">Cargando pedidos…</td></tr>';
 
-  if (!orders.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">No hay pedidos ${orderStatusFilter !== 'all' ? 'con ese estado' : 'registrados'}</td></tr>`;
-    return;
-  }
+  try {
+    await updateOrderStats();
+    let orders = await withTimeout(CloudOrders.getAll(), 15000, 'los pedidos');
+    if (orderStatusFilter !== 'all') orders = orders.filter(o => o.status === orderStatusFilter);
 
-  const STATUS_LABELS = { pendiente: 'Pendiente', pagado: 'Pagado', cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado' };
-  const SELECT_OPTIONS = ['pendiente', 'pagado', 'cancelado'];
+    if (!orders.length) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">No hay pedidos ${orderStatusFilter !== 'all' ? 'con ese estado' : 'registrados'}</td></tr>`;
+      return;
+    }
 
-  tbody.innerHTML = orders.map(o => {
+    const STATUS_LABELS = { pendiente: 'Pendiente', pagado: 'Pagado', cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado' };
+    const SELECT_OPTIONS = ['pendiente', 'pagado', 'cancelado'];
+
+    tbody.innerHTML = orders.map(o => {
     const date   = new Date(o.date).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: '2-digit' });
     const items  = o.items.map(i => `${i.productName} ${i.size} ×${i.quantity}`).join(', ');
     const delivLabel = o.deliveryType === 'recojo' ? '🏪 Recojo' : '📦 Shalom';
@@ -588,82 +638,86 @@ async function renderOrdersSection() {
         </div>
       </td>
     </tr>`;
-  }).join('');
+    }).join('');
 
-  // Cambio de estado
-  tbody.querySelectorAll('.order-action-select').forEach(sel => {
-    sel.addEventListener('change', () => {
-      const id        = sel.dataset.id;
-      const newStatus = sel.value;
-      const prevStatus = sel.dataset.status;
+    // Cambio de estado
+    tbody.querySelectorAll('.order-action-select').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const id        = sel.dataset.id;
+        const newStatus = sel.value;
+        const prevStatus = sel.dataset.status;
 
-      const doUpdate = async () => {
-        try {
-          await CloudOrders.updateStatus(id, newStatus);
-          sel.dataset.status = newStatus;
-          renderOrdersSection().catch(console.error);
-          showToast(`Pedido ${id} → ${STATUS_LABELS[newStatus]}`);
-        } catch (err) {
-          console.error('Error al actualizar estado:', err);
-          sel.value = prevStatus;
-          showToast('Error al actualizar el pedido. Inténtalo de nuevo.');
-        }
-      };
-
-      if (newStatus === 'pagado') {
-        sel.value = prevStatus; // revertir visualmente mientras carga
-        CloudOrders.getById(id).then(order => {
-          const items = order?.items || [];
-          const mlLines = items
-            .filter(i => parseInt(i.size) > 0)
-            .map(i => `  • ${i.productName} ${i.size} ×${i.quantity} = ${parseInt(i.size) * i.quantity} ml`)
-            .join('\n');
-          const msg = mlLines
-            ? `Se descontará del stock al confirmar:\n\n${mlLines}\n\n¿Confirmar pago?`
-            : `¿Confirmar el pedido ${id} como PAGADO?`;
-
-          showConfirmModal(msg,
-            () => { sel.value = newStatus; doUpdate(); },
-            () => { sel.value = prevStatus; }
-          );
-        }).catch(() => {
-          showConfirmModal(
-            `¿Confirmar el pedido ${id} como PAGADO?`,
-            () => { sel.value = newStatus; doUpdate(); },
-            () => { sel.value = prevStatus; }
-          );
-        });
-      } else {
-        doUpdate();
-      }
-    });
-  });
-
-  // Ver detalle
-  tbody.querySelectorAll('.btn-order-detail').forEach(btn => {
-    btn.addEventListener('click', () => openOrderDetail(btn.dataset.id).catch(console.error));
-  });
-
-  // Eliminar pedido
-  tbody.querySelectorAll('.btn-delete-order').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.id;
-      showConfirmModal(
-        `¿Eliminar el pedido ${id}? Esta acción no se puede deshacer.`,
-        async () => {
+        const doUpdate = async () => {
           try {
-            await CloudOrders.delete(id);
+            await CloudOrders.updateStatus(id, newStatus);
+            sel.dataset.status = newStatus;
             renderOrdersSection().catch(console.error);
-            showToast(`Pedido ${id} eliminado.`);
+            showToast(`Pedido ${id} → ${STATUS_LABELS[newStatus]}`);
           } catch (err) {
-            console.error(err);
-            showToast('Error al eliminar el pedido.');
+            console.error('Error al actualizar estado:', err);
+            sel.value = prevStatus;
+            showToast('Error al actualizar el pedido. Inténtalo de nuevo.');
           }
-        },
-        () => {}
-      );
+        };
+
+        if (newStatus === 'pagado') {
+          sel.value = prevStatus; // revertir visualmente mientras carga
+          CloudOrders.getById(id).then(order => {
+            const items = order?.items || [];
+            const mlLines = items
+              .filter(i => parseInt(i.size) > 0)
+              .map(i => `  • ${i.productName} ${i.size} ×${i.quantity} = ${parseInt(i.size) * i.quantity} ml`)
+              .join('\n');
+            const msg = mlLines
+              ? `Se descontará del stock al confirmar:\n\n${mlLines}\n\n¿Confirmar pago?`
+              : `¿Confirmar el pedido ${id} como PAGADO?`;
+
+            showConfirmModal(msg,
+              () => { sel.value = newStatus; doUpdate(); },
+              () => { sel.value = prevStatus; }
+            );
+          }).catch(() => {
+            showConfirmModal(
+              `¿Confirmar el pedido ${id} como PAGADO?`,
+              () => { sel.value = newStatus; doUpdate(); },
+              () => { sel.value = prevStatus; }
+            );
+          });
+        } else {
+          doUpdate();
+        }
+      });
     });
-  });
+
+    // Ver detalle
+    tbody.querySelectorAll('.btn-order-detail').forEach(btn => {
+      btn.addEventListener('click', () => openOrderDetail(btn.dataset.id).catch(console.error));
+    });
+
+    // Eliminar pedido
+    tbody.querySelectorAll('.btn-delete-order').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        showConfirmModal(
+          `¿Eliminar el pedido ${id}? Esta acción no se puede deshacer.`,
+          async () => {
+            try {
+              await CloudOrders.delete(id);
+              renderOrdersSection().catch(console.error);
+              showToast(`Pedido ${id} eliminado.`);
+            } catch (err) {
+              console.error(err);
+              showToast('Error al eliminar el pedido.');
+            }
+          },
+          () => {}
+        );
+      });
+    });
+  } catch (err) {
+    console.error('[MICHT] renderOrdersSection falló:', err);
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">No se pudieron cargar los pedidos.</td></tr>';
+  }
 }
 
 async function openOrderDetail(id) {

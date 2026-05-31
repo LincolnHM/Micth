@@ -519,6 +519,9 @@ const CloudProducts = {
 // ─── Cliente Supabase con sesión persistente para Auth de clientes ────────────
 // Distinto de `db` (que fuerza rol anónimo en tienda) — este preserva la sesión
 // del cliente para login, registro, y consultas de perfil de usuario.
+// storageKey separada para que las sesiones de clientes NO interfieran con el admin.
 const authClient = SUPABASE_READY
-  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { storageKey: 'micht-customer-auth' }
+    })
   : null;
