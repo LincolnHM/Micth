@@ -1621,99 +1621,101 @@ async function renderUsersSection() {
   if (!tbody) return;
   tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Cargando usuarios…</td></tr>';
 
-  try {
-    if (!db) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Base de datos no disponible.</td></tr>';
-      return;
-    }
+  const hint = document.getElementById('usersSqlHint');
 
-    const [profilesRes, orders] = await Promise.all([
-      withTimeout(db.from('perfiles_usuarios').select('*').order('created_at', { ascending: false }), 15000, 'los usuarios'),
-      withTimeout(CloudOrders.getAll(), 15000, 'los pedidos de usuarios')
-    ]);
-
-    if (profilesRes.error) {
-      const hint = document.getElementById('usersSqlHint');
-      if (profilesRes.error.code === '42501' || profilesRes.error.code === '42P01' || String(profilesRes.error.message).includes('permission')) {
-        if (hint) hint.style.display = '';
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Sin acceso — ejecuta el SQL de arriba para habilitar esta sección.</td></tr>';
-      } else {
-        if (hint) hint.style.display = 'none';
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Error: ${sanitize(profilesRes.error.message || 'desconocido')}</td></tr>`;
-      }
-      return;
-    }
-
-    document.getElementById('usersSqlHint')?.style && (document.getElementById('usersSqlHint').style.display = 'none');
-    const profiles = profilesRes.data || [];
-
-    // Mapa pedidos por DNI
-    const ordersByDni = {};
-    (orders || []).forEach(o => {
-      const dni = (o.customerDni || '').trim();
-      if (!dni) return;
-      if (!ordersByDni[dni]) ordersByDni[dni] = { count: 0, total: 0 };
-      ordersByDni[dni].count++;
-      if (o.status === 'pagado') ordersByDni[dni].total += (o.total || 0);
-    });
-
-    updateUsersStats(profiles, ordersByDni);
-
-    // Filtro búsqueda
-    let filtered = profiles;
-    if (_userSearch) {
-      const q = _userSearch.toLowerCase();
-      filtered = profiles.filter(p =>
-        (p.nombre_completo || '').toLowerCase().includes(q) ||
-        (p.dni || '').includes(q) ||
-        (p.telefono || '').includes(q)
-      );
-    }
-
-    if (!filtered.length) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">${
-        profiles.length ? 'Ningún usuario coincide con la búsqueda.' : 'No hay usuarios registrados aún.'
-      }</td></tr>`;
-      return;
-    }
-
-    const td = 'padding:.5rem .7rem;font-size:.80rem;border-bottom:1px solid var(--border);vertical-align:middle';
-
-    tbody.innerHTML = filtered.map(p => {
-      const stats    = ordersByDni[(p.dni || '').trim()] || { count: 0, total: 0 };
-      const regDate  = new Date(p.created_at).toLocaleDateString('es-PE', { day:'2-digit', month:'2-digit', year:'2-digit' });
-      const discBadge = p.primer_descuento_usado
-        ? '<span style="font-size:.72rem;background:rgba(239,83,80,.12);color:#ef5350;padding:.15rem .55rem;border-radius:3px;white-space:nowrap">Usado</span>'
-        : '<span style="font-size:.72rem;background:rgba(76,175,80,.12);color:#4caf50;padding:.15rem .55rem;border-radius:3px;white-space:nowrap">Disponible</span>';
-
-      return `<tr>
-        <td style="${td}"><strong style="color:var(--text)">${sanitize(p.nombre_completo || '—')}</strong></td>
-        <td style="${td};font-family:monospace;color:var(--text2);letter-spacing:.04em">${sanitize(p.dni || '—')}</td>
-        <td style="${td}"><a href="https://wa.me/51${escapeAttr((p.telefono||'').replace(/\D/g,''))}" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none;transition:opacity .15s" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">📱 ${sanitize(p.telefono || '—')}</a></td>
-        <td style="${td};text-align:center">${discBadge}</td>
-        <td style="${td};color:var(--text2);font-size:.75rem;white-space:nowrap">${regDate}</td>
-        <td style="${td};text-align:center;color:${stats.count > 0 ? 'var(--gold)' : 'var(--text3)'}"><strong>${stats.count || '—'}</strong></td>
-        <td style="${td};text-align:right;font-weight:${stats.total > 0 ? '700' : '400'};color:${stats.total > 0 ? 'var(--green)' : 'var(--text3)'}">
-          ${stats.total > 0 ? `S/ ${stats.total.toFixed(2)}` : '—'}
-        </td>
-        <td style="${td};text-align:center">
-          <button class="btn-view-user-orders" data-dni="${escapeAttr(p.dni || '')}" data-name="${escapeAttr(p.nombre_completo || '')}"
-                  style="font-size:.72rem;padding:.3rem .65rem;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:var(--r);cursor:pointer;transition:all .15s;white-space:nowrap"
-                  onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
-                  onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">Ver pedidos</button>
-        </td>
-      </tr>`;
-    }).join('');
-
-    // Evento "Ver pedidos"
-    tbody.querySelectorAll('.btn-view-user-orders').forEach(btn => {
-      btn.addEventListener('click', () => openUserOrdersModal(btn.dataset.dni, btn.dataset.name));
-    });
-
-  } catch (err) {
-    console.error('[MICHT] Error cargando usuarios:', err);
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Error al cargar. Intenta de nuevo.</td></tr>';
+  if (!db) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Base de datos no disponible.</td></tr>';
+    return;
   }
+
+  // ── Obtener perfiles (await directo — el builder de Supabase no es un Promise nativo) ──
+  let profilesData = [], profilesErr = null;
+  try {
+    const res = await db.from('perfiles_usuarios').select('*').order('created_at', { ascending: false });
+    profilesData = res.data  || [];
+    profilesErr  = res.error || null;
+  } catch (e) {
+    profilesErr = e;
+  }
+
+  if (profilesErr) {
+    const code = profilesErr.code || '';
+    const msg  = String(profilesErr.message || profilesErr.details || '');
+    const isPermission = code === '42501' || code === '42P01' || msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('does not exist');
+    if (hint) hint.style.display = isPermission ? '' : 'none';
+    tbody.innerHTML = isPermission
+      ? '<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Sin acceso — ejecuta el SQL de arriba en Supabase para habilitar esta sección.</td></tr>'
+      : `<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Error al cargar usuarios: ${sanitize(msg || code || 'desconocido')}</td></tr>`;
+    return;
+  }
+
+  if (hint) hint.style.display = 'none';
+
+  // ── Obtener pedidos para cruzar por DNI (falla silenciosa) ──
+  let orders = [];
+  try { orders = await CloudOrders.getAll(); } catch (_) {}
+
+  const ordersByDni = {};
+  orders.forEach(o => {
+    const dni = (o.customerDni || '').trim();
+    if (!dni) return;
+    if (!ordersByDni[dni]) ordersByDni[dni] = { count: 0, total: 0 };
+    ordersByDni[dni].count++;
+    if (o.status === 'pagado') ordersByDni[dni].total += (o.total || 0);
+  });
+
+  updateUsersStats(profilesData, ordersByDni);
+
+  // ── Filtro de búsqueda ────────────────────────────────────────────────────────
+  let filtered = profilesData;
+  if (_userSearch) {
+    const q = _userSearch.toLowerCase();
+    filtered = profilesData.filter(p =>
+      (p.nombre_completo || '').toLowerCase().includes(q) ||
+      (p.dni  || '').includes(q) ||
+      (p.telefono || '').includes(q)
+    );
+  }
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">${
+      profilesData.length ? 'Ningún usuario coincide con la búsqueda.' : 'No hay usuarios registrados aún.'
+    }</td></tr>`;
+    return;
+  }
+
+  const tdS = 'padding:.5rem .7rem;font-size:.80rem;border-bottom:1px solid var(--border);vertical-align:middle';
+
+  tbody.innerHTML = filtered.map(p => {
+    const stats    = ordersByDni[(p.dni || '').trim()] || { count: 0, total: 0 };
+    const regDate  = new Date(p.created_at).toLocaleDateString('es-PE', { day:'2-digit', month:'2-digit', year:'2-digit' });
+    const discBadge = p.primer_descuento_usado
+      ? '<span style="font-size:.72rem;background:rgba(239,83,80,.12);color:#ef5350;padding:.15rem .55rem;border-radius:3px;white-space:nowrap">Usado</span>'
+      : '<span style="font-size:.72rem;background:rgba(76,175,80,.12);color:#4caf50;padding:.15rem .55rem;border-radius:3px;white-space:nowrap">Disponible</span>';
+
+    return `<tr>
+      <td style="${tdS}"><strong style="color:var(--text)">${sanitize(p.nombre_completo || '—')}</strong></td>
+      <td style="${tdS};font-family:monospace;color:var(--text2);letter-spacing:.04em">${sanitize(p.dni || '—')}</td>
+      <td style="${tdS}"><a href="https://wa.me/51${escapeAttr((p.telefono||'').replace(/\D/g,''))}" target="_blank" rel="noopener"
+            style="color:var(--gold);text-decoration:none" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">📱 ${sanitize(p.telefono || '—')}</a></td>
+      <td style="${tdS};text-align:center">${discBadge}</td>
+      <td style="${tdS};color:var(--text2);font-size:.75rem;white-space:nowrap">${regDate}</td>
+      <td style="${tdS};text-align:center;color:${stats.count > 0 ? 'var(--gold)' : 'var(--text3)'}"><strong>${stats.count || '—'}</strong></td>
+      <td style="${tdS};text-align:right;font-weight:${stats.total > 0 ? '700' : '400'};color:${stats.total > 0 ? 'var(--green)' : 'var(--text3)'}">
+        ${stats.total > 0 ? `S/ ${stats.total.toFixed(2)}` : '—'}
+      </td>
+      <td style="${tdS};text-align:center">
+        <button class="btn-view-user-orders" data-dni="${escapeAttr(p.dni || '')}" data-name="${escapeAttr(p.nombre_completo || '')}"
+                style="font-size:.72rem;padding:.3rem .65rem;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:var(--r);cursor:pointer;transition:all .15s;white-space:nowrap"
+                onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
+                onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">Ver pedidos</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('.btn-view-user-orders').forEach(btn => {
+    btn.addEventListener('click', () => openUserOrdersModal(btn.dataset.dni, btn.dataset.name));
+  });
 }
 
 function updateUsersStats(profiles, ordersByDni) {
