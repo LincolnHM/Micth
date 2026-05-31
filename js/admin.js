@@ -31,23 +31,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const { data: { session } } = await db.auth.getSession();
-  if (session) {
-    // getUser() pide datos frescos al servidor (no usa el JWT cacheado)
-    // Esto garantiza que app_metadata esté actualizado
+  if (!session) { showLoginScreen(); return; }
+
+  // Ruta rápida: el JWT ya tiene app_metadata si el token se renovó después
+  // de ejecutar el SQL. Si no lo tiene, se verifica con getUser() (más lento).
+  if (isAdminUser(session.user)) {
+    await showDashboard();
+  } else {
+    // Token viejo — verificar con datos frescos del servidor
     const { data: { user }, error: userErr } = await db.auth.getUser();
     if (userErr || !isAdminUser(user)) {
       await db.auth.signOut();
       showLoginScreen();
-      const err = document.getElementById('loginError');
-      if (err) {
-        err.textContent = 'Acceso denegado. Esta cuenta no tiene permisos de administrador.';
-        err.style.display = 'block';
-      }
+      const errEl = document.getElementById('loginError');
+      if (errEl) { errEl.textContent = 'Acceso denegado. Esta cuenta no tiene permisos de administrador.'; errEl.style.display = 'block'; }
     } else {
       await showDashboard();
     }
-  } else {
-    showLoginScreen();
   }
 
   document.getElementById('logoutBtn').addEventListener('click', async () => {
@@ -94,13 +94,13 @@ function showNoDbScreen() {
 async function showDashboard() {
   document.getElementById('loginSection').style.display    = 'none';
   document.getElementById('dashboardSection').style.display = 'block';
-  await CloudProducts.getAll();
-  renderAdminProducts().catch(console.error);
-  renderOrdersSection().catch(console.error);
   setupAdminEvents();
   setupOrderEvents();
   setupAccountingEvents();
   setupNav();
+  // Lanzar en paralelo sin bloquear — cada función muestra su propio loader
+  renderAdminProducts().catch(console.error);
+  renderOrdersSection().catch(console.error);
 }
 
 async function handleLogin(e) {
@@ -126,9 +126,8 @@ async function handleLogin(e) {
     return;
   }
 
-  // Pedir datos frescos del servidor para verificar app_metadata actualizado
-  const { data: { user: freshUser } } = await db.auth.getUser();
-  if (!isAdminUser(freshUser)) {
+  // signInWithPassword devuelve el user con app_metadata del servidor (siempre fresco)
+  if (!isAdminUser(loginData?.user)) {
     await db.auth.signOut();
     err.textContent = 'Esta cuenta no tiene permisos de administrador.';
     err.style.display = 'block';
