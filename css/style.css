@@ -318,6 +318,186 @@
   pointer-events: none;
 }
 
+/* ── FIESTAS PATRIAS ────────────────────────────────────── */
+.seasonal-art-patrias {
+  background:
+    radial-gradient(ellipse at  8% 55%, rgba(220,40,40,.30) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 20%, rgba(220,40,40,.22) 0%, transparent 40%),
+    radial-gradient(ellipse at 55% 85%, rgba(200,20,20,.18) 0%, transparent 50%),
+    linear-gradient(145deg, #160606 0%, #1a0a0a 50%, #0e1a0e 100%);
+  box-shadow: 0 2px 32px rgba(200,40,40,.20), inset 0 0 60px rgba(200,40,40,.06);
+}
+.seasonal-art-patrias::before {
+  content: '';
+  position: absolute; top: -50%; right: -10%; width: 50%; height: 200%;
+  background: linear-gradient(180deg, rgba(220,40,40,.08) 0%, transparent 100%);
+  transform: rotate(-10deg); pointer-events: none;
+}
+.seasonal-art-patrias::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='1' fill='rgba(255,255,255,.04)'/%3E%3C/svg%3E") repeat;
+  opacity: .3; pointer-events: none;
+}
+.seasonal-art-patrias .seasonal-hero-kicker { color: #f87171; }
+.seasonal-art-patrias .seasonal-hero-art {
+  background:
+    radial-gradient(circle at 38% 32%, rgba(255,255,255,.85) 0%, transparent 22%),
+    radial-gradient(circle at 65% 65%, rgba(220,40,40,.55)   0%, transparent 35%),
+    radial-gradient(circle at 20% 75%, rgba(255,255,255,.30) 0%, transparent 30%),
+    linear-gradient(145deg, #c82828 0%, #8b1a1a 55%, #1a2e1a 100%);
+  animation: seasonal-pulse-patrias 3.2s ease-in-out infinite;
+}
+@keyframes seasonal-pulse-patrias {
+  0%,100% { box-shadow: 0 0 32px rgba(200,40,40,.55), 0 0 12px rgba(255,80,80,.4), inset 0 1px 0 rgba(255,255,255,.22); }
+  50%      { box-shadow: 0 0 44px rgba(200,40,40,.75), 0 0 20px rgba(255,80,80,.55), inset 0 1px 0 rgba(255,255,255,.28); }
+}
+.seasonal-art-patrias .seasonal-hero-art::before {
+  content: ''; position: absolute; inset: 10px; border-radius: 13px;
+  border: 1px solid rgba(255,100,100,.45); pointer-events: none;
+}
+.seasonal-art-patrias .seasonal-hero-art::after {
+  content: ''; position: absolute; inset: 22px; border-radius: 9px;
+  border: 1px solid rgba(255,100,100,.22);
+  background: radial-gradient(circle at 42% 38%, rgba(255,200,200,.25) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+/* ── SAN VALENTÍN ───────────────────────────────────────── */
+.seasonal-art-valentin {
+  background:
+    radial-gradient(ellipse at  8% 55%, rgba(240,80,120,.30) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 20%, rgba(220,60,100,.22) 0%, transparent 40%),
+    radial-gradient(ellipse at 55% 85%, rgba(200,40,80,.18)  0%, transparent 50%),
+    linear-gradient(145deg, #190a10 0%, #1a0812 50%, #1a0a10 100%);
+  box-shadow: 0 2px 32px rgba(220,80,120,.20), inset 0 0 60px rgba(220,80,120,.06);
+}
+.seasonal-art-valentin::before {
+  content: '';
+  position: absolute; top: -50%; right: -10%; width: 50%; height: 200%;
+  background: linear-gradient(180deg, rgba(240,80,120,.08) 0%, transparent 100%);
+  transform: rotate(-10deg); pointer-events: none;
+}
+.seasonal-art-valentin::after {
+  content: ''; position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='1' fill='rgba(255,100,150,.05)'/%3E%3C/svg%3E") repeat;
+  opacity: .3; pointer-events: none;
+}
+.seasonal-art-valentin .seasonal-hero-kicker { color: #f9a8c9; }
+.seasonal-art-valentin .seasonal-hero-art {
+  background:
+    radial-gradient(circle at 38% 32%, rgba(255,255,255,.85) 0%, transparent 22%),
+    radial-gradient(circle at 65% 65%, rgba(240,80,120,.55)  0%, transparent 35%),
+    radial-gradient(circle at 20% 75%, rgba(255,180,200,.30) 0%, transparent 30%),
+    linear-gradient(145deg, #c82860 0%, #8b1a3c 55%, #1a0818 100%);
+  animation: seasonal-pulse-valentin 3s ease-in-out infinite;
+}
+@keyframes seasonal-pulse-valentin {
+  0%,100% { box-shadow: 0 0 32px rgba(220,80,120,.55), 0 0 12px rgba(255,120,160,.4), inset 0 1px 0 rgba(255,255,255,.22); }
+  50%      { box-shadow: 0 0 44px rgba(220,80,120,.75), 0 0 20px rgba(255,120,160,.55), inset 0 1px 0 rgba(255,255,255,.28); }
+}
+.seasonal-art-valentin .seasonal-hero-art::before {
+  content: ''; position: absolute; inset: 10px; border-radius: 13px;
+  border: 1px solid rgba(255,120,160,.45); pointer-events: none;
+}
+.seasonal-art-valentin .seasonal-hero-art::after {
+  content: ''; position: absolute; inset: 22px; border-radius: 9px;
+  border: 1px solid rgba(255,120,160,.22);
+  background: radial-gradient(circle at 42% 38%, rgba(255,200,220,.25) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+/* ── HALLOWEEN ──────────────────────────────────────────── */
+.seasonal-art-halloween {
+  background:
+    radial-gradient(ellipse at  8% 55%, rgba(220,100,20,.32) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 20%, rgba(120,40,160,.25) 0%, transparent 40%),
+    radial-gradient(ellipse at 55% 85%, rgba(200,80,10,.20)  0%, transparent 50%),
+    linear-gradient(145deg, #0e0808 0%, #120a18 50%, #0e0808 100%);
+  box-shadow: 0 2px 32px rgba(200,80,20,.22), inset 0 0 60px rgba(200,80,20,.06);
+}
+.seasonal-art-halloween::before {
+  content: '';
+  position: absolute; top: -50%; right: -10%; width: 50%; height: 200%;
+  background: linear-gradient(180deg, rgba(200,80,20,.08) 0%, transparent 100%);
+  transform: rotate(-10deg); pointer-events: none;
+}
+.seasonal-art-halloween::after {
+  content: ''; position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='1' fill='rgba(255,120,20,.04)'/%3E%3C/svg%3E") repeat;
+  opacity: .3; pointer-events: none;
+}
+.seasonal-art-halloween .seasonal-hero-kicker { color: #fb923c; }
+.seasonal-art-halloween .seasonal-hero-art {
+  background:
+    radial-gradient(circle at 38% 32%, rgba(255,200,150,.75) 0%, transparent 22%),
+    radial-gradient(circle at 65% 65%, rgba(200,80,20,.55)   0%, transparent 35%),
+    radial-gradient(circle at 20% 75%, rgba(120,40,160,.40)  0%, transparent 30%),
+    linear-gradient(145deg, #c85010 0%, #7a2e06 55%, #120a18 100%);
+  animation: seasonal-pulse-halloween 2.8s ease-in-out infinite;
+}
+@keyframes seasonal-pulse-halloween {
+  0%,100% { box-shadow: 0 0 32px rgba(200,80,20,.55), 0 0 12px rgba(120,40,160,.45), inset 0 1px 0 rgba(255,200,150,.22); }
+  50%      { box-shadow: 0 0 44px rgba(200,80,20,.75), 0 0 20px rgba(120,40,160,.60), inset 0 1px 0 rgba(255,200,150,.30); }
+}
+.seasonal-art-halloween .seasonal-hero-art::before {
+  content: ''; position: absolute; inset: 10px; border-radius: 13px;
+  border: 1px solid rgba(255,140,40,.45); pointer-events: none;
+}
+.seasonal-art-halloween .seasonal-hero-art::after {
+  content: ''; position: absolute; inset: 22px; border-radius: 9px;
+  border: 1px solid rgba(255,140,40,.22);
+  background: radial-gradient(circle at 42% 38%, rgba(255,200,150,.25) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+/* ── AÑO NUEVO ──────────────────────────────────────────── */
+.seasonal-art-anionuevo {
+  background:
+    radial-gradient(ellipse at  8% 55%, rgba(201,168,76,.30) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 20%, rgba(180,140,50,.22) 0%, transparent 40%),
+    radial-gradient(ellipse at 55% 85%, rgba(20,60,140,.25)  0%, transparent 50%),
+    linear-gradient(145deg, #080c18 0%, #0e1428 50%, #080c18 100%);
+  box-shadow: 0 2px 32px rgba(180,140,50,.20), inset 0 0 60px rgba(20,60,140,.08);
+}
+.seasonal-art-anionuevo::before {
+  content: '';
+  position: absolute; top: -50%; right: -10%; width: 50%; height: 200%;
+  background: linear-gradient(180deg, rgba(201,168,76,.08) 0%, transparent 100%);
+  transform: rotate(-10deg); pointer-events: none;
+}
+.seasonal-art-anionuevo::after {
+  content: ''; position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='1' fill='rgba(201,168,76,.06)'/%3E%3C/svg%3E") repeat;
+  opacity: .4; pointer-events: none;
+}
+.seasonal-art-anionuevo .seasonal-hero-kicker { color: #c9a84c; }
+.seasonal-art-anionuevo .seasonal-hero-art {
+  background:
+    radial-gradient(circle at 38% 32%, rgba(255,240,180,.85) 0%, transparent 22%),
+    radial-gradient(circle at 65% 65%, rgba(201,168,76,.55)  0%, transparent 35%),
+    radial-gradient(circle at 20% 75%, rgba(20,60,140,.40)   0%, transparent 30%),
+    linear-gradient(145deg, #c9a020 0%, #7a6010 55%, #080c20 100%);
+  animation: seasonal-pulse-anionuevo 3s ease-in-out infinite;
+}
+@keyframes seasonal-pulse-anionuevo {
+  0%,100% { box-shadow: 0 0 32px rgba(201,168,76,.55), 0 0 12px rgba(20,60,140,.45), inset 0 1px 0 rgba(255,240,180,.22); }
+  50%      { box-shadow: 0 0 48px rgba(201,168,76,.80), 0 0 22px rgba(20,60,140,.60), inset 0 1px 0 rgba(255,240,180,.32); }
+}
+.seasonal-art-anionuevo .seasonal-hero-art::before {
+  content: ''; position: absolute; inset: 10px; border-radius: 13px;
+  border: 1px solid rgba(201,168,76,.45); pointer-events: none;
+}
+.seasonal-art-anionuevo .seasonal-hero-art::after {
+  content: ''; position: absolute; inset: 22px; border-radius: 9px;
+  border: 1px solid rgba(201,168,76,.22);
+  background: radial-gradient(circle at 42% 38%, rgba(255,240,180,.25) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+/* ── Ícono en botón campaña ─────────────────────────────── */
+.cpn-icon { font-size: 1.4rem; display: block; margin-bottom: .25rem; line-height: 1; }
+
 @media (max-width: 700px) {
   .seasonal-hero-box {
     flex-direction: column;

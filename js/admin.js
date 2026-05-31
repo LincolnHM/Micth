@@ -2028,15 +2028,34 @@ function drawDailyChart(dailyStats, year, month) {
 
 // ─── Sección: Estadísticas completas ─────────────────────────────────────────
 
-async function renderStatsSection() {
+let _statsCache = null;
+let _statsCacheAt = 0;
+const STATS_TTL = 90000; // 90 s
+
+async function renderStatsSection(forceRefresh = false) {
   const container = document.getElementById('statsContent');
   if (!container) return;
-  container.innerHTML = '<p style="color:var(--text2);text-align:center;padding:2.5rem">Cargando estadísticas…</p>';
 
-  const [orders, products] = await Promise.all([
-    CloudOrders.getAll(),
-    CloudProducts.getAll()
-  ]);
+  const now = Date.now();
+  const useCache = !forceRefresh && _statsCache && (now - _statsCacheAt) < STATS_TTL;
+
+  if (!useCache) {
+    container.innerHTML = `
+      <div style="padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.6rem;margin-bottom:.8rem">
+        ${[1,2,3,4].map(() => `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.8rem;height:56px;animation:statsSkeleton 1.2s ease infinite alternate"></div>`).join('')}
+      </div>
+      <style>@keyframes statsSkeleton{from{opacity:.4}to{opacity:.9}}</style>
+      <p style="text-align:center;color:var(--text2);font-size:.8rem;padding:.5rem">Cargando datos…</p>`;
+  }
+
+  let orders, products;
+  if (useCache) {
+    ({ orders, products } = _statsCache);
+  } else {
+    [orders, products] = await Promise.all([CloudOrders.getAll(), CloudProducts.getAll()]);
+    _statsCache   = { orders, products };
+    _statsCacheAt = now;
+  }
 
   if (!orders.length) {
     container.innerHTML = '<p style="color:var(--text2);text-align:center;padding:2.5rem">Aún no hay pedidos registrados.</p>';
@@ -2156,78 +2175,118 @@ async function renderStatsSection() {
 
   container.innerHTML = `
     <style>
-      .stats-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:.65rem; padding:.9rem .9rem 0; }
-      .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:.9rem; padding:.9rem; }
-      .kpi-box    { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:.8rem 1rem; }
-      .kpi-v      { font-size:1.45rem; font-weight:700; color:var(--gold); font-family:'Playfair Display',serif; line-height:1.1; }
-      .kpi-l      { font-size:.68rem; color:var(--text2); margin-top:.2rem; }
-      @media(max-width:540px){ .stats-kpis{ grid-template-columns:1fr 1fr; } .stats-grid{ grid-template-columns:1fr; padding:.65rem; } }
+      .stats-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;padding:.75rem .75rem 0}
+      .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;padding:.75rem}
+      .stats-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;padding:0 .75rem .75rem}
+      .kpi-box{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.65rem .8rem}
+      .kpi-v{font-size:1.2rem;font-weight:700;color:var(--gold);font-family:'Playfair Display',serif;line-height:1.1}
+      .kpi-l{font-size:.65rem;color:var(--text2);margin-top:.15rem}
+      .stat-card-inner{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+      .stat-card-head{padding:.6rem .8rem;border-bottom:1px solid var(--border);font-size:.8rem;color:var(--gold);font-weight:600}
+      .stat-card-sub{font-size:.65rem;color:var(--text2);font-weight:400;margin-left:.3rem}
+      .stat-card-body{padding:.6rem .8rem}
+      @media(max-width:700px){
+        .stats-kpis{grid-template-columns:1fr 1fr}
+        .stats-grid{grid-template-columns:1fr}
+        .stats-grid-3{grid-template-columns:1fr}
+        .stats-kpis,.stats-grid,.stats-grid-3{padding:.5rem}
+      }
     </style>
 
-    <div class="stats-kpis">
-      <div class="kpi-box"><div class="kpi-v">${orders.length}</div><div class="kpi-l">Total pedidos</div></div>
-      <div class="kpi-box"><div class="kpi-v">S/ ${totalRevenue.toFixed(0)}</div><div class="kpi-l">Facturado (pagados)</div></div>
-      <div class="kpi-box"><div class="kpi-v">S/ ${avgTicket.toFixed(1)}</div><div class="kpi-l">Ticket promedio</div></div>
-      <div class="kpi-box"><div class="kpi-v">${discountCount}</div><div class="kpi-l">Usaron 10% descuento</div></div>
+    <!-- Cabecera con botón actualizar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .75rem .2rem">
+      <span style="font-size:.72rem;color:var(--text3)">Datos en caché · se actualiza cada 90s</span>
+      <button onclick="renderStatsSection(true)" style="font-size:.7rem;padding:.25rem .6rem;background:transparent;border:1px solid var(--border);border-radius:var(--r);color:var(--text2);cursor:pointer">↻ Actualizar</button>
     </div>
 
+    <!-- KPIs -->
+    <div class="stats-kpis">
+      <div class="kpi-box"><div class="kpi-v">${orders.length}</div><div class="kpi-l">Total pedidos</div></div>
+      <div class="kpi-box"><div class="kpi-v">S/${totalRevenue.toFixed(0)}</div><div class="kpi-l">Facturado</div></div>
+      <div class="kpi-box"><div class="kpi-v">S/${avgTicket.toFixed(1)}</div><div class="kpi-l">Ticket prom.</div></div>
+      <div class="kpi-box"><div class="kpi-v">${discountCount}</div><div class="kpi-l">Con descuento</div></div>
+    </div>
+
+    <!-- Fila principal: decants + clientes -->
     <div class="stats-grid">
+      <div class="stat-card-inner">
+        <div class="stat-card-head">🏆 Decants más pedidos<span class="stat-card-sub">por unidades</span></div>
+        <div class="stat-card-body" style="padding:0">
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr>
+              <th style="${th}">#</th><th style="${th}">Perfume</th>
+              <th style="${th};text-align:right">Uni.</th><th style="${th};text-align:right">S/</th>
+            </tr></thead>
+            <tbody>${topPerf.map((p,i) => `<tr>
+              <td style="${td};font-size:.85rem">${medal(i)}</td>
+              <td style="${td}"><strong style="font-size:.76rem;display:block">${sanitize(p.name)}</strong><small style="color:var(--text2);font-size:.68rem">${sanitize(p.brand)}</small></td>
+              <td style="${tdr};color:var(--gold);font-weight:700">${p.qty}</td>
+              <td style="${tdr}">S/${p.rev.toFixed(0)}</td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>
+      </div>
 
-      ${card('🏆 Decants más pedidos', 'Por unidades vendidas — todos los estados',
-        `<table style="width:100%;border-collapse:collapse">
-          <thead><tr><th style="${th}">#</th><th style="${th}">Perfume</th><th style="${th};text-align:right">Unid.</th><th style="${th};text-align:right">S/</th></tr></thead>
-          <tbody>${topPerf.map((p,i) => `<tr>
-            <td style="${td};font-size:.88rem">${medal(i)}</td>
-            <td style="${td}"><strong style="display:block;font-size:.78rem">${sanitize(p.name)}</strong><small style="color:var(--text2)">${sanitize(p.brand)}</small></td>
-            <td style="${tdr};color:var(--gold);font-weight:700">${p.qty}</td>
-            <td style="${tdr}">S/ ${p.rev.toFixed(0)}</td>
-          </tr>`).join('')}
-          </tbody>
-        </table>
-        <div style="margin-top:.6rem">${topPerf.map(p => bar(p.name, p.qty, maxPerf)).join('')}</div>`
-      )}
+      <div class="stat-card-inner">
+        <div class="stat-card-head">⭐ Mejores clientes<span class="stat-card-sub">por total gastado</span></div>
+        <div class="stat-card-body" style="padding:0">
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr>
+              <th style="${th}">#</th><th style="${th}">Cliente</th>
+              <th style="${th};text-align:right">Ped.</th><th style="${th};text-align:right">S/</th>
+            </tr></thead>
+            <tbody>${topClients.map((c,i) => `<tr>
+              <td style="${td};font-size:.85rem">${medal(i)}</td>
+              <td style="${td}"><strong style="font-size:.76rem;display:block">${sanitize(c.name)}</strong><small style="color:var(--text2);font-size:.68rem">DNI: ${sanitize(c.dni)}</small></td>
+              <td style="${tdr};color:var(--gold);font-weight:700">${c.orders}</td>
+              <td style="${tdr}">S/${c.total.toFixed(0)}</td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-      ${card('👥 Compras por género', 'Según el tipo de perfume pedido',
-        bar('👨 Para hombre', gQty.masculino, totalG, '#5b9cf6') +
-        bar('👩 Para mujer',  gQty.femenino,  totalG, '#f06292') +
-        bar('✨ Unisex',      gQty.unisex,    totalG, 'var(--gold)')
-      )}
+    <!-- Fila de 3: género, tipo, tamaños -->
+    <div class="stats-grid-3">
+      <div class="stat-card-inner">
+        <div class="stat-card-head">👥 Por género</div>
+        <div class="stat-card-body">
+          ${bar('👨 Hombre', gQty.masculino, totalG, '#5b9cf6')}
+          ${bar('👩 Mujer',  gQty.femenino,  totalG, '#f06292')}
+          ${bar('✨ Unisex', gQty.unisex,    totalG, 'var(--gold)')}
+        </div>
+      </div>
+      <div class="stat-card-inner">
+        <div class="stat-card-head">🧴 Tipo fragancia</div>
+        <div class="stat-card-body">
+          ${Object.entries(typeQty).sort((a,b)=>b[1]-a[1]).map(([t,v]) => {
+            const clr = { arabe:'#a78bfa', entero:'#34d399' };
+            return bar(t.charAt(0).toUpperCase()+t.slice(1), v, totalT, clr[t]||'var(--gold)');
+          }).join('')}
+        </div>
+      </div>
+      <div class="stat-card-inner">
+        <div class="stat-card-head">💧 Tamaño decant</div>
+        <div class="stat-card-body">
+          ${topSizes.map(([sz,v]) => bar(sz, v, maxSize)).join('') || '<p style="color:var(--text2);font-size:.78rem">Sin datos</p>'}
+        </div>
+      </div>
+    </div>
 
-      ${card('🧴 Por tipo de fragancia', 'Árabe · Diseñador · Entero',
-        Object.entries(typeQty).sort((a,b)=>b[1]-a[1]).map(([t,v]) => {
-          const colors = { arabe:'#a78bfa', entero:'#34d399' };
-          return bar(t.charAt(0).toUpperCase()+t.slice(1), v, totalT, colors[t]||'var(--gold)');
-        }).join('')
-      )}
-
-      ${card('💧 Tamaños más pedidos', 'Decant favorito de tus clientes',
-        topSizes.map(([sz, v]) => bar(sz, v, maxSize)).join('') ||
-        '<p style="color:var(--text2);font-size:.8rem">Sin datos</p>'
-      )}
-
-      ${card('🚚 Método de entrega', 'Recojo vs envío Shalom',
-        bar('🏪 Recojo en tienda', cRecojo, totalDel, 'var(--gold)') +
-        bar('📦 Envío Shalom',     cEnvio,  totalDel, '#60a5fa')
-      )}
-
-      ${card('📍 Departamentos con envíos', 'Dónde llegan más pedidos',
-        topDepts.length
-          ? topDepts.map(([d,v]) => bar(d, v, maxDept)).join('')
-          : '<p style="color:var(--text2);font-size:.8rem;text-align:center;padding:.4rem 0">Sin envíos registrados</p>'
-      )}
-
-      ${card('⭐ Mejores clientes', 'Por total gastado en la tienda',
-        `<table style="width:100%;border-collapse:collapse">
-          <thead><tr><th style="${th}">#</th><th style="${th}">Cliente</th><th style="${th};text-align:right">Ped.</th><th style="${th};text-align:right">Total</th></tr></thead>
-          <tbody>${topClients.map((c,i) => `<tr>
-            <td style="${td};font-size:.88rem">${medal(i)}</td>
-            <td style="${td}"><strong style="display:block;font-size:.78rem">${sanitize(c.name)}</strong><small style="color:var(--text2)">DNI: ${sanitize(c.dni)}</small></td>
-            <td style="${tdr};color:var(--gold);font-weight:700">${c.orders}</td>
-            <td style="${tdr}">S/ ${c.total.toFixed(0)}</td>
-          </tr>`).join('')}
-          </tbody>
-        </table>`
-      )}
-
+    <!-- Fila de 2: entrega + departamentos -->
+    <div class="stats-grid" style="padding-top:0">
+      <div class="stat-card-inner">
+        <div class="stat-card-head">🚚 Método de entrega</div>
+        <div class="stat-card-body">
+          ${bar('🏪 Recojo en tienda', cRecojo, totalDel, 'var(--gold)')}
+          ${bar('📦 Envío Shalom', cEnvio, totalDel, '#60a5fa')}
+        </div>
+      </div>
+      <div class="stat-card-inner">
+        <div class="stat-card-head">📍 Envíos por región</div>
+        <div class="stat-card-body">
+          ${topDepts.length ? topDepts.map(([d,v]) => bar(d,v,maxDept)).join('') : '<p style="color:var(--text2);font-size:.78rem;text-align:center">Sin envíos aún</p>'}
+        </div>
+      </div>
     </div>`;
 }
