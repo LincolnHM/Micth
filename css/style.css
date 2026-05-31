@@ -3402,7 +3402,6 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 }
 
 /* Columna Marca */
-.footer-brand {}
 .footer-logo {
   font-family: var(--font-serif);
   font-size: 1.5rem;
@@ -4977,3 +4976,216 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   .promo-banner-close { position: static; transform: none; margin-left: .25rem; }
   .promo-banner-text  { text-align: center; font-size: .78rem; }
 }
+
+/* ─── Dropdown menú de usuario (desktop) ─────────────────────────────────────── */
+.hud-wrapper {
+  position: relative;
+}
+.hud-trigger {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .3rem .6rem .3rem .45rem;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+  color: var(--text);
+  font-family: Inter, sans-serif;
+  font-size: .8rem;
+}
+.hud-trigger:hover,
+.hud-trigger[aria-expanded="true"] {
+  background: rgba(201,168,76,.1);
+  border-color: rgba(201,168,76,.35);
+}
+.hud-avatar {
+  width: 24px; height: 24px;
+  background: rgba(201,168,76,.15);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+.hud-name {
+  color: var(--text);
+  font-weight: 500;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hud-chevron {
+  color: var(--text2);
+  transition: transform .2s;
+  flex-shrink: 0;
+}
+.hud-trigger[aria-expanded="true"] .hud-chevron {
+  transform: rotate(180deg);
+}
+.hud-dropdown {
+  position: absolute;
+  top: calc(100% + .5rem);
+  right: 0;
+  min-width: 210px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: 0 8px 32px rgba(0,0,0,.45);
+  padding: .4rem;
+  z-index: 500;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity .18s ease, transform .18s ease;
+}
+.hud-dropdown.open {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+.hud-item {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  width: 100%;
+  padding: .55rem .75rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--r);
+  color: var(--text2);
+  font-size: .82rem;
+  font-family: Inter, sans-serif;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  text-align: left;
+}
+.hud-item:hover { background: rgba(255,255,255,.06); color: var(--text); }
+.hud-item svg  { flex-shrink: 0; color: var(--text3); }
+.hud-item:hover svg { color: var(--gold); }
+.hud-item-chevron {
+  margin-left: auto;
+  color: var(--text3);
+  transition: transform .2s;
+  flex-shrink: 0;
+}
+.hud-pass-toggle[aria-expanded="true"] .hud-item-chevron {
+  transform: rotate(180deg);
+}
+.hud-item-logout { color: #ef9090; }
+.hud-item-logout:hover { background: rgba(239,83,80,.1); color: #ef5350; }
+.hud-item-logout:hover svg { color: #ef5350; }
+.hud-divider {
+  height: 1px;
+  background: var(--border);
+  margin: .3rem .4rem;
+}
+/* Panel contraseña dentro del dropdown */
+.hud-pass-panel {
+  padding: .5rem .75rem .6rem;
+  display: none;
+}
+.hud-pass-panel.open { display: block; }
+.hud-pass-panel input {
+  width: 100%;
+  padding: .45rem .6rem;
+  margin-bottom: .4rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text);
+  font-size: .78rem;
+  font-family: Inter, sans-serif;
+  box-sizing: border-box;
+}
+.hud-pass-panel input::placeholder { color: var(--text3); }
+.hud-pass-panel input:focus { outline: none; border-color: var(--gold); }
+.hud-pass-err {
+  font-size: .72rem;
+  min-height: 1rem;
+  margin: 0 0 .35rem;
+  color: var(--red, #ef5350);
+}
+.hud-save-btn {
+  width: 100%;
+  padding: .4rem;
+  background: var(--gold);
+  color: #111;
+  border: none;
+  border-radius: var(--r);
+  font-size: .78rem;
+  font-weight: 700;
+  font-family: Inter, sans-serif;
+  cursor: pointer;
+  transition: background .15s;
+}
+.hud-save-btn:hover { background: #e0c050; }
+.hud-save-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Panel contraseña en móvil */
+.mob-pass-panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  padding: .5rem 0;
+}
+.mob-pass-panel input {
+  padding: .55rem .75rem;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text);
+  font-size: .85rem;
+  font-family: Inter, sans-serif;
+  width: 100%;
+  box-sizing: border-box;
+}
+.mob-pass-panel input::placeholder { color: var(--text3); }
+.mob-btn-secondary {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+}
+
+/* ─── Historial de compras — estado vacío mejorado ────────────────────────── */
+.history-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  gap: .75rem;
+}
+.history-empty-icon {
+  font-size: 2.8rem;
+  opacity: .5;
+}
+.history-empty-title {
+  font-size: 1rem;
+  color: var(--text);
+  font-family: 'Playfair Display', serif;
+  margin: 0;
+}
+.history-empty-sub {
+  font-size: .83rem;
+  color: var(--text2);
+  margin: 0;
+  line-height: 1.5;
+}
+.history-empty-cta {
+  margin-top: .5rem;
+  padding: .45rem 1.2rem;
+  background: var(--gold);
+  color: #111;
+  border: none;
+  border-radius: 20px;
+  font-size: .8rem;
+  font-weight: 700;
+  font-family: Inter, sans-serif;
+  cursor: pointer;
+  transition: background .15s;
+}
+.history-empty-cta:hover { background: #e0c050; }

@@ -80,42 +80,43 @@ const UserAuth = {
     this._updateHeaderUI();
   },
 
+  // ─── Helper: promesa con timeout ──────────────────────────────────────────
+  _withTimeout(promise, ms) {
+    return Promise.race([
+      promise,
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))
+    ]);
+  },
+
   // ─── Registro ──────────────────────────────────────────────────────────────
   async register({ nombre, dni, telefono, email, password }) {
     if (!authClient) return { error: 'Sin conexión al servidor. Intenta más tarde.' };
 
-    // Verificar DNI duplicado de forma segura (función SQL)
+    // Verificar DNI duplicado — con timeout para que no se cuelgue
     try {
-      const { data: exists, error: fnErr } = await authClient.rpc('check_dni_exists', { p_dni: dni.trim() });
+      const { data: exists, error: fnErr } = await this._withTimeout(
+        authClient.rpc('check_dni_exists', { p_dni: dni.trim() }), 6000
+      );
       if (!fnErr && exists) {
         return { error: 'Este DNI ya tiene una cuenta registrada. Inicia sesión.' };
       }
-    } catch (_) { /* La función puede no existir todavía — continuar */ }
+    } catch (_) { /* función no existe o timeout — continuar */ }
 
-    this._pendingProfile = {
-      nombre:   nombre.trim(),
-      dni:      dni.trim(),
-      telefono: telefono.trim()
-    };
-
-    this._isRegistering = true;
+    this._pendingProfile = { nombre: nombre.trim(), dni: dni.trim(), telefono: telefono.trim() };
+    this._isRegistering  = true;
 
     let data, error;
     try {
-      const _timeout = new Promise((_, rej) =>
-        setTimeout(() => rej(new Error('timeout')), 12000)
-      );
-      ({ data, error } = await Promise.race([
+      ({ data, error } = await this._withTimeout(
         authClient.auth.signUp({ email: email.trim().toLowerCase(), password }),
-        _timeout.then(() => { throw new Error('timeout'); })
-      ]));
+        12000
+      ));
     } catch (err) {
       this._pendingProfile = null;
       this._isRegistering  = false;
-      if (err.message === 'timeout') {
-        return { error: 'La conexión tardó demasiado. Verifica tu internet e inténtalo de nuevo.' };
-      }
-      return { error: 'Error de conexión. Inténtalo de nuevo.' };
+      return { error: err.message === 'timeout'
+        ? 'La conexión tardó demasiado. Verifica tu internet e inténtalo de nuevo.'
+        : 'Error de conexión. Inténtalo de nuevo.' };
     }
 
     if (error) {
@@ -125,7 +126,7 @@ const UserAuth = {
         return { error: 'Este correo ya tiene una cuenta. Inicia sesión.' };
       }
       if (error.message?.includes('disabled') || error.message?.includes('not enabled')) {
-        return { error: 'El registro está desactivado. Contacta al administrador.' };
+        return { error: 'El registro con correo no está activado. Contacta al administrador.' };
       }
       return { error: error.message || 'Error al registrar. Intenta de nuevo.' };
     }
@@ -134,11 +135,11 @@ const UserAuth = {
     const user = data?.session?.user || data?.user;
     if (user) {
       this._currentUser = user;
-      try { await this._insertProfile(user.id); } catch (_) {}
+      try { await this._withTimeout(this._insertProfile(user.id), 8000); } catch (_) {}
     }
 
     // Cerrar sesión para que el usuario inicie sesión manualmente
-    try { await authClient.auth.signOut(); } catch (_) {}
+    try { await this._withTimeout(authClient.auth.signOut(), 5000); } catch (_) {}
     this._isRegistering  = false;
     this._currentUser    = null;
     this._currentProfile = null;
@@ -276,7 +277,8 @@ const UserAuth = {
       el.loginBtn.style.display    = loggedIn ? 'none' : '';
       el.regBtn.style.display      = loggedIn ? 'none' : '';
       el.userDisplay.style.display = loggedIn ? 'flex' : 'none';
-      if (el.userName && firstName) el.userName.textContent = firstName;
+      const hudName = document.getElementById('headerUserName');
+      if (hudName && firstName) hudName.textContent = firstName;
     }
 
     // Descuento badge en header
@@ -362,7 +364,17 @@ async function openHistoryModal() {
   }
 
   if (!orders || !orders.length) {
-    content.innerHTML = '<p class="history-empty">Aún no tienes compras registradas.<br>¡Haz tu primer pedido!</p>';
+    content.innerHTML = `
+      <div class="history-empty-state">
+        <div class="history-empty-icon">🛍️</div>
+        <p class="history-empty-title">¡Ups! Aún no tienes compras</p>
+        <p class="history-empty-sub">Cuando hagas tu primer pedido,<br>aparecerá aquí tu historial.</p>
+        <button class="history-empty-cta" id="historyGoShopBtn">Ver catálogo</button>
+      </div>`;
+    document.getElementById('historyGoShopBtn')?.addEventListener('click', () => {
+      closeHistoryModal();
+      document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
+    });
     return;
   }
 
@@ -401,6 +413,41 @@ async function openHistoryModal() {
 function closeHistoryModal() {
   const overlay = document.getElementById('historyOverlay');
   if (overlay) overlay.style.display = 'none';
+}
+
+// ─── Cambio de contraseña ─────────────────────────────────────────────────────
+
+async function _handleChangePassword(newPass, newPass2, errEl, btn, onSuccess) {
+  if (!errEl || !btn) return;
+  errEl.style.color = '';
+  errEl.textContent = '';
+
+  if (!newPass || newPass.length < 8) {
+    errEl.textContent = 'La contraseña debe tener al menos 8 caracteres.'; return;
+  }
+  if (newPass !== newPass2) {
+    errEl.textContent = 'Las contraseñas no coinciden.'; return;
+  }
+  if (!authClient) {
+    errEl.textContent = 'Sin conexión. Inténtalo de nuevo.'; return;
+  }
+
+  btn.disabled    = true;
+  btn.textContent = 'Guardando…';
+
+  const { error } = await authClient.auth.updateUser({ password: newPass });
+
+  btn.disabled    = false;
+  btn.textContent = 'Guardar contraseña';
+
+  if (error) {
+    errEl.textContent = 'Error al cambiar. Inténtalo de nuevo.';
+  } else {
+    errEl.style.color = 'var(--gold)';
+    errEl.textContent = '¡Contraseña actualizada!';
+    showAuthToast('Contraseña cambiada correctamente.', 'success');
+    if (onSuccess) setTimeout(onSuccess, 1500);
+  }
 }
 
 // ─── Toast de notificación ────────────────────────────────────────────────────
@@ -600,69 +647,147 @@ const AuthModals = {
 document.addEventListener('DOMContentLoaded', async () => {
   await UserAuth.init();
 
-  // Botones del header — desktop
+  // ── Botones login/registro header desktop ────────────────────────────────
   document.getElementById('headerLoginBtn')?.addEventListener('click', () => AuthModals.openLogin());
   document.getElementById('headerRegisterBtn')?.addEventListener('click', () => AuthModals.openRegister());
+
+  // ── Dropdown del usuario (desktop) ───────────────────────────────────────
+  const hudTrigger  = document.getElementById('headerUserTrigger');
+  const hudDropdown = document.getElementById('headerUserDropdown');
+
+  function openHud() {
+    hudDropdown?.classList.add('open');
+    hudTrigger?.setAttribute('aria-expanded', 'true');
+  }
+  function closeHud() {
+    hudDropdown?.classList.remove('open');
+    hudTrigger?.setAttribute('aria-expanded', 'false');
+    // Cerrar también el panel de contraseña
+    document.getElementById('headerPassPanel')?.classList.remove('open');
+    document.getElementById('headerChangePassBtn')?.setAttribute('aria-expanded', 'false');
+  }
+
+  hudTrigger?.addEventListener('click', e => {
+    e.stopPropagation();
+    hudDropdown?.classList.contains('open') ? closeHud() : openHud();
+  });
+
+  // Cerrar al hacer clic fuera
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.hud-wrapper')) closeHud();
+  });
+
+  // Mis compras (desktop)
+  document.getElementById('headerHistoryBtn')?.addEventListener('click', () => {
+    closeHud();
+    openHistoryModal();
+  });
+
+  // Cambiar contraseña toggle (desktop)
+  document.getElementById('headerChangePassBtn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    const panel = document.getElementById('headerPassPanel');
+    const btn   = document.getElementById('headerChangePassBtn');
+    const open  = panel?.classList.toggle('open');
+    btn?.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) document.getElementById('hudNewPass')?.focus();
+  });
+
+  // Guardar contraseña (desktop)
+  document.getElementById('hudSavePassBtn')?.addEventListener('click', () =>
+    _handleChangePassword(
+      document.getElementById('hudNewPass')?.value,
+      document.getElementById('hudNewPass2')?.value,
+      document.getElementById('hudPassErr'),
+      document.getElementById('hudSavePassBtn'),
+      () => {
+        document.getElementById('hudNewPass').value  = '';
+        document.getElementById('hudNewPass2').value = '';
+        setTimeout(closeHud, 1800);
+      }
+    )
+  );
+
+  // Cerrar sesión (desktop)
   document.getElementById('headerLogoutBtn')?.addEventListener('click', async () => {
+    closeHud();
     await UserAuth.logout();
     showAuthToast('Sesión cerrada.', 'info');
   });
 
-  // Botones del menú móvil
-  document.getElementById('mobileLoginBtn')?.addEventListener('click', () => {
+  // ── Menú móvil ────────────────────────────────────────────────────────────
+  const closeMobileMenu = () => {
     document.getElementById('mobileMenu')?.classList.remove('open');
     document.body.style.overflow = '';
-    AuthModals.openLogin();
+  };
+
+  document.getElementById('mobileLoginBtn')?.addEventListener('click', () => {
+    closeMobileMenu(); AuthModals.openLogin();
   });
   document.getElementById('mobileRegisterBtn')?.addEventListener('click', () => {
-    document.getElementById('mobileMenu')?.classList.remove('open');
-    document.body.style.overflow = '';
-    AuthModals.openRegister();
+    closeMobileMenu(); AuthModals.openRegister();
   });
+
+  // Mis compras (móvil)
+  document.getElementById('mobileHistoryBtn')?.addEventListener('click', () => {
+    closeMobileMenu(); openHistoryModal();
+  });
+
+  // Cambiar contraseña (móvil)
+  document.getElementById('mobileChangePassBtn')?.addEventListener('click', () => {
+    const panel = document.getElementById('mobilePassPanel');
+    if (!panel) return;
+    const isOpen = panel.style.display !== 'none';
+    panel.style.display = isOpen ? 'none' : 'flex';
+    if (!isOpen) document.getElementById('mobNewPass')?.focus();
+  });
+
+  document.getElementById('mobSavePassBtn')?.addEventListener('click', () =>
+    _handleChangePassword(
+      document.getElementById('mobNewPass')?.value,
+      document.getElementById('mobNewPass2')?.value,
+      document.getElementById('mobPassErr'),
+      document.getElementById('mobSavePassBtn'),
+      () => {
+        document.getElementById('mobNewPass').value  = '';
+        document.getElementById('mobNewPass2').value = '';
+        document.getElementById('mobilePassPanel').style.display = 'none';
+      }
+    )
+  );
+
+  // Cerrar sesión (móvil)
   document.getElementById('mobileLogoutBtn')?.addEventListener('click', async () => {
-    document.getElementById('mobileMenu')?.classList.remove('open');
-    document.body.style.overflow = '';
+    closeMobileMenu();
     await UserAuth.logout();
     showAuthToast('Sesión cerrada.', 'info');
   });
 
-  // Cerrar overlay al hacer clic fuera del modal
+  // ── Modales auth ──────────────────────────────────────────────────────────
   document.getElementById('authModalOverlay')?.addEventListener('click', e => {
     if (e.target.id === 'authModalOverlay') AuthModals.closeAll();
   });
-
-  // Botones de cierre X en cada modal
   document.querySelectorAll('.auth-modal-close').forEach(btn =>
     btn.addEventListener('click', () => AuthModals.closeAll())
   );
-
-  // Formularios
   document.getElementById('authLoginForm')?.addEventListener('submit',    e => AuthModals.submitLogin(e));
   document.getElementById('authRegisterForm')?.addEventListener('submit', e => AuthModals.submitRegister(e));
-
-  // Switch entre login ↔ registro
   document.getElementById('authSwitchToRegister')?.addEventListener('click', () => AuthModals.openRegister());
   document.getElementById('authSwitchToLogin')?.addEventListener('click',    () => AuthModals.openLogin());
-
-  // Olvidé contraseña
   document.getElementById('authForgotLink')?.addEventListener('click', e => {
     e.preventDefault();
     AuthModals._switchForgot(true);
     setTimeout(() => document.getElementById('authForgotEmail')?.focus(), 100);
   });
   document.getElementById('authBackToLogin')?.addEventListener('click', e => {
-    e.preventDefault();
-    AuthModals._switchForgot(false);
+    e.preventDefault(); AuthModals._switchForgot(false);
   });
 
-  // Banner promocional
+  // ── Banner promocional ────────────────────────────────────────────────────
   document.getElementById('promoBannerCta')?.addEventListener('click', () => {
     const action = document.getElementById('promoBannerCta')?.dataset.action;
-    if (action === 'register') {
-      AuthModals.openRegister();
-    } else {
-      document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
-    }
+    if (action === 'register') AuthModals.openRegister();
+    else document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
   });
   document.getElementById('promoBannerClose')?.addEventListener('click', () => {
     sessionStorage.setItem('promoBannerDismissed', '1');
@@ -670,23 +795,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (banner) banner.style.display = 'none';
   });
 
-  // Historial de compras
-  document.getElementById('headerHistoryBtn')?.addEventListener('click', () => openHistoryModal());
-  document.getElementById('mobileHistoryBtn')?.addEventListener('click', () => {
-    document.getElementById('mobileMenu')?.classList.remove('open');
-    document.body.style.overflow = '';
-    openHistoryModal();
-  });
+  // ── Modal historial ───────────────────────────────────────────────────────
   document.getElementById('historyCloseBtn')?.addEventListener('click', closeHistoryModal);
   document.getElementById('historyOverlay')?.addEventListener('click', e => {
     if (e.target.id === 'historyOverlay') closeHistoryModal();
   });
 
-  // Toggle visibilidad de contraseñas
+  // ── Toggle contraseñas en formularios ─────────────────────────────────────
   document.querySelectorAll('.auth-toggle-pass').forEach(btn => {
     btn.addEventListener('click', () => {
-      const targetId = btn.dataset.target;
-      const input    = document.getElementById(targetId);
+      const input = document.getElementById(btn.dataset.target);
       if (!input) return;
       const isPass = input.type === 'password';
       input.type   = isPass ? 'text' : 'password';
