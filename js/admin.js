@@ -1,5 +1,13 @@
 // ─── Panel Administrador — MICHT Decants ─────────────────────────────────────
 
+// ─── Verificación de acceso admin ────────────────────────────────────────────
+// La lista de admins se gestiona en Supabase Dashboard → Authentication → Users
+// → clic en el usuario → editar "app_metadata" → agregar: {"role":"admin"}
+// Así no hay correos ni datos sensibles en el código ni en el repositorio.
+function isAdminUser(user) {
+  return user?.app_metadata?.role === 'admin';
+}
+
 let _adminProductSearch = '';
 let _adminProductTypeFilter = 'all';
 let _customerHistory = [];
@@ -14,13 +22,23 @@ const CAMPAIGN_LABELS = {
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!SUPABASE_READY) {
-    // Sin Supabase no hay acceso — evita la puerta trasera por sessionStorage
     showNoDbScreen();
     return;
   }
   const { data: { session } } = await db.auth.getSession();
-  if (session) { await showDashboard(); }
-  else { showLoginScreen(); }
+  if (session) {
+    if (!isAdminUser(session.user)) {
+      // Usuario normal que llegó aquí — bloquearlo inmediatamente
+      await db.auth.signOut();
+      showLoginScreen();
+      const err = document.getElementById('loginError');
+      if (err) { err.textContent = 'Acceso denegado. Esta cuenta no tiene permisos de administrador.'; err.style.display = 'block'; }
+    } else {
+      await showDashboard();
+    }
+  } else {
+    showLoginScreen();
+  }
 
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     await db.auth.signOut();
@@ -88,16 +106,25 @@ async function handleLogin(e) {
   const btn = e.target.querySelector('button[type=submit]');
   if (btn) { btn.disabled = true; btn.textContent = 'Verificando…'; }
 
-  const { error } = await db.auth.signInWithPassword({ email, password: pw });
+  const { data: loginData, error } = await db.auth.signInWithPassword({ email, password: pw });
 
   if (btn) { btn.disabled = false; btn.textContent = 'Entrar'; }
 
   if (error) {
     err.textContent = 'Correo o contraseña incorrectos.';
     err.style.display = 'block';
-  } else {
-    await showDashboard();
+    return;
   }
+
+  // Verificar que sea una cuenta admin (marcada en Supabase con role:"admin")
+  if (!isAdminUser(loginData?.user)) {
+    await db.auth.signOut();
+    err.textContent = 'Esta cuenta no tiene permisos de administrador.';
+    err.style.display = 'block';
+    return;
+  }
+
+  await showDashboard();
 }
 
 

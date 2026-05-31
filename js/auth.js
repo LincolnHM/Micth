@@ -100,16 +100,32 @@ const UserAuth = {
 
     this._isRegistering = true;
 
-    const { data, error } = await authClient.auth.signUp({
-      email:    email.trim().toLowerCase(),
-      password: password
-    });
+    let data, error;
+    try {
+      const _timeout = new Promise((_, rej) =>
+        setTimeout(() => rej(new Error('timeout')), 12000)
+      );
+      ({ data, error } = await Promise.race([
+        authClient.auth.signUp({ email: email.trim().toLowerCase(), password }),
+        _timeout.then(() => { throw new Error('timeout'); })
+      ]));
+    } catch (err) {
+      this._pendingProfile = null;
+      this._isRegistering  = false;
+      if (err.message === 'timeout') {
+        return { error: 'La conexión tardó demasiado. Verifica tu internet e inténtalo de nuevo.' };
+      }
+      return { error: 'Error de conexión. Inténtalo de nuevo.' };
+    }
 
     if (error) {
       this._pendingProfile = null;
       this._isRegistering  = false;
       if (error.message?.includes('already registered') || error.message?.includes('User already registered')) {
         return { error: 'Este correo ya tiene una cuenta. Inicia sesión.' };
+      }
+      if (error.message?.includes('disabled') || error.message?.includes('not enabled')) {
+        return { error: 'El registro está desactivado. Contacta al administrador.' };
       }
       return { error: error.message || 'Error al registrar. Intenta de nuevo.' };
     }
@@ -118,11 +134,11 @@ const UserAuth = {
     const user = data?.session?.user || data?.user;
     if (user) {
       this._currentUser = user;
-      await this._insertProfile(user.id);
+      try { await this._insertProfile(user.id); } catch (_) {}
     }
 
     // Cerrar sesión para que el usuario inicie sesión manualmente
-    await authClient.auth.signOut();
+    try { await authClient.auth.signOut(); } catch (_) {}
     this._isRegistering  = false;
     this._currentUser    = null;
     this._currentProfile = null;
@@ -532,8 +548,14 @@ const AuthModals = {
 
     btn.disabled = true;
     btn.textContent = 'Creando cuenta…';
+    errEl.textContent = '';
 
-    const result = await UserAuth.register({ nombre, dni, telefono, email, password: pass });
+    let result;
+    try {
+      result = await UserAuth.register({ nombre, dni, telefono, email, password: pass });
+    } catch (err) {
+      result = { error: 'Error de conexión. Verifica tu internet e inténtalo de nuevo.' };
+    }
 
     btn.disabled = false;
     btn.textContent = 'Crear Cuenta';
