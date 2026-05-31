@@ -605,6 +605,19 @@ async function renderOrdersSection() {
     // Una sola query a Supabase — se reutiliza para stats y tabla
     let orders = await withTimeout(CloudOrders.getAll(), 15000, 'los pedidos');
     await updateOrderStats(orders);
+
+    // Aviso si los datos vienen del caché local (Supabase no respondió)
+    const dbWarningId = 'supabase-orders-warning';
+    const existingWarn = document.getElementById(dbWarningId);
+    if (existingWarn) existingWarn.remove();
+    if (!CloudOrders._lastFetchFromSupabase) {
+      const warn = document.createElement('div');
+      warn.id = dbWarningId;
+      warn.style.cssText = 'background:rgba(255,165,0,.12);border:1px solid rgba(255,165,0,.4);border-radius:var(--r);padding:.6rem 1rem;margin-bottom:.75rem;font-size:.8rem;color:#ffb347;display:flex;align-items:center;gap:.5rem';
+      warn.innerHTML = '⚠ Mostrando pedidos guardados localmente — no se pudo conectar a Supabase. Revisa tu sesión o recarga la página.';
+      tbody.parentElement.insertBefore(warn, tbody.parentElement.firstChild);
+    }
+
     if (orderStatusFilter !== 'all') orders = orders.filter(o => o.status === orderStatusFilter);
 
     if (!orders.length) {

@@ -117,6 +117,8 @@ function generateOrderId() {
 
 const CloudOrders = {
 
+  _lastFetchFromSupabase: false,
+
   async getAll() {
     if (db) {
       const { data, error } = await db
@@ -124,7 +126,11 @@ const CloudOrders = {
         .select('*')
         .order('created_at', { ascending: false })
         .limit(500);
-      if (error) { console.error('Supabase error:', error?.code, error?.message); return this._localGetAll(); }
+      if (error) {
+        console.error('Supabase error:', error?.code, error?.message);
+        this._lastFetchFromSupabase = false;
+        return this._localGetAll();
+      }
       const supabaseOrders = data.map(orderFromDB);
       const localOrders    = Orders.getAll();
       // Construir mapa de status local para sincronización rápida
@@ -150,10 +156,12 @@ const CloudOrders = {
         ? localOrders.filter(o => !supabaseIds.has(o.id) && new Date(o.date).getTime() <= tenMinAgo)
         : [];
       if (zombies.length) Orders.save(localOrders.filter(o => !zombies.some(z => z.id === o.id)));
+      this._lastFetchFromSupabase = true;
       if (!pendingLocal.length) return mergedSupabase;
       return [...mergedSupabase, ...pendingLocal]
         .sort((a, b) => new Date(b.date) - new Date(a.date));
     }
+    this._lastFetchFromSupabase = false;
     return this._localGetAll();
   },
 
