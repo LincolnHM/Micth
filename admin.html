@@ -66,6 +66,7 @@
         <nav class="admin-nav">
           <button class="admin-nav-btn active" data-section="products">Perfumes</button>
           <button class="admin-nav-btn" data-section="orders">Pedidos</button>
+          <button class="admin-nav-btn" data-section="users">Usuarios</button>
           <button class="admin-nav-btn" data-section="accounting">Contabilidad</button>
           <button class="admin-nav-btn" data-section="stats">Estadísticas</button>
           <button class="admin-nav-btn" data-section="settings">Ajustes</button>
@@ -132,6 +133,14 @@
         <!-- Stats bar -->
         <div id="orderStatsBar" class="order-stats-bar"></div>
 
+        <!-- Buscador de pedidos -->
+        <div style="margin-bottom:.75rem">
+          <input type="text" id="orderSearch"
+                 placeholder="🔍  Buscar por nombre, teléfono o ID de pedido…"
+                 style="width:100%;max-width:420px;padding:.52rem .9rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;outline:none;box-sizing:border-box;transition:border-color .2s"
+                 onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+
         <!-- Filtros de estado -->
         <div class="order-filters">
           <button class="order-filter-btn active" data-status="all">Todos</button>
@@ -165,6 +174,59 @@
         </div>
       </div>
 
+
+      <!-- ── Sección: Usuarios Registrados ───────────────────────────────────── -->
+      <div class="admin-section" id="section-users">
+        <div class="admin-section-header">
+          <h2>Usuarios Registrados</h2>
+          <button class="btn-secondary" id="refreshUsersBtn"
+                  style="font-size:.78rem;padding:.42rem .9rem;background:transparent;border:1px solid rgba(201,168,76,.3);color:var(--gold);border-radius:var(--r);cursor:pointer;display:flex;align-items:center;gap:.35rem;transition:background .2s,border-color .2s"
+                  onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background='transparent'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Actualizar
+          </button>
+        </div>
+
+        <!-- Stats de usuarios -->
+        <div id="usersStatsBar" class="order-stats-bar" style="margin-bottom:1rem"></div>
+
+        <!-- SQL info (solo se muestra si falta la política) -->
+        <div id="usersSqlHint" style="display:none;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);border-radius:var(--r);padding:.8rem 1rem;margin-bottom:1rem;font-size:.82rem;color:var(--gold-d)">
+          <strong>Para ver todos los usuarios necesitas ejecutar este SQL en Supabase:</strong><br>
+          <pre style="margin:.5rem 0 0;font-size:.75rem;color:var(--text2);white-space:pre-wrap;background:rgba(0,0,0,.3);padding:.6rem .8rem;border-radius:6px;overflow-x:auto">DROP POLICY IF EXISTS "owner_select" ON perfiles_usuarios;
+CREATE POLICY "user_or_admin_select" ON perfiles_usuarios FOR SELECT TO authenticated
+  USING ( auth.uid() = id OR (auth.jwt() ->> 'app_metadata')::jsonb ->> 'role' = 'admin' );</pre>
+        </div>
+
+        <!-- Buscador -->
+        <div style="margin-bottom:1rem">
+          <input type="text" id="userSearch"
+                 placeholder="🔍  Buscar por nombre, DNI o teléfono…"
+                 style="width:100%;max-width:420px;padding:.52rem .9rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;outline:none;box-sizing:border-box;transition:border-color .2s"
+                 onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+
+        <!-- Tabla de usuarios -->
+        <div class="orders-table-wrap">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>DNI</th>
+                <th>Teléfono</th>
+                <th style="text-align:center">10% OFF</th>
+                <th>Registrado</th>
+                <th style="text-align:center">Pedidos</th>
+                <th style="text-align:right">Total gastado</th>
+                <th style="text-align:center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Haz clic en "Usuarios" para cargar.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <!-- ── Sección: Contabilidad ────────────────────────────────────────────── -->
       <div class="admin-section" id="section-accounting">

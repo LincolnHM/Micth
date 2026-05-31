@@ -11,6 +11,8 @@ function isAdminUser(user) {
 let _adminProductSearch = '';
 let _adminProductTypeFilter = 'all';
 let _customerHistory = [];
+let _orderSearch = '';
+let _userSearch  = '';
 
 const CAMPAIGN_LABELS = {
   'default':         'Diseño normal',
@@ -136,6 +138,7 @@ async function showDashboard() {
     _dashboardReady = true;
     setupAdminEvents();
     setupOrderEvents();
+    setupUsersEvents();
     setupAccountingEvents();
     setupNav();
   }
@@ -198,6 +201,7 @@ function setupNav() {
       if (btn.dataset.section === 'inventory')   renderInventorySection().catch(console.error);
       if (btn.dataset.section === 'orders')      renderOrdersSection().catch(console.error);
       if (btn.dataset.section === 'orders')      updateOrderStats().catch(console.error);
+      if (btn.dataset.section === 'users')       renderUsersSection().catch(console.error);
       if (btn.dataset.section === 'accounting')  renderAccountingSection().catch(console.error);
       if (btn.dataset.section === 'stats')       renderStatsSection().catch(console.error);
     });
@@ -623,9 +627,18 @@ async function renderOrdersSection() {
     tbody.parentElement.insertBefore(diagBox, tbody.parentElement.firstChild);
 
     if (orderStatusFilter !== 'all') orders = orders.filter(o => o.status === orderStatusFilter);
+    if (_orderSearch) {
+      const q = _orderSearch.toLowerCase();
+      orders = orders.filter(o =>
+        (o.customerName  || '').toLowerCase().includes(q) ||
+        (o.customerPhone || '').includes(q) ||
+        (o.customerDni   || '').includes(q) ||
+        o.id.toLowerCase().includes(q)
+      );
+    }
 
     if (!orders.length) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">No hay pedidos ${orderStatusFilter !== 'all' ? 'con ese estado' : 'registrados'}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">No hay pedidos ${_orderSearch ? 'que coincidan con la búsqueda' : orderStatusFilter !== 'all' ? 'con ese estado' : 'registrados'}</td></tr>`;
       return;
     }
 
@@ -851,6 +864,12 @@ async function openOrderDetail(id) {
 }
 
 function setupOrderEvents() {
+  // Buscador de pedidos
+  document.getElementById('orderSearch')?.addEventListener('input', function() {
+    _orderSearch = this.value.trim();
+    renderOrdersSection().catch(console.error);
+  });
+
   // Filtros de estado
   document.querySelectorAll('.order-filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1594,6 +1613,199 @@ function showToast(msg) {
 }
 
 function escapeAttr(str) { return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+
+// ─── Sección: Usuarios ───────────────────────────────────────────────────────
+
+async function renderUsersSection() {
+  const tbody = document.getElementById('usersTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Cargando usuarios…</td></tr>';
+
+  try {
+    if (!db) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Base de datos no disponible.</td></tr>';
+      return;
+    }
+
+    const [profilesRes, orders] = await Promise.all([
+      withTimeout(db.from('perfiles_usuarios').select('*').order('created_at', { ascending: false }), 15000, 'los usuarios'),
+      withTimeout(CloudOrders.getAll(), 15000, 'los pedidos de usuarios')
+    ]);
+
+    if (profilesRes.error) {
+      const hint = document.getElementById('usersSqlHint');
+      if (profilesRes.error.code === '42501' || profilesRes.error.code === '42P01' || String(profilesRes.error.message).includes('permission')) {
+        if (hint) hint.style.display = '';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Sin acceso — ejecuta el SQL de arriba para habilitar esta sección.</td></tr>';
+      } else {
+        if (hint) hint.style.display = 'none';
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Error: ${sanitize(profilesRes.error.message || 'desconocido')}</td></tr>`;
+      }
+      return;
+    }
+
+    document.getElementById('usersSqlHint')?.style && (document.getElementById('usersSqlHint').style.display = 'none');
+    const profiles = profilesRes.data || [];
+
+    // Mapa pedidos por DNI
+    const ordersByDni = {};
+    (orders || []).forEach(o => {
+      const dni = (o.customerDni || '').trim();
+      if (!dni) return;
+      if (!ordersByDni[dni]) ordersByDni[dni] = { count: 0, total: 0 };
+      ordersByDni[dni].count++;
+      if (o.status === 'pagado') ordersByDni[dni].total += (o.total || 0);
+    });
+
+    updateUsersStats(profiles, ordersByDni);
+
+    // Filtro búsqueda
+    let filtered = profiles;
+    if (_userSearch) {
+      const q = _userSearch.toLowerCase();
+      filtered = profiles.filter(p =>
+        (p.nombre_completo || '').toLowerCase().includes(q) ||
+        (p.dni || '').includes(q) ||
+        (p.telefono || '').includes(q)
+      );
+    }
+
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">${
+        profiles.length ? 'Ningún usuario coincide con la búsqueda.' : 'No hay usuarios registrados aún.'
+      }</td></tr>`;
+      return;
+    }
+
+    const td = 'padding:.5rem .7rem;font-size:.80rem;border-bottom:1px solid var(--border);vertical-align:middle';
+
+    tbody.innerHTML = filtered.map(p => {
+      const stats    = ordersByDni[(p.dni || '').trim()] || { count: 0, total: 0 };
+      const regDate  = new Date(p.created_at).toLocaleDateString('es-PE', { day:'2-digit', month:'2-digit', year:'2-digit' });
+      const discBadge = p.primer_descuento_usado
+        ? '<span style="font-size:.72rem;background:rgba(239,83,80,.12);color:#ef5350;padding:.15rem .55rem;border-radius:3px;white-space:nowrap">Usado</span>'
+        : '<span style="font-size:.72rem;background:rgba(76,175,80,.12);color:#4caf50;padding:.15rem .55rem;border-radius:3px;white-space:nowrap">Disponible</span>';
+
+      return `<tr>
+        <td style="${td}"><strong style="color:var(--text)">${sanitize(p.nombre_completo || '—')}</strong></td>
+        <td style="${td};font-family:monospace;color:var(--text2);letter-spacing:.04em">${sanitize(p.dni || '—')}</td>
+        <td style="${td}"><a href="https://wa.me/51${escapeAttr((p.telefono||'').replace(/\D/g,''))}" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none;transition:opacity .15s" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">📱 ${sanitize(p.telefono || '—')}</a></td>
+        <td style="${td};text-align:center">${discBadge}</td>
+        <td style="${td};color:var(--text2);font-size:.75rem;white-space:nowrap">${regDate}</td>
+        <td style="${td};text-align:center;color:${stats.count > 0 ? 'var(--gold)' : 'var(--text3)'}"><strong>${stats.count || '—'}</strong></td>
+        <td style="${td};text-align:right;font-weight:${stats.total > 0 ? '700' : '400'};color:${stats.total > 0 ? 'var(--green)' : 'var(--text3)'}">
+          ${stats.total > 0 ? `S/ ${stats.total.toFixed(2)}` : '—'}
+        </td>
+        <td style="${td};text-align:center">
+          <button class="btn-view-user-orders" data-dni="${escapeAttr(p.dni || '')}" data-name="${escapeAttr(p.nombre_completo || '')}"
+                  style="font-size:.72rem;padding:.3rem .65rem;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:var(--r);cursor:pointer;transition:all .15s;white-space:nowrap"
+                  onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
+                  onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">Ver pedidos</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    // Evento "Ver pedidos"
+    tbody.querySelectorAll('.btn-view-user-orders').forEach(btn => {
+      btn.addEventListener('click', () => openUserOrdersModal(btn.dataset.dni, btn.dataset.name));
+    });
+
+  } catch (err) {
+    console.error('[MICHT] Error cargando usuarios:', err);
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Error al cargar. Intenta de nuevo.</td></tr>';
+  }
+}
+
+function updateUsersStats(profiles, ordersByDni) {
+  const bar = document.getElementById('usersStatsBar');
+  if (!bar) return;
+  const total       = profiles.length;
+  const discAvail   = profiles.filter(p => !p.primer_descuento_usado).length;
+  const discUsed    = profiles.filter(p =>  p.primer_descuento_usado).length;
+  const conPedidos  = profiles.filter(p => (ordersByDni[(p.dni||'').trim()]?.count || 0) > 0).length;
+  bar.innerHTML = `
+    <div class="stat-card"><div class="stat-val" style="color:var(--gold)">${total}</div><div class="stat-label">Total usuarios</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:#4caf50">${discAvail}</div><div class="stat-label">Con 10% OFF</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--text2)">${discUsed}</div><div class="stat-label">Descuento usado</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:#60a5fa">${conPedidos}</div><div class="stat-label">Con pedidos</div></div>
+  `;
+}
+
+async function openUserOrdersModal(dni, name) {
+  if (!dni) { showToast('Este usuario no tiene DNI registrado.'); return; }
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;transition:opacity .22s ease';
+
+  overlay.innerHTML = `
+    <div style="background:#1a1a1a;border:1px solid var(--gold-d);border-radius:10px;padding:1.5rem;max-width:560px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.6);max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;gap:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem">
+        <h3 style="margin:0;color:var(--gold);font-family:'Playfair Display',serif;font-size:1rem">Pedidos de ${sanitize(name)}</h3>
+        <button id="closeUserOrdersModal" style="background:none;border:none;color:#888;font-size:1.3rem;cursor:pointer;line-height:1;padding:0 .2rem">✕</button>
+      </div>
+      <div id="userOrdersList" style="display:flex;flex-direction:column;gap:.5rem">
+        <p style="color:var(--text2);text-align:center;padding:1.5rem">Cargando…</p>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+
+  function closeModal() {
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.remove(), 240);
+  }
+  overlay.querySelector('#closeUserOrdersModal').addEventListener('click', closeModal);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+
+  try {
+    const allOrders = await withTimeout(CloudOrders.getAll(), 15000, 'los pedidos del usuario');
+    const userOrders = allOrders.filter(o => (o.customerDni || '').trim() === dni.trim());
+    const list = overlay.querySelector('#userOrdersList');
+
+    if (!userOrders.length) {
+      list.innerHTML = '<p style="color:var(--text2);text-align:center;padding:1.5rem">Este usuario no tiene pedidos registrados.</p>';
+      return;
+    }
+
+    const STATUS_LABELS = { pendiente: 'Pendiente', pagado: 'Pagado', cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado' };
+    list.innerHTML = userOrders.map(o => {
+      const date  = new Date(o.date).toLocaleString('es-PE', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
+      const items = (o.items || []).map(i => `${sanitize(i.productName)} ${sanitize(i.size)} ×${i.quantity}`).join(' · ');
+      const safeStatus = (o.status || '').replace(/[^a-z]/g, '');
+      return `
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.75rem 1rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.4rem">
+            <span class="order-id">${sanitize(o.id)}</span>
+            <span class="status-badge status-${safeStatus}">${STATUS_LABELS[o.status] || o.status}</span>
+            <span style="font-size:.73rem;color:var(--text3)">${date}</span>
+          </div>
+          <div style="font-size:.78rem;color:var(--text2);margin-bottom:.35rem">${items || '—'}</div>
+          <div style="display:flex;justify-content:space-between;font-size:.8rem">
+            <span style="color:var(--text3)">${o.deliveryType === 'envio' ? '📦 Shalom' : '🏪 Recojo'}</span>
+            <strong style="color:var(--gold)">S/ ${o.total.toFixed(2)}</strong>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (err) {
+    overlay.querySelector('#userOrdersList').innerHTML = '<p style="color:var(--text2);text-align:center">Error al cargar los pedidos.</p>';
+  }
+}
+
+function setupUsersEvents() {
+  document.getElementById('userSearch')?.addEventListener('input', function() {
+    _userSearch = this.value.trim();
+    renderUsersSection().catch(console.error);
+  });
+
+  document.getElementById('refreshUsersBtn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('refreshUsersBtn');
+    if (btn) { btn.disabled = true; btn.style.opacity = '.5'; }
+    await renderUsersSection().catch(console.error);
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    showToast('Usuarios actualizados ✓');
+  });
+}
 
 // ─── Sección: Contabilidad ────────────────────────────────────────────────────
 
