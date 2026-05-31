@@ -122,7 +122,8 @@ const CloudOrders = {
       const { data, error } = await db
         .from('pedidos')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(500);
       if (error) { console.error('Supabase error:', error?.code, error?.message); return this._localGetAll(); }
       const supabaseOrders = data.map(orderFromDB);
       const localOrders    = Orders.getAll();
@@ -144,9 +145,10 @@ const CloudOrders = {
         !supabaseIds.has(o.id) && new Date(o.date).getTime() > tenMinAgo
       );
       // Limpiar zombies del localStorage (órdenes que ya no están en Supabase y son antiguas)
-      const zombies = localOrders.filter(o =>
-        !supabaseIds.has(o.id) && new Date(o.date).getTime() <= tenMinAgo
-      );
+      // Solo limpiar si Supabase devolvió datos reales — evita borrar datos cuando hay error de auth/red
+      const zombies = supabaseOrders.length > 0
+        ? localOrders.filter(o => !supabaseIds.has(o.id) && new Date(o.date).getTime() <= tenMinAgo)
+        : [];
       if (zombies.length) Orders.save(localOrders.filter(o => !zombies.some(z => z.id === o.id)));
       if (!pendingLocal.length) return mergedSupabase;
       return [...mergedSupabase, ...pendingLocal]

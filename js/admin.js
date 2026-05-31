@@ -571,11 +571,18 @@ async function renderInventorySection() {
 
 let orderStatusFilter = 'all';
 
-async function updateOrderStats() {
+async function updateOrderStats(allOrders = null) {
   const bar = document.getElementById('orderStatsBar');
   if (!bar) return;
   try {
-    const stats = await withTimeout(CloudOrders.getStats(), 15000, 'las estadísticas de pedidos');
+    const all = allOrders || await withTimeout(CloudOrders.getAll(), 15000, 'las estadísticas de pedidos');
+    const stats = {
+      total:     all.length,
+      pendiente: all.filter(o => o.status === 'pendiente').length,
+      pagado:    all.filter(o => o.status === 'pagado').length,
+      cancelado: all.filter(o => o.status === 'cancelado').length,
+      revenue:   all.filter(o => o.status === 'pagado').reduce((s, o) => s + o.total, 0)
+    };
     bar.innerHTML = `
       <div class="stat-card"><div class="stat-val" style="color:var(--gold)">${stats.total}</div><div class="stat-label">Total</div></div>
       <div class="stat-card"><div class="stat-val" style="color:var(--orange)">${stats.pendiente}</div><div class="stat-label">Pendientes</div></div>
@@ -595,8 +602,9 @@ async function renderOrdersSection() {
   tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">Cargando pedidos…</td></tr>';
 
   try {
-    await updateOrderStats();
+    // Una sola query a Supabase — se reutiliza para stats y tabla
     let orders = await withTimeout(CloudOrders.getAll(), 15000, 'los pedidos');
+    await updateOrderStats(orders);
     if (orderStatusFilter !== 'all') orders = orders.filter(o => o.status === orderStatusFilter);
 
     if (!orders.length) {

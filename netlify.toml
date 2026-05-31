@@ -40,6 +40,22 @@
     Permissions-Policy         = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
     Content-Security-Policy    = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co https://michtdecants.com https://api.anthropic.com; frame-src https://maps.google.com https://www.google.com; frame-ancestors 'none';"
 
+# HTML principal — siempre fresco (sin caché)
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+[[headers]]
+  for = "/**/*.html"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
 # Caché larga para assets (CSS, JS, imágenes)
 [[headers]]
   for = "/css/*"
