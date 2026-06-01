@@ -1649,20 +1649,24 @@ async function exportCatalogPDF() {
     };
 
     // ── Render de sección: chunks de 6, orden Hombre → Mujer → Unisex → Marca → Nombre ──
-    const gOrd = { hombre: 0, mujer: 1, unisex: 2 };
-
     let _firstSection = true;
 
-    const renderSection = (title, icon, cards) => {
+    // mergeUnisex=true → unisex se muestra con hombre (Diseñador sin grupo Unisex separado)
+    const renderSection = (title, icon, cards, mergeUnisex = false) => {
       if (!cards.length) return '';
 
       const isFirst   = _firstSection;
       _firstSection   = false;
 
+      // Unisex en Diseñador va con Hombre (posición 0); en Árabes tiene su propio grupo (posición 2)
+      const gOrd = mergeUnisex
+        ? { hombre: 0, unisex: 0, mujer: 1 }
+        : { hombre: 0, mujer: 1, unisex: 2 };
+
       // Ordenar: género → marca → nombre (sin headers dentro del grid)
       const sorted = [...cards].sort((a, b) => {
-        const ga = gOrd[(a.gender||'unisex').toLowerCase()] ?? 2;
-        const gb = gOrd[(b.gender||'unisex').toLowerCase()] ?? 2;
+        const ga = gOrd[(a.gender||'unisex').toLowerCase()] ?? (mergeUnisex ? 0 : 2);
+        const gb = gOrd[(b.gender||'unisex').toLowerCase()] ?? (mergeUnisex ? 0 : 2);
         if (ga !== gb) return ga - gb;
         const bc = a.brand.localeCompare(b.brand, 'es');
         return bc !== 0 ? bc : a.name.localeCompare(b.name, 'es');
@@ -1723,7 +1727,7 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 .sec-count{margin-left:auto;font-size:7.5pt;font-weight:400;color:#aaa;text-transform:none;letter-spacing:0;font-family:sans-serif}
 
 /* Grid de 6 por página: 2 columnas × 3 filas de altura fija */
-.chunk-grid{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:83mm;gap:3.5mm}
+.chunk-grid{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:75mm;gap:3mm;page-break-inside:avoid}
 .break-after{page-break-after:always}
 .new-page{page-break-before:always}
 
@@ -1763,10 +1767,9 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
   .pbar{display:none!important}
   body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   @page{margin:1cm 1.2cm;size:A4 portrait}
-  .section{page-break-inside:auto}
-  .sec-title{page-break-after:avoid}
-  .card{page-break-inside:avoid}
-  .brand-hdr{page-break-after:avoid}
+  .wrap{padding:4px 14px 10px}
+  .sec-title{font-size:9pt;padding-bottom:3px;margin-bottom:4px}
+  .section{margin-bottom:6px}
 }
 </style>
 </head>
@@ -1788,7 +1791,7 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
     </div>
   </div>
 
-  ${renderSection('Diseñador', '💧', diseCards)}
+  ${renderSection('Diseñador', '💧', diseCards, true)}
   ${renderSection('Árabes', '🌙', arabeCards)}
   ${otrosCards.length ? renderSection('Otros', '✦', otrosCards) : ''}
   ${renderSection('Perfumes Enteros', '🛍', enteroCards)}
