@@ -1648,53 +1648,42 @@ async function exportCatalogPDF() {
       </div>`;
     };
 
-    // ── Render de sección: Género → Marca → Nombre (A-Z) ────────────────────
-    const sortByName = arr => [...arr].sort((a, b) => a.name.localeCompare(b.name, 'es'));
+    // ── Render de sección: chunks de 6, orden Hombre → Mujer → Unisex → Marca → Nombre ──
+    const gOrd = { hombre: 0, mujer: 1, unisex: 2 };
 
-    // Agrupa y renderiza un grupo de género (♂ / ♀ / ⚥) con sub-headers de marca
-    const renderGenderGroup = (gCards, gHdrLabel, gHdrColor) => {
-      if (!gCards.length) return '';
-
-      // Ordenar: marca → nombre
-      const sorted = [...gCards].sort((a, b) => {
-        const bc = a.brand.localeCompare(b.brand, 'es');
-        return bc !== 0 ? bc : a.name.localeCompare(b.name, 'es');
-      });
-
-      // Agrupar por marca
-      const byBrand = {};
-      sorted.forEach(c => {
-        const b = c.brand || '?';
-        if (!byBrand[b]) byBrand[b] = [];
-        byBrand[b].push(c);
-      });
-      const brands = Object.keys(byBrand).sort((a, b) => a.localeCompare(b, 'es'));
-
-      let html = `<div class="g-hdr" style="color:${gHdrColor};border-color:${gHdrColor}55">${gHdrLabel}</div>`;
-      brands.forEach((brand, bi) => {
-        html += `<div class="b-hdr${bi === 0 ? ' b-hdr-first' : ''}">${esc(brand.toUpperCase())}</div>`;
-        html += byBrand[brand].map(renderCard).join('');
-      });
-      return html;
-    };
+    let _firstSection = true;
 
     const renderSection = (title, icon, cards) => {
       if (!cards.length) return '';
 
-      const hombre = cards.filter(c => (c.gender||'unisex').toLowerCase() === 'hombre');
-      const mujer  = cards.filter(c => (c.gender||'unisex').toLowerCase() === 'mujer');
-      const unisex = cards.filter(c => !['hombre','mujer'].includes((c.gender||'unisex').toLowerCase()));
+      const isFirst   = _firstSection;
+      _firstSection   = false;
 
-      const inner =
-        renderGenderGroup(hombre, '♂ Para Hombre', '#1d4ed8') +
-        renderGenderGroup(mujer,  '♀ Para Mujer',  '#be185d') +
-        renderGenderGroup(unisex, '⚥ Unisex',      '#6d28d9');
+      // Ordenar: género → marca → nombre (sin headers dentro del grid)
+      const sorted = [...cards].sort((a, b) => {
+        const ga = gOrd[(a.gender||'unisex').toLowerCase()] ?? 2;
+        const gb = gOrd[(b.gender||'unisex').toLowerCase()] ?? 2;
+        if (ga !== gb) return ga - gb;
+        const bc = a.brand.localeCompare(b.brand, 'es');
+        return bc !== 0 ? bc : a.name.localeCompare(b.name, 'es');
+      });
 
-      return `
-      <div class="section">
-        <div class="sec-title"><span>${icon}</span> ${title}<span class="sec-count">${cards.length} fragancia${cards.length !== 1 ? 's' : ''}</span></div>
-        <div class="grid">${inner}</div>
-      </div>`;
+      // Partir en grupos de 6
+      const chunks = [];
+      for (let i = 0; i < sorted.length; i += 6) chunks.push(sorted.slice(i, i + 6));
+
+      let html = `<div class="section${isFirst ? '' : ' new-page'}">`;
+      html += `<div class="sec-title"><span>${icon}</span> ${title}<span class="sec-count">${cards.length} fragancia${cards.length !== 1 ? 's' : ''}</span></div>`;
+
+      chunks.forEach((chunk, ci) => {
+        const breakAfter = ci < chunks.length - 1;
+        html += `<div class="chunk-grid${breakAfter ? ' break-after' : ''}">`;
+        html += chunk.map(renderCard).join('');
+        html += '</div>';
+      });
+
+      html += '</div>';
+      return html;
     };
 
     const totalAll  = all.length;
@@ -1733,17 +1722,13 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 .sec-title{display:flex;align-items:center;gap:8px;font-size:10.5pt;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1a1005;border-bottom:1.5px solid #c9a84c;padding-bottom:5px;margin-bottom:10px}
 .sec-count{margin-left:auto;font-size:7.5pt;font-weight:400;color:#aaa;text-transform:none;letter-spacing:0;font-family:sans-serif}
 
-/* Grid */
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-/* Sub-header género */
-.g-hdr{grid-column:1/-1;font-size:8.5pt;letter-spacing:1.5px;text-transform:uppercase;font-family:sans-serif;font-weight:700;padding:7px 8px 3px;border-top:2px solid;margin-top:4px}
-.g-hdr:first-child{border-top:none;padding-top:2px;margin-top:0}
-/* Sub-header marca dentro de género */
-.b-hdr{grid-column:1/-1;font-size:6.5pt;letter-spacing:2px;text-transform:uppercase;color:#b08a30;font-family:sans-serif;font-weight:700;padding:4px 6px 2px;border-top:1px dotted #e0d5b0;margin-top:2px}
-.b-hdr-first{border-top:none;padding-top:0;margin-top:0}
+/* Grid de 6 por página: 2 columnas × 3 filas de altura fija */
+.chunk-grid{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:83mm;gap:3.5mm}
+.break-after{page-break-after:always}
+.new-page{page-break-before:always}
 
-/* Tarjeta */
-.card{border:1px solid #e8dfc8;border-radius:8px;padding:10px 13px;page-break-inside:avoid;background:#fffef9}
+/* Tarjeta — altura fija por grid-auto-rows, overflow recortado */
+.card{border:1px solid #e8dfc8;border-radius:8px;padding:10px 13px;background:#fffef9;overflow:hidden;display:flex;flex-direction:column}
 
 .c-head{display:flex;gap:9px;margin-bottom:8px}
 .c-img-wrap{flex-shrink:0;width:96px;height:96px}
@@ -1803,10 +1788,10 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
     </div>
   </div>
 
-  ${renderSection('Perfumes Enteros', '🛍', enteroCards)}
   ${renderSection('Diseñador', '💧', diseCards)}
   ${renderSection('Árabes', '🌙', arabeCards)}
   ${otrosCards.length ? renderSection('Otros', '✦', otrosCards) : ''}
+  ${renderSection('Perfumes Enteros', '🛍', enteroCards)}
 
   <div class="df">
     <b>MICHT Decants</b> &nbsp;·&nbsp; WhatsApp 917 452 643 &nbsp;·&nbsp; Catálogo generado el ${date}<br>
