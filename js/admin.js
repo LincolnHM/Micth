@@ -1729,21 +1729,21 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 .meta b{color:#c9a84c}
 
 /* Sección */
-.section{margin-bottom:24px}
+.section{margin-bottom:14px}
 .sec-title{display:flex;align-items:center;gap:8px;font-size:10.5pt;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1a1005;border-bottom:1.5px solid #c9a84c;padding-bottom:5px;margin-bottom:10px}
 .sec-count{margin-left:auto;font-size:7.5pt;font-weight:400;color:#aaa;text-transform:none;letter-spacing:0;font-family:sans-serif}
 
 /* Grid */
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 /* Sub-header género */
-.g-hdr{grid-column:1/-1;font-size:8.5pt;letter-spacing:1.5px;text-transform:uppercase;font-family:sans-serif;font-weight:700;padding:11px 10px 5px;border-top:2px solid;margin-top:8px}
-.g-hdr:first-child{border-top:none;padding-top:4px;margin-top:0}
+.g-hdr{grid-column:1/-1;font-size:8.5pt;letter-spacing:1.5px;text-transform:uppercase;font-family:sans-serif;font-weight:700;padding:7px 8px 3px;border-top:2px solid;margin-top:4px}
+.g-hdr:first-child{border-top:none;padding-top:2px;margin-top:0}
 /* Sub-header marca dentro de género */
-.b-hdr{grid-column:1/-1;font-size:6.5pt;letter-spacing:2px;text-transform:uppercase;color:#b08a30;font-family:sans-serif;font-weight:700;padding:6px 8px 3px;border-top:1px dotted #e0d5b0;margin-top:4px}
+.b-hdr{grid-column:1/-1;font-size:6.5pt;letter-spacing:2px;text-transform:uppercase;color:#b08a30;font-family:sans-serif;font-weight:700;padding:4px 6px 2px;border-top:1px dotted #e0d5b0;margin-top:2px}
 .b-hdr-first{border-top:none;padding-top:0;margin-top:0}
 
 /* Tarjeta */
-.card{border:1px solid #e8dfc8;border-radius:8px;padding:14px 15px;page-break-inside:avoid;background:#fffef9}
+.card{border:1px solid #e8dfc8;border-radius:8px;padding:10px 13px;page-break-inside:avoid;background:#fffef9}
 
 .c-head{display:flex;gap:9px;margin-bottom:8px}
 .c-img-wrap{flex-shrink:0;width:96px;height:96px}
@@ -1751,21 +1751,21 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 .c-img-ph{width:96px;height:96px;background:#f5eed8;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:26pt;color:#c9a84c;font-weight:900;font-family:serif}
 .c-info{flex:1;min-width:0}
 .c-brand{font-size:8pt;letter-spacing:1.5px;text-transform:uppercase;color:#c9a84c;font-weight:700;font-family:sans-serif}
-.c-name{font-size:13.5pt;font-weight:700;color:#1a1005;line-height:1.2;margin:2px 0 6px}
+.c-name{font-size:13.5pt;font-weight:700;color:#1a1005;line-height:1.2;margin:1px 0 4px}
 .c-badges{display:flex;flex-wrap:wrap;gap:4px}
 .badge{font-size:8pt;padding:2.5px 8px;border-radius:20px;font-family:sans-serif;font-weight:600;white-space:nowrap}
 .b-occ{background:#f5f0e4;color:#7a5f20;border:1px solid #d6c88a}
 .b-olf{background:#f4f4f4;color:#777;border:1px solid #e0e0e0;font-style:italic;font-weight:400}
 
 /* Precios */
-.c-prices{display:grid;grid-template-columns:1fr 1fr;gap:8px;border-top:1px solid #f0ebe0;padding-top:9px;margin-top:4px}
+.c-prices{display:grid;grid-template-columns:1fr 1fr;gap:6px;border-top:1px solid #f0ebe0;padding-top:6px;margin-top:3px}
 .pr-col{}
 .pr-lbl{font-size:7.5pt;text-transform:uppercase;letter-spacing:1.2px;color:#aaa;font-family:sans-serif;font-weight:700;margin-bottom:4px}
 .pt{width:100%;border-collapse:collapse;font-family:sans-serif}
 .pt tr{border-top:1px solid #f5f0ea}
 .pt tr:first-child{border-top:none}
-.td-s{color:#888;font-size:9.5pt;padding:3px 0}
-.td-p{text-align:right;font-weight:700;font-size:10.5pt;color:#1a1005;padding:3px 0}
+.td-s{color:#888;font-size:9.5pt;padding:2px 0}
+.td-p{text-align:right;font-weight:700;font-size:10.5pt;color:#1a1005;padding:2px 0}
 .blank-price{font-size:10pt;color:#888;font-family:sans-serif;margin-top:3px}
 .blank-line{color:#bbb;letter-spacing:1px}
 
