@@ -1517,17 +1517,26 @@ async function exportCatalogPDF() {
 
   try {
     const all  = await CloudProducts.getAll();
+    // Aplicar imagen map manualmente por si no se aplicó en Supabase
+    const imgMap = typeof PRODUCT_IMAGE_MAP !== 'undefined' ? PRODUCT_IMAGE_MAP : {};
+    all.forEach(p => {
+      if (!p.imageUrl && imgMap[p.name]) p.imageUrl = imgMap[p.name];
+      if (imgMap[p.name]) p.imageUrl = imgMap[p.name]; // siempre priorizar el mapa
+    });
+
     const base = window.location.origin;
     const date = new Date().toLocaleDateString('es-PE', { day:'2-digit', month:'long', year:'numeric' });
 
     // ── Helpers ──────────────────────────────────────────────────────────────
     const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
+    // Resuelve URL de imagen: admite data URIs (incluyendo SVG), http y rutas relativas con espacios
     const resolveImg = url => {
-      if (!url || url.startsWith('data:svg') || url === '') return '';
-      if (url.startsWith('data:')) return url;
-      if (url.startsWith('http'))  return url;
-      return base + (url.startsWith('/') ? url : '/' + url);
+      if (!url || url.trim() === '') return '';
+      if (url.startsWith('data:')) return url;           // SVG generado o base64 — usar directo
+      if (url.startsWith('http'))  return encodeURI(url); // URL externa
+      const path = url.startsWith('/') ? url : '/' + url;
+      return encodeURI(base + path);                     // ruta relativa → absoluta (encodes espacios)
     };
 
     const gLabel = g => ({ hombre:'Hombre', mujer:'Mujer', unisex:'Unisex' }[g] || 'Unisex');
@@ -1541,16 +1550,16 @@ async function exportCatalogPDF() {
     const decantProds = all.filter(p => p.type !== 'entero');
 
     const normKey = p => (p.brand + '@@' + p.name).toLowerCase().trim();
-    const enteroMap = {};
-    enteroProds.forEach(e => { enteroMap[normKey(e)] = e; });
+    const enteroByKey = {};
+    enteroProds.forEach(e => { enteroByKey[normKey(e)] = e; });
 
     const usedEnteroKeys = new Set();
     const mergedCards    = [];
 
     decantProds.forEach(d => {
-      const key            = normKey(d);
-      const matchedEntero  = enteroMap[key];
-      let   enteroInfo     = null;
+      const key           = normKey(d);
+      const matchedEntero = enteroByKey[key];
+      let   enteroInfo    = null;
 
       if (matchedEntero && !usedEnteroKeys.has(key)) {
         usedEnteroKeys.add(key);
@@ -1565,28 +1574,24 @@ async function exportCatalogPDF() {
     // Enteros sin decant coincidente → sección propia
     const standaloneEnteros = enteroProds.filter(e => !usedEnteroKeys.has(normKey(e)));
 
-    // ── Separar por tipo y ordenar por marca → nombre ─────────────────────────
-    const byBrand = arr =>
-      [...arr].sort((a, b) =>
-        (a.brand + '@@' + a.name).localeCompare(b.brand + '@@' + b.name, 'es')
-      );
-
-    const diseCards   = byBrand(mergedCards.filter(p => p.type === 'diseñador'));
-    const arabeCards  = byBrand(mergedCards.filter(p => p.type === 'arabe'));
-    const enteroCards = byBrand(standaloneEnteros);
+    // ── Separar secciones ─────────────────────────────────────────────────────
+    const diseCards   = mergedCards.filter(p => p.type === 'diseñador');
+    const arabeCards  = mergedCards.filter(p => p.type === 'arabe');
+    // Productos con tipo inesperado → mostrarlos igualmente en "Otros"
+    const otrosCards  = mergedCards.filter(p => p.type !== 'diseñador' && p.type !== 'arabe');
+    const enteroCards = standaloneEnteros;
 
     // ── Render de tarjeta ─────────────────────────────────────────────────────
     const renderCard = c => {
       const isEnteroOnly = !c._decantSizes;
-      const g     = (c.gender   || 'unisex').toLowerCase();
-      const o     = (c.occasion || 'ambas').toLowerCase();
-      const gc    = gColor(g);
-      const img   = resolveImg(c.imageUrl);
+      const g   = (c.gender   || 'unisex').toLowerCase();
+      const o   = (c.occasion || 'ambas').toLowerCase();
+      const gc  = gColor(g);
+      const img = resolveImg(c.imageUrl);
       const agotado = !c.inStock && !(c._enteroInfo?.inStock);
 
-      // Imagen o inicial de marca
       const imgHtml = img
-        ? `<img class="c-img" src="${esc(img)}" alt="${esc(c.name)}"
+        ? `<img class="c-img" src="${esc(img)}" alt="${esc(c.name)}" loading="lazy"
                onerror="this.style.display='none';this.nextSibling.style.display='flex'"
              ><div class="c-img-ph" style="display:none">${esc((c.brand||'?').charAt(0))}</div>`
         : `<div class="c-img-ph">${esc((c.brand||'?').charAt(0))}</div>`;
@@ -1597,42 +1602,25 @@ async function exportCatalogPDF() {
         const rows = Object.entries(c._decantSizes).map(([ml, pr]) =>
           `<tr><td class="td-s">${esc(ml)}</td><td class="td-p">${pr > 0 ? 'S/ ' + parseFloat(pr).toFixed(2) : '—'}</td></tr>`
         ).join('');
-        decantHtml = `
-          <div class="pr-col">
-            <div class="pr-lbl">Decant</div>
-            <table class="pt"><tbody>${rows}</tbody></table>
-          </div>`;
+        decantHtml = `<div class="pr-col"><div class="pr-lbl">Decant</div><table class="pt"><tbody>${rows}</tbody></table></div>`;
       }
 
-      // Precios entero
+      // Precios entero (o espacio para llenar)
       let enteroHtml = '';
       if (!isEnteroOnly) {
         if (c._enteroInfo) {
           const rows = Object.entries(c._enteroInfo.sizes).map(([sz, pr]) =>
             `<tr><td class="td-s">${esc(sz)}</td><td class="td-p">${pr > 0 ? 'S/ ' + parseFloat(pr).toFixed(2) : '—'}</td></tr>`
           ).join('');
-          enteroHtml = `
-            <div class="pr-col">
-              <div class="pr-lbl">Entero</div>
-              <table class="pt"><tbody>${rows}</tbody></table>
-            </div>`;
+          enteroHtml = `<div class="pr-col"><div class="pr-lbl">Entero</div><table class="pt"><tbody>${rows}</tbody></table></div>`;
         } else {
-          enteroHtml = `
-            <div class="pr-col">
-              <div class="pr-lbl">Entero</div>
-              <div class="blank-price">S/&nbsp;<span class="blank-line">____________</span></div>
-            </div>`;
+          enteroHtml = `<div class="pr-col"><div class="pr-lbl">Entero</div><div class="blank-price">S/&nbsp;<span class="blank-line">___________</span></div></div>`;
         }
       } else {
-        // Solo entero
         const rows = Object.entries(c.sizes || {}).map(([sz, pr]) =>
           `<tr><td class="td-s">${esc(sz)}</td><td class="td-p">${pr > 0 ? 'S/ ' + parseFloat(pr).toFixed(2) : '—'}</td></tr>`
         ).join('');
-        enteroHtml = `
-          <div class="pr-col" style="grid-column:1/-1">
-            <div class="pr-lbl">Precio</div>
-            <table class="pt"><tbody>${rows}</tbody></table>
-          </div>`;
+        enteroHtml = `<div class="pr-col" style="grid-column:1/-1"><div class="pr-lbl">Precio</div><table class="pt"><tbody>${rows}</tbody></table></div>`;
       }
 
       return `
@@ -1654,37 +1642,39 @@ async function exportCatalogPDF() {
       </div>`;
     };
 
-    // ── Render de sección con agrupación por marca ────────────────────────────
+    // ── Render de sección con sub-grupos por género (ordenado por nombre A-Z) ─
+    const sortByName = arr => [...arr].sort((a, b) => a.name.localeCompare(b.name, 'es'));
+
     const renderSection = (title, icon, cards) => {
       if (!cards.length) return '';
 
-      const byBrandMap = {};
-      cards.forEach(c => {
-        const b = c.brand || '?';
-        if (!byBrandMap[b]) byBrandMap[b] = [];
-        byBrandMap[b].push(c);
-      });
-      const brands = Object.keys(byBrandMap).sort((a, b) => a.localeCompare(b, 'es'));
+      const hombre = sortByName(cards.filter(c => (c.gender||'unisex').toLowerCase() === 'hombre'));
+      const mujer  = sortByName(cards.filter(c => (c.gender||'unisex').toLowerCase() === 'mujer'));
+      const unisex = sortByName(cards.filter(c => !['hombre','mujer'].includes((c.gender||'unisex').toLowerCase())));
 
       let inner = '';
-      brands.forEach(brand => {
-        const brandCards = byBrandMap[brand].sort((a,b) => a.name.localeCompare(b.name, 'es'));
-        inner += `<div class="brand-hdr" data-brand="${esc(brand)}">${esc(brand.toUpperCase())}</div>`;
-        inner += brandCards.map(renderCard).join('');
-      });
+      if (hombre.length) {
+        inner += `<div class="g-hdr" style="color:#1d4ed8;border-color:#1d4ed844">♂ Para Hombre</div>`;
+        inner += hombre.map(renderCard).join('');
+      }
+      if (mujer.length) {
+        inner += `<div class="g-hdr" style="color:#be185d;border-color:#be185d44">♀ Para Mujer</div>`;
+        inner += mujer.map(renderCard).join('');
+      }
+      if (unisex.length) {
+        inner += `<div class="g-hdr" style="color:#6d28d9;border-color:#6d28d944">⚥ Unisex</div>`;
+        inner += unisex.map(renderCard).join('');
+      }
 
       return `
       <div class="section">
-        <div class="sec-title">
-          <span>${icon}</span> ${title}
-          <span class="sec-count">${cards.length} fragancia${cards.length !== 1 ? 's' : ''}</span>
-        </div>
+        <div class="sec-title"><span>${icon}</span> ${title}<span class="sec-count">${cards.length} fragancia${cards.length !== 1 ? 's' : ''}</span></div>
         <div class="grid">${inner}</div>
       </div>`;
     };
 
-    const totalAll   = all.length;
-    const totalDisp  = all.filter(p => p.inStock).length;
+    const totalAll  = all.length;
+    const totalDisp = all.filter(p => p.inStock).length;
 
     // ── HTML completo ─────────────────────────────────────────────────────────
     const html = `<!DOCTYPE html>
@@ -1722,10 +1712,10 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 .sec-title{display:flex;align-items:center;gap:8px;font-size:10.5pt;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1a1005;border-bottom:1.5px solid #c9a84c;padding-bottom:5px;margin-bottom:10px}
 .sec-count{margin-left:auto;font-size:7.5pt;font-weight:400;color:#aaa;text-transform:none;letter-spacing:0;font-family:sans-serif}
 
-/* Grid + agrupación por marca */
+/* Grid + sub-grupos por género */
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.brand-hdr{grid-column:1/-1;font-size:7pt;letter-spacing:2px;text-transform:uppercase;color:#b08a30;font-family:sans-serif;font-weight:700;padding:7px 0 4px;border-top:1px solid #ede5cc;margin-top:3px}
-.brand-hdr:first-child{border-top:none;padding-top:0;margin-top:0}
+.g-hdr{grid-column:1/-1;font-size:8pt;letter-spacing:1.5px;text-transform:uppercase;font-family:sans-serif;font-weight:700;padding:9px 10px 5px;border-top:1.5px solid;margin-top:5px}
+.g-hdr:first-child{border-top:none;padding-top:0;margin-top:0}
 
 /* Tarjeta */
 .card{border:1px solid #e8dfc8;border-radius:7px;padding:10px 11px;page-break-inside:avoid;background:#fffef9}
@@ -1797,9 +1787,10 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
     </div>
   </div>
 
-  ${renderSection('Perfumes Enteros', '🛍', enteroCards)}
+  ${renderSection('Perfumes Enteros', '🛍', sortByName(enteroCards))}
   ${renderSection('Diseñador', '💧', diseCards)}
   ${renderSection('Árabes', '🌙', arabeCards)}
+  ${otrosCards.length ? renderSection('Otros', '✦', otrosCards) : ''}
 
   <div class="df">
     <b>MICHT Decants</b> &nbsp;·&nbsp; WhatsApp 917 452 643 &nbsp;·&nbsp; Catálogo generado el ${date}<br>
