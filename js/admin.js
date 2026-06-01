@@ -1507,6 +1507,371 @@ function setupCampaignEvents() {
   refreshCampaignAdminUI().catch(console.error);
 }
 
+// ─── Exportar catálogo PDF ────────────────────────────────────────────────────
+
+async function exportCatalogPDF() {
+  const btn   = document.getElementById('exportPdfBtn');
+  const label = document.getElementById('exportPdfLabel');
+  if (btn)   { btn.disabled = true; btn.style.opacity = '.55'; }
+  if (label) { label.textContent = 'Generando…'; }
+
+  try {
+    const all = await CloudProducts.getAll();
+
+    // Ordenar cada sección por marca, luego nombre
+    const sort = arr => [...arr].sort((a, b) =>
+      (a.brand + a.name).localeCompare(b.brand + b.name, 'es')
+    );
+
+    const enteros     = sort(all.filter(p => p.type === 'entero'));
+    const disenadores = sort(all.filter(p => p.type === 'diseñador'));
+    const arabes      = sort(all.filter(p => p.type === 'arabe'));
+
+    const date = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    const genderLabel = g => ({ hombre:'Hombre', mujer:'Mujer', unisex:'Unisex' }[g] || 'Unisex');
+    const genderColor = g => ({ hombre:'#3b82f6', mujer:'#ec4899', unisex:'#8b5cf6' }[g] || '#8b5cf6');
+    const genderIcon  = g => ({ hombre:'♂', mujer:'♀', unisex:'⚥' }[g] || '⚥');
+
+    const occLabel = o => ({ dia:'Día', noche:'Noche', ambas:'Día & Noche' }[o] || 'Día & Noche');
+    const occIcon  = o => ({ dia:'☀', noche:'☾', ambas:'☀ ☾' }[o] || '☀ ☾');
+
+    // ── Tarjeta de producto ───────────────────────────────────────────────────
+    const renderCard = p => {
+      const prices   = Object.entries(p.sizes || {});
+      const g        = (p.gender  || 'unisex').toLowerCase();
+      const o        = (p.occasion || 'ambas').toLowerCase();
+      const gColor   = genderColor(g);
+      const agotado  = !p.inStock;
+
+      const priceRows = prices.map(([ml, price]) => `
+        <tr>
+          <td class="td-size">${esc(ml)}</td>
+          <td class="td-price">${price > 0 ? 'S/ ' + parseFloat(price).toFixed(2) : 'Consultar'}</td>
+        </tr>`).join('');
+
+      return `
+      <div class="card${agotado ? ' card-agotado' : ''}">
+        <div class="card-brand">${esc(p.brand)}</div>
+        <div class="card-name">${esc(p.name)}</div>
+        <div class="card-badges">
+          <span class="badge" style="background:${gColor}18;color:${gColor};border:1px solid ${gColor}44">
+            ${genderIcon(g)} ${genderLabel(g)}
+          </span>
+          <span class="badge badge-occ">
+            ${occIcon(o)} ${occLabel(o)}
+          </span>
+          ${p.olfFamily ? `<span class="badge badge-olf">${esc(p.olfFamily)}</span>` : ''}
+        </div>
+        ${prices.length ? `
+        <table class="price-table">
+          <tbody>${priceRows}</tbody>
+        </table>` : ''}
+        ${agotado ? '<div class="stamp-agotado">Agotado</div>' : ''}
+      </div>`;
+    };
+
+    // ── Sección ───────────────────────────────────────────────────────────────
+    const renderSection = (title, icon, products) => {
+      if (!products.length) return '';
+      return `
+      <div class="section">
+        <div class="section-title">
+          <span class="section-icon">${icon}</span>
+          ${title}
+          <span class="section-count">${products.length} ${products.length === 1 ? 'producto' : 'productos'}</span>
+        </div>
+        <div class="cards-grid">
+          ${products.map(renderCard).join('')}
+        </div>
+      </div>`;
+    };
+
+    // ── Resumen de totales ────────────────────────────────────────────────────
+    const totalDisp = all.filter(p => p.inStock).length;
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>MICHT Decants — Catálogo de Precios ${date}</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    color: #1a1005;
+    background: #fff;
+    font-size: 9.5pt;
+    line-height: 1.45;
+  }
+
+  /* ── Barra de acción (solo pantalla) ── */
+  .print-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #1a1005;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .btn-print {
+    background: #c9a84c;
+    color: #111;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 22px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: .5px;
+  }
+  .btn-print:hover { background: #e0c060; }
+  .print-hint { color: #aaa; font-size: 11px; font-family: sans-serif; }
+
+  /* ── Contenido ── */
+  .wrap { max-width: 780px; margin: 0 auto; padding: 24px 28px 36px; }
+
+  /* ── Cabecera ── */
+  .doc-header {
+    text-align: center;
+    padding-bottom: 16px;
+    margin-bottom: 22px;
+    border-bottom: 2.5px solid #c9a84c;
+  }
+  .logo-text {
+    font-size: 26pt;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #1a1005;
+    font-family: 'Georgia', serif;
+  }
+  .logo-text span { color: #c9a84c; }
+  .doc-subtitle {
+    font-size: 8pt;
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    color: #888;
+    margin-top: 2px;
+  }
+  .doc-meta {
+    display: flex;
+    justify-content: center;
+    gap: 22px;
+    margin-top: 10px;
+    font-size: 8pt;
+    color: #666;
+    font-family: sans-serif;
+  }
+  .doc-meta strong { color: #c9a84c; }
+
+  /* ── Sección ── */
+  .section { margin-bottom: 28px; }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11pt;
+    font-weight: bold;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #1a1005;
+    border-bottom: 1.5px solid #c9a84c;
+    padding-bottom: 6px;
+    margin-bottom: 12px;
+  }
+  .section-icon { font-size: 13pt; }
+  .section-count {
+    margin-left: auto;
+    font-size: 8pt;
+    font-weight: normal;
+    color: #999;
+    letter-spacing: 0;
+    text-transform: none;
+    font-family: sans-serif;
+  }
+
+  /* ── Grid de tarjetas ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* ── Tarjeta ── */
+  .card {
+    border: 1px solid #e8dfc8;
+    border-radius: 7px;
+    padding: 10px 12px 10px;
+    page-break-inside: avoid;
+    background: #fffef9;
+    position: relative;
+  }
+  .card-agotado { opacity: .6; border-style: dashed; }
+
+  .card-brand {
+    font-size: 7pt;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: #c9a84c;
+    font-weight: 700;
+    font-family: sans-serif;
+    margin-bottom: 1px;
+  }
+  .card-name {
+    font-size: 11.5pt;
+    font-weight: bold;
+    color: #1a1005;
+    line-height: 1.25;
+    margin-bottom: 6px;
+  }
+
+  .card-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 7px;
+  }
+  .badge {
+    font-size: 7pt;
+    padding: 1.5px 7px;
+    border-radius: 20px;
+    font-family: sans-serif;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-occ {
+    background: #f0ede4;
+    color: #7a5f20;
+    border: 1px solid #d6c88a;
+  }
+  .badge-olf {
+    background: #f4f4f4;
+    color: #666;
+    border: 1px solid #ddd;
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  /* ── Tabla de precios ── */
+  .price-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: sans-serif;
+  }
+  .price-table tr { border-top: 1px solid #f0ebe0; }
+  .price-table tr:first-child { border-top: none; }
+  .td-size {
+    color: #888;
+    font-size: 8pt;
+    padding: 2.5px 0;
+  }
+  .td-price {
+    text-align: right;
+    font-weight: 700;
+    font-size: 9pt;
+    color: #1a1005;
+    padding: 2.5px 0;
+  }
+
+  /* ── Sello agotado ── */
+  .stamp-agotado {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 7pt;
+    background: #fff0f0;
+    color: #c0392b;
+    border: 1px solid #f5a5a5;
+    border-radius: 3px;
+    padding: 1.5px 8px;
+    font-family: sans-serif;
+    font-weight: 600;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+
+  /* ── Pie de página ── */
+  .doc-footer {
+    margin-top: 28px;
+    padding-top: 12px;
+    border-top: 1px solid #e0d5b8;
+    text-align: center;
+    font-size: 8pt;
+    color: #aaa;
+    font-family: sans-serif;
+  }
+  .doc-footer strong { color: #c9a84c; }
+
+  /* ── Reglas de impresión ── */
+  @media print {
+    .print-bar { display: none !important; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    @page { margin: 1.4cm 1.6cm; size: A4 portrait; }
+    .section { page-break-inside: auto; }
+    .section-title { page-break-after: avoid; }
+    .card { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Barra de acción (desaparece al imprimir) -->
+  <div class="print-bar">
+    <button class="btn-print" onclick="window.print()">🖨&nbsp; Imprimir / Guardar PDF</button>
+    <span class="print-hint">En el diálogo de impresión, elige <strong style="color:#c9a84c">"Guardar como PDF"</strong> como destino</span>
+  </div>
+
+  <div class="wrap">
+
+    <!-- Cabecera -->
+    <div class="doc-header">
+      <div class="logo-text">MICHT<span>Decants</span></div>
+      <div class="doc-subtitle">Catálogo de Precios — Fragancias</div>
+      <div class="doc-meta">
+        <span>Actualizado: <strong>${date}</strong></span>
+        <span>Total disponibles: <strong>${totalDisp} de ${all.length}</strong> fragancias</span>
+        <span>WhatsApp: <strong>917 452 643</strong></span>
+      </div>
+    </div>
+
+    ${renderSection('Perfumes Enteros', '🛍', enteros)}
+    ${renderSection('Decants · Diseñador', '💧', disenadores)}
+    ${renderSection('Decants · Árabes', '🌙', arabes)}
+
+    <div class="doc-footer">
+      <strong>MICHT Decants</strong> &nbsp;·&nbsp; WhatsApp 917 452 643 &nbsp;·&nbsp; Catálogo generado el ${date}<br>
+      <span style="font-size:7pt;margin-top:3px;display:inline-block">Los precios están expresados en soles peruanos (S/). Disponibilidad sujeta a stock.</span>
+    </div>
+
+  </div>
+
+</body>
+</html>`;
+
+    const win = window.open('', '_blank', 'width=920,height=750');
+    if (!win) {
+      showToast('Activa las ventanas emergentes para poder exportar el PDF.');
+      return;
+    }
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+
+  } catch (err) {
+    console.error('[MICHT] Error generando PDF:', err);
+    showToast('Error al generar el catálogo. Intenta de nuevo.');
+  } finally {
+    if (btn)   { btn.disabled = false; btn.style.opacity = ''; }
+    if (label) { label.textContent = 'Exportar PDF'; }
+  }
+}
+
 // ─── Modal de confirmación (totalmente dinámico, sin dependencia de HTML) ────
 
 function showConfirmModal(message, onOk, onCancel) {
