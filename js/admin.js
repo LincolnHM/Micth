@@ -1517,11 +1517,16 @@ async function exportCatalogPDF() {
 
   try {
     const all  = await CloudProducts.getAll();
-    // Aplicar imagen map manualmente por si no se aplicó en Supabase
+
+    // Re-aplicar imágenes: PRODUCT_IMAGE_MAP > DEFAULT_PRODUCTS > lo que venga de Supabase
     const imgMap = typeof PRODUCT_IMAGE_MAP !== 'undefined' ? PRODUCT_IMAGE_MAP : {};
+    const defById = {};
+    if (typeof DEFAULT_PRODUCTS !== 'undefined') {
+      DEFAULT_PRODUCTS.forEach(p => { if (p.imageUrl) defById[p.id] = p.imageUrl; });
+    }
     all.forEach(p => {
-      if (!p.imageUrl && imgMap[p.name]) p.imageUrl = imgMap[p.name];
-      if (imgMap[p.name]) p.imageUrl = imgMap[p.name]; // siempre priorizar el mapa
+      if (imgMap[p.name])               p.imageUrl = imgMap[p.name];   // mapa por nombre (máx. prioridad)
+      else if (!p.imageUrl && defById[p.id]) p.imageUrl = defById[p.id]; // fallback DEFAULT_PRODUCTS por id
     });
 
     const base = window.location.origin;
@@ -1588,7 +1593,8 @@ async function exportCatalogPDF() {
       const o   = (c.occasion || 'ambas').toLowerCase();
       const gc  = gColor(g);
       const img = resolveImg(c.imageUrl);
-      const agotado = !c.inStock && !(c._enteroInfo?.inStock);
+      // Todos se muestran — sin stock solo lleva un badge informativo, sin difuminar
+      const sinStock = !c.inStock && !(c._enteroInfo?.inStock);
 
       const imgHtml = img
         ? `<img class="c-img" src="${esc(img)}" alt="${esc(c.name)}" loading="lazy"
@@ -1624,7 +1630,7 @@ async function exportCatalogPDF() {
       }
 
       return `
-      <div class="card${agotado ? ' card-ag' : ''}" data-stock="${agotado?'0':'1'}">
+      <div class="card">
         <div class="c-head">
           <div class="c-img-wrap">${imgHtml}</div>
           <div class="c-info">
@@ -1634,37 +1640,55 @@ async function exportCatalogPDF() {
               <span class="badge" style="background:${gc}14;color:${gc};border:1px solid ${gc}33">${gIcon(g)} ${gLabel(g)}</span>
               <span class="badge b-occ">${oIcon(o)} ${oLabel(o)}</span>
               ${c.olfFamily ? `<span class="badge b-olf">${esc(c.olfFamily)}</span>` : ''}
+              ${sinStock ? '<span class="badge" style="background:#fff0f0;color:#c0392b;border:1px solid #f5a5a5">Sin stock</span>' : ''}
             </div>
           </div>
         </div>
         <div class="c-prices">${decantHtml}${enteroHtml}</div>
-        ${agotado ? '<div class="stamp">Sin stock</div>' : ''}
       </div>`;
     };
 
-    // ── Render de sección con sub-grupos por género (ordenado por nombre A-Z) ─
+    // ── Render de sección: Género → Marca → Nombre (A-Z) ────────────────────
     const sortByName = arr => [...arr].sort((a, b) => a.name.localeCompare(b.name, 'es'));
+
+    // Agrupa y renderiza un grupo de género (♂ / ♀ / ⚥) con sub-headers de marca
+    const renderGenderGroup = (gCards, gHdrLabel, gHdrColor) => {
+      if (!gCards.length) return '';
+
+      // Ordenar: marca → nombre
+      const sorted = [...gCards].sort((a, b) => {
+        const bc = a.brand.localeCompare(b.brand, 'es');
+        return bc !== 0 ? bc : a.name.localeCompare(b.name, 'es');
+      });
+
+      // Agrupar por marca
+      const byBrand = {};
+      sorted.forEach(c => {
+        const b = c.brand || '?';
+        if (!byBrand[b]) byBrand[b] = [];
+        byBrand[b].push(c);
+      });
+      const brands = Object.keys(byBrand).sort((a, b) => a.localeCompare(b, 'es'));
+
+      let html = `<div class="g-hdr" style="color:${gHdrColor};border-color:${gHdrColor}55">${gHdrLabel}</div>`;
+      brands.forEach((brand, bi) => {
+        html += `<div class="b-hdr${bi === 0 ? ' b-hdr-first' : ''}">${esc(brand.toUpperCase())}</div>`;
+        html += byBrand[brand].map(renderCard).join('');
+      });
+      return html;
+    };
 
     const renderSection = (title, icon, cards) => {
       if (!cards.length) return '';
 
-      const hombre = sortByName(cards.filter(c => (c.gender||'unisex').toLowerCase() === 'hombre'));
-      const mujer  = sortByName(cards.filter(c => (c.gender||'unisex').toLowerCase() === 'mujer'));
-      const unisex = sortByName(cards.filter(c => !['hombre','mujer'].includes((c.gender||'unisex').toLowerCase())));
+      const hombre = cards.filter(c => (c.gender||'unisex').toLowerCase() === 'hombre');
+      const mujer  = cards.filter(c => (c.gender||'unisex').toLowerCase() === 'mujer');
+      const unisex = cards.filter(c => !['hombre','mujer'].includes((c.gender||'unisex').toLowerCase()));
 
-      let inner = '';
-      if (hombre.length) {
-        inner += `<div class="g-hdr" style="color:#1d4ed8;border-color:#1d4ed844">♂ Para Hombre</div>`;
-        inner += hombre.map(renderCard).join('');
-      }
-      if (mujer.length) {
-        inner += `<div class="g-hdr" style="color:#be185d;border-color:#be185d44">♀ Para Mujer</div>`;
-        inner += mujer.map(renderCard).join('');
-      }
-      if (unisex.length) {
-        inner += `<div class="g-hdr" style="color:#6d28d9;border-color:#6d28d944">⚥ Unisex</div>`;
-        inner += unisex.map(renderCard).join('');
-      }
+      const inner =
+        renderGenderGroup(hombre, '♂ Para Hombre', '#1d4ed8') +
+        renderGenderGroup(mujer,  '♀ Para Mujer',  '#be185d') +
+        renderGenderGroup(unisex, '⚥ Unisex',      '#6d28d9');
 
       return `
       <div class="section">
@@ -1685,16 +1709,13 @@ async function exportCatalogPDF() {
 <base href="${base}/">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff;font-size:9pt;line-height:1.45}
+body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff;font-size:11pt;line-height:1.5}
 
 /* Barra acción */
 .pbar{position:sticky;top:0;z-index:200;background:#1a1005;padding:9px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .pbar-btn{background:#c9a84c;color:#111;border:none;border-radius:6px;padding:7px 20px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px}
 .pbar-btn:hover{background:#ddb84e}
 .pbar-hint{color:#aaa;font-size:10px;font-family:sans-serif}
-.filter-wrap{margin-left:auto;display:flex;align-items:center;gap:10px;font-family:sans-serif;font-size:11px;color:#ccc}
-.filter-wrap label{display:flex;align-items:center;gap:5px;cursor:pointer}
-.filter-wrap input{cursor:pointer;accent-color:#c9a84c}
 
 /* Layout */
 .wrap{max-width:780px;margin:0 auto;padding:22px 26px 36px}
@@ -1712,41 +1733,42 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 .sec-title{display:flex;align-items:center;gap:8px;font-size:10.5pt;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1a1005;border-bottom:1.5px solid #c9a84c;padding-bottom:5px;margin-bottom:10px}
 .sec-count{margin-left:auto;font-size:7.5pt;font-weight:400;color:#aaa;text-transform:none;letter-spacing:0;font-family:sans-serif}
 
-/* Grid + sub-grupos por género */
+/* Grid */
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.g-hdr{grid-column:1/-1;font-size:8pt;letter-spacing:1.5px;text-transform:uppercase;font-family:sans-serif;font-weight:700;padding:9px 10px 5px;border-top:1.5px solid;margin-top:5px}
-.g-hdr:first-child{border-top:none;padding-top:0;margin-top:0}
+/* Sub-header género */
+.g-hdr{grid-column:1/-1;font-size:8.5pt;letter-spacing:1.5px;text-transform:uppercase;font-family:sans-serif;font-weight:700;padding:11px 10px 5px;border-top:2px solid;margin-top:8px}
+.g-hdr:first-child{border-top:none;padding-top:4px;margin-top:0}
+/* Sub-header marca dentro de género */
+.b-hdr{grid-column:1/-1;font-size:6.5pt;letter-spacing:2px;text-transform:uppercase;color:#b08a30;font-family:sans-serif;font-weight:700;padding:6px 8px 3px;border-top:1px dotted #e0d5b0;margin-top:4px}
+.b-hdr-first{border-top:none;padding-top:0;margin-top:0}
 
 /* Tarjeta */
-.card{border:1px solid #e8dfc8;border-radius:7px;padding:10px 11px;page-break-inside:avoid;background:#fffef9}
-.card-ag{opacity:.58;border-style:dashed}
+.card{border:1px solid #e8dfc8;border-radius:8px;padding:14px 15px;page-break-inside:avoid;background:#fffef9}
 
 .c-head{display:flex;gap:9px;margin-bottom:8px}
-.c-img-wrap{flex-shrink:0;width:66px;height:66px}
-.c-img{width:66px;height:66px;object-fit:contain;border-radius:5px;border:1px solid #f0ebe0}
-.c-img-ph{width:66px;height:66px;background:#f5eed8;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:18pt;color:#c9a84c;font-weight:900;font-family:serif}
+.c-img-wrap{flex-shrink:0;width:96px;height:96px}
+.c-img{width:96px;height:96px;object-fit:contain;border-radius:6px;border:1px solid #f0ebe0}
+.c-img-ph{width:96px;height:96px;background:#f5eed8;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:26pt;color:#c9a84c;font-weight:900;font-family:serif}
 .c-info{flex:1;min-width:0}
-.c-brand{font-size:6.5pt;letter-spacing:1.5px;text-transform:uppercase;color:#c9a84c;font-weight:700;font-family:sans-serif}
-.c-name{font-size:10.5pt;font-weight:700;color:#1a1005;line-height:1.2;margin:1px 0 5px}
-.c-badges{display:flex;flex-wrap:wrap;gap:3px}
-.badge{font-size:6.5pt;padding:1.5px 6px;border-radius:20px;font-family:sans-serif;font-weight:600;white-space:nowrap}
+.c-brand{font-size:8pt;letter-spacing:1.5px;text-transform:uppercase;color:#c9a84c;font-weight:700;font-family:sans-serif}
+.c-name{font-size:13.5pt;font-weight:700;color:#1a1005;line-height:1.2;margin:2px 0 6px}
+.c-badges{display:flex;flex-wrap:wrap;gap:4px}
+.badge{font-size:8pt;padding:2.5px 8px;border-radius:20px;font-family:sans-serif;font-weight:600;white-space:nowrap}
 .b-occ{background:#f5f0e4;color:#7a5f20;border:1px solid #d6c88a}
 .b-olf{background:#f4f4f4;color:#777;border:1px solid #e0e0e0;font-style:italic;font-weight:400}
 
 /* Precios */
-.c-prices{display:grid;grid-template-columns:1fr 1fr;gap:6px;border-top:1px solid #f0ebe0;padding-top:7px}
+.c-prices{display:grid;grid-template-columns:1fr 1fr;gap:8px;border-top:1px solid #f0ebe0;padding-top:9px;margin-top:4px}
 .pr-col{}
-.pr-lbl{font-size:6pt;text-transform:uppercase;letter-spacing:1.2px;color:#aaa;font-family:sans-serif;font-weight:700;margin-bottom:3px}
+.pr-lbl{font-size:7.5pt;text-transform:uppercase;letter-spacing:1.2px;color:#aaa;font-family:sans-serif;font-weight:700;margin-bottom:4px}
 .pt{width:100%;border-collapse:collapse;font-family:sans-serif}
 .pt tr{border-top:1px solid #f5f0ea}
 .pt tr:first-child{border-top:none}
-.td-s{color:#888;font-size:7.5pt;padding:2px 0}
-.td-p{text-align:right;font-weight:700;font-size:8.5pt;color:#1a1005;padding:2px 0}
-.blank-price{font-size:8pt;color:#888;font-family:sans-serif;margin-top:2px}
+.td-s{color:#888;font-size:9.5pt;padding:3px 0}
+.td-p{text-align:right;font-weight:700;font-size:10.5pt;color:#1a1005;padding:3px 0}
+.blank-price{font-size:10pt;color:#888;font-family:sans-serif;margin-top:3px}
 .blank-line{color:#bbb;letter-spacing:1px}
 
-/* Sello agotado */
-.stamp{display:inline-block;margin-top:5px;font-size:6.5pt;background:#fff0f0;color:#c0392b;border:1px solid #f5a5a5;border-radius:3px;padding:1.5px 8px;font-family:sans-serif;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
 
 /* Pie */
 .df{margin-top:24px;padding-top:10px;border-top:1px solid #e0d5b8;text-align:center;font-size:7.5pt;color:#aaa;font-family:sans-serif}
@@ -1755,7 +1777,7 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 @media print{
   .pbar{display:none!important}
   body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  @page{margin:1.3cm 1.5cm;size:A4 portrait}
+  @page{margin:1cm 1.2cm;size:A4 portrait}
   .section{page-break-inside:auto}
   .sec-title{page-break-after:avoid}
   .card{page-break-inside:avoid}
@@ -1767,13 +1789,7 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 
 <div class="pbar">
   <button class="pbar-btn" onclick="window.print()">🖨&nbsp; Imprimir / Guardar PDF</button>
-  <span class="pbar-hint">Elige <b style="color:#c9a84c">"Guardar como PDF"</b> como destino de impresión</span>
-  <div class="filter-wrap">
-    <label>
-      <input type="checkbox" id="chkStock" checked onchange="filtrarStock(this.checked)">
-      Mostrar sin stock
-    </label>
-  </div>
+  <span class="pbar-hint">Elige <b style="color:#c9a84c">"Guardar como PDF"</b> como destino · Incluye <b style="color:#c9a84c">todos</b> los perfumes</span>
 </div>
 
 <div class="wrap">
@@ -1787,7 +1803,7 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
     </div>
   </div>
 
-  ${renderSection('Perfumes Enteros', '🛍', sortByName(enteroCards))}
+  ${renderSection('Perfumes Enteros', '🛍', enteroCards)}
   ${renderSection('Diseñador', '💧', diseCards)}
   ${renderSection('Árabes', '🌙', arabeCards)}
   ${otrosCards.length ? renderSection('Otros', '✦', otrosCards) : ''}
@@ -1798,23 +1814,6 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
   </div>
 </div>
 
-<script>
-function filtrarStock(mostrar) {
-  document.querySelectorAll('.card-ag').forEach(c => {
-    c.style.display = mostrar ? '' : 'none';
-  });
-  // Ocultar cabeceras de marca si todas sus tarjetas están ocultas
-  document.querySelectorAll('.brand-hdr').forEach(hdr => {
-    let sib = hdr.nextElementSibling;
-    let hasVisible = false;
-    while (sib && !sib.classList.contains('brand-hdr')) {
-      if (sib.classList.contains('card') && sib.style.display !== 'none') hasVisible = true;
-      sib = sib.nextElementSibling;
-    }
-    hdr.style.display = hasVisible ? '' : 'none';
-  });
-}
-</script>
 </body>
 </html>`;
 
