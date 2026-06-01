@@ -1516,349 +1516,319 @@ async function exportCatalogPDF() {
   if (label) { label.textContent = 'Generando…'; }
 
   try {
-    const all = await CloudProducts.getAll();
-
-    // Ordenar cada sección por marca, luego nombre
-    const sort = arr => [...arr].sort((a, b) =>
-      (a.brand + a.name).localeCompare(b.brand + b.name, 'es')
-    );
-
-    const enteros     = sort(all.filter(p => p.type === 'entero'));
-    const disenadores = sort(all.filter(p => p.type === 'diseñador'));
-    const arabes      = sort(all.filter(p => p.type === 'arabe'));
-
-    const date = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: 'long', year: 'numeric' });
+    const all  = await CloudProducts.getAll();
+    const base = window.location.origin;
+    const date = new Date().toLocaleDateString('es-PE', { day:'2-digit', month:'long', year:'numeric' });
 
     // ── Helpers ──────────────────────────────────────────────────────────────
     const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    const genderLabel = g => ({ hombre:'Hombre', mujer:'Mujer', unisex:'Unisex' }[g] || 'Unisex');
-    const genderColor = g => ({ hombre:'#3b82f6', mujer:'#ec4899', unisex:'#8b5cf6' }[g] || '#8b5cf6');
-    const genderIcon  = g => ({ hombre:'♂', mujer:'♀', unisex:'⚥' }[g] || '⚥');
+    const resolveImg = url => {
+      if (!url || url.startsWith('data:svg') || url === '') return '';
+      if (url.startsWith('data:')) return url;
+      if (url.startsWith('http'))  return url;
+      return base + (url.startsWith('/') ? url : '/' + url);
+    };
 
-    const occLabel = o => ({ dia:'Día', noche:'Noche', ambas:'Día & Noche' }[o] || 'Día & Noche');
-    const occIcon  = o => ({ dia:'☀', noche:'☾', ambas:'☀ ☾' }[o] || '☀ ☾');
+    const gLabel = g => ({ hombre:'Hombre', mujer:'Mujer', unisex:'Unisex' }[g] || 'Unisex');
+    const gColor = g => ({ hombre:'#2563eb', mujer:'#db2777', unisex:'#7c3aed' }[g] || '#7c3aed');
+    const gIcon  = g => ({ hombre:'♂', mujer:'♀', unisex:'⚥' }[g] || '⚥');
+    const oLabel = o => ({ dia:'Solo Día', noche:'Solo Noche', ambas:'Día & Noche' }[o] || 'Día & Noche');
+    const oIcon  = o => ({ dia:'☀', noche:'☾', ambas:'☀☾' }[o] || '☀☾');
 
-    // ── Tarjeta de producto ───────────────────────────────────────────────────
-    const renderCard = p => {
-      const prices   = Object.entries(p.sizes || {});
-      const g        = (p.gender  || 'unisex').toLowerCase();
-      const o        = (p.occasion || 'ambas').toLowerCase();
-      const gColor   = genderColor(g);
-      const agotado  = !p.inStock;
+    // ── Merge: unir decant + entero del mismo perfume ─────────────────────────
+    const enteroProds = all.filter(p => p.type === 'entero');
+    const decantProds = all.filter(p => p.type !== 'entero');
 
-      const priceRows = prices.map(([ml, price]) => `
-        <tr>
-          <td class="td-size">${esc(ml)}</td>
-          <td class="td-price">${price > 0 ? 'S/ ' + parseFloat(price).toFixed(2) : 'Consultar'}</td>
-        </tr>`).join('');
+    const normKey = p => (p.brand + '@@' + p.name).toLowerCase().trim();
+    const enteroMap = {};
+    enteroProds.forEach(e => { enteroMap[normKey(e)] = e; });
+
+    const usedEnteroKeys = new Set();
+    const mergedCards    = [];
+
+    decantProds.forEach(d => {
+      const key            = normKey(d);
+      const matchedEntero  = enteroMap[key];
+      let   enteroInfo     = null;
+
+      if (matchedEntero && !usedEnteroKeys.has(key)) {
+        usedEnteroKeys.add(key);
+        enteroInfo = { sizes: matchedEntero.sizes, inStock: matchedEntero.inStock };
+      } else if (d.availableAsEntero && d.enteroPrice > 0) {
+        enteroInfo = { sizes: { 'Unidad': d.enteroPrice }, inStock: true };
+      }
+
+      mergedCards.push({ ...d, _decantSizes: d.sizes, _enteroInfo: enteroInfo });
+    });
+
+    // Enteros sin decant coincidente → sección propia
+    const standaloneEnteros = enteroProds.filter(e => !usedEnteroKeys.has(normKey(e)));
+
+    // ── Separar por tipo y ordenar por marca → nombre ─────────────────────────
+    const byBrand = arr =>
+      [...arr].sort((a, b) =>
+        (a.brand + '@@' + a.name).localeCompare(b.brand + '@@' + b.name, 'es')
+      );
+
+    const diseCards   = byBrand(mergedCards.filter(p => p.type === 'diseñador'));
+    const arabeCards  = byBrand(mergedCards.filter(p => p.type === 'arabe'));
+    const enteroCards = byBrand(standaloneEnteros);
+
+    // ── Render de tarjeta ─────────────────────────────────────────────────────
+    const renderCard = c => {
+      const isEnteroOnly = !c._decantSizes;
+      const g     = (c.gender   || 'unisex').toLowerCase();
+      const o     = (c.occasion || 'ambas').toLowerCase();
+      const gc    = gColor(g);
+      const img   = resolveImg(c.imageUrl);
+      const agotado = !c.inStock && !(c._enteroInfo?.inStock);
+
+      // Imagen o inicial de marca
+      const imgHtml = img
+        ? `<img class="c-img" src="${esc(img)}" alt="${esc(c.name)}"
+               onerror="this.style.display='none';this.nextSibling.style.display='flex'"
+             ><div class="c-img-ph" style="display:none">${esc((c.brand||'?').charAt(0))}</div>`
+        : `<div class="c-img-ph">${esc((c.brand||'?').charAt(0))}</div>`;
+
+      // Precios decant
+      let decantHtml = '';
+      if (!isEnteroOnly && c._decantSizes) {
+        const rows = Object.entries(c._decantSizes).map(([ml, pr]) =>
+          `<tr><td class="td-s">${esc(ml)}</td><td class="td-p">${pr > 0 ? 'S/ ' + parseFloat(pr).toFixed(2) : '—'}</td></tr>`
+        ).join('');
+        decantHtml = `
+          <div class="pr-col">
+            <div class="pr-lbl">Decant</div>
+            <table class="pt"><tbody>${rows}</tbody></table>
+          </div>`;
+      }
+
+      // Precios entero
+      let enteroHtml = '';
+      if (!isEnteroOnly) {
+        if (c._enteroInfo) {
+          const rows = Object.entries(c._enteroInfo.sizes).map(([sz, pr]) =>
+            `<tr><td class="td-s">${esc(sz)}</td><td class="td-p">${pr > 0 ? 'S/ ' + parseFloat(pr).toFixed(2) : '—'}</td></tr>`
+          ).join('');
+          enteroHtml = `
+            <div class="pr-col">
+              <div class="pr-lbl">Entero</div>
+              <table class="pt"><tbody>${rows}</tbody></table>
+            </div>`;
+        } else {
+          enteroHtml = `
+            <div class="pr-col">
+              <div class="pr-lbl">Entero</div>
+              <div class="blank-price">S/&nbsp;<span class="blank-line">____________</span></div>
+            </div>`;
+        }
+      } else {
+        // Solo entero
+        const rows = Object.entries(c.sizes || {}).map(([sz, pr]) =>
+          `<tr><td class="td-s">${esc(sz)}</td><td class="td-p">${pr > 0 ? 'S/ ' + parseFloat(pr).toFixed(2) : '—'}</td></tr>`
+        ).join('');
+        enteroHtml = `
+          <div class="pr-col" style="grid-column:1/-1">
+            <div class="pr-lbl">Precio</div>
+            <table class="pt"><tbody>${rows}</tbody></table>
+          </div>`;
+      }
 
       return `
-      <div class="card${agotado ? ' card-agotado' : ''}">
-        <div class="card-brand">${esc(p.brand)}</div>
-        <div class="card-name">${esc(p.name)}</div>
-        <div class="card-badges">
-          <span class="badge" style="background:${gColor}18;color:${gColor};border:1px solid ${gColor}44">
-            ${genderIcon(g)} ${genderLabel(g)}
-          </span>
-          <span class="badge badge-occ">
-            ${occIcon(o)} ${occLabel(o)}
-          </span>
-          ${p.olfFamily ? `<span class="badge badge-olf">${esc(p.olfFamily)}</span>` : ''}
+      <div class="card${agotado ? ' card-ag' : ''}" data-stock="${agotado?'0':'1'}">
+        <div class="c-head">
+          <div class="c-img-wrap">${imgHtml}</div>
+          <div class="c-info">
+            <div class="c-brand">${esc(c.brand)}</div>
+            <div class="c-name">${esc(c.name)}</div>
+            <div class="c-badges">
+              <span class="badge" style="background:${gc}14;color:${gc};border:1px solid ${gc}33">${gIcon(g)} ${gLabel(g)}</span>
+              <span class="badge b-occ">${oIcon(o)} ${oLabel(o)}</span>
+              ${c.olfFamily ? `<span class="badge b-olf">${esc(c.olfFamily)}</span>` : ''}
+            </div>
+          </div>
         </div>
-        ${prices.length ? `
-        <table class="price-table">
-          <tbody>${priceRows}</tbody>
-        </table>` : ''}
-        ${agotado ? '<div class="stamp-agotado">Agotado</div>' : ''}
+        <div class="c-prices">${decantHtml}${enteroHtml}</div>
+        ${agotado ? '<div class="stamp">Sin stock</div>' : ''}
       </div>`;
     };
 
-    // ── Sección ───────────────────────────────────────────────────────────────
-    const renderSection = (title, icon, products) => {
-      if (!products.length) return '';
+    // ── Render de sección con agrupación por marca ────────────────────────────
+    const renderSection = (title, icon, cards) => {
+      if (!cards.length) return '';
+
+      const byBrandMap = {};
+      cards.forEach(c => {
+        const b = c.brand || '?';
+        if (!byBrandMap[b]) byBrandMap[b] = [];
+        byBrandMap[b].push(c);
+      });
+      const brands = Object.keys(byBrandMap).sort((a, b) => a.localeCompare(b, 'es'));
+
+      let inner = '';
+      brands.forEach(brand => {
+        const brandCards = byBrandMap[brand].sort((a,b) => a.name.localeCompare(b.name, 'es'));
+        inner += `<div class="brand-hdr" data-brand="${esc(brand)}">${esc(brand.toUpperCase())}</div>`;
+        inner += brandCards.map(renderCard).join('');
+      });
+
       return `
       <div class="section">
-        <div class="section-title">
-          <span class="section-icon">${icon}</span>
-          ${title}
-          <span class="section-count">${products.length} ${products.length === 1 ? 'producto' : 'productos'}</span>
+        <div class="sec-title">
+          <span>${icon}</span> ${title}
+          <span class="sec-count">${cards.length} fragancia${cards.length !== 1 ? 's' : ''}</span>
         </div>
-        <div class="cards-grid">
-          ${products.map(renderCard).join('')}
-        </div>
+        <div class="grid">${inner}</div>
       </div>`;
     };
 
-    // ── Resumen de totales ────────────────────────────────────────────────────
-    const totalDisp = all.filter(p => p.inStock).length;
+    const totalAll   = all.length;
+    const totalDisp  = all.filter(p => p.inStock).length;
 
+    // ── HTML completo ─────────────────────────────────────────────────────────
     const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>MICHT Decants — Catálogo de Precios ${date}</title>
+<title>MICHT Decants — Catálogo ${date}</title>
+<base href="${base}/">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff;font-size:9pt;line-height:1.45}
 
-  body {
-    font-family: 'Georgia', 'Times New Roman', serif;
-    color: #1a1005;
-    background: #fff;
-    font-size: 9.5pt;
-    line-height: 1.45;
-  }
+/* Barra acción */
+.pbar{position:sticky;top:0;z-index:200;background:#1a1005;padding:9px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.pbar-btn{background:#c9a84c;color:#111;border:none;border-radius:6px;padding:7px 20px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px}
+.pbar-btn:hover{background:#ddb84e}
+.pbar-hint{color:#aaa;font-size:10px;font-family:sans-serif}
+.filter-wrap{margin-left:auto;display:flex;align-items:center;gap:10px;font-family:sans-serif;font-size:11px;color:#ccc}
+.filter-wrap label{display:flex;align-items:center;gap:5px;cursor:pointer}
+.filter-wrap input{cursor:pointer;accent-color:#c9a84c}
 
-  /* ── Barra de acción (solo pantalla) ── */
-  .print-bar {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: #1a1005;
-    padding: 10px 20px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-  .btn-print {
-    background: #c9a84c;
-    color: #111;
-    border: none;
-    border-radius: 6px;
-    padding: 7px 22px;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    letter-spacing: .5px;
-  }
-  .btn-print:hover { background: #e0c060; }
-  .print-hint { color: #aaa; font-size: 11px; font-family: sans-serif; }
+/* Layout */
+.wrap{max-width:780px;margin:0 auto;padding:22px 26px 36px}
 
-  /* ── Contenido ── */
-  .wrap { max-width: 780px; margin: 0 auto; padding: 24px 28px 36px; }
+/* Cabecera */
+.dh{text-align:center;padding-bottom:14px;margin-bottom:20px;border-bottom:2px solid #c9a84c}
+.logo{font-size:24pt;font-weight:900;letter-spacing:2px}
+.logo span{color:#c9a84c}
+.sub{font-size:7.5pt;letter-spacing:4px;text-transform:uppercase;color:#888;margin-top:2px}
+.meta{display:flex;justify-content:center;gap:20px;margin-top:8px;font-size:7.5pt;color:#666;font-family:sans-serif}
+.meta b{color:#c9a84c}
 
-  /* ── Cabecera ── */
-  .doc-header {
-    text-align: center;
-    padding-bottom: 16px;
-    margin-bottom: 22px;
-    border-bottom: 2.5px solid #c9a84c;
-  }
-  .logo-text {
-    font-size: 26pt;
-    font-weight: 900;
-    letter-spacing: 2px;
-    color: #1a1005;
-    font-family: 'Georgia', serif;
-  }
-  .logo-text span { color: #c9a84c; }
-  .doc-subtitle {
-    font-size: 8pt;
-    letter-spacing: 3.5px;
-    text-transform: uppercase;
-    color: #888;
-    margin-top: 2px;
-  }
-  .doc-meta {
-    display: flex;
-    justify-content: center;
-    gap: 22px;
-    margin-top: 10px;
-    font-size: 8pt;
-    color: #666;
-    font-family: sans-serif;
-  }
-  .doc-meta strong { color: #c9a84c; }
+/* Sección */
+.section{margin-bottom:24px}
+.sec-title{display:flex;align-items:center;gap:8px;font-size:10.5pt;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1a1005;border-bottom:1.5px solid #c9a84c;padding-bottom:5px;margin-bottom:10px}
+.sec-count{margin-left:auto;font-size:7.5pt;font-weight:400;color:#aaa;text-transform:none;letter-spacing:0;font-family:sans-serif}
 
-  /* ── Sección ── */
-  .section { margin-bottom: 28px; }
+/* Grid + agrupación por marca */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.brand-hdr{grid-column:1/-1;font-size:7pt;letter-spacing:2px;text-transform:uppercase;color:#b08a30;font-family:sans-serif;font-weight:700;padding:7px 0 4px;border-top:1px solid #ede5cc;margin-top:3px}
+.brand-hdr:first-child{border-top:none;padding-top:0;margin-top:0}
 
-  .section-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11pt;
-    font-weight: bold;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: #1a1005;
-    border-bottom: 1.5px solid #c9a84c;
-    padding-bottom: 6px;
-    margin-bottom: 12px;
-  }
-  .section-icon { font-size: 13pt; }
-  .section-count {
-    margin-left: auto;
-    font-size: 8pt;
-    font-weight: normal;
-    color: #999;
-    letter-spacing: 0;
-    text-transform: none;
-    font-family: sans-serif;
-  }
+/* Tarjeta */
+.card{border:1px solid #e8dfc8;border-radius:7px;padding:10px 11px;page-break-inside:avoid;background:#fffef9}
+.card-ag{opacity:.58;border-style:dashed}
 
-  /* ── Grid de tarjetas ── */
-  .cards-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
+.c-head{display:flex;gap:9px;margin-bottom:8px}
+.c-img-wrap{flex-shrink:0;width:66px;height:66px}
+.c-img{width:66px;height:66px;object-fit:contain;border-radius:5px;border:1px solid #f0ebe0}
+.c-img-ph{width:66px;height:66px;background:#f5eed8;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:18pt;color:#c9a84c;font-weight:900;font-family:serif}
+.c-info{flex:1;min-width:0}
+.c-brand{font-size:6.5pt;letter-spacing:1.5px;text-transform:uppercase;color:#c9a84c;font-weight:700;font-family:sans-serif}
+.c-name{font-size:10.5pt;font-weight:700;color:#1a1005;line-height:1.2;margin:1px 0 5px}
+.c-badges{display:flex;flex-wrap:wrap;gap:3px}
+.badge{font-size:6.5pt;padding:1.5px 6px;border-radius:20px;font-family:sans-serif;font-weight:600;white-space:nowrap}
+.b-occ{background:#f5f0e4;color:#7a5f20;border:1px solid #d6c88a}
+.b-olf{background:#f4f4f4;color:#777;border:1px solid #e0e0e0;font-style:italic;font-weight:400}
 
-  /* ── Tarjeta ── */
-  .card {
-    border: 1px solid #e8dfc8;
-    border-radius: 7px;
-    padding: 10px 12px 10px;
-    page-break-inside: avoid;
-    background: #fffef9;
-    position: relative;
-  }
-  .card-agotado { opacity: .6; border-style: dashed; }
+/* Precios */
+.c-prices{display:grid;grid-template-columns:1fr 1fr;gap:6px;border-top:1px solid #f0ebe0;padding-top:7px}
+.pr-col{}
+.pr-lbl{font-size:6pt;text-transform:uppercase;letter-spacing:1.2px;color:#aaa;font-family:sans-serif;font-weight:700;margin-bottom:3px}
+.pt{width:100%;border-collapse:collapse;font-family:sans-serif}
+.pt tr{border-top:1px solid #f5f0ea}
+.pt tr:first-child{border-top:none}
+.td-s{color:#888;font-size:7.5pt;padding:2px 0}
+.td-p{text-align:right;font-weight:700;font-size:8.5pt;color:#1a1005;padding:2px 0}
+.blank-price{font-size:8pt;color:#888;font-family:sans-serif;margin-top:2px}
+.blank-line{color:#bbb;letter-spacing:1px}
 
-  .card-brand {
-    font-size: 7pt;
-    letter-spacing: 1.8px;
-    text-transform: uppercase;
-    color: #c9a84c;
-    font-weight: 700;
-    font-family: sans-serif;
-    margin-bottom: 1px;
-  }
-  .card-name {
-    font-size: 11.5pt;
-    font-weight: bold;
-    color: #1a1005;
-    line-height: 1.25;
-    margin-bottom: 6px;
-  }
+/* Sello agotado */
+.stamp{display:inline-block;margin-top:5px;font-size:6.5pt;background:#fff0f0;color:#c0392b;border:1px solid #f5a5a5;border-radius:3px;padding:1.5px 8px;font-family:sans-serif;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
 
-  .card-badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-bottom: 7px;
-  }
-  .badge {
-    font-size: 7pt;
-    padding: 1.5px 7px;
-    border-radius: 20px;
-    font-family: sans-serif;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .badge-occ {
-    background: #f0ede4;
-    color: #7a5f20;
-    border: 1px solid #d6c88a;
-  }
-  .badge-olf {
-    background: #f4f4f4;
-    color: #666;
-    border: 1px solid #ddd;
-    font-style: italic;
-    font-weight: 400;
-  }
+/* Pie */
+.df{margin-top:24px;padding-top:10px;border-top:1px solid #e0d5b8;text-align:center;font-size:7.5pt;color:#aaa;font-family:sans-serif}
+.df b{color:#c9a84c}
 
-  /* ── Tabla de precios ── */
-  .price-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: sans-serif;
-  }
-  .price-table tr { border-top: 1px solid #f0ebe0; }
-  .price-table tr:first-child { border-top: none; }
-  .td-size {
-    color: #888;
-    font-size: 8pt;
-    padding: 2.5px 0;
-  }
-  .td-price {
-    text-align: right;
-    font-weight: 700;
-    font-size: 9pt;
-    color: #1a1005;
-    padding: 2.5px 0;
-  }
-
-  /* ── Sello agotado ── */
-  .stamp-agotado {
-    display: inline-block;
-    margin-top: 6px;
-    font-size: 7pt;
-    background: #fff0f0;
-    color: #c0392b;
-    border: 1px solid #f5a5a5;
-    border-radius: 3px;
-    padding: 1.5px 8px;
-    font-family: sans-serif;
-    font-weight: 600;
-    letter-spacing: .5px;
-    text-transform: uppercase;
-  }
-
-  /* ── Pie de página ── */
-  .doc-footer {
-    margin-top: 28px;
-    padding-top: 12px;
-    border-top: 1px solid #e0d5b8;
-    text-align: center;
-    font-size: 8pt;
-    color: #aaa;
-    font-family: sans-serif;
-  }
-  .doc-footer strong { color: #c9a84c; }
-
-  /* ── Reglas de impresión ── */
-  @media print {
-    .print-bar { display: none !important; }
-    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    @page { margin: 1.4cm 1.6cm; size: A4 portrait; }
-    .section { page-break-inside: auto; }
-    .section-title { page-break-after: avoid; }
-    .card { page-break-inside: avoid; }
-  }
+@media print{
+  .pbar{display:none!important}
+  body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{margin:1.3cm 1.5cm;size:A4 portrait}
+  .section{page-break-inside:auto}
+  .sec-title{page-break-after:avoid}
+  .card{page-break-inside:avoid}
+  .brand-hdr{page-break-after:avoid}
+}
 </style>
 </head>
 <body>
 
-  <!-- Barra de acción (desaparece al imprimir) -->
-  <div class="print-bar">
-    <button class="btn-print" onclick="window.print()">🖨&nbsp; Imprimir / Guardar PDF</button>
-    <span class="print-hint">En el diálogo de impresión, elige <strong style="color:#c9a84c">"Guardar como PDF"</strong> como destino</span>
+<div class="pbar">
+  <button class="pbar-btn" onclick="window.print()">🖨&nbsp; Imprimir / Guardar PDF</button>
+  <span class="pbar-hint">Elige <b style="color:#c9a84c">"Guardar como PDF"</b> como destino de impresión</span>
+  <div class="filter-wrap">
+    <label>
+      <input type="checkbox" id="chkStock" checked onchange="filtrarStock(this.checked)">
+      Mostrar sin stock
+    </label>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="dh">
+    <div class="logo">MICHT<span>Decants</span></div>
+    <div class="sub">Catálogo de Fragancias &amp; Precios</div>
+    <div class="meta">
+      <span>Actualizado: <b>${date}</b></span>
+      <span>Disponibles: <b>${totalDisp}</b> de <b>${totalAll}</b> fragancias</span>
+      <span>WhatsApp: <b>917 452 643</b></span>
+    </div>
   </div>
 
-  <div class="wrap">
+  ${renderSection('Perfumes Enteros', '🛍', enteroCards)}
+  ${renderSection('Diseñador', '💧', diseCards)}
+  ${renderSection('Árabes', '🌙', arabeCards)}
 
-    <!-- Cabecera -->
-    <div class="doc-header">
-      <div class="logo-text">MICHT<span>Decants</span></div>
-      <div class="doc-subtitle">Catálogo de Precios — Fragancias</div>
-      <div class="doc-meta">
-        <span>Actualizado: <strong>${date}</strong></span>
-        <span>Total disponibles: <strong>${totalDisp} de ${all.length}</strong> fragancias</span>
-        <span>WhatsApp: <strong>917 452 643</strong></span>
-      </div>
-    </div>
-
-    ${renderSection('Perfumes Enteros', '🛍', enteros)}
-    ${renderSection('Decants · Diseñador', '💧', disenadores)}
-    ${renderSection('Decants · Árabes', '🌙', arabes)}
-
-    <div class="doc-footer">
-      <strong>MICHT Decants</strong> &nbsp;·&nbsp; WhatsApp 917 452 643 &nbsp;·&nbsp; Catálogo generado el ${date}<br>
-      <span style="font-size:7pt;margin-top:3px;display:inline-block">Los precios están expresados en soles peruanos (S/). Disponibilidad sujeta a stock.</span>
-    </div>
-
+  <div class="df">
+    <b>MICHT Decants</b> &nbsp;·&nbsp; WhatsApp 917 452 643 &nbsp;·&nbsp; Catálogo generado el ${date}<br>
+    <span style="font-size:6.5pt;margin-top:2px;display:inline-block">Precios en soles peruanos (S/). Disponibilidad sujeta a stock.</span>
   </div>
+</div>
 
+<script>
+function filtrarStock(mostrar) {
+  document.querySelectorAll('.card-ag').forEach(c => {
+    c.style.display = mostrar ? '' : 'none';
+  });
+  // Ocultar cabeceras de marca si todas sus tarjetas están ocultas
+  document.querySelectorAll('.brand-hdr').forEach(hdr => {
+    let sib = hdr.nextElementSibling;
+    let hasVisible = false;
+    while (sib && !sib.classList.contains('brand-hdr')) {
+      if (sib.classList.contains('card') && sib.style.display !== 'none') hasVisible = true;
+      sib = sib.nextElementSibling;
+    }
+    hdr.style.display = hasVisible ? '' : 'none';
+  });
+}
+</script>
 </body>
 </html>`;
 
-    const win = window.open('', '_blank', 'width=920,height=750');
-    if (!win) {
-      showToast('Activa las ventanas emergentes para poder exportar el PDF.');
-      return;
-    }
+    const win = window.open('', '_blank', 'width=920,height=760');
+    if (!win) { showToast('Activa las ventanas emergentes para exportar el PDF.'); return; }
     win.document.open();
     win.document.write(html);
     win.document.close();
