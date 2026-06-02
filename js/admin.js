@@ -10,6 +10,8 @@ function isAdminUser(user) {
 
 let _adminProductSearch = '';
 let _adminProductTypeFilter = 'all';
+let _adminPage  = 1;
+const _ADMIN_PAGE_SIZE = 12;
 let _customerHistory = [];
 let _orderSearch = '';
 let _userSearch  = '';
@@ -236,11 +238,17 @@ async function renderAdminProducts() {
     );
   }
 
-  // Mapa de SVGs de respaldo indexado por id (evita poner data-URIs enormes en atributos HTML)
-  window._adminImgFallback = {};
-  products.forEach(p => { window._adminImgFallback[p.id] = buildProductImage(p); });
+  // ── Paginación ─────────────────────────────────────────────────────────────
+  const totalProds  = products.length;
+  const totalPages  = Math.max(1, Math.ceil(totalProds / _ADMIN_PAGE_SIZE));
+  _adminPage        = Math.min(_adminPage, totalPages);
+  const pageStart   = (_adminPage - 1) * _ADMIN_PAGE_SIZE;
+  const paginated   = products.slice(pageStart, pageStart + _ADMIN_PAGE_SIZE);
 
-  container.innerHTML = products.map(p => {
+  window._adminImgFallback = {};
+  paginated.forEach(p => { window._adminImgFallback[p.id] = buildProductImage(p); });
+
+  container.innerHTML = paginated.map(p => {
     const pct    = p.bottleTotalMl > 0 ? Math.round(p.bottleRemainingMl / p.bottleTotalMl * 100) : 0;
     const color  = pct > 50 ? '#4caf50' : pct > 20 ? '#ff9800' : '#ef5350';
     const typeLabel = p.type === 'arabe' ? 'Árabe' : p.type === 'entero' ? 'Entero' : 'Diseñador';
@@ -522,6 +530,56 @@ async function renderAdminProducts() {
       showToast('Perfume eliminado.');
     });
   });
+
+  // ── Controles de paginación ────────────────────────────────────────────────
+  let pagerEl = document.getElementById('adminPager');
+  if (!pagerEl) {
+    pagerEl = document.createElement('div');
+    pagerEl.id = 'adminPager';
+    container.parentElement.appendChild(pagerEl);
+  }
+
+  if (totalPages <= 1) {
+    pagerEl.innerHTML = `<p style="text-align:center;color:var(--text3);font-size:.78rem;margin-top:.75rem">${totalProds} perfume${totalProds !== 1 ? 's' : ''} en total</p>`;
+  } else {
+    pagerEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;gap:.75rem;margin-top:1rem;flex-wrap:wrap">
+        <button id="pagePrev" ${_adminPage <= 1 ? 'disabled' : ''}
+          style="padding:.42rem 1rem;background:var(--bg2);border:1px solid var(--border);color:var(--text2);border-radius:var(--r);font-size:.8rem;cursor:pointer;transition:all .2s;${_adminPage <= 1 ? 'opacity:.4;cursor:default' : ''}"
+          onmouseover="if(!this.disabled)this.style.borderColor='var(--gold-d)'" onmouseout="this.style.borderColor='var(--border)'">← Anterior</button>
+
+        <div style="display:flex;gap:.3rem">
+          ${Array.from({length: totalPages}, (_,i) => i+1).map(pg => `
+            <button class="page-num-btn" data-pg="${pg}"
+              style="width:32px;height:32px;border-radius:var(--r);font-size:.78rem;font-weight:${pg===_adminPage?'700':'400'};
+                     background:${pg===_adminPage?'var(--gold)':'var(--bg2)'};
+                     color:${pg===_adminPage?'#111':'var(--text2)'};
+                     border:1px solid ${pg===_adminPage?'var(--gold)':'var(--border)'};cursor:pointer;transition:all .15s">${pg}</button>`).join('')}
+        </div>
+
+        <button id="pageNext" ${_adminPage >= totalPages ? 'disabled' : ''}
+          style="padding:.42rem 1rem;background:var(--bg2);border:1px solid var(--border);color:var(--text2);border-radius:var(--r);font-size:.8rem;cursor:pointer;transition:all .2s;${_adminPage >= totalPages ? 'opacity:.4;cursor:default' : ''}"
+          onmouseover="if(!this.disabled)this.style.borderColor='var(--gold-d)'" onmouseout="this.style.borderColor='var(--border)'">Siguiente →</button>
+
+        <span style="font-size:.75rem;color:var(--text3)">
+          ${pageStart + 1}–${Math.min(pageStart + _ADMIN_PAGE_SIZE, totalProds)} de ${totalProds}
+        </span>
+      </div>`;
+
+    pagerEl.querySelector('#pagePrev')?.addEventListener('click', () => {
+      if (_adminPage > 1) { _adminPage--; renderAdminProducts().catch(console.error); window.scrollTo({top:0,behavior:'smooth'}); }
+    });
+    pagerEl.querySelector('#pageNext')?.addEventListener('click', () => {
+      if (_adminPage < totalPages) { _adminPage++; renderAdminProducts().catch(console.error); window.scrollTo({top:0,behavior:'smooth'}); }
+    });
+    pagerEl.querySelectorAll('.page-num-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        _adminPage = parseInt(btn.dataset.pg);
+        renderAdminProducts().catch(console.error);
+        window.scrollTo({top:0,behavior:'smooth'});
+      });
+    });
+  }
 }
 
 // ─── Sección: Inventario (ml) ─────────────────────────────────────────────────
@@ -647,7 +705,7 @@ async function renderOrdersSection() {
 
     tbody.innerHTML = orders.map(o => {
     const date   = new Date(o.date).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: '2-digit' });
-    const items  = o.items.map(i => `${i.productName} ${i.size} ×${i.quantity}`).join(', ');
+    const items  = o.items.map(i => `${sanitize(i.productName||'')} ${sanitize(i.size||'')} ×${parseInt(i.quantity)||1}`).join(', ');
     const delivLabel = o.deliveryType === 'recojo' ? '🏪 Recojo' : '📦 Shalom';
     const safeStatus = o.status.replace(/[^a-z]/g, '');
     // Si el pedido tiene un estado antiguo (enviado/entregado), mostrar en select como pendiente
@@ -655,13 +713,13 @@ async function renderOrdersSection() {
 
     return `
     <tr>
-      <td><span class="order-id">${o.id}</span></td>
+      <td><span class="order-id">${sanitize(o.id)}</span></td>
       <td><span class="order-customer">${sanitize(o.customerName || '—')}</span><br><span class="order-date">${sanitize(o.customerPhone || '')}</span></td>
       <td class="order-date">${date}<br><small style="color:var(--text3)">${delivLabel}</small></td>
       <td style="font-size:.75rem;color:var(--text2);max-width:200px">${sanitize(items)}</td>
       <td class="order-total-cell">S/ ${o.total.toFixed(2)}</td>
       <td>
-        <span class="status-badge status-${safeStatus}">${STATUS_LABELS[o.status] || o.status}</span>
+        <span class="status-badge status-${safeStatus}">${STATUS_LABELS[o.status] ?? sanitize(o.status)}</span>
         ${o.paymentMethod === 'efectivo' ? '<br><span style="font-size:.68rem;color:#4caf50;font-weight:600">💵 Efectivo</span>' : ''}
         ${o.paymentMethod === 'yape'     ? '<br><span style="font-size:.68rem;color:#7c3aed;font-weight:600">📱 Yape</span>'     : ''}
       </td>
@@ -1308,12 +1366,14 @@ function addSizeRow(ml = '', price = '') {
 function setupAdminEvents() {
   document.getElementById('adminProductSearch')?.addEventListener('input', function() {
     _adminProductSearch = this.value.trim();
+    _adminPage = 1;
     renderAdminProducts().catch(console.error);
   });
 
   document.querySelectorAll('.admin-type-filter').forEach(btn => {
     btn.addEventListener('click', () => {
       _adminProductTypeFilter = btn.dataset.type;
+      _adminPage = 1;
       document.querySelectorAll('.admin-type-filter').forEach(b => {
         const active = b === btn;
         b.style.background = active ? 'var(--gold)' : 'var(--bg2)';
@@ -2411,7 +2471,7 @@ async function openUserOrdersModal(dni, name) {
         <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.75rem 1rem">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.4rem">
             <span class="order-id">${sanitize(o.id)}</span>
-            <span class="status-badge status-${safeStatus}">${STATUS_LABELS[o.status] || o.status}</span>
+            <span class="status-badge status-${safeStatus}">${STATUS_LABELS[o.status] ?? sanitize(o.status)}</span>
             <span style="font-size:.73rem;color:var(--text3)">${date}</span>
           </div>
           <div style="font-size:.78rem;color:var(--text2);margin-bottom:.35rem">${items || '—'}</div>
@@ -3036,6 +3096,157 @@ function drawDailyChart(dailyStats, year, month) {
 
 let _statsCache = null;
 let _statsCacheAt = 0;
+
+// ── Chart helpers para Estadísticas ─────────────────────────────────────────
+
+function _chartSetup(id, w, h) {
+  const c = document.getElementById(id);
+  if (!c) return null;
+  const dpr = window.devicePixelRatio || 1;
+  const pw  = c.parentElement ? (c.parentElement.offsetWidth - 24) : w;
+  const cw  = Math.max(pw, 80);
+  c.width  = cw * dpr; c.height = h * dpr;
+  c.style.width = cw + 'px'; c.style.height = h + 'px';
+  const ctx = c.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, cw, h);
+  return { ctx, W: cw, H: h };
+}
+
+function _drawTrendChart(id, months) {
+  const r = _chartSetup(id, 300, 130);
+  if (!r) return;
+  const { ctx, W, H } = r;
+  const maxRev = Math.max(...months.map(m => m.rev), 1);
+  const padL = 44, padB = 24, padT = 12, padR = 8;
+  const cW = W - padL - padR, cH = H - padT - padB;
+  const n  = months.length;
+
+  // Grid
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + cH - cH * i / 4;
+    ctx.fillStyle = '#555'; ctx.font = '9px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(`S/${Math.round(maxRev * i / 4)}`, padL - 4, y + 3);
+    ctx.beginPath(); ctx.strokeStyle = '#2a2a2a'; ctx.lineWidth = .7;
+    ctx.moveTo(padL, y); ctx.lineTo(padL + cW, y); ctx.stroke();
+  }
+
+  // Area gradient
+  const pts = months.map((m, i) => ({
+    x: padL + i * (cW / (n - 1)),
+    y: padT + cH - (m.rev / maxRev) * cH
+  }));
+
+  const grad = ctx.createLinearGradient(0, padT, 0, padT + cH);
+  grad.addColorStop(0, 'rgba(201,168,76,.35)');
+  grad.addColorStop(1, 'rgba(201,168,76,0)');
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, padT + cH);
+  pts.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(pts[pts.length - 1].x, padT + cH);
+  ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.strokeStyle = '#c9a84c'; ctx.lineWidth = 2; ctx.stroke();
+
+  // Dots + labels
+  pts.forEach((p, i) => {
+    ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#c9a84c'; ctx.fill();
+    ctx.fillStyle = '#888'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(months[i].label, p.x, H - 5);
+    if (months[i].rev > 0) {
+      ctx.fillStyle = '#c9a84c'; ctx.font = 'bold 8px sans-serif';
+      ctx.fillText(`${months[i].rev.toFixed(0)}`, p.x, p.y - 7);
+    }
+  });
+}
+
+function _drawPayDonut(id, nEfect, nYape, nSin, total) {
+  const size = 110;
+  const c = document.getElementById(id);
+  if (!c) return;
+  const dpr = window.devicePixelRatio || 1;
+  c.width = c.height = size * dpr;
+  c.style.width = c.style.height = size + 'px';
+  const ctx = c.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, size, size);
+
+  const segs = [
+    { v: nEfect, col: '#4caf50' },
+    { v: nYape,  col: '#7c3aed' },
+    { v: nSin,   col: '#3a3a3a' }
+  ].filter(s => s.v > 0);
+  const tot = segs.reduce((s, x) => s + x.v, 0) || 1;
+
+  const cx = size / 2, cy = size / 2, R = size * .42, ri = size * .24;
+  let angle = -Math.PI / 2;
+  segs.forEach(seg => {
+    const sweep = (seg.v / tot) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, angle, angle + sweep);
+    ctx.closePath();
+    ctx.fillStyle = seg.col; ctx.fill();
+    angle += sweep;
+  });
+
+  // Hole
+  ctx.beginPath(); ctx.arc(cx, cy, ri, 0, Math.PI * 2);
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--card').trim() || '#1a1a1a';
+  ctx.fill();
+
+  // Center text
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#c9a84c'; ctx.font = `bold ${size * .15}px sans-serif`;
+  ctx.fillText(total, cx, cy - 7);
+  ctx.fillStyle = '#888'; ctx.font = `${size * .09}px sans-serif`;
+  ctx.fillText('pagados', cx, cy + 9);
+}
+
+function _drawTopHBar(id, items) {
+  if (!items.length) return;
+  const ROW = 26, PAD_T = 4;
+  const r = _chartSetup(id, 300, items.length * ROW + PAD_T * 2);
+  if (!r) return;
+  const { ctx, W, H } = r;
+  const maxV  = items[0]?.qty || 1;
+  const padL  = 120, padR = 48;
+  const barW  = W - padL - padR;
+  const GOLD  = '#c9a84c';
+  const DARK  = '#2e2e2e';
+
+  items.forEach((item, i) => {
+    const y  = PAD_T + i * ROW;
+    const pct = item.qty / maxV;
+    const bw  = Math.max(pct * barW, 2);
+    const clr = i === 0 ? GOLD : i === 1 ? '#9a7830' : i === 2 ? '#6a5020' : DARK;
+
+    // Label
+    const lbl = (item.brand ? item.brand + ' ' : '') + item.name;
+    const short = lbl.length > 17 ? lbl.slice(0, 17) + '…' : lbl;
+    ctx.fillStyle = '#aaa'; ctx.font = '9.5px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(short, padL - 5, y + 14);
+
+    // Bar
+    ctx.fillStyle = clr;
+    const bh = 14, by = y + 5;
+    ctx.beginPath();
+    ctx.moveTo(padL, by); ctx.lineTo(padL + bw - 4, by);
+    ctx.quadraticCurveTo(padL + bw, by, padL + bw, by + 4);
+    ctx.lineTo(padL + bw, by + bh - 4);
+    ctx.quadraticCurveTo(padL + bw, by + bh, padL + bw - 4, by + bh);
+    ctx.lineTo(padL, by + bh); ctx.closePath(); ctx.fill();
+
+    // Value
+    ctx.fillStyle = '#ccc'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(`${item.qty} un.`, padL + bw + 4, y + 14);
+  });
+}
 const STATS_TTL = 90000; // 90 s
 
 async function renderStatsSection(forceRefresh = false) {
@@ -3156,6 +3367,24 @@ async function renderStatsSection(forceRefresh = false) {
   });
   const topClients = Object.values(clientMap).sort((a, b) => b.total - a.total).slice(0, 10);
 
+  // ── Método de pago ─────────────────────────────────────────────────────────
+  const pmEfectivo = paidOrders.filter(o => o.paymentMethod === 'efectivo');
+  const pmYape     = paidOrders.filter(o => o.paymentMethod === 'yape');
+  const pmSinDato  = paidOrders.filter(o => !o.paymentMethod);
+  const revEfect   = pmEfectivo.reduce((s, o) => s + o.total, 0);
+  const revYape    = pmYape.reduce((s, o) => s + o.total, 0);
+
+  // ── Tendencia últimos 6 meses ──────────────────────────────────────────────
+  const now6 = new Date();
+  const trend6 = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now6.getFullYear(), now6.getMonth() - 5 + i, 1);
+    const mo = paidOrders.filter(o => {
+      const od = new Date(o.date);
+      return od.getFullYear() === d.getFullYear() && od.getMonth() === d.getMonth();
+    });
+    return { label: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][d.getMonth()], rev: mo.reduce((s,o) => s + o.total, 0) };
+  });
+
   // ── Helpers ───────────────────────────────────────────────────────────────
   const medal = i => ['🥇','🥈','🥉'][i] || `${i+1}`;
 
@@ -3178,58 +3407,101 @@ async function renderStatsSection(forceRefresh = false) {
 
   container.innerHTML = `
     <style>
-      .stats-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;padding:.75rem .75rem 0}
+      .stats-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;padding:.75rem .75rem 0}
+      .stats-kpis-2{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;padding:.4rem .75rem 0}
       .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;padding:.75rem}
       .stats-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;padding:0 .75rem .75rem}
-      .kpi-box{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.65rem .8rem}
-      .kpi-v{font-size:1.2rem;font-weight:700;color:var(--gold);font-family:'Playfair Display',serif;line-height:1.1}
-      .kpi-l{font-size:.65rem;color:var(--text2);margin-top:.15rem}
+      .kpi-box{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.65rem .8rem;position:relative;overflow:hidden}
+      .kpi-box::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 60%,rgba(255,255,255,.02));pointer-events:none}
+      .kpi-v{font-size:1.25rem;font-weight:700;color:var(--gold);font-family:'Playfair Display',serif;line-height:1.1}
+      .kpi-l{font-size:.63rem;color:var(--text2);margin-top:.2rem;letter-spacing:.03em}
+      .kpi-sub{font-size:.6rem;color:var(--text3);margin-top:.1rem}
       .stat-card-inner{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
-      .stat-card-head{padding:.6rem .8rem;border-bottom:1px solid var(--border);font-size:.8rem;color:var(--gold);font-weight:600}
-      .stat-card-sub{font-size:.65rem;color:var(--text2);font-weight:400;margin-left:.3rem}
+      .stat-card-head{padding:.6rem .8rem;border-bottom:1px solid var(--border);font-size:.8rem;color:var(--gold);font-weight:600;display:flex;align-items:center;gap:.4rem}
+      .stat-card-sub{font-size:.65rem;color:var(--text2);font-weight:400;margin-left:auto}
       .stat-card-body{padding:.6rem .8rem}
-      @media(max-width:700px){
-        .stats-kpis{grid-template-columns:1fr 1fr}
+      .chart-legend{display:flex;flex-wrap:wrap;gap:.4rem .8rem;padding:.5rem .8rem .7rem;font-size:.72rem}
+      .legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:.3rem;flex-shrink:0}
+      @media(max-width:600px){
+        .stats-kpis,.stats-kpis-2{grid-template-columns:1fr 1fr}
         .stats-grid{grid-template-columns:1fr}
         .stats-grid-3{grid-template-columns:1fr}
-        .stats-kpis,.stats-grid,.stats-grid-3{padding:.5rem}
+        .stats-kpis,.stats-kpis-2,.stats-grid,.stats-grid-3{padding:.5rem}
       }
     </style>
 
-    <!-- Cabecera con botón actualizar -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .75rem .2rem">
-      <span style="font-size:.72rem;color:var(--text3)">Datos en caché · se actualiza cada 90s</span>
-      <button onclick="renderStatsSection(true)" style="font-size:.7rem;padding:.25rem .6rem;background:transparent;border:1px solid var(--border);border-radius:var(--r);color:var(--text2);cursor:pointer">↻ Actualizar</button>
+    <!-- Cabecera -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .75rem .2rem;flex-wrap:wrap;gap:.4rem">
+      <span style="font-size:.72rem;color:var(--text3)">Caché 90s · ${orders.length} pedidos · ${products.length} productos</span>
+      <button onclick="renderStatsSection(true)" style="font-size:.7rem;padding:.28rem .7rem;background:transparent;border:1px solid var(--border);border-radius:var(--r);color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:.3rem">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Actualizar
+      </button>
     </div>
 
-    <!-- KPIs -->
+    <!-- KPIs fila 1 -->
     <div class="stats-kpis">
-      <div class="kpi-box"><div class="kpi-v">${orders.length}</div><div class="kpi-l">Total pedidos</div></div>
-      <div class="kpi-box"><div class="kpi-v">S/${totalRevenue.toFixed(0)}</div><div class="kpi-l">Facturado</div></div>
-      <div class="kpi-box"><div class="kpi-v">S/${avgTicket.toFixed(1)}</div><div class="kpi-l">Ticket prom.</div></div>
-      <div class="kpi-box"><div class="kpi-v">${discountCount}</div><div class="kpi-l">Con descuento</div></div>
+      <div class="kpi-box">
+        <div class="kpi-v">${orders.length}</div>
+        <div class="kpi-l">Total pedidos</div>
+        <div class="kpi-sub">${paidOrders.length} pagados · ${orders.filter(o=>o.status==='pendiente').length} pendientes</div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-v" style="color:#4caf50">S/ ${totalRevenue.toFixed(0)}</div>
+        <div class="kpi-l">Facturado (pagados)</div>
+        <div class="kpi-sub">Ticket prom. S/ ${avgTicket.toFixed(1)}</div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-v" style="color:var(--text2)">${products.filter(p=>p.inStock).length}<span style="font-size:.75rem;color:var(--text3)">/${products.length}</span></div>
+        <div class="kpi-l">Productos en stock</div>
+        <div class="kpi-sub">${products.filter(p=>!p.inStock).length} agotados</div>
+      </div>
     </div>
 
-    <!-- Fila principal: decants + clientes -->
+    <!-- KPIs fila 2: métodos de pago -->
+    <div class="stats-kpis-2">
+      <div class="kpi-box" style="border-color:rgba(76,175,80,.3)">
+        <div class="kpi-v" style="color:#4caf50">S/ ${revEfect.toFixed(0)}</div>
+        <div class="kpi-l">💵 Efectivo</div>
+        <div class="kpi-sub">${pmEfectivo.length} pedido${pmEfectivo.length!==1?'s':''}</div>
+      </div>
+      <div class="kpi-box" style="border-color:rgba(124,58,237,.3)">
+        <div class="kpi-v" style="color:#a78bfa">S/ ${revYape.toFixed(0)}</div>
+        <div class="kpi-l">📱 Yape</div>
+        <div class="kpi-sub">${pmYape.length} pedido${pmYape.length!==1?'s':''}</div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-v" style="color:var(--text2)">S/ ${pmSinDato.reduce((s,o)=>s+o.total,0).toFixed(0)}</div>
+        <div class="kpi-l">⏳ Sin dato de pago</div>
+        <div class="kpi-sub">${pmSinDato.length} pedido${pmSinDato.length!==1?'s':''}</div>
+      </div>
+    </div>
+
+    <!-- Chart: Tendencia 6 meses + Métodos de pago -->
     <div class="stats-grid">
       <div class="stat-card-inner">
-        <div class="stat-card-head">🏆 Decants más pedidos<span class="stat-card-sub">por unidades</span></div>
-        <div class="stat-card-body" style="padding:0">
-          <table style="width:100%;border-collapse:collapse">
-            <thead><tr>
-              <th style="${th}">#</th><th style="${th}">Perfume</th>
-              <th style="${th};text-align:right">Uni.</th><th style="${th};text-align:right">S/</th>
-            </tr></thead>
-            <tbody>${topPerf.map((p,i) => `<tr>
-              <td style="${td};font-size:.85rem">${medal(i)}</td>
-              <td style="${td}"><strong style="font-size:.76rem;display:block">${sanitize(p.name)}</strong><small style="color:var(--text2);font-size:.68rem">${sanitize(p.brand)}</small></td>
-              <td style="${tdr};color:var(--gold);font-weight:700">${p.qty}</td>
-              <td style="${tdr}">S/${p.rev.toFixed(0)}</td>
-            </tr>`).join('')}</tbody>
-          </table>
+        <div class="stat-card-head">📈 Tendencia de ventas <span class="stat-card-sub">últimos 6 meses</span></div>
+        <div style="padding:.75rem"><canvas id="statsTrendChart" style="display:block;width:100%;height:130px"></canvas></div>
+      </div>
+      <div class="stat-card-inner">
+        <div class="stat-card-head">💳 Método de pago <span class="stat-card-sub">pedidos pagados</span></div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:1rem;padding:.75rem;flex-wrap:wrap">
+          <canvas id="statsPayChart" style="flex-shrink:0"></canvas>
+          <div class="chart-legend" style="flex-direction:column;padding:0;gap:.5rem">
+            <div style="display:flex;align-items:center;gap:.5rem;font-size:.78rem"><span class="legend-dot" style="background:#4caf50"></span>💵 Efectivo: <strong>${pmEfectivo.length}</strong></div>
+            <div style="display:flex;align-items:center;gap:.5rem;font-size:.78rem"><span class="legend-dot" style="background:#7c3aed"></span>📱 Yape: <strong>${pmYape.length}</strong></div>
+            <div style="display:flex;align-items:center;gap:.5rem;font-size:.78rem"><span class="legend-dot" style="background:#444"></span>Sin dato: <strong>${pmSinDato.length}</strong></div>
+          </div>
         </div>
       </div>
+    </div>
 
+    <!-- Top decants (chart horizontal) + clientes -->
+    <div class="stats-grid">
+      <div class="stat-card-inner">
+        <div class="stat-card-head">🏆 Top decants <span class="stat-card-sub">por unidades vendidas</span></div>
+        <div style="padding:.75rem .5rem"><canvas id="statsTopChart" style="display:block;width:100%"></canvas></div>
+      </div>
       <div class="stat-card-inner">
         <div class="stat-card-head">⭐ Mejores clientes<span class="stat-card-sub">por total gastado</span></div>
         <div class="stat-card-body" style="padding:0">
@@ -3292,4 +3564,11 @@ async function renderStatsSection(forceRefresh = false) {
         </div>
       </div>
     </div>`;
+
+  // ── Dibujar gráficos después del render ──────────────────────────────────
+  setTimeout(() => {
+    _drawTrendChart('statsTrendChart', trend6);
+    _drawPayDonut('statsPayChart', pmEfectivo.length, pmYape.length, pmSinDato.length, paidOrders.length);
+    _drawTopHBar('statsTopChart', topPerf.slice(0, 8));
+  }, 60);
 }
