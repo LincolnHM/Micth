@@ -1924,6 +1924,22 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
   .order-action-select { width: 100%; }
   .btn-order-detail    { width: 100%; text-align: center; }
 
+  /* Sección Usuarios — tabla con scroll horizontal */
+  #section-users .orders-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #usersStatsBar { grid-template-columns: repeat(2,1fr) !important; }
+
+  /* Sección Estadísticas — scroll horizontal en tablas internas */
+  #statsContent { overflow-x: hidden; }
+  #statsContent table { font-size: .72rem; }
+  #statsContent .stat-card-inner { overflow-x: auto; }
+
+  /* Buscadores: ancho completo en móvil */
+  #orderSearch, #userSearch { max-width: 100% !important; }
+
+  /* Admin section header con buscador */
+  #section-orders .admin-section-header,
+  #section-users  .admin-section-header { flex-wrap: wrap; gap: .5rem; }
+
   /* Modal responsivo */
   .product-modal-content { margin: .5rem; border-radius: var(--r-lg); }
   .product-modal-body    { padding: 1rem; }

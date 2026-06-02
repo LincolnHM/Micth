@@ -81,6 +81,7 @@ function orderFromDB(row) {
     items:         row.items          || [],
     total:         parseFloat(row.total) || 0,
     status:        row.status         || 'pendiente',
+    paymentMethod: row.payment_method || null,
     date:          row.created_at,
     updatedAt:     row.updated_at
   };
@@ -99,7 +100,8 @@ function orderToDB(order) {
     notes:          order.notes         || '',
     items:          order.items         || [],
     total:          order.total         || 0,
-    status:         order.status        || 'pendiente'
+    status:         order.status        || 'pendiente',
+    payment_method: order.paymentMethod || null
   };
 }
 
@@ -207,7 +209,7 @@ const CloudOrders = {
     return newOrder.id;
   },
 
-  async updateStatus(id, status) {
+  async updateStatus(id, status, paymentMethod = null) {
     // Descontar stock cuando se confirma el pago
     if (status === 'pagado') {
       const order = await this.getById(id);
@@ -245,15 +247,35 @@ const CloudOrders = {
     // Actualizar localStorage siempre (fuente de verdad local)
     Orders.updateStatus(id, status);
     if (db) {
-      const { error } = await db
-        .from('pedidos')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', id);
-      if (error) {
-        console.error('Supabase error al cambiar estado:', error?.code);
-        // El localStorage ya fue actualizado arriba, el error no bloquea la UI
-      }
+      const patch = { status, updated_at: new Date().toISOString() };
+      if (paymentMethod) patch.payment_method = paymentMethod;
+      const { error } = await db.from('pedidos').update(patch).eq('id', id);
+      if (error) console.error('Supabase error al cambiar estado:', error?.code);
     }
+  },
+
+  async update(id, data) {
+    // Actualizar localStorage
+    const local = Orders.getAll();
+    const idx   = local.findIndex(o => o.id === id);
+    if (idx !== -1) {
+      local[idx] = { ...local[idx], ...data };
+      Orders.save(local);
+    }
+    // Actualizar Supabase
+    if (db) {
+      const patch = { updated_at: new Date().toISOString() };
+      const map = {
+        items: 'items', total: 'total', status: 'status',
+        customerName: 'customer_name', customerPhone: 'customer_phone',
+        customerDni: 'customer_dni', deliveryType: 'delivery_type',
+        notes: 'notes', paymentMethod: 'payment_method'
+      };
+      Object.entries(data).forEach(([k, v]) => { if (map[k]) patch[map[k]] = v; });
+      const { error } = await db.from('pedidos').update(patch).eq('id', id);
+      if (error) { console.error('Supabase error al actualizar pedido:', error?.code); return error; }
+    }
+    return null;
   },
 
   async delete(id) {

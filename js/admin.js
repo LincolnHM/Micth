@@ -660,7 +660,11 @@ async function renderOrdersSection() {
       <td class="order-date">${date}<br><small style="color:var(--text3)">${delivLabel}</small></td>
       <td style="font-size:.75rem;color:var(--text2);max-width:200px">${sanitize(items)}</td>
       <td class="order-total-cell">S/ ${o.total.toFixed(2)}</td>
-      <td><span class="status-badge status-${safeStatus}">${STATUS_LABELS[o.status] || o.status}</span></td>
+      <td>
+        <span class="status-badge status-${safeStatus}">${STATUS_LABELS[o.status] || o.status}</span>
+        ${o.paymentMethod === 'efectivo' ? '<br><span style="font-size:.68rem;color:#4caf50;font-weight:600">💵 Efectivo</span>' : ''}
+        ${o.paymentMethod === 'yape'     ? '<br><span style="font-size:.68rem;color:#7c3aed;font-weight:600">📱 Yape</span>'     : ''}
+      </td>
       <td>
         <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
           <select class="order-action-select" data-id="${escapeAttr(o.id)}" data-status="${escapeAttr(o.status)}" aria-label="Cambiar estado">
@@ -669,6 +673,10 @@ async function renderOrdersSection() {
             ).join('')}
           </select>
           <button class="btn-order-detail" data-id="${escapeAttr(o.id)}">Ver</button>
+          <button class="btn-edit-order" data-id="${escapeAttr(o.id)}"
+                  style="font-size:.72rem;padding:.3rem .6rem;background:transparent;color:var(--gold-d);border:1px solid rgba(201,168,76,.35);border-radius:var(--r);cursor:pointer;font-weight:600;transition:background .15s,color .15s"
+                  onmouseover="this.style.background='rgba(201,168,76,.12)'"
+                  onmouseout="this.style.background='transparent'">Editar</button>
           <button class="btn-delete-order" data-id="${escapeAttr(o.id)}"
                   style="font-size:.72rem;padding:.3rem .6rem;background:transparent;color:#ef5350;border:1px solid #ef5350;border-radius:var(--r);cursor:pointer;font-weight:600;transition:background .15s,color .15s"
                   onmouseover="this.style.background='#ef5350';this.style.color='#fff'"
@@ -685,12 +693,13 @@ async function renderOrdersSection() {
         const newStatus = sel.value;
         const prevStatus = sel.dataset.status;
 
-        const doUpdate = async () => {
+        const doUpdate = async (paymentMethod = null) => {
           try {
-            await CloudOrders.updateStatus(id, newStatus);
+            await CloudOrders.updateStatus(id, newStatus, paymentMethod);
             sel.dataset.status = newStatus;
             renderOrdersSection().catch(console.error);
-            showToast(`Pedido ${id} → ${STATUS_LABELS[newStatus]}`);
+            const payLabel = paymentMethod === 'efectivo' ? ' · 💵 Efectivo' : paymentMethod === 'yape' ? ' · 📱 Yape' : '';
+            showToast(`Pedido ${id} → ${STATUS_LABELS[newStatus]}${payLabel}`);
           } catch (err) {
             console.error('Error al actualizar estado:', err);
             sel.value = prevStatus;
@@ -699,25 +708,23 @@ async function renderOrdersSection() {
         };
 
         if (newStatus === 'pagado') {
-          sel.value = prevStatus; // revertir visualmente mientras carga
+          sel.value = prevStatus;
           CloudOrders.getById(id).then(order => {
-            const items = order?.items || [];
+            const items   = order?.items || [];
             const mlLines = items
               .filter(i => parseInt(i.size) > 0)
               .map(i => `  • ${i.productName} ${i.size} ×${i.quantity} = ${parseInt(i.size) * i.quantity} ml`)
               .join('\n');
-            const msg = mlLines
-              ? `Se descontará del stock al confirmar:\n\n${mlLines}\n\n¿Confirmar pago?`
-              : `¿Confirmar el pedido ${id} como PAGADO?`;
-
-            showConfirmModal(msg,
-              () => { sel.value = newStatus; doUpdate(); },
+            const info = mlLines ? `Stock a descontar:\n${mlLines}\n\n` : '';
+            showPaymentModal(
+              `${info}¿Cómo pagó el pedido ${id}?`,
+              (payMethod) => { sel.value = newStatus; doUpdate(payMethod); },
               () => { sel.value = prevStatus; }
             );
           }).catch(() => {
-            showConfirmModal(
-              `¿Confirmar el pedido ${id} como PAGADO?`,
-              () => { sel.value = newStatus; doUpdate(); },
+            showPaymentModal(
+              `¿Cómo pagó el pedido ${id}?`,
+              (payMethod) => { sel.value = newStatus; doUpdate(payMethod); },
               () => { sel.value = prevStatus; }
             );
           });
@@ -730,6 +737,11 @@ async function renderOrdersSection() {
     // Ver detalle
     tbody.querySelectorAll('.btn-order-detail').forEach(btn => {
       btn.addEventListener('click', () => openOrderDetail(btn.dataset.id).catch(console.error));
+    });
+
+    // Editar pedido
+    tbody.querySelectorAll('.btn-edit-order').forEach(btn => {
+      btn.addEventListener('click', () => openEditOrderModal(btn.dataset.id).catch(console.error));
     });
 
     // Eliminar pedido
@@ -770,6 +782,17 @@ async function openOrderDetail(id) {
   body.innerHTML = `
     <div class="order-detail-row"><span class="lbl">ID Pedido</span><span class="val order-id">${order.id}</span></div>
     <div class="order-detail-row"><span class="lbl">Estado</span><span class="val"><span class="status-badge status-${order.status}">${STATUS_LABELS[order.status]}</span></span></div>
+    <div class="order-detail-row">
+      <span class="lbl">Método pago</span>
+      <span class="val" style="display:flex;align-items:center;gap:.5rem">
+        <select id="detPayMethod" style="padding:.3rem .6rem;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:var(--r);font-size:.82rem">
+          <option value=""    ${!order.paymentMethod                    ?'selected':''}>⏳ Por confirmar</option>
+          <option value="efectivo" ${order.paymentMethod==='efectivo'   ?'selected':''}>💵 Efectivo</option>
+          <option value="yape"     ${order.paymentMethod==='yape'       ?'selected':''}>📱 Yape</option>
+        </select>
+        <button id="savePayMethodBtn" style="font-size:.75rem;padding:.3rem .75rem;background:var(--gold);color:#111;border:none;border-radius:var(--r);font-weight:700;cursor:pointer">Guardar</button>
+      </span>
+    </div>
     <div class="order-detail-row"><span class="lbl">Fecha</span><span class="val">${date}</span></div>
     <hr style="border-color:var(--border)">
     <div class="order-detail-row"><span class="lbl">Cliente</span><span class="val">${sanitize(order.customerName || '—')}</span></div>
@@ -815,6 +838,20 @@ async function openOrderDetail(id) {
     </div>
     ${order.notes ? `<div class="order-detail-row" style="margin-top:.5rem"><span class="lbl">Notas</span><span class="val">${sanitize(order.notes)}</span></div>` : ''}
   `;
+
+  // Guardar método de pago
+  body.querySelector('#savePayMethodBtn')?.addEventListener('click', async () => {
+    const pm  = body.querySelector('#detPayMethod')?.value || null;
+    const btn = body.querySelector('#savePayMethodBtn');
+    btn.disabled = true; btn.textContent = '…';
+    try {
+      await CloudOrders.update(order.id, { paymentMethod: pm });
+      const label = pm === 'efectivo' ? '💵 Efectivo' : pm === 'yape' ? '📱 Yape' : 'Por confirmar';
+      showToast(`Método de pago actualizado: ${label} ✓`);
+      renderOrdersSection().catch(console.error);
+    } catch(e) { showToast('Error al guardar.'); }
+    btn.disabled = false; btn.textContent = 'Guardar';
+  });
 
   // Guardar nuevo total
   body.querySelector('#saveOrderTotalBtn')?.addEventListener('click', async () => {
@@ -1104,8 +1141,9 @@ async function saveManualOrder() {
   const name  = document.getElementById('regCustomerName').value.trim();
   const phone = document.getElementById('regCustomerPhone').value.trim();
   const dni   = document.getElementById('regCustomerDni').value.trim();
-  const dtype = document.getElementById('regDeliveryType').value;
-  const notes = document.getElementById('regNotes').value.trim();
+  const dtype   = document.getElementById('regDeliveryType').value;
+  const payMeth = document.getElementById('regPaymentMethod')?.value || '';
+  const notes   = document.getElementById('regNotes').value.trim();
 
   if (!name) { alert('Ingresa el nombre del cliente.'); return; }
 
@@ -1152,33 +1190,37 @@ async function saveManualOrder() {
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Guardando...'; }
 
   try {
-    await CloudOrders.create({ customerName: name, customerPhone: phone, customerDni: dni, deliveryType: dtype, notes, items, total });
+    await CloudOrders.create({ customerName: name, customerPhone: phone, customerDni: dni, deliveryType: dtype, notes, items, total, paymentMethod: payMeth || null });
 
-    // Descontar stock al registrar el pedido
+    // Descontar stock — errores no bloquean el cierre del modal
     const agotados = [];
     for (const item of items) {
-      const product = Products.getById(item.productId);
-      if (!product) continue;
-      if (product.type === 'entero') {
-        const qty    = item.quantity || 1;
-        const newQty = Math.max(0, (product.stockQuantity || 0) - qty);
-        await CloudProducts.update(item.productId, { stockQuantity: newQty, inStock: newQty > 0 });
-        if (newQty === 0) agotados.push(product.name);
-      } else if (product.availableAsEntero && item.size === 'Unidad') {
-        await CloudProducts.update(item.productId, { availableAsEntero: false, bottleRemainingMl: 0, inStock: false });
-        agotados.push(product.name);
-      }
+      try {
+        const product = Products.getById(item.productId);
+        if (!product) continue;
+        if (product.type === 'entero') {
+          const qty    = item.quantity || 1;
+          const newQty = Math.max(0, (product.stockQuantity || 0) - qty);
+          await CloudProducts.update(item.productId, { stockQuantity: newQty, inStock: newQty > 0 });
+          if (newQty === 0) agotados.push(product.name);
+        } else if (product.availableAsEntero && item.size === 'Unidad') {
+          await CloudProducts.update(item.productId, { availableAsEntero: false, bottleRemainingMl: 0, inStock: false });
+          agotados.push(product.name);
+        }
+      } catch (_) {}
     }
 
+    // Cerrar modal y mostrar éxito inmediatamente — el refresh es no-bloqueante
     document.getElementById('registerOrderModal').classList.remove('open');
-    await renderOrdersSection();
-    renderAdminProducts().catch(console.error);
     const msg = agotados.length
       ? `Pedido registrado ✓  |  Agotado: ${agotados.join(', ')}`
       : 'Pedido registrado correctamente ✓';
     showToast(msg);
+    renderOrdersSection().catch(console.error);
+    renderAdminProducts().catch(console.error);
+
   } catch (err) {
-    console.error(err);
+    console.error('[MICHT] Error guardando pedido:', err);
     showToast('Error al guardar el pedido. Inténtalo de nuevo.');
   } finally {
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Guardar Pedido'; }
@@ -1820,6 +1862,283 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
   }
 }
 
+// ─── Modal de edición de pedido ───────────────────────────────────────────────
+
+async function openEditOrderModal(id) {
+  const order = await CloudOrders.getById(id);
+  if (!order) { showToast('No se encontró el pedido.'); return; }
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;transition:opacity .22s ease';
+
+  const STATUS_LABELS = { pendiente:'Pendiente', pagado:'Pagado', cancelado:'Cancelado' };
+
+  overlay.innerHTML = `
+    <div style="background:#1a1a1a;border:1px solid var(--gold-d);border-radius:10px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.6);display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border)">
+        <h3 style="margin:0;color:var(--gold);font-family:'Playfair Display',serif;font-size:1rem">Editar Pedido ${sanitize(id)}</h3>
+        <button id="closeEditModal" style="background:none;border:none;color:#888;font-size:1.3rem;cursor:pointer">✕</button>
+      </div>
+
+      <div style="padding:1.1rem 1.25rem;display:flex;flex-direction:column;gap:.9rem">
+
+        <!-- Datos del cliente -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
+          <div>
+            <label style="font-size:.74rem;color:var(--text2);display:block;margin-bottom:.25rem">Nombre *</label>
+            <input id="editName" type="text" value="${sanitize(order.customerName||'')}" maxlength="120"
+              style="width:100%;padding:.42rem .65rem;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:var(--r);font-size:.83rem;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:.74rem;color:var(--text2);display:block;margin-bottom:.25rem">Teléfono</label>
+            <input id="editPhone" type="tel" value="${sanitize(order.customerPhone||'')}" maxlength="20"
+              style="width:100%;padding:.42rem .65rem;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:var(--r);font-size:.83rem;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:.74rem;color:var(--text2);display:block;margin-bottom:.25rem">DNI</label>
+            <input id="editDni" type="text" value="${sanitize(order.customerDni||'')}" maxlength="8"
+              style="width:100%;padding:.42rem .65rem;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:var(--r);font-size:.83rem;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:.74rem;color:var(--text2);display:block;margin-bottom:.25rem">Entrega</label>
+            <select id="editDelivery"
+              style="width:100%;padding:.42rem .65rem;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:var(--r);font-size:.83rem;box-sizing:border-box">
+              <option value="recojo" ${order.deliveryType==='recojo'?'selected':''}>🏪 Recojo</option>
+              <option value="envio"  ${order.deliveryType==='envio' ?'selected':''}>📦 Shalom</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size:.74rem;color:var(--text2);display:block;margin-bottom:.25rem">Notas</label>
+          <textarea id="editNotes" maxlength="300"
+            style="width:100%;padding:.42rem .65rem;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:var(--r);font-size:.83rem;min-height:52px;box-sizing:border-box;resize:vertical">${sanitize(order.notes||'')}</textarea>
+        </div>
+
+        <!-- Productos editables -->
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+            <label style="font-size:.74rem;color:var(--text2);font-weight:600">Productos del pedido</label>
+            <button id="editAddItemBtn" style="font-size:.72rem;padding:.28rem .7rem;background:var(--bg2);border:1px solid var(--border-l);color:var(--text2);border-radius:var(--r);cursor:pointer">+ Agregar</button>
+          </div>
+          <div id="editItemsList" style="display:flex;flex-direction:column;gap:.4rem"></div>
+        </div>
+
+        <!-- Total calculado -->
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem .8rem;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border)">
+          <span style="font-size:.82rem;color:var(--text2)">Total calculado:</span>
+          <strong id="editTotalDisplay" style="color:var(--gold);font-size:1rem">S/ 0.00</strong>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:.6rem;justify-content:flex-end;padding:.85rem 1.25rem;border-top:1px solid var(--border)">
+        <button id="editCancelBtn" style="padding:.5rem 1.1rem;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:transparent;border:1px solid #555;color:#aaa">Cancelar</button>
+        <button id="editSaveBtn" style="padding:.5rem 1.25rem;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:700;background:var(--gold);border:1px solid var(--gold);color:#111">Guardar cambios</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+
+  function closeModal() {
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.remove(), 240);
+  }
+  overlay.querySelector('#closeEditModal').addEventListener('click', closeModal);
+  overlay.querySelector('#editCancelBtn').addEventListener('click', closeModal);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+
+  // ── Renderizar items editables ─────────────────────────────────────────────
+  const allProducts = await CloudProducts.getAll();
+  const prodLookup  = {};
+  allProducts.forEach(p => { prodLookup[p.id] = p; });
+
+  let editItems = (order.items || []).map(i => ({ ...i }));
+
+  function calcAndShowTotal() {
+    const t = editItems.reduce((s, i) => s + (parseFloat(i.price)||0) * (parseInt(i.quantity)||1), 0);
+    overlay.querySelector('#editTotalDisplay').textContent = `S/ ${t.toFixed(2)}`;
+  }
+
+  function renderEditItems() {
+    const list = overlay.querySelector('#editItemsList');
+    list.innerHTML = '';
+    editItems.forEach((item, idx) => {
+      const prod    = prodLookup[item.productId];
+      const sizes   = prod ? Object.entries(prod.sizes || {}) : [];
+      const row     = document.createElement('div');
+      row.style.cssText = 'display:grid;grid-template-columns:1fr auto auto auto;gap:.4rem;align-items:center;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:.45rem .6rem';
+      row.innerHTML = `
+        <span style="font-size:.8rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${sanitize(item.brand||'')} ${sanitize(item.productName||'')}">${sanitize(item.brand||'')} — ${sanitize(item.productName||'')}</span>
+        <select class="edit-size-sel" data-idx="${idx}"
+          style="padding:.3rem .5rem;background:var(--card);border:1px solid var(--border-l);color:var(--text);border-radius:var(--r);font-size:.78rem;cursor:pointer">
+          ${sizes.length
+            ? sizes.map(([s, p]) => `<option value="${escapeAttr(s)}|${p}" ${s===item.size?'selected':''}>${s} — S/${p}</option>`).join('')
+            : `<option value="${escapeAttr(item.size||'')}|${item.price||0}">${sanitize(item.size||'')} — S/${item.price||0}</option>`}
+        </select>
+        <input type="number" class="edit-qty-inp" data-idx="${idx}" min="1" max="99" value="${item.quantity||1}"
+          style="width:54px;padding:.3rem .4rem;background:var(--card);border:1px solid var(--border-l);color:var(--text);border-radius:var(--r);font-size:.82rem;text-align:center">
+        <button class="edit-remove-item" data-idx="${idx}"
+          style="background:none;border:none;color:#666;font-size:1.1rem;cursor:pointer;padding:0 .2rem;line-height:1"
+          onmouseover="this.style.color='#ef5350'" onmouseout="this.style.color='#666'">×</button>`;
+      list.appendChild(row);
+    });
+
+    list.querySelectorAll('.edit-size-sel').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const i = parseInt(sel.dataset.idx);
+        const [sz, pr] = sel.value.split('|');
+        editItems[i].size  = sz;
+        editItems[i].price = parseFloat(pr) || editItems[i].price;
+        calcAndShowTotal();
+      });
+    });
+    list.querySelectorAll('.edit-qty-inp').forEach(inp => {
+      inp.addEventListener('input', () => {
+        editItems[parseInt(inp.dataset.idx)].quantity = parseInt(inp.value) || 1;
+        calcAndShowTotal();
+      });
+    });
+    list.querySelectorAll('.edit-remove-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        editItems.splice(parseInt(btn.dataset.idx), 1);
+        renderEditItems();
+        calcAndShowTotal();
+      });
+    });
+    calcAndShowTotal();
+  }
+
+  renderEditItems();
+
+  // ── Agregar producto ───────────────────────────────────────────────────────
+  overlay.querySelector('#editAddItemBtn').addEventListener('click', () => {
+    const allOpts = [];
+    allProducts.forEach(p => {
+      if (p.type === 'entero') {
+        Object.entries(p.sizes||{}).forEach(([s,pr]) => allOpts.push({ productId:p.id, brand:p.brand, productName:p.name, size:s, price:pr, quantity:1 }));
+      } else {
+        Object.entries(p.sizes||{}).forEach(([s,pr]) => allOpts.push({ productId:p.id, brand:p.brand, productName:p.name, size:s, price:pr, quantity:1 }));
+      }
+    });
+
+    const picker = document.createElement('div');
+    picker.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:1rem';
+    picker.innerHTML = `
+      <div style="background:#1a1a1a;border:1px solid var(--border);border-radius:8px;width:100%;max-width:440px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.6)">
+        <div style="padding:.75rem 1rem;border-bottom:1px solid var(--border);display:flex;gap:.5rem;align-items:center">
+          <input id="pickSearch" type="text" placeholder="Buscar perfume..." autocomplete="off"
+            style="flex:1;padding:.4rem .65rem;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:var(--r);font-size:.83rem">
+          <button id="pickClose" style="background:none;border:none;color:#888;font-size:1.2rem;cursor:pointer">✕</button>
+        </div>
+        <div id="pickList" style="overflow-y:auto;max-height:55vh;padding:.4rem"></div>
+      </div>`;
+    document.body.appendChild(picker);
+
+    const pickList   = picker.querySelector('#pickList');
+    const pickSearch = picker.querySelector('#pickSearch');
+
+    function renderPick(q = '') {
+      const filtered = q ? allOpts.filter(o => `${o.brand} ${o.productName} ${o.size}`.toLowerCase().includes(q.toLowerCase())) : allOpts;
+      pickList.innerHTML = filtered.slice(0, 60).map((o, i) => `
+        <div class="pick-opt" data-i="${i + (q ? 0 : 0)}"
+          style="padding:.45rem .75rem;cursor:pointer;border-bottom:1px solid var(--border);font-size:.8rem;color:var(--text2);transition:background .1s"
+          onmouseenter="this.style.background='var(--gold-dim)';this.style.color='var(--text)'"
+          onmouseleave="this.style.background='';this.style.color='var(--text2)'">
+          <strong>${sanitize(o.brand)}</strong> — ${sanitize(o.productName)} <span style="color:var(--gold)">${sanitize(o.size)}</span> <span style="float:right">S/ ${o.price}</span>
+        </div>`).join('');
+      pickList.querySelectorAll('.pick-opt').forEach((el, ri) => {
+        const item = filtered[ri];
+        if (!item) return;
+        el.addEventListener('click', () => {
+          editItems.push({ ...item, quantity: 1 });
+          renderEditItems();
+          picker.remove();
+        });
+      });
+    }
+
+    renderPick();
+    pickSearch.addEventListener('input', () => renderPick(pickSearch.value));
+    picker.querySelector('#pickClose').addEventListener('click', () => picker.remove());
+    picker.addEventListener('click', e => { if (e.target === picker) picker.remove(); });
+    setTimeout(() => pickSearch.focus(), 80);
+  });
+
+  // ── Guardar cambios ────────────────────────────────────────────────────────
+  overlay.querySelector('#editSaveBtn').addEventListener('click', async () => {
+    const name     = overlay.querySelector('#editName').value.trim();
+    const phone    = overlay.querySelector('#editPhone').value.trim();
+    const dni      = overlay.querySelector('#editDni').value.trim();
+    const delivery = overlay.querySelector('#editDelivery').value;
+    const notes    = overlay.querySelector('#editNotes').value.trim();
+    const saveBtn2 = overlay.querySelector('#editSaveBtn');
+
+    if (!name) { showToast('Ingresa el nombre del cliente.'); return; }
+    if (!editItems.length) { showToast('El pedido debe tener al menos un producto.'); return; }
+
+    saveBtn2.disabled    = true;
+    saveBtn2.textContent = 'Guardando…';
+
+    const newTotal = editItems.reduce((s, i) => s + (parseFloat(i.price)||0) * (parseInt(i.quantity)||1), 0);
+
+    try {
+      await CloudOrders.update(id, {
+        customerName: name, customerPhone: phone, customerDni: dni,
+        deliveryType: delivery, notes, items: editItems, total: newTotal
+      });
+      showToast(`Pedido ${id} actualizado ✓`);
+      closeModal();
+      renderOrdersSection().catch(console.error);
+    } catch (err) {
+      console.error(err);
+      showToast('Error al guardar. Inténtalo de nuevo.');
+    } finally {
+      saveBtn2.disabled    = false;
+      saveBtn2.textContent = 'Guardar cambios';
+    }
+  });
+}
+
+// ─── Modal de método de pago ──────────────────────────────────────────────────
+
+function showPaymentModal(message, onConfirm, onCancel) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;transition:opacity .22s ease';
+
+  overlay.innerHTML = `
+    <div style="background:#1a1a1a;border:1px solid #c9a84c;border-radius:10px;padding:1.5rem 1.75rem;max-width:380px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <h3 style="margin:0;font-size:1rem;color:#c9a84c;font-weight:700">Confirmar pago</h3>
+        <button id="pmClose" style="background:none;border:none;color:#888;font-size:1.1rem;cursor:pointer">✕</button>
+      </div>
+      <p style="margin:0;color:#e0d5c5;font-size:.88rem;white-space:pre-line;line-height:1.55">${sanitize(message)}</p>
+      <p style="margin:0;font-size:.8rem;color:var(--text2);font-weight:600">¿Cómo se realizó el pago?</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem">
+        <button id="pmEfectivo" style="padding:.7rem;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:700;background:#1e3a20;border:2px solid #4caf50;color:#4caf50;transition:all .15s"
+          onmouseover="this.style.background='#2a4f2c'" onmouseout="this.style.background='#1e3a20'">
+          💵<br><span style="font-size:.8rem">Efectivo</span>
+        </button>
+        <button id="pmYape" style="padding:.7rem;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:700;background:#1e1a3a;border:2px solid #7c3aed;color:#a78bfa;transition:all .15s"
+          onmouseover="this.style.background='#2a2050'" onmouseout="this.style.background='#1e1a3a'">
+          📱<br><span style="font-size:.8rem">Yape</span>
+        </button>
+      </div>
+      <button id="pmCancel" style="padding:.45rem;border-radius:6px;cursor:pointer;font-size:.82rem;font-weight:600;background:transparent;border:1px solid #444;color:#888">Cancelar</button>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+
+  function cleanup() { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 240); }
+
+  overlay.querySelector('#pmEfectivo').addEventListener('click', () => { cleanup(); onConfirm('efectivo'); });
+  overlay.querySelector('#pmYape').addEventListener('click',     () => { cleanup(); onConfirm('yape'); });
+  overlay.querySelector('#pmCancel').addEventListener('click',   () => { cleanup(); if (onCancel) onCancel(); });
+  overlay.querySelector('#pmClose').addEventListener('click',    () => { cleanup(); if (onCancel) onCancel(); });
+  overlay.addEventListener('click', e => { if (e.target === overlay) { cleanup(); if (onCancel) onCancel(); } });
+}
+
 // ─── Modal de confirmación (totalmente dinámico, sin dependencia de HTML) ────
 
 function showConfirmModal(message, onOk, onCancel) {
@@ -2126,18 +2445,75 @@ function setupUsersEvents() {
 
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-function getExpenses(year) {
+// ── Gastos: localStorage como cache + Supabase para sync entre dispositivos ──
+// SQL para crear la tabla (ejecutar en Supabase SQL Editor una sola vez):
+//
+// CREATE TABLE IF NOT EXISTS gastos (
+//   id          SERIAL PRIMARY KEY,
+//   year        INTEGER NOT NULL,
+//   month       INTEGER NOT NULL,
+//   description TEXT    NOT NULL,
+//   amount      NUMERIC NOT NULL,
+//   created_at  TIMESTAMPTZ DEFAULT NOW()
+// );
+// ALTER TABLE gastos ENABLE ROW LEVEL SECURITY;
+// CREATE POLICY "admin_gastos" ON gastos FOR ALL TO authenticated USING (true);
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function getExpenses(year) {
+  // Intentar cargar desde Supabase (sync entre dispositivos)
+  if (db) {
+    try {
+      const { data, error } = await db.from('gastos').select('*').eq('year', year);
+      if (!error && data) {
+        // Convertir a formato legacy {month, description, amount, date}
+        const remote = data.map(r => ({ id: r.id, month: r.month, description: r.description, amount: parseFloat(r.amount), date: r.created_at }));
+        localStorage.setItem(`micht_expenses_${year}`, JSON.stringify(remote));
+        return remote;
+      }
+    } catch (_) {}
+  }
+  // Fallback: localStorage
   try { return JSON.parse(localStorage.getItem(`micht_expenses_${year}`) || '[]'); }
   catch { return []; }
 }
 
+async function addExpense(year, month, description, amount) {
+  const newExp = { month, description, amount, date: new Date().toISOString() };
+  // Guardar en Supabase
+  if (db) {
+    try {
+      const { data, error } = await db.from('gastos').insert({ year, month, description, amount }).select().single();
+      if (!error && data) newExp.id = data.id;
+    } catch (_) {}
+  }
+  // Guardar en localStorage
+  const local = JSON.parse(localStorage.getItem(`micht_expenses_${year}`) || '[]');
+  local.push(newExp);
+  localStorage.setItem(`micht_expenses_${year}`, JSON.stringify(local));
+  return newExp;
+}
+
+async function deleteExpense(year, expenseId, localIdx) {
+  // Eliminar de Supabase por id si existe
+  if (db && expenseId) {
+    try { await db.from('gastos').delete().eq('id', expenseId); } catch (_) {}
+  }
+  // Eliminar de localStorage
+  const local = JSON.parse(localStorage.getItem(`micht_expenses_${year}`) || '[]');
+  local.splice(localIdx, 1);
+  localStorage.setItem(`micht_expenses_${year}`, JSON.stringify(local));
+}
+
+// saveExpenses mantiene compatibilidad con el código legacy (contabilidad mensual)
 function saveExpenses(year, expenses) {
   localStorage.setItem(`micht_expenses_${year}`, JSON.stringify(expenses));
 }
 
-function getMonthlyStats(orders, year) {
+async function getMonthlyStats(orders, year) {
   const filtered = orders.filter(o => new Date(o.date).getFullYear() === year);
-  const expenses = getExpenses(year);
+  const expenses = await getExpenses(year);
   return Array.from({ length: 12 }, (_, m) => {
     const monthOrders = filtered.filter(o => new Date(o.date).getMonth() === m);
     const paid        = monthOrders.filter(o => o.status === 'pagado');
@@ -2165,7 +2541,7 @@ async function renderAccountingSection() {
   }
 
   const year  = parseInt(yearSel.value) || thisYear;
-  const stats = getMonthlyStats(allOrders, year);
+  const stats = await getMonthlyStats(allOrders, year);
   const now   = new Date();
 
   // Calcular totales
@@ -2177,12 +2553,20 @@ async function renderAccountingSection() {
   const paidTotal     = stats.reduce((s, m) => s + m.paid, 0);
   const activeMonths  = stats.filter(m => m.revenue > 0).length || 1;
 
+  // Desglose por método de pago
+  const paidOrders = allOrders.filter(o => o.status === 'pagado' && new Date(o.date).getFullYear() === year);
+  const revEfectivo = paidOrders.filter(o => o.paymentMethod === 'efectivo').reduce((s,o) => s + o.total, 0);
+  const revYape     = paidOrders.filter(o => o.paymentMethod === 'yape').reduce((s,o) => s + o.total, 0);
+  const revSinMet   = paidOrders.filter(o => !o.paymentMethod).reduce((s,o) => s + o.total, 0);
+
   // ── Tarjetas de resumen ──────────────────────────────────────────────────────
   const summary = document.getElementById('accountingSummary');
   summary.innerHTML = [
     { label: `Total ${year}`, val: `S/ ${totalRevenue.toFixed(0)}`, sub: `${paidTotal} pedidos pagados`, color: 'var(--gold)' },
     { label: 'Mejor Mes',    val: bestMonth.revenue > 0 ? bestMonth.name : '—', sub: bestMonth.revenue > 0 ? `S/ ${bestMonth.revenue.toFixed(0)}` : 'Sin ventas aún', color: 'var(--green)' },
     { label: year === thisYear ? 'Mes Actual' : `Dic ${year}`, val: `S/ ${(year === thisYear ? currentMonth : stats[11]).revenue.toFixed(0)}`, sub: `${(year === thisYear ? currentMonth : stats[11]).paid} pagados`, color: 'var(--gold-d)' },
+    { label: '💵 Efectivo',  val: `S/ ${revEfectivo.toFixed(0)}`, sub: `${paidOrders.filter(o=>o.paymentMethod==='efectivo').length} pedidos`, color: '#4caf50' },
+    { label: '📱 Yape',      val: `S/ ${revYape.toFixed(0)}`,     sub: `${paidOrders.filter(o=>o.paymentMethod==='yape').length} pedidos`,     color: '#7c3aed' },
     { label: 'Gastos Totales', val: `S/ ${totalExpenses.toFixed(0)}`, sub: 'registrados manualmente', color: '#ef5350' },
     { label: 'Neto (Ingr.−Gastos)', val: `S/ ${totalNet.toFixed(0)}`, sub: `Prom/mes: S/ ${(totalRevenue / activeMonths).toFixed(0)}`, color: totalNet >= 0 ? 'var(--green)' : '#ef5350' }
   ].map(c => `
@@ -2352,11 +2736,12 @@ function drawAccountingChart(stats, year) {
   });
 }
 
-function openExpenseModal(month, year) {
+async function openExpenseModal(month, year) {
   let overlay = document.getElementById('expenseOverlay');
   if (overlay) overlay.remove();
 
-  const expenses  = getExpenses(year).filter(e => e.month === month);
+  const allExp    = await getExpenses(year);
+  const expenses  = allExp.filter(e => e.month === month);
   const total     = expenses.reduce((s, e) => s + e.amount, 0);
   const monthName = MONTH_NAMES[month];
 
@@ -2414,12 +2799,10 @@ function openExpenseModal(month, year) {
 
   // Eliminar gasto
   overlay.querySelectorAll('.del-expense-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const all         = getExpenses(year);
-      const monthItems  = all.filter(e => e.month === month);
-      const target      = monthItems[parseInt(btn.dataset.idx)];
-      const newAll      = all.filter(e => e !== target);
-      saveExpenses(year, newAll);
+    btn.addEventListener('click', async () => {
+      const localIdx = parseInt(btn.dataset.idx);
+      const target   = expenses[localIdx];
+      await deleteExpense(year, target?.id, (await getExpenses(year)).findIndex(e => e === target || (e.month === target.month && e.description === target.description && e.amount === target.amount)));
       showToast('Gasto eliminado ✓');
       overlay.remove();
       openExpenseModal(month, year);
@@ -2427,14 +2810,12 @@ function openExpenseModal(month, year) {
   });
 
   // Guardar gasto
-  overlay.querySelector('#saveExpenseBtn').addEventListener('click', () => {
+  overlay.querySelector('#saveExpenseBtn').addEventListener('click', async () => {
     const desc   = overlay.querySelector('#expenseDesc').value.trim();
     const amount = parseFloat(overlay.querySelector('#expenseAmount').value);
-    if (!desc)               { showToast('Ingresa una descripción.'); return; }
-    if (isNaN(amount) || amount <= 0) { showToast('Ingresa un monto válido.'); return; }
-    const all = getExpenses(year);
-    all.push({ month, description: desc, amount, date: new Date().toISOString() });
-    saveExpenses(year, all);
+    if (!desc)                         { showToast('Ingresa una descripción.'); return; }
+    if (isNaN(amount) || amount <= 0)  { showToast('Ingresa un monto válido.'); return; }
+    await addExpense(year, month, desc, amount);
     showToast('Gasto registrado ✓');
     overlay.remove();
     openExpenseModal(month, year);

@@ -613,6 +613,15 @@ CREATE POLICY "user_or_admin_select" ON perfiles_usuarios FOR SELECT TO authenti
         </div>
 
         <div class="field">
+          <label for="regPaymentMethod">Método de pago</label>
+          <select id="regPaymentMethod">
+            <option value="">⏳ Por confirmar</option>
+            <option value="efectivo">💵 Efectivo</option>
+            <option value="yape">📱 Yape</option>
+          </select>
+        </div>
+
+        <div class="field">
           <label for="regNotes">Notas del pedido (opcional)</label>
           <textarea id="regNotes" maxlength="300" placeholder="Observaciones, dirección de referencia, etc." style="min-height:60px"></textarea>
         </div>
@@ -652,7 +661,7 @@ CREATE POLICY "user_or_admin_select" ON perfiles_usuarios FOR SELECT TO authenti
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/data.js"></script>
-  <script src="js/supabase-config.js?v=21"></script>
-  <script src="js/admin.js?v=21"></script>
+  <script src="js/supabase-config.js?v=23"></script>
+  <script src="js/admin.js?v=23"></script>
 </body>
 </html>
