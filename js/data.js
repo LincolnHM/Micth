@@ -693,6 +693,26 @@ const DEFAULT_PRODUCTS = [
     bottleTotalMl: 0
   },
 
+  {
+    id: 75,
+    name: 'Khamrah Waha',
+    brand: 'Lattafa',
+    type: 'arabe',
+    gender: 'unisex',
+    occasion: 'ambas',
+    olfFamily: 'Oriental Frutal Floral',
+    topNotes: 'Sandía, Durazno, Cítricos',
+    heartNotes: 'Rosa, Jazmín, Lila',
+    baseNotes: 'Almizcle, Sándalo, Ámbar',
+    description: 'Khamrah Waha: la versión fresca y frutal de la icónica línea Khamrah de Lattafa. "Waha" significa oasis — un refugio fragante con frutas jugosas y flores delicadas sobre una base oriental suave. Ideal para el día.',
+    imageUrl: '',
+    sizes: { '3ml': 10, '5ml': 15, '10ml': 25 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 0,
+    bottleTotalMl: 0
+  },
+
   // ─── RASASI — SERIE HAWAS ─────────────────────────────────────────────────
   {
     id: 32,
@@ -1274,6 +1294,7 @@ const PRODUCT_IMAGE_MAP = {
   'Khamrah Qahwa':              '/img PERFUMES/Khamrah_Qahwa.png',
   'Khamrah Dukhan':             '/img PERFUMES/Khamrah_Dukhan.png',
   'Khamrah':                    '/img PERFUMES/Khamrah.png',
+  'Khamrah Waha':               '/img PERFUMES/Khamrah_Waha.png',
   'Hawas Fire':                 '/img PERFUMES/Hawas_Fire.png',
   'Hawas Elixir':               '/img PERFUMES/Hawas_Elixir.png',
   'Hawas Ice':                  '/img PERFUMES/Hawas_Ice.png',
