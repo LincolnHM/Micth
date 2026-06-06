@@ -5841,6 +5841,34 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   --sh-gold: 0 10px 30px rgba(201,168,76,.16);
 }
 
+#loginSection,
+#dashboardSection,
+.admin-header,
+.admin-main,
+.admin-layout,
+.admin-section,
+.admin-card,
+.stat-card,
+.campaign-admin-card,
+.order-modal-content,
+.product-modal-content,
+.pass-form,
+.notes-section,
+.ml-tracker,
+.campaign-status-box,
+.orders-table-wrap,
+.order-modal-header,
+.product-modal-header,
+.product-modal-footer,
+.order-modal-body,
+.orders-table th,
+.orders-table td,
+.privacy-modal,
+.privacy-modal-header,
+.privacy-modal-body {
+  background-color: var(--bg) !important;
+}
+
 #loginSection {
   background:
     radial-gradient(circle at 18% 12%, rgba(201,168,76,.08) 0%, transparent 34%),
