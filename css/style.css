@@ -5822,57 +5822,57 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 /* ─── Admin theme refresh ────────────────────────────────────────────────── */
 #loginSection,
 #dashboardSection {
-  --bg: #f4efe5;
-  --bg2: #fffaf1;
-  --card: #ffffff;
-  --card-h: #fffdf8;
-  --white: #171513;
-  --text: #171513;
-  --text1: #2c2822;
-  --text2: #726b61;
-  --text3: #a29a8d;
-  --border: rgba(63, 47, 24, .10);
-  --border-l: rgba(63, 47, 24, .16);
-  --gold: #a8792f;
-  --gold-l: #c89b44;
-  --gold-d: #8d6320;
-  --gold-dim: rgba(168,121,47,.10);
-  --sh: 0 18px 44px rgba(31, 23, 11, .08);
-  --sh-gold: 0 10px 30px rgba(168,121,47,.16);
+  --bg: #080808;
+  --bg2: #101010;
+  --card: #151515;
+  --card-h: #1b1b1b;
+  --white: #f8f4ee;
+  --text: #e8e4de;
+  --text1: #cfc9c1;
+  --text2: #8f8a84;
+  --text3: #4e4a46;
+  --border: #1d1d1d;
+  --border-l: #2a2a2a;
+  --gold: #c9a84c;
+  --gold-l: #e1bd5f;
+  --gold-d: #9a7a2a;
+  --gold-dim: rgba(201,168,76,.12);
+  --sh: 0 18px 44px rgba(0,0,0,.6);
+  --sh-gold: 0 10px 30px rgba(201,168,76,.16);
 }
 
 #loginSection {
   background:
-    radial-gradient(circle at 18% 12%, rgba(201,168,76,.12) 0%, transparent 34%),
-    radial-gradient(circle at 82% 0%, rgba(168,121,47,.09) 0%, transparent 28%),
-    linear-gradient(180deg, #faf7f0 0%, #f1e8dc 100%);
+    radial-gradient(circle at 18% 12%, rgba(201,168,76,.08) 0%, transparent 34%),
+    radial-gradient(circle at 82% 0%, rgba(201,168,76,.06) 0%, transparent 28%),
+    linear-gradient(180deg, #0d0d0d 0%, #050505 100%);
 }
 
 #loginSection .login-box {
-  background: rgba(255,255,255,.92);
-  border: 1px solid rgba(63,47,24,.08);
-  box-shadow: 0 16px 48px rgba(31,23,11,.10);
-  backdrop-filter: blur(14px);
+  background: rgba(20,20,20,.96);
+  border: 1px solid rgba(255,255,255,.06);
+  box-shadow: var(--sh);
+  backdrop-filter: blur(14px) saturate(140%);
 }
 
 #loginSection .logo-admin {
-  color: var(--text);
+  color: var(--white);
 }
 
 #dashboardSection {
   background:
-    radial-gradient(circle at 18% 0%, rgba(201,168,76,.11) 0%, transparent 33%),
-    linear-gradient(180deg, #f7f1e8 0%, #eee3d2 100%);
+    radial-gradient(circle at 18% 0%, rgba(201,168,76,.08) 0%, transparent 33%),
+    linear-gradient(180deg, #090909 0%, #050505 100%);
 }
 
 .admin-header {
-  background: rgba(255,250,243,.88);
-  border-bottom: 1px solid rgba(63,47,24,.08);
-  box-shadow: 0 10px 32px rgba(31,23,11,.08);
+  background: rgba(8,8,8,.97);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 10px 32px rgba(0,0,0,.22);
 }
 
 .admin-logo {
-  color: var(--text);
+  color: var(--white);
 }
 
 .admin-sidebar {
@@ -5900,22 +5900,22 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 }
 
 .admin-main::before {
-  opacity: .45;
+  opacity: .28;
 }
 
 .admin-section {
-  background: rgba(255,255,255,.76);
-  border: 1px solid rgba(63,47,24,.08);
-  box-shadow: 0 18px 48px rgba(31,23,11,.08);
-  backdrop-filter: blur(14px);
+  background: linear-gradient(180deg, rgba(19,19,19,.96), rgba(13,13,13,.98));
+  border: 1px solid rgba(255,255,255,.06);
+  box-shadow: 0 18px 48px rgba(0,0,0,.32);
+  backdrop-filter: blur(14px) saturate(120%);
 }
 
 .admin-section::before {
-  opacity: .7;
+  opacity: .55;
 }
 
 .admin-section-header {
-  border-bottom-color: rgba(63,47,24,.08);
+  border-bottom-color: var(--border);
 }
 
 .admin-section-header h2,
@@ -5940,9 +5940,9 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 .notes-section,
 .ml-tracker,
 .campaign-status-box {
-  background: rgba(255,255,255,.95);
-  border-color: rgba(63,47,24,.08);
-  box-shadow: 0 12px 30px rgba(31,23,11,.08);
+  background: rgba(22,22,22,.98);
+  border-color: rgba(255,255,255,.06);
+  box-shadow: 0 12px 30px rgba(0,0,0,.18);
 }
 
 .admin-card-head,
@@ -5950,12 +5950,12 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 .order-modal-header,
 .product-modal-footer,
 .order-modal-body {
-  border-color: rgba(63,47,24,.08);
+  border-color: rgba(255,255,255,.06);
 }
 
 .admin-product-thumb {
-  background: rgba(245,240,231,.9);
-  border-color: rgba(168,121,47,.16);
+  background: rgba(255,255,255,.05);
+  border-color: rgba(201,168,76,.2);
 }
 
 .admin-type-badge,
@@ -5969,35 +5969,35 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 }
 
 .order-stats-bar .stat-card {
-  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,246,239,.96));
+  background: linear-gradient(180deg, rgba(24,24,24,.98), rgba(16,16,16,.96));
 }
 
 .orders-table-wrap {
-  background: rgba(255,255,255,.88);
-  border-color: rgba(63,47,24,.08);
+  background: rgba(255,255,255,.02);
+  border-color: rgba(255,255,255,.06);
 }
 
 .orders-table th {
   color: var(--text2);
-  border-bottom-color: rgba(63,47,24,.08);
+  border-bottom-color: rgba(255,255,255,.06);
 }
 
 .orders-table td {
-  border-bottom-color: rgba(63,47,24,.08);
+  border-bottom-color: rgba(255,255,255,.05);
 }
 
 .orders-table tr:hover td {
-  background: rgba(168,121,47,.04);
+  background: rgba(255,255,255,.02);
 }
 
 .order-filter-btn {
-  background: rgba(255,255,255,.88);
-  border-color: rgba(63,47,24,.10);
+  background: rgba(255,255,255,.03);
+  border-color: rgba(255,255,255,.07);
 }
 
 .order-filter-btn.active {
-  background: rgba(168,121,47,.14);
-  border-color: rgba(168,121,47,.28);
+  background: rgba(201,168,76,.16);
+  border-color: rgba(201,168,76,.28);
 }
 
 #adminProductSearch,
@@ -6017,8 +6017,8 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 #calcBottlePrice,
 #calcBottleMl,
 #calcMargin {
-  background: rgba(255,255,255,.92) !important;
-  border-color: rgba(63,47,24,.10) !important;
+  background: rgba(8,8,8,.92) !important;
+  border-color: rgba(255,255,255,.08) !important;
   color: var(--text) !important;
 }
 
@@ -6035,8 +6035,8 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 .btn-order-detail,
 .btn-edit-order,
 .btn-delete-order {
-  background: rgba(255,255,255,.90) !important;
-  border-color: rgba(63,47,24,.10) !important;
+  background: rgba(255,255,255,.03) !important;
+  border-color: rgba(255,255,255,.08) !important;
   color: var(--text2) !important;
 }
 
@@ -6053,7 +6053,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 .btn-order-detail:hover,
 .btn-edit-order:hover,
 .btn-delete-order:hover {
-  border-color: rgba(168,121,47,.28) !important;
+  border-color: rgba(201,168,76,.35) !important;
   color: var(--gold) !important;
 }
 
@@ -6069,7 +6069,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 .cookie-btn-accept,
 .history-empty-cta,
 .btn-campaign-auto.active {
-  box-shadow: 0 10px 22px rgba(168,121,47,.16);
+  box-shadow: 0 10px 22px rgba(201,168,76,.16);
 }
 
 .btn-add {
@@ -6087,7 +6087,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 .history-empty-cta,
 .cookie-btn-accept {
   background: linear-gradient(180deg, var(--gold-l), var(--gold));
-  color: #1b1408;
+  color: #111;
 }
 
 .btn-login:hover,
@@ -6108,12 +6108,12 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 .product-modal-footer,
 .order-modal-content,
 .product-modal-content {
-  background: rgba(255,255,255,.96) !important;
+  background: rgba(18,18,18,.96) !important;
 }
 
 .privacy-modal {
-  background: #fff;
-  border-color: rgba(63,47,24,.10);
+  background: #141414;
+  border-color: rgba(255,255,255,.08);
 }
 
 .privacy-modal-header,
@@ -6129,6 +6129,6 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   }
 
   .admin-section {
-    background: rgba(255,255,255,.86);
+    background: rgba(19,19,19,.96);
   }
 }
