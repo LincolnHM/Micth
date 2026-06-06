@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../imgGato/web.png">
-  <link rel="stylesheet" href="../css/style.css?v=20260606-admin-black2">
+  <link rel="stylesheet" href="../css/style.css?v=20260606-admin-black3">
   <style>
     html, body {
       background: #050505 !important;
@@ -125,6 +125,12 @@
     .cookie-btn-accept {
       color: #111 !important;
     }
+
+    /* Forzar layout correcto: header encima, sidebar a la izquierda */
+    .admin-header { z-index: 900 !important; position: sticky !important; top: 0 !important; }
+    .admin-layout { flex-direction: row !important; }
+    .admin-sidebar { order: 0 !important; left: 0 !important; right: auto !important; }
+    .admin-main { order: 1 !important; }
   </style>
 </head>
 <body>
@@ -183,7 +189,10 @@
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
-        <p class="admin-logo">MICHT<span>Decants</span> <span style="color:var(--text2);font-size:.75rem;font-family:Inter,sans-serif;font-weight:400"> · Admin</span></p>
+        <div class="admin-brand-block">
+          <p class="admin-logo">MICHT<span>Decants</span></p>
+          <p class="admin-header-subtitle">Panel de administración · Control total</p>
+        </div>
         <button class="btn-logout" id="logoutBtn">Cerrar sesión</button>
       </div>
     </header>
@@ -199,6 +208,10 @@
         <div class="admin-sidebar-head">
           <p>Menú lateral</p>
           <span>Accesos rápidos</span>
+        </div>
+        <div class="admin-sidebar-summary">
+          <strong>Panel Admin</strong>
+          <span>Perfumes · Inventario · Pedidos · Herramientas</span>
         </div>
         <nav class="admin-nav">
 
