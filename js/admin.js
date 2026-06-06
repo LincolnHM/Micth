@@ -143,6 +143,7 @@ async function showDashboard() {
     setupUsersEvents();
     setupAccountingEvents();
     setupNav();
+    setupSidebarControls();
   }
 
   renderAdminProducts().catch(err => {
@@ -208,6 +209,49 @@ function setupNav() {
       if (btn.dataset.section === 'accounting')  renderAccountingSection().catch(console.error);
       if (btn.dataset.section === 'stats')       renderStatsSection().catch(console.error);
       if (btn.dataset.section === 'tools')       setupToolsSection().catch(console.error);
+    });
+  });
+}
+
+function setupSidebarControls() {
+  const sidebar = document.getElementById('adminSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const toggle = document.getElementById('sidebarToggle');
+  if (!sidebar || !overlay || !toggle) return;
+
+  const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+
+  const openSidebar = () => {
+    if (!isMobile()) return;
+    sidebar.classList.add('open');
+    overlay.classList.add('visible');
+    toggle.setAttribute('aria-expanded', 'true');
+  };
+
+  const closeSidebar = () => {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('visible');
+    toggle.setAttribute('aria-expanded', 'false');
+  };
+
+  toggle.addEventListener('click', () => {
+    if (sidebar.classList.contains('open')) closeSidebar();
+    else openSidebar();
+  });
+
+  overlay.addEventListener('click', closeSidebar);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSidebar();
+  });
+
+  window.addEventListener('resize', () => {
+    if (!isMobile()) closeSidebar();
+  });
+
+  document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (isMobile()) closeSidebar();
     });
   });
 }

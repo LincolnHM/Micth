@@ -579,38 +579,6 @@ function shareProduct(id, name) {
   }
 }
 
-// ─── "Te puede gustar" en modal de detalle ────────────────────────────────────
-
-function buildRelatedSection(product, allProducts) {
-  if (!product.olfFamily) return '';
-  const related = allProducts
-    .filter(p => p.id !== product.id && p.olfFamily === product.olfFamily && p.inStock)
-    .slice(0, 5);
-  if (!related.length) return '';
-
-  const cards = related.map(p => {
-    const img = p.imageUrl
-      ? `<img src="${escapeAttr(p.imageUrl)}" alt="${escapeAttr(p.name)}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.style.display='none'">`
-      : `<svg viewBox="0 0 32 48" fill="none" stroke="currentColor" stroke-width="1.2" style="width:24px;height:36px;opacity:.4" aria-hidden="true"><rect x="10" y="0" width="12" height="4" rx="1"/><path d="M8 4C4 4 2 8 2 12L2 44C2 46 4 48 6 48L26 48C28 48 30 46 30 44L30 12C30 8 28 4 24 4Z"/><line x1="2" y1="14" x2="30" y2="14"/></svg>`;
-    const minPrice = Math.min(...Object.values(p.sizes || {}).filter(v => v > 0));
-    return `
-    <div class="related-card" data-id="${p.id}" role="button" tabindex="0" style="cursor:pointer">
-      <div class="related-thumb">${img}</div>
-      <div class="related-info">
-        <div class="related-brand">${sanitize(p.brand)}</div>
-        <div class="related-name">${sanitize(p.name)}</div>
-        ${isFinite(minPrice) && minPrice > 0 ? `<div class="related-price">Desde S/ ${minPrice}</div>` : ''}
-      </div>
-    </div>`;
-  }).join('');
-
-  return `
-  <div class="related-section">
-    <div class="related-title">✦ Te puede gustar <span style="font-size:.72rem;color:var(--text2);font-weight:400">(${sanitize(product.olfFamily)})</span></div>
-    <div class="related-scroll">${cards}</div>
-  </div>`;
-}
-
 // Manejar link de compartir al cargar la página (?p=ID)
 (function handleShareLink() {
   const params = new URLSearchParams(location.search);
@@ -980,9 +948,6 @@ function _createPdModal() {
         </div>
       </div>
 
-      <!-- Te puede gustar -->
-      <div id="pdRelatedSection" class="pd-discover-wrap" style="padding-bottom:0"></div>
-
       <!-- Descubre más vibras -->
       <div class="pd-discover-wrap">
         <section class="pd-discover">
@@ -1236,16 +1201,6 @@ function openPdModal(productId) {
   document.getElementById('pdDiscoverScroll').querySelectorAll('.pd-mini-card').forEach(btn => {
     btn.addEventListener('click', () => openPdModal(parseInt(btn.dataset.id)));
   });
-
-  // Sección "Te puede gustar" (misma familia olfativa)
-  const relatedEl = document.getElementById('pdRelatedSection');
-  if (relatedEl) {
-    relatedEl.innerHTML = buildRelatedSection(p, _allProducts || Products.getAll());
-    relatedEl.querySelectorAll('.related-card').forEach(card => {
-      card.addEventListener('click', () => openPdModal(parseInt(card.dataset.id)));
-      card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openPdModal(parseInt(card.dataset.id)); });
-    });
-  }
 
   // Ocultar secciones del catálogo
   ['#carouselWrapper', '.filters-section', '#catalogBanner', '.products-section',
