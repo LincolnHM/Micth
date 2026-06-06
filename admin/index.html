@@ -99,6 +99,13 @@
             Perfumes
           </button>
 
+          <button class="admin-nav-btn" data-section="inventory">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <path d="M4 7h16M6 7v12h12V7M9 11h6M9 15h6"/>
+            </svg>
+            Inventario
+          </button>
+
           <button class="admin-nav-btn" data-section="orders">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
               <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/>
@@ -216,6 +223,23 @@
           </div>
         </div>
         <div id="adminProductList"></div>
+      </div>
+
+      <!-- ── Sección: Inventario ───────────────────────────────────────────── -->
+      <div class="admin-section" id="section-inventory">
+        <div class="admin-section-header">
+          <h2>Inventario</h2>
+          <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+            <button id="refreshInventoryBtn"
+                    style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;padding:.45rem .9rem;border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);color:var(--text2);cursor:pointer;transition:all .2s"
+                    onmouseover="this.style.borderColor='var(--gold-d)';this.style.color='var(--gold)'"
+                    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Actualizar
+            </button>
+          </div>
+        </div>
+        <div id="inventoryList"></div>
       </div>
 
       <!-- ── Sección: Pedidos ───────────────────────────────────────────────── -->

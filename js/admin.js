@@ -1490,6 +1490,13 @@ function setupAdminEvents() {
 
   document.getElementById('addProductBtn')?.addEventListener('click', () => openProductModal());
 
+  document.getElementById('refreshInventoryBtn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('refreshInventoryBtn');
+    if (btn) { btn.disabled = true; btn.style.opacity = '.5'; }
+    await renderInventorySection().catch(console.error);
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  });
+
   document.getElementById('closeProductModal')?.addEventListener('click', () => {
     document.getElementById('productModal')?.classList.remove('open');
   });
