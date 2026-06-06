@@ -1425,16 +1425,22 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
 .btn-logout:hover { background: rgba(239,83,80,.2); }
 
 /* ── Admin layout: sidebar + main ─────────────────────── */
-.admin-layout { display: flex; align-items: flex-start; min-height: calc(100vh - 60px); overflow-x: hidden; }
+.admin-layout {
+  display: flex;
+  align-items: stretch;
+  height: calc(100vh - 72px);
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
 
 .admin-sidebar {
   width: 248px;
   flex-shrink: 0;
   background: linear-gradient(180deg, rgba(18,18,18,.98), rgba(10,10,10,.98));
   border-right: 1px solid var(--border);
-  position: sticky;
-  top: 60px;
-  height: calc(100vh - 60px);
+  position: relative;
+  top: 0;
+  height: 100%;
   overflow-y: hidden;
   overflow-x: hidden;
   scrollbar-width: thin;
@@ -1521,7 +1527,16 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
 .admin-nav-btn.active { color: var(--gold); border-color: rgba(201,168,76,.28); background: linear-gradient(90deg, rgba(201,168,76,.18), rgba(201,168,76,.08)); box-shadow: 0 8px 18px rgba(0,0,0,.18); }
 .admin-nav-btn.active svg { opacity: 1; }
 
-.admin-main { flex: 1; min-width: 0; width: 0; padding: 1.5rem 1.75rem; position: relative; background: linear-gradient(180deg, rgba(255,255,255,.02), transparent 18%); }
+.admin-main {
+  flex: 1;
+  min-width: 0;
+  width: 0;
+  padding: 1.5rem 1.75rem;
+  position: relative;
+  background: linear-gradient(180deg, rgba(255,255,255,.02), transparent 18%);
+  height: 100%;
+  overflow-y: auto;
+}
 .admin-main::before {
   content: '';
   position: absolute;
@@ -2323,7 +2338,15 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
   }
   .admin-sidebar-overlay.visible { display: block; }
 
-  .admin-main { padding: .85rem .75rem; }
+  .admin-layout {
+    height: auto;
+    overflow-y: visible;
+  }
+  .admin-main {
+    height: auto;
+    overflow-y: visible;
+    padding: .85rem .75rem;
+  }
   .admin-section-header h2 { font-size: 1.1rem; }
   .admin-section-header { align-items: flex-start; }
   .admin-section-header > div { width: 100%; justify-content: flex-start; }
