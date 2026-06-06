@@ -9,7 +9,129 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="imgGato/web.png">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=20260606-admin-black3">
+  <style>
+    html, body {
+      background: #050505 !important;
+      color: #e8e4de !important;
+    }
+
+    #loginSection,
+    #dashboardSection {
+      background: #050505 !important;
+    }
+
+    .admin-header {
+      background: rgba(8,8,8,.98) !important;
+      border-bottom: 1px solid #1e1e1e !important;
+      box-shadow: 0 10px 32px rgba(0,0,0,.35) !important;
+    }
+
+    .admin-sidebar,
+    .admin-section,
+    .admin-card,
+    .stat-card,
+    .campaign-admin-card,
+    .order-modal-content,
+    .product-modal-content,
+    .pass-form,
+    .notes-section,
+    .ml-tracker,
+    .campaign-status-box,
+    .orders-table-wrap,
+    .privacy-modal,
+    .product-modal-header,
+    .order-modal-header,
+    .product-modal-footer,
+    .order-modal-body {
+      background: #111 !important;
+      color: #e8e4de !important;
+      border-color: #222 !important;
+    }
+
+    .admin-main,
+    .admin-section,
+    .admin-section-header,
+    .admin-card-head,
+    .admin-card-body,
+    .orders-table th,
+    .orders-table td,
+    .privacy-modal-header,
+    .privacy-modal-body {
+      color: #e8e4de !important;
+    }
+
+    .admin-section-header,
+    .admin-card-head,
+    .orders-table th,
+    .orders-table td,
+    .product-modal-header,
+    .order-modal-header,
+    .product-modal-footer,
+    .order-modal-body {
+      border-color: #222 !important;
+    }
+
+    .admin-nav-btn,
+    .admin-nav-section-label,
+    .btn-logout,
+    .btn-cancel,
+    .btn-img-change,
+    .btn-img-remove,
+    .btn-campaign-reset,
+    .btn-campaign-auto,
+    .btn-order-detail,
+    .btn-edit-order,
+    .btn-delete-order {
+      color: #cfc9c1 !important;
+    }
+
+    .admin-nav-btn:hover,
+    .admin-nav-btn.active {
+      color: #fff !important;
+    }
+
+    #adminProductSearch,
+    #orderSearch,
+    #userSearch,
+    #accountingYear,
+    #csvStatusFilter,
+    .field input,
+    .field select,
+    .field textarea,
+    .pass-field input,
+    .ml-controls input,
+    .size-row .size-ml,
+    .size-row .size-price,
+    .order-action-select,
+    #chatInput,
+    #calcBottlePrice,
+    #calcBottleMl,
+    #calcMargin {
+      background: #0d0d0d !important;
+      color: #e8e4de !important;
+      border-color: #2a2a2a !important;
+    }
+
+    .btn-add,
+    .btn-login,
+    .btn-save,
+    .btn-save-ml,
+    .btn-save-stock-qty,
+    .btn-save-entero-price,
+    .btn-save-prices,
+    .btn-change-pass,
+    .history-empty-cta,
+    .cookie-btn-accept {
+      color: #111 !important;
+    }
+
+    /* Forzar layout correcto: header encima, sidebar a la izquierda */
+    .admin-header { z-index: 900 !important; position: sticky !important; top: 0 !important; }
+    .admin-layout { flex-direction: row !important; }
+    .admin-sidebar { order: 0 !important; left: 0 !important; right: auto !important; }
+    .admin-main { order: 1 !important; }
+  </style>
 </head>
 <body>
 
@@ -61,126 +183,140 @@
 
     <!-- Header del admin -->
     <header class="admin-header">
-      <div class="admin-header-inner" style="display: flex; justify-content: space-between; align-items: center;">
-        <p class="admin-logo">MICHT<span>Decants</span> <span style="color:var(--text2);font-size:.75rem;font-family:Inter,sans-serif;font-weight:400"> · Admin</span></p>
+      <div class="admin-header-inner">
+        <button class="admin-sidebar-toggle" id="sidebarToggle" aria-label="Abrir menú" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <div class="admin-brand-block">
+          <p class="admin-logo">MICHT<span>Decants</span></p>
+          <p class="admin-header-subtitle">Panel de administración · Control total</p>
+        </div>
         <button class="btn-logout" id="logoutBtn">Cerrar sesión</button>
       </div>
     </header>
 
-    <div class="admin-nav-bar">
-      <nav class="admin-nav">
-        <button class="admin-nav-btn" data-section="dashboard">🏠 Inicio</button>
-        <button class="admin-nav-btn active" data-section="products">Perfumes</button>
-        <button class="admin-nav-btn" data-section="orders">Pedidos</button>
-        <button class="admin-nav-btn" data-section="users">Usuarios</button>
-        <button class="admin-nav-btn" data-section="accounting">Contabilidad</button>
-        <button class="admin-nav-btn" data-section="stats">Estadísticas</button>
-        <button class="admin-nav-btn" data-section="tools">Herramientas</button>
-        <button class="admin-nav-btn" data-section="settings">Ajustes</button>
-      </nav>
-    </div>
+    <!-- Layout principal: sidebar + contenido -->
+    <div class="admin-layout">
 
-    <div class="admin-body">
+      <!-- Overlay móvil -->
+      <div class="admin-sidebar-overlay" id="sidebarOverlay"></div>
 
-      <!-- ── Sección: Dashboard / Inicio ─────────────────────────────────── -->
+      <!-- Sidebar de navegación -->
+      <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-head">
+          <p>Menú lateral</p>
+          <span>Accesos rápidos</span>
+        </div>
+        <div class="admin-sidebar-summary">
+          <strong>Panel Admin</strong>
+          <span>Perfumes · Inventario · Pedidos · Herramientas</span>
+        </div>
+        <nav class="admin-nav">
+
+          <span class="admin-nav-section-label">Principal</span>
+
+          <button class="admin-nav-btn" data-section="dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            Dashboard
+          </button>
+
+          <button class="admin-nav-btn active" data-section="products">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <path d="M9 3h6M10 3v4.5L6.5 10c-1.2 1.6-1.5 3.2-1.5 5a7 7 0 0 0 14 0c0-1.8-.3-3.4-1.5-5L14 7.5V3"/>
+            </svg>
+            Perfumes
+          </button>
+
+          <button class="admin-nav-btn" data-section="inventory">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <path d="M4 7h16M6 7v12h12V7M9 11h6M9 15h6"/>
+            </svg>
+            Inventario
+          </button>
+
+          <button class="admin-nav-btn" data-section="orders">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/>
+              <rect x="8" y="2" width="8" height="4" rx="1"/>
+              <line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/>
+            </svg>
+            Pedidos
+          </button>
+
+          <div class="admin-nav-divider"></div>
+          <span class="admin-nav-section-label">Análisis</span>
+
+          <button class="admin-nav-btn" data-section="stats">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+            </svg>
+            Estadísticas
+          </button>
+
+          <button class="admin-nav-btn" data-section="accounting">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+            </svg>
+            Contabilidad
+          </button>
+
+          <button class="admin-nav-btn" data-section="users">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+            Clientes
+          </button>
+
+          <div class="admin-nav-divider"></div>
+          <span class="admin-nav-section-label">Configuración</span>
+
+          <button class="admin-nav-btn" data-section="tools">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
+            </svg>
+            Herramientas
+          </button>
+
+          <button class="admin-nav-btn" data-section="settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+            Ajustes
+          </button>
+
+          <div class="admin-nav-divider"></div>
+          <a href="index.html" style="display:flex;align-items:center;gap:.65rem;color:var(--text3);font-size:.82rem;padding:.55rem .85rem;border-radius:var(--r);text-decoration:none;transition:color var(--tr);"
+             onmouseover="this.style.color='var(--text2)'" onmouseout="this.style.color='var(--text3)'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            Ver tienda
+          </a>
+
+        </nav>
+      </aside>
+
+      <!-- Contenido principal -->
+      <main class="admin-main">
+
+      <!-- ── Sección: Dashboard ────────────────────────────────────────────── -->
       <div class="admin-section" id="section-dashboard">
         <div class="admin-section-header">
-          <h2>Resumen General</h2>
-          <span id="dashboardDate" style="font-size:.8rem;color:var(--text2)"></span>
+          <h2>Dashboard</h2>
+          <span id="dashboardDate" style="font-size:.82rem;color:var(--text2)"></span>
         </div>
         <div id="dashboardContent">
-          <div class="dash-skeleton-wrap">
-            <div class="sk-block" style="height:90px;border-radius:var(--r-lg)"></div>
-            <div class="sk-block" style="height:90px;border-radius:var(--r-lg)"></div>
-            <div class="sk-block" style="height:90px;border-radius:var(--r-lg)"></div>
-            <div class="sk-block" style="height:90px;border-radius:var(--r-lg)"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Sección: Herramientas ─────────────────────────────────────────── -->
-      <div class="admin-section" id="section-tools">
-        <div class="admin-section-header">
-          <h2>Herramientas</h2>
-        </div>
-
-        <div class="tools-grid">
-
-          <!-- Calculadora de precios -->
-          <section class="tool-card tool-card-primary">
-            <div class="tool-card-head">
-              <span class="tool-icon">🧮</span>
-              <div>
-                <h3>Calculadora de Precios</h3>
-                <p>Calcula el precio de tus decants según el costo del frasco.</p>
-              </div>
-            </div>
-            <div class="tool-card-body">
-              <div class="pass-field">
-                <label for="calcBottlePrice">Precio del frasco (S/)</label>
-                <input type="number" id="calcBottlePrice" min="0" step="0.01" placeholder="Ej: 120">
-              </div>
-              <div class="pass-field">
-                <label for="calcBottleMl">Total de ml del frasco</label>
-                <input type="number" id="calcBottleMl" min="1" step="1" placeholder="Ej: 100">
-              </div>
-              <div class="pass-field">
-                <label for="calcMargin">Margen de ganancia (%)</label>
-                <input type="number" id="calcMargin" min="0" max="500" step="5" value="80">
-              </div>
-              <button id="calcBtn" class="btn-save" style="width:100%">Calcular precios</button>
-            </div>
-            <div id="calcResult" style="display:none;margin-top:1rem"></div>
-          </section>
-
-          <!-- Exportar pedidos a CSV -->
-          <section class="tool-card">
-            <div class="tool-card-head">
-              <span class="tool-icon">📥</span>
-              <div>
-                <h3>Exportar Pedidos</h3>
-                <p>Descarga todos tus pedidos en formato CSV para Excel o Google Sheets.</p>
-              </div>
-            </div>
-            <div class="tool-card-body">
-              <div class="pass-field">
-                <label for="csvStatusFilter">Filtrar por estado</label>
-                <select id="csvStatusFilter" style="width:100%;padding:.52rem .8rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem">
-                  <option value="all">Todos los estados</option>
-                  <option value="pagado">Solo pagados</option>
-                  <option value="pendiente">Solo pendientes</option>
-                  <option value="cancelado">Solo cancelados</option>
-                </select>
-              </div>
-              <button id="exportCsvBtn" class="btn-save" style="width:100%;display:flex;align-items:center;justify-content:center;gap:.5rem">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Descargar CSV
-              </button>
-            </div>
-          </section>
-
-          <!-- WhatsApp masivo -->
-          <section class="tool-card tool-card-highlight">
-            <div class="tool-card-head">
-              <span class="tool-icon">💬</span>
-              <div>
-                <h3>WhatsApp a Clientes</h3>
-                <p>Genera links rápidos para enviar un mensaje a todos tus clientes.</p>
-              </div>
-            </div>
-            <p id="waClientsCount" class="tool-count">Cargando clientes…</p>
-            <div class="tool-card-body">
-              <div class="pass-field">
-                <label for="waMessageText">Mensaje a enviar</label>
-                <textarea id="waMessageText" rows="4" maxlength="1000"
-                           placeholder="Hola {nombre}, tenemos nuevas fragancias en MICHT Decants 🌸 ¿Te interesa alguna?"
-                           style="width:100%;padding:.52rem .8rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;resize:vertical;box-sizing:border-box;font-family:Inter,sans-serif"></textarea>
-              </div>
-              <button id="waGenBtn" class="btn-save" style="width:100%;background:#25d366">Generar links WhatsApp</button>
-            </div>
-            <div id="waLinksResult" class="tool-result"></div>
-          </section>
-
+          <p style="text-align:center;color:var(--text2);padding:3rem">Cargando…</p>
         </div>
       </div>
 
@@ -189,13 +325,13 @@
         <div class="admin-section-header">
           <h2>Gestión de Perfumes</h2>
           <div style="display:flex;gap:.6rem;align-items:center">
-            <button id="exportPdfBtn" onclick="exportCatalogPDF()"
-               style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;padding:.45rem .9rem;border:1px solid var(--border);border-radius:var(--r);color:var(--text2);transition:all .2s;background:transparent;cursor:pointer"
+            <a href="?export=pdf" target="_blank"
+               style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;padding:.45rem .9rem;border:1px solid var(--border);border-radius:var(--r);color:var(--text2);transition:all .2s;text-decoration:none"
                onmouseover="this.style.borderColor='var(--gold-d)';this.style.color='var(--gold)'"
                onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-              <span id="exportPdfLabel">Exportar PDF</span>
-            </button>
+              Exportar PDF
+            </a>
             <button class="btn-add" id="addProductBtn">+ Agregar Perfume</button>
           </div>
         </div>
@@ -222,15 +358,37 @@
         <div id="adminProductList"></div>
       </div>
 
+      <!-- ── Sección: Inventario ───────────────────────────────────────────── -->
+      <div class="admin-section" id="section-inventory">
+        <div class="admin-section-header">
+          <h2>Inventario</h2>
+          <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+            <button id="refreshInventoryBtn"
+                    style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;padding:.45rem .9rem;border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);color:var(--text2);cursor:pointer;transition:all .2s"
+                    onmouseover="this.style.borderColor='var(--gold-d)';this.style.color='var(--gold)'"
+                    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Actualizar
+            </button>
+          </div>
+        </div>
+        <div id="inventoryList"></div>
+      </div>
+
       <!-- ── Sección: Pedidos ───────────────────────────────────────────────── -->
       <div class="admin-section" id="section-orders">
         <div class="admin-section-header">
           <h2>Pedidos</h2>
-          <div style="display:flex;gap:.6rem;align-items:center">
-            <button class="btn-secondary" id="refreshOrdersBtn" title="Actualizar lista de pedidos"
-                    style="font-size:.78rem;padding:.42rem .9rem;background:transparent;border:1px solid rgba(201,168,76,.3);color:var(--gold);border-radius:var(--r);cursor:pointer;display:flex;align-items:center;gap:.35rem;transition:background .2s,border-color .2s"
-                    onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background='transparent'">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+            <input type="text" id="orderSearch"
+                   placeholder="🔍  Buscar por cliente, DNI o ID…"
+                   style="flex:1;min-width:180px;max-width:300px;padding:.52rem .9rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;outline:none;transition:border-color .2s"
+                   onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='var(--border)'">
+            <button id="refreshOrdersBtn"
+                    style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;padding:.45rem .9rem;border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);color:var(--text2);cursor:pointer;transition:all .2s"
+                    onmouseover="this.style.borderColor='var(--gold-d)';this.style.color='var(--gold)'"
+                    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
               Actualizar
             </button>
             <button class="btn-add" id="registerOrderBtn">+ Registrar Pedido</button>
@@ -240,19 +398,12 @@
         <!-- Stats bar -->
         <div id="orderStatsBar" class="order-stats-bar"></div>
 
-        <!-- Buscador de pedidos -->
-        <div style="margin-bottom:.75rem">
-          <input type="text" id="orderSearch"
-                 placeholder="🔍  Buscar por nombre, teléfono o ID de pedido…"
-                 style="width:100%;max-width:420px;padding:.52rem .9rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;outline:none;box-sizing:border-box;transition:border-color .2s"
-                 onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='var(--border)'">
-        </div>
-
         <!-- Filtros de estado -->
         <div class="order-filters">
           <button class="order-filter-btn active" data-status="all">Todos</button>
           <button class="order-filter-btn" data-status="pendiente">Pendiente</button>
           <button class="order-filter-btn" data-status="pagado">Pagado</button>
+          <button class="order-filter-btn" data-status="enviado">Enviado</button>
           <button class="order-filter-btn" data-status="cancelado">Cancelado</button>
         </div>
 
@@ -261,8 +412,9 @@
           <table class="orders-table">
             <thead>
               <tr>
-                <th>Pedido</th>
+                <th>ID</th>
                 <th>Cliente</th>
+                <th>Fecha</th>
                 <th>Productos</th>
                 <th>Total</th>
                 <th>Estado</th>
@@ -271,7 +423,7 @@
             </thead>
             <tbody id="ordersTableBody">
               <tr>
-                <td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">
+                <td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">
                   Cargando pedidos…
                 </td>
               </tr>
@@ -280,59 +432,6 @@
         </div>
       </div>
 
-
-      <!-- ── Sección: Usuarios Registrados ───────────────────────────────────── -->
-      <div class="admin-section" id="section-users">
-        <div class="admin-section-header">
-          <h2>Usuarios Registrados</h2>
-          <button class="btn-secondary" id="refreshUsersBtn"
-                  style="font-size:.78rem;padding:.42rem .9rem;background:transparent;border:1px solid rgba(201,168,76,.3);color:var(--gold);border-radius:var(--r);cursor:pointer;display:flex;align-items:center;gap:.35rem;transition:background .2s,border-color .2s"
-                  onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background='transparent'">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-            Actualizar
-          </button>
-        </div>
-
-        <!-- Stats de usuarios -->
-        <div id="usersStatsBar" class="order-stats-bar" style="margin-bottom:1rem"></div>
-
-        <!-- SQL info (solo se muestra si falta la política) -->
-        <div id="usersSqlHint" style="display:none;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);border-radius:var(--r);padding:.8rem 1rem;margin-bottom:1rem;font-size:.82rem;color:var(--gold-d)">
-          <strong>Para ver todos los usuarios necesitas ejecutar este SQL en Supabase:</strong><br>
-          <pre style="margin:.5rem 0 0;font-size:.75rem;color:var(--text2);white-space:pre-wrap;background:rgba(0,0,0,.3);padding:.6rem .8rem;border-radius:6px;overflow-x:auto">DROP POLICY IF EXISTS "owner_select" ON perfiles_usuarios;
-CREATE POLICY "user_or_admin_select" ON perfiles_usuarios FOR SELECT TO authenticated
-  USING ( auth.uid() = id OR (auth.jwt() ->> 'app_metadata')::jsonb ->> 'role' = 'admin' );</pre>
-        </div>
-
-        <!-- Buscador -->
-        <div style="margin-bottom:1rem">
-          <input type="text" id="userSearch"
-                 placeholder="🔍  Buscar por nombre, DNI o teléfono…"
-                 style="width:100%;max-width:420px;padding:.52rem .9rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;outline:none;box-sizing:border-box;transition:border-color .2s"
-                 onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='var(--border)'">
-        </div>
-
-        <!-- Tabla de usuarios -->
-        <div class="orders-table-wrap">
-          <table class="orders-table">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>DNI</th>
-                <th>Teléfono</th>
-                <th style="text-align:center">10% OFF</th>
-                <th>Registrado</th>
-                <th style="text-align:center">Pedidos</th>
-                <th style="text-align:right">Total gastado</th>
-                <th style="text-align:center">Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="usersTableBody">
-              <tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Haz clic en "Usuarios" para cargar.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
       <!-- ── Sección: Contabilidad ────────────────────────────────────────────── -->
       <div class="admin-section" id="section-accounting">
@@ -452,13 +551,156 @@ CREATE POLICY "user_or_admin_select" ON perfiles_usuarios FOR SELECT TO authenti
 
       </div>
 
-      <!-- ── Sección: Estadísticas ────────────────────────────────────────────── -->
+      <!-- ── Sección: Estadísticas ─────────────────────────────────────────── -->
       <div class="admin-section" id="section-stats">
         <div class="admin-section-header">
-          <h2 class="admin-section-title">Estadísticas de ventas</h2>
+          <h2>Estadísticas</h2>
         </div>
-        <div id="statsContent" style="padding:1rem">
-          <p style="color:var(--text2);text-align:center;padding:2rem">Haz clic en "Estadísticas" para cargar.</p>
+        <div id="statsContent">
+          <p style="text-align:center;color:var(--text2);padding:3rem">Cargando estadísticas…</p>
+        </div>
+      </div>
+
+      <!-- ── Sección: Clientes ──────────────────────────────────────────────── -->
+      <div class="admin-section" id="section-users">
+        <div class="admin-section-header">
+          <h2>Clientes</h2>
+          <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+            <input type="text" id="userSearch"
+                   placeholder="🔍  Buscar por nombre, DNI o teléfono…"
+                   style="flex:1;min-width:200px;max-width:340px;padding:.52rem .9rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;outline:none;transition:border-color .2s"
+                   onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='var(--border)'">
+            <button id="refreshUsersBtn"
+                    style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;padding:.45rem .9rem;border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);color:var(--text2);cursor:pointer;transition:all .2s"
+                    onmouseover="this.style.borderColor='var(--gold-d)';this.style.color='var(--gold)'"
+                    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Actualizar
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats de usuarios -->
+        <div id="usersStatsBar" class="order-stats-bar" style="margin-bottom:1.25rem"></div>
+
+        <!-- Hint SQL si la tabla no existe -->
+        <div id="usersSqlHint" style="display:none;background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.3);border-radius:var(--r);padding:.9rem 1.1rem;margin-bottom:1rem;font-size:.82rem;color:#ef9a9a;line-height:1.7">
+          <strong>⚠ Tabla no encontrada.</strong> Ejecuta este SQL en Supabase → SQL Editor:
+          <pre style="margin:.5rem 0 0;font-size:.75rem;color:var(--text2);background:var(--bg);border-radius:4px;padding:.5rem;overflow-x:auto">CREATE TABLE perfiles_usuarios (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  nombre_completo TEXT NOT NULL, dni TEXT NOT NULL UNIQUE,
+  telefono TEXT NOT NULL, primer_descuento_usado BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE perfiles_usuarios ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (true);</pre>
+        </div>
+
+        <!-- Tabla de usuarios -->
+        <div class="orders-table-wrap">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>DNI</th>
+                <th>Teléfono</th>
+                <th style="text-align:center">10% OFF</th>
+                <th>Registro</th>
+                <th style="text-align:center">Pedidos</th>
+                <th style="text-align:right">Total gastado</th>
+                <th style="text-align:center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Cargando clientes…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Sección: Herramientas ───────────────────────────────────────────── -->
+      <div class="admin-section" id="section-tools">
+        <div class="admin-section-header">
+          <h2>Herramientas</h2>
+        </div>
+
+        <div class="tools-grid">
+
+          <!-- Calculadora de precios -->
+          <section class="tool-card tool-card-primary">
+            <div class="tool-card-head">
+              <span class="tool-icon">🧮</span>
+              <div>
+                <h3>Calculadora de Precios</h3>
+                <p>Calcula el precio de tus decants según el costo del frasco.</p>
+              </div>
+            </div>
+            <div class="tool-card-body">
+              <div class="pass-field">
+                <label for="calcBottlePrice">Precio del frasco (S/)</label>
+                <input type="number" id="calcBottlePrice" min="0" step="0.01" placeholder="Ej: 120">
+              </div>
+              <div class="pass-field">
+                <label for="calcBottleMl">Total de ml del frasco</label>
+                <input type="number" id="calcBottleMl" min="1" step="1" placeholder="Ej: 100">
+              </div>
+              <div class="pass-field">
+                <label for="calcMargin">Margen de ganancia (%)</label>
+                <input type="number" id="calcMargin" min="0" max="500" step="5" value="80">
+              </div>
+              <button id="calcBtn" class="btn-save" style="width:100%">Calcular precios</button>
+            </div>
+            <div id="calcResult" style="display:none;margin-top:1rem"></div>
+          </section>
+
+          <!-- Exportar pedidos a CSV -->
+          <section class="tool-card">
+            <div class="tool-card-head">
+              <span class="tool-icon">📥</span>
+              <div>
+                <h3>Exportar Pedidos</h3>
+                <p>Descarga todos tus pedidos en formato CSV para Excel o Google Sheets.</p>
+              </div>
+            </div>
+            <div class="tool-card-body">
+              <div class="pass-field">
+                <label for="csvStatusFilter">Filtrar por estado</label>
+                <select id="csvStatusFilter" style="width:100%;padding:.52rem .8rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem">
+                  <option value="all">Todos los estados</option>
+                  <option value="pagado">Solo pagados</option>
+                  <option value="pendiente">Solo pendientes</option>
+                  <option value="cancelado">Solo cancelados</option>
+                </select>
+              </div>
+              <button id="exportCsvBtn" class="btn-save" style="width:100%;display:flex;align-items:center;justify-content:center;gap:.5rem">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Descargar CSV
+              </button>
+            </div>
+          </section>
+
+          <!-- WhatsApp masivo -->
+          <section class="tool-card tool-card-highlight">
+            <div class="tool-card-head">
+              <span class="tool-icon">💬</span>
+              <div>
+                <h3>WhatsApp a Clientes</h3>
+                <p>Genera links rápidos para enviar un mensaje a todos tus clientes.</p>
+              </div>
+            </div>
+            <p id="waClientsCount" class="tool-count">Cargando clientes…</p>
+            <div class="tool-card-body">
+              <div class="pass-field">
+                <label for="waMessageText">Mensaje a enviar</label>
+                <textarea id="waMessageText" rows="4" maxlength="1000"
+                           placeholder="Hola {nombre}, tenemos nuevas fragancias en MICHT Decants 🌸 ¿Te interesa alguna?"
+                           style="width:100%;padding:.52rem .8rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;resize:vertical;box-sizing:border-box;font-family:Inter,sans-serif"></textarea>
+              </div>
+              <button id="waGenBtn" class="btn-save" style="width:100%;background:#25d366">Generar links WhatsApp</button>
+            </div>
+            <div id="waLinksResult" class="tool-result"></div>
+          </section>
+
         </div>
       </div>
 
@@ -505,44 +747,20 @@ CREATE POLICY "user_or_admin_select" ON perfiles_usuarios FOR SELECT TO authenti
 
           <div id="campaignButtonsGrid" class="campaign-buttons-grid">
             <button class="campaign-apply-btn" type="button" data-campaign="dia-madre">
-              <span class="cpn-icon">🌸</span>
               <strong>Día de la Madre</strong>
               <span>Tonos rosados y cálidos</span>
             </button>
             <button class="campaign-apply-btn" type="button" data-campaign="dia-padre">
-              <span class="cpn-icon">👔</span>
               <strong>Día del Padre</strong>
               <span>Azules elegantes</span>
             </button>
             <button class="campaign-apply-btn" type="button" data-campaign="san-juan">
-              <span class="cpn-icon">🌿</span>
               <strong>San Juan</strong>
               <span>Verde amazónico festivo</span>
             </button>
             <button class="campaign-apply-btn" type="button" data-campaign="navidad">
-              <span class="cpn-icon">🎄</span>
               <strong>Navidad</strong>
               <span>Rojo y verde navideño</span>
-            </button>
-            <button class="campaign-apply-btn" type="button" data-campaign="fiestas-patrias">
-              <span class="cpn-icon">🇵🇪</span>
-              <strong>Fiestas Patrias</strong>
-              <span>28 y 29 de julio</span>
-            </button>
-            <button class="campaign-apply-btn" type="button" data-campaign="san-valentin">
-              <span class="cpn-icon">❤️</span>
-              <strong>San Valentín</strong>
-              <span>14 de febrero</span>
-            </button>
-            <button class="campaign-apply-btn" type="button" data-campaign="halloween">
-              <span class="cpn-icon">🎃</span>
-              <strong>Halloween</strong>
-              <span>31 de octubre</span>
-            </button>
-            <button class="campaign-apply-btn" type="button" data-campaign="anio-nuevo">
-              <span class="cpn-icon">🎆</span>
-              <strong>Año Nuevo</strong>
-              <span>1 de enero</span>
             </button>
           </div>
         </div>
@@ -558,7 +776,8 @@ CREATE POLICY "user_or_admin_select" ON perfiles_usuarios FOR SELECT TO authenti
         </div>
       </div>
 
-    </div><!-- /admin-body -->
+    </main>
+    </div><!-- /admin-layout -->
   </div><!-- /dashboardSection -->
 
   <!-- ── Modal: Editar / Agregar producto ──────────────────────────────────── -->
@@ -718,13 +937,24 @@ CREATE POLICY "user_or_admin_select" ON perfiles_usuarios FOR SELECT TO authenti
           </div>
         </div>
 
-        <div class="field">
-          <label for="regPaymentMethod">Método de pago</label>
-          <select id="regPaymentMethod">
-            <option value="">⏳ Por confirmar</option>
-            <option value="efectivo">💵 Efectivo</option>
-            <option value="yape">📱 Yape</option>
-          </select>
+        <div class="field-grid-2">
+          <div class="field">
+            <label for="regPaymentMethod">Método de pago</label>
+            <select id="regPaymentMethod">
+              <option value="yape">Yape</option>
+              <option value="plin">Plin</option>
+              <option value="efectivo">Efectivo</option>
+              <option value="transferencia">Transferencia</option>
+              <option value="">Otro / Sin especificar</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="regOrderStatus">Estado inicial</label>
+            <select id="regOrderStatus">
+              <option value="pendiente">Pendiente</option>
+              <option value="pagado">Pagado</option>
+            </select>
+          </div>
         </div>
 
         <div class="field">
@@ -765,26 +995,78 @@ CREATE POLICY "user_or_admin_select" ON perfiles_usuarios FOR SELECT TO authenti
     </div>
   </div>
 
-  <!-- ── Modal: Etiqueta de envío ─────────────────────────────────────────── -->
+  <!-- ── Modal: Etiqueta de envío ──────────────────────────────────────────── -->
   <div class="product-modal" id="shippingLabelModal" role="dialog" aria-modal="true">
-    <div class="product-modal-content" style="max-width:480px">
+    <div class="product-modal-content" style="max-width:460px">
       <div class="product-modal-header">
         <h3>Etiqueta de Envío</h3>
-        <button class="close-btn" onclick="document.getElementById('shippingLabelModal').classList.remove('open')">×</button>
+        <button class="close-btn" onclick="document.getElementById('shippingLabelModal').classList.remove('open')" aria-label="Cerrar">×</button>
       </div>
       <div class="product-modal-body">
         <div id="shippingLabelContent"></div>
       </div>
-      <div class="product-modal-footer" style="gap:.5rem">
+      <div class="product-modal-footer">
         <button class="btn-cancel" onclick="document.getElementById('shippingLabelModal').classList.remove('open')">Cerrar</button>
-        <button class="btn-save" onclick="printShippingLabel()">🖨 Imprimir</button>
+        <button class="btn-save" onclick="printShippingLabel()" style="display:flex;align-items:center;gap:.4rem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimir etiqueta
+        </button>
       </div>
     </div>
   </div>
+
+  <!-- ── Notificación de nuevo pedido (Realtime) ───────────────────────────── -->
+  <div id="newOrderToast" style="display:none;position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;background:#1a1a1a;border:1px solid var(--gold);border-radius:10px;padding:1rem 1.25rem;box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:260px;max-width:340px;animation:slideInRight .3s ease">
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <span style="font-size:1.4rem">🔔</span>
+      <div style="flex:1">
+        <div style="font-weight:700;color:var(--gold);font-size:.88rem;margin-bottom:.15rem">¡Nuevo pedido!</div>
+        <div id="newOrderToastMsg" style="font-size:.78rem;color:var(--text2)">Un cliente acaba de hacer un pedido.</div>
+      </div>
+      <button onclick="document.getElementById('newOrderToast').style.display='none'" style="background:none;border:none;color:var(--text3);font-size:1.1rem;cursor:pointer;line-height:1;padding:0 .2rem;flex-shrink:0">×</button>
+    </div>
+    <button onclick="document.querySelector('[data-section=orders]').click();document.getElementById('newOrderToast').style.display='none'" style="margin-top:.6rem;width:100%;padding:.4rem;background:rgba(201,168,76,.12);color:var(--gold);border:1px solid rgba(201,168,76,.3);border-radius:6px;font-size:.76rem;font-weight:700;cursor:pointer">Ver pedidos →</button>
+  </div>
+  <style>
+    @keyframes slideInRight { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+  </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/data.js"></script>
   <script src="js/supabase-config.js?v=25"></script>
   <script src="js/admin.js?v=27"></script>
+  <script>
+    (function () {
+      var toggle  = document.getElementById('sidebarToggle');
+      var sidebar = document.getElementById('adminSidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+      if (!toggle || !sidebar || !overlay) return;
+
+      function openSidebar() {
+        sidebar.classList.add('open');
+        overlay.classList.add('visible');
+        toggle.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('visible');
+        toggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      }
+
+      toggle.addEventListener('click', function () {
+        sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+      });
+      overlay.addEventListener('click', closeSidebar);
+
+      /* Cerrar sidebar al elegir sección en móvil */
+      document.querySelectorAll('.admin-nav-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (window.innerWidth <= 768) closeSidebar();
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
