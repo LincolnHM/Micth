@@ -193,7 +193,6 @@
           <p class="admin-logo">MICHT<span>Decants</span></p>
           <p class="admin-header-subtitle">Panel de administración · Control total</p>
         </div>
-        <button class="btn-logout" id="logoutBtn">Cerrar sesión</button>
       </div>
     </header>
 
@@ -205,14 +204,6 @@
 
       <!-- Sidebar de navegación -->
       <aside class="admin-sidebar" id="adminSidebar">
-        <div class="admin-sidebar-head">
-          <p>Menú lateral</p>
-          <span>Accesos rápidos</span>
-        </div>
-        <div class="admin-sidebar-summary">
-          <strong>Panel Admin</strong>
-          <span>Perfumes · Inventario · Pedidos · Herramientas</span>
-        </div>
         <nav class="admin-nav">
 
           <span class="admin-nav-section-label">Principal</span>
@@ -230,13 +221,6 @@
               <path d="M9 3h6M10 3v4.5L6.5 10c-1.2 1.6-1.5 3.2-1.5 5a7 7 0 0 0 14 0c0-1.8-.3-3.4-1.5-5L14 7.5V3"/>
             </svg>
             Perfumes
-          </button>
-
-          <button class="admin-nav-btn" data-section="inventory">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
-              <path d="M4 7h16M6 7v12h12V7M9 11h6M9 15h6"/>
-            </svg>
-            Inventario
           </button>
 
           <button class="admin-nav-btn" data-section="orders">
@@ -303,6 +287,14 @@
             Ver tienda
           </a>
 
+          <div class="admin-nav-divider"></div>
+          <button class="admin-nav-btn text-danger" id="logoutBtn" style="color:#ef5350 !important;background:rgba(239,83,80,.04);border-color:rgba(239,83,80,.1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" style="stroke:#ef5350;opacity:.9">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+            </svg>
+            Cerrar sesión
+          </button>
+
         </nav>
       </aside>
 
@@ -358,22 +350,6 @@
         <div id="adminProductList"></div>
       </div>
 
-      <!-- ── Sección: Inventario ───────────────────────────────────────────── -->
-      <div class="admin-section" id="section-inventory">
-        <div class="admin-section-header">
-          <h2>Inventario</h2>
-          <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
-            <button id="refreshInventoryBtn"
-                    style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;padding:.45rem .9rem;border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);color:var(--text2);cursor:pointer;transition:all .2s"
-                    onmouseover="this.style.borderColor='var(--gold-d)';this.style.color='var(--gold)'"
-                    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-              Actualizar
-            </button>
-          </div>
-        </div>
-        <div id="inventoryList"></div>
-      </div>
 
       <!-- ── Sección: Pedidos ───────────────────────────────────────────────── -->
       <div class="admin-section" id="section-orders">

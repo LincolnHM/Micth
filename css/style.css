@@ -1435,7 +1435,7 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
   position: sticky;
   top: 60px;
   height: calc(100vh - 60px);
-  overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
@@ -2305,6 +2305,7 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
     background: #111009;
     box-shadow: none;
     border-right: 1px solid rgba(201,168,76,.15);
+    overflow-y: auto;
   }
   .admin-sidebar-head { padding: 1rem .95rem .6rem; }
   .admin-sidebar-summary { margin: .45rem .6rem .65rem; }
@@ -6684,4 +6685,85 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 
 .dash-action-btn:hover span {
   transform: scale(1.15);
+}
+
+/* ─── Alerta Stock Bajo ────────────────────────────────── */
+.low-stock-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.2rem;
+  background: linear-gradient(135deg, rgba(239, 83, 80, 0.09) 0%, rgba(201, 168, 76, 0.04) 100%);
+  border: 1px solid rgba(239, 83, 80, 0.25);
+  border-radius: var(--r);
+  margin-bottom: 1.25rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.low-stock-banner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 3px; height: 100%;
+  background: linear-gradient(to bottom, #ef5350, var(--gold));
+}
+
+.lsb-icon {
+  font-size: 1.25rem;
+  color: #ef5350;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: lsbPulse 2s infinite ease-in-out;
+}
+
+.lsb-content {
+  flex: 1;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text2);
+}
+
+.lsb-content strong {
+  color: var(--white);
+  font-weight: 600;
+  margin-right: 0.45rem;
+}
+
+.lsb-list {
+  color: rgba(232, 228, 222, 0.85);
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+
+.lsb-close {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.1rem 0.4rem;
+  transition: all var(--tr);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+}
+
+.lsb-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--white);
+}
+
+@keyframes lsbPulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
 }
