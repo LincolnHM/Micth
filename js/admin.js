@@ -591,6 +591,7 @@ async function renderAdminProducts() {
 async function renderInventorySection() {
   const products = await CloudProducts.getAll();
   const list = document.getElementById('inventoryList');
+  if (!list) return;
   list.innerHTML = products.map(p => {
     const pct   = p.bottleTotalMl > 0 ? Math.round(p.bottleRemainingMl / p.bottleTotalMl * 100) : 0;
     const color = pct > 50 ? '#4caf50' : pct > 20 ? '#ff9800' : '#ef5350';
@@ -1256,9 +1257,10 @@ async function saveManualOrder() {
   const name  = document.getElementById('regCustomerName').value.trim();
   const phone = document.getElementById('regCustomerPhone').value.trim();
   const dni   = document.getElementById('regCustomerDni').value.trim();
-  const dtype   = document.getElementById('regDeliveryType').value;
-  const payMeth = document.getElementById('regPaymentMethod')?.value || '';
-  const notes   = document.getElementById('regNotes').value.trim();
+  const dtype    = document.getElementById('regDeliveryType').value;
+  const payMeth  = document.getElementById('regPaymentMethod')?.value || '';
+  const initStat = document.getElementById('regOrderStatus')?.value || 'pendiente';
+  const notes    = document.getElementById('regNotes').value.trim();
 
   if (!name) { alert('Ingresa el nombre del cliente.'); return; }
 
@@ -1305,7 +1307,7 @@ async function saveManualOrder() {
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Guardando...'; }
 
   try {
-    await CloudOrders.create({ customerName: name, customerPhone: phone, customerDni: dni, deliveryType: dtype, notes, items, total, paymentMethod: payMeth || null });
+    await CloudOrders.create({ customerName: name, customerPhone: phone, customerDni: dni, deliveryType: dtype, notes, items, total, paymentMethod: payMeth || null, status: initStat });
 
     // Descontar stock — errores no bloquean el cierre del modal
     const agotados = [];

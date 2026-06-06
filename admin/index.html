@@ -62,22 +62,112 @@
     <!-- Header del admin -->
     <header class="admin-header">
       <div class="admin-header-inner">
+        <button class="admin-sidebar-toggle" id="sidebarToggle" aria-label="Abrir menú" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
         <p class="admin-logo">MICHT<span>Decants</span> <span style="color:var(--text2);font-size:.75rem;font-family:Inter,sans-serif;font-weight:400"> · Admin</span></p>
-        <nav class="admin-nav">
-          <button class="admin-nav-btn" data-section="dashboard">Dashboard</button>
-          <button class="admin-nav-btn active" data-section="products">Perfumes</button>
-          <button class="admin-nav-btn" data-section="orders">Pedidos</button>
-          <button class="admin-nav-btn" data-section="stats">Estadísticas</button>
-          <button class="admin-nav-btn" data-section="users">Clientes</button>
-          <button class="admin-nav-btn" data-section="accounting">Contabilidad</button>
-          <button class="admin-nav-btn" data-section="tools">Herramientas</button>
-          <button class="admin-nav-btn" data-section="settings">Ajustes</button>
-        </nav>
         <button class="btn-logout" id="logoutBtn">Cerrar sesión</button>
       </div>
     </header>
 
-    <div class="admin-body">
+    <!-- Layout principal: sidebar + contenido -->
+    <div class="admin-layout">
+
+      <!-- Overlay móvil -->
+      <div class="admin-sidebar-overlay" id="sidebarOverlay"></div>
+
+      <!-- Sidebar de navegación -->
+      <aside class="admin-sidebar" id="adminSidebar">
+        <nav class="admin-nav">
+
+          <span class="admin-nav-section-label">Principal</span>
+
+          <button class="admin-nav-btn" data-section="dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            Dashboard
+          </button>
+
+          <button class="admin-nav-btn active" data-section="products">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <path d="M9 3h6M10 3v4.5L6.5 10c-1.2 1.6-1.5 3.2-1.5 5a7 7 0 0 0 14 0c0-1.8-.3-3.4-1.5-5L14 7.5V3"/>
+            </svg>
+            Perfumes
+          </button>
+
+          <button class="admin-nav-btn" data-section="orders">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/>
+              <rect x="8" y="2" width="8" height="4" rx="1"/>
+              <line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/>
+            </svg>
+            Pedidos
+          </button>
+
+          <div class="admin-nav-divider"></div>
+          <span class="admin-nav-section-label">Análisis</span>
+
+          <button class="admin-nav-btn" data-section="stats">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+            </svg>
+            Estadísticas
+          </button>
+
+          <button class="admin-nav-btn" data-section="accounting">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+            </svg>
+            Contabilidad
+          </button>
+
+          <button class="admin-nav-btn" data-section="users">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+            Clientes
+          </button>
+
+          <div class="admin-nav-divider"></div>
+          <span class="admin-nav-section-label">Configuración</span>
+
+          <button class="admin-nav-btn" data-section="tools">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
+            </svg>
+            Herramientas
+          </button>
+
+          <button class="admin-nav-btn" data-section="settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+            Ajustes
+          </button>
+
+          <div class="admin-nav-divider"></div>
+          <a href="../" style="display:flex;align-items:center;gap:.65rem;color:var(--text3);font-size:.82rem;padding:.55rem .85rem;border-radius:var(--r);text-decoration:none;transition:color var(--tr);"
+             onmouseover="this.style.color='var(--text2)'" onmouseout="this.style.color='var(--text3)'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            Ver tienda
+          </a>
+
+        </nav>
+      </aside>
+
+      <!-- Contenido principal -->
+      <main class="admin-main">
 
       <!-- ── Sección: Dashboard ────────────────────────────────────────────── -->
       <div class="admin-section" id="section-dashboard">
@@ -514,7 +604,8 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
         </div>
       </div>
 
-    </div><!-- /admin-body -->
+    </main>
+    </div><!-- /admin-layout -->
   </div><!-- /dashboardSection -->
 
   <!-- ── Modal: Editar / Agregar producto ──────────────────────────────────── -->
@@ -674,6 +765,26 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
           </div>
         </div>
 
+        <div class="field-grid-2">
+          <div class="field">
+            <label for="regPaymentMethod">Método de pago</label>
+            <select id="regPaymentMethod">
+              <option value="yape">Yape</option>
+              <option value="plin">Plin</option>
+              <option value="efectivo">Efectivo</option>
+              <option value="transferencia">Transferencia</option>
+              <option value="">Otro / Sin especificar</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="regOrderStatus">Estado inicial</label>
+            <select id="regOrderStatus">
+              <option value="pendiente">Pendiente</option>
+              <option value="pagado">Pagado</option>
+            </select>
+          </div>
+        </div>
+
         <div class="field">
           <label for="regNotes">Notas del pedido (opcional)</label>
           <textarea id="regNotes" maxlength="300" placeholder="Observaciones, dirección de referencia, etc." style="min-height:60px"></textarea>
@@ -752,5 +863,38 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
   <script src="../js/data.js"></script>
   <script src="../js/supabase-config.js?v=16"></script>
   <script src="../js/admin.js?v=16"></script>
+  <script>
+    (function () {
+      var toggle  = document.getElementById('sidebarToggle');
+      var sidebar = document.getElementById('adminSidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+      if (!toggle || !sidebar || !overlay) return;
+
+      function openSidebar() {
+        sidebar.classList.add('open');
+        overlay.classList.add('visible');
+        toggle.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('visible');
+        toggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      }
+
+      toggle.addEventListener('click', function () {
+        sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+      });
+      overlay.addEventListener('click', closeSidebar);
+
+      /* Cerrar sidebar al elegir sección en móvil */
+      document.querySelectorAll('.admin-nav-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (window.innerWidth <= 768) closeSidebar();
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

@@ -195,7 +195,7 @@ const CloudOrders = {
       ...order,
       id:     generateOrderId(),
       date:   new Date().toISOString(),
-      status: 'pendiente'
+      status: order.status || 'pendiente'
     };
     // Guardar en localStorage primero — garantiza que no se pierde el pedido
     try { this._localCreate(newOrder); } catch {}
