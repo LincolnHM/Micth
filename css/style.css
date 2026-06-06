@@ -1395,7 +1395,7 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
 
 #dashboardSection { display: none; }
 /* ── Admin header ──────────────────────────────────────── */
-.admin-header { background: rgba(8,8,8,.97); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 300; backdrop-filter: blur(12px); }
+.admin-header { background: rgba(8,8,8,.97); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 600; backdrop-filter: blur(12px); }
 .admin-header-inner { display: flex; align-items: center; gap: .75rem; padding: 0 1.25rem; height: 60px; }
 .admin-logo { font-family: var(--font-serif); font-size: 1.1rem; color: var(--white); flex: 1; min-width: 0; }
 .admin-logo span { color: var(--gold); }
@@ -1963,24 +1963,26 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
     position: fixed;
     top: 0; left: 0;
     height: 100vh;
-    width: 240px;
-    z-index: 400;
+    width: 260px;
+    z-index: 500;
     transform: translateX(-100%);
-    transition: transform .28s cubic-bezier(.4,0,.2,1);
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
     padding-top: 60px;
-    background: #0f0d0b;
+    background: #111009;
     box-shadow: none;
+    border-right: 1px solid rgba(201,168,76,.15);
   }
   .admin-sidebar.open {
     transform: translateX(0);
-    box-shadow: 6px 0 28px rgba(0,0,0,.65);
+    box-shadow: 8px 0 40px rgba(0,0,0,.85);
   }
   .admin-sidebar-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,.55);
-    z-index: 399;
+    background: rgba(0,0,0,.75);
+    z-index: 490;
+    backdrop-filter: blur(1px);
   }
   .admin-sidebar-overlay.visible { display: block; }
 
@@ -2922,7 +2924,7 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
 
 /* Columna izquierda — imagen sticky */
 .pd-left-col {
-  background: #fff;
+  background: var(--bg2);
   display: flex; align-items: center; justify-content: center;
   min-height: 300px;
   overflow: hidden;
