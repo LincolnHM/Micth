@@ -400,6 +400,14 @@ function renderProducts() {
         ? `<a class="btn-consultar-wa" href="${waConsultUrl}" target="_blank" rel="noopener noreferrer">💬 Consultar precio</a>`
         : `<p class="price-consultar">Consultar precio</p>`;
 
+    // Badge NUEVO: si fue agregado en los últimos 30 días
+    const isNew = p.date && (Date.now() - new Date(p.date).getTime()) < 30 * 24 * 3600 * 1000;
+    // Stock restante: mostrar si queda poco
+    const lowMlWarn = p.type !== 'entero' && p.bottleTotalMl > 0 && p.bottleRemainingMl > 0 && p.bottleRemainingMl < 15
+      ? `<div class="stock-low-tag">~${Math.round(p.bottleRemainingMl)}ml restantes</div>` : '';
+    // Wishlist
+    const isFav = Wishlist.has(p.id);
+
     return `
       <article class="product-card ${!p.inStock ? 'out-of-stock' : ''} ${p.featured ? 'featured' : ''}">
         <div class="product-img-wrap">
@@ -414,10 +422,21 @@ function renderProducts() {
           <div class="product-badges">
             <span class="badge-type ${typeBadge}">${typeLabel}</span>
             ${p.featured ? '<span class="badge-featured">⭐ Popular</span>' : ''}
+            ${isNew ? '<span class="badge-new">NUEVO</span>' : ''}
           </div>
           ${!p.inStock ? '<div class="out-badge">Agotado</div>' : (p.type === 'entero' && p.stockQuantity === 1 ? '<div class="last-unit-badge">⚠ Última unidad</div>' : '')}
+          ${lowMlWarn}
           ${p.olfFamily ? `<div class="olf-family-tag">${sanitize(p.olfFamily)}</div>` : ''}
           <button class="pd-open-btn" data-id="${p.id}" aria-label="Ver detalles de ${sanitize(p.name)}">Ver detalles →</button>
+          <!-- Acciones flotantes -->
+          <div class="card-float-actions">
+            <button class="card-action-btn wishlist-btn ${isFav ? 'active' : ''}" data-id="${p.id}" aria-label="${isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}" title="${isFav ? 'Quitar favorito' : 'Guardar favorito'}">
+              <svg viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            </button>
+            <button class="card-action-btn share-btn" data-id="${p.id}" data-name="${escapeAttr(p.brand + ' ' + p.name)}" aria-label="Compartir" title="Compartir perfume">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            </button>
+          </div>
         </div>
 
         <div class="product-info">
@@ -441,7 +460,6 @@ function renderProducts() {
             </svg>
           </button>
           <p class="product-desc" id="desc-${p.id}">${sanitize(p.description)}</p>
-
 
           <div class="product-footer">
             ${priceHtml}
@@ -468,7 +486,6 @@ function renderProducts() {
     });
   });
 
-
   // Eventos: abrir modal de detalle
   grid.querySelectorAll('.pd-open-btn, .btn-ver-detalle').forEach(btn => {
     btn.addEventListener('click', e => { e.stopPropagation(); openPdModal(parseInt(btn.dataset.id)); });
@@ -486,6 +503,27 @@ function renderProducts() {
     });
   });
 
+  // Eventos: wishlist
+  grid.querySelectorAll('.wishlist-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const pid = parseInt(btn.dataset.id);
+      const active = Wishlist.toggle(pid);
+      btn.classList.toggle('active', active);
+      btn.querySelector('svg').setAttribute('fill', active ? 'currentColor' : 'none');
+      btn.setAttribute('aria-label', active ? 'Quitar de favoritos' : 'Agregar a favoritos');
+      showCartToast(active ? '❤ Guardado en favoritos' : 'Quitado de favoritos');
+    });
+  });
+
+  // Eventos: compartir
+  grid.querySelectorAll('.share-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      shareProduct(parseInt(btn.dataset.id), btn.dataset.name);
+    });
+  });
+
   renderPagination(Pagination.currentPage, totalPages);
 
 }
@@ -499,6 +537,96 @@ function populateOlfFamilyFilter() {
   sel.innerHTML = '<option value="all">Todas las familias</option>' +
     families.map(f => `<option value="${escapeAttr(f)}">${f}</option>`).join('');
 }
+
+// ─── Wishlist / Favoritos ─────────────────────────────────────────────────────
+
+const Wishlist = {
+  _key: 'micht_wishlist',
+  _ids: null,
+
+  _load() {
+    if (this._ids) return;
+    try { this._ids = new Set(JSON.parse(localStorage.getItem(this._key) || '[]')); }
+    catch { this._ids = new Set(); }
+  },
+  _save() {
+    try { localStorage.setItem(this._key, JSON.stringify([...this._ids])); } catch {}
+  },
+
+  has(id)     { this._load(); return this._ids.has(id); },
+  toggle(id)  { this._load(); this._ids.has(id) ? this._ids.delete(id) : this._ids.add(id); this._save(); return this._ids.has(id); },
+  getAll()    { this._load(); return [...this._ids]; },
+  count()     { this._load(); return this._ids.size; }
+};
+
+// ─── Compartir perfume ────────────────────────────────────────────────────────
+
+function shareProduct(id, name) {
+  const url = `${location.origin}${location.pathname}?p=${id}`;
+  if (navigator.share) {
+    navigator.share({ title: name, text: `Mira este perfume en MICHT Decants: ${name}`, url })
+      .catch(() => {});
+  } else {
+    navigator.clipboard?.writeText(url).then(() => showCartToast('🔗 Link copiado al portapapeles'))
+      .catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showCartToast('🔗 Link copiado al portapapeles');
+      });
+  }
+}
+
+// ─── "Te puede gustar" en modal de detalle ────────────────────────────────────
+
+function buildRelatedSection(product, allProducts) {
+  if (!product.olfFamily) return '';
+  const related = allProducts
+    .filter(p => p.id !== product.id && p.olfFamily === product.olfFamily && p.inStock)
+    .slice(0, 5);
+  if (!related.length) return '';
+
+  const cards = related.map(p => {
+    const img = p.imageUrl
+      ? `<img src="${escapeAttr(p.imageUrl)}" alt="${escapeAttr(p.name)}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.style.display='none'">`
+      : `<svg viewBox="0 0 32 48" fill="none" stroke="currentColor" stroke-width="1.2" style="width:24px;height:36px;opacity:.4" aria-hidden="true"><rect x="10" y="0" width="12" height="4" rx="1"/><path d="M8 4C4 4 2 8 2 12L2 44C2 46 4 48 6 48L26 48C28 48 30 46 30 44L30 12C30 8 28 4 24 4Z"/><line x1="2" y1="14" x2="30" y2="14"/></svg>`;
+    const minPrice = Math.min(...Object.values(p.sizes || {}).filter(v => v > 0));
+    return `
+    <div class="related-card" data-id="${p.id}" role="button" tabindex="0" style="cursor:pointer">
+      <div class="related-thumb">${img}</div>
+      <div class="related-info">
+        <div class="related-brand">${sanitize(p.brand)}</div>
+        <div class="related-name">${sanitize(p.name)}</div>
+        ${isFinite(minPrice) && minPrice > 0 ? `<div class="related-price">Desde S/ ${minPrice}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="related-section">
+    <div class="related-title">✦ Te puede gustar <span style="font-size:.72rem;color:var(--text2);font-weight:400">(${sanitize(product.olfFamily)})</span></div>
+    <div class="related-scroll">${cards}</div>
+  </div>`;
+}
+
+// Manejar link de compartir al cargar la página (?p=ID)
+(function handleShareLink() {
+  const params = new URLSearchParams(location.search);
+  const pid    = parseInt(params.get('p'));
+  if (!pid || isNaN(pid)) return;
+  // Esperar a que los productos carguen
+  const tryOpen = setInterval(() => {
+    if (typeof openPdModal === 'function' && (_allProducts || Products.getAll()).length > 0) {
+      clearInterval(tryOpen);
+      openPdModal(pid);
+      // Limpiar el parámetro de la URL sin recargar
+      history.replaceState(null, '', location.pathname + location.search.replace(/[?&]p=\d+/, '').replace(/^&/, '?'));
+    }
+  }, 200);
+  setTimeout(() => clearInterval(tryOpen), 6000);
+})();
 
 function resetAllFilters() {
   Filter.reset();
@@ -852,6 +980,9 @@ function _createPdModal() {
         </div>
       </div>
 
+      <!-- Te puede gustar -->
+      <div id="pdRelatedSection" class="pd-discover-wrap" style="padding-bottom:0"></div>
+
       <!-- Descubre más vibras -->
       <div class="pd-discover-wrap">
         <section class="pd-discover">
@@ -1105,6 +1236,16 @@ function openPdModal(productId) {
   document.getElementById('pdDiscoverScroll').querySelectorAll('.pd-mini-card').forEach(btn => {
     btn.addEventListener('click', () => openPdModal(parseInt(btn.dataset.id)));
   });
+
+  // Sección "Te puede gustar" (misma familia olfativa)
+  const relatedEl = document.getElementById('pdRelatedSection');
+  if (relatedEl) {
+    relatedEl.innerHTML = buildRelatedSection(p, _allProducts || Products.getAll());
+    relatedEl.querySelectorAll('.related-card').forEach(card => {
+      card.addEventListener('click', () => openPdModal(parseInt(card.dataset.id)));
+      card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openPdModal(parseInt(card.dataset.id)); });
+    });
+  }
 
   // Ocultar secciones del catálogo
   ['#carouselWrapper', '.filters-section', '#catalogBanner', '.products-section',

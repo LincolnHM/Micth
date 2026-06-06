@@ -1,0 +1,21 @@
+{
+  "name": "Micht Decants",
+  "short_name": "Micht Decants",
+  "description": "Decants de perfumes originales en Perú — árabes y de diseñador desde S/ 12.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#12100e",
+  "theme_color": "#c9a84c",
+  "lang": "es-PE",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "imgGato/web.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping"],
+  "screenshots": []
+}

@@ -200,12 +200,14 @@ function setupNav() {
       btn.classList.add('active');
       const sec = document.getElementById('section-' + btn.dataset.section);
       if (sec) sec.classList.add('active');
+      if (btn.dataset.section === 'dashboard')   renderDashboard().catch(console.error);
       if (btn.dataset.section === 'inventory')   renderInventorySection().catch(console.error);
       if (btn.dataset.section === 'orders')      renderOrdersSection().catch(console.error);
       if (btn.dataset.section === 'orders')      updateOrderStats().catch(console.error);
       if (btn.dataset.section === 'users')       renderUsersSection().catch(console.error);
       if (btn.dataset.section === 'accounting')  renderAccountingSection().catch(console.error);
       if (btn.dataset.section === 'stats')       renderStatsSection().catch(console.error);
+      if (btn.dataset.section === 'tools')       setupToolsSection().catch(console.error);
     });
   });
 }
@@ -221,7 +223,9 @@ function _normAdminImg(url) {
 async function renderAdminProducts() {
   const container = document.getElementById('adminProductList');
   if (!container) return;
-  container.innerHTML = '<div style="text-align:center;color:var(--text2);padding:2rem;background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg)">Cargando perfumes…</div>';
+  container.innerHTML = `<div class="sk-products-wrap">${Array(4).fill('<div class="sk-product-card"><div class="sk-block" style="height:100px;margin-bottom:.5rem"></div><div class="sk-block" style="height:14px;width:60%;margin-bottom:.4rem"></div><div class="sk-block" style="height:12px;width:40%"></div></div>').join('')}</div>`;
+  // Mostrar alerta de stock bajo
+  renderLowStockBanner().catch(() => {});
 
   let products = await withTimeout(CloudProducts.getAll(), 15000, 'los perfumes');
   if (_adminProductTypeFilter === 'entero') {
@@ -661,7 +665,7 @@ async function updateOrderStats(allOrders = null) {
 async function renderOrdersSection() {
   const tbody = document.getElementById('ordersTableBody');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">Cargando pedidos…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">Cargando pedidos…</td></tr>';
 
   try {
     // Una sola query a Supabase — se reutiliza para stats y tabla
@@ -696,7 +700,7 @@ async function renderOrdersSection() {
     }
 
     if (!orders.length) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">No hay pedidos ${_orderSearch ? 'que coincidan con la búsqueda' : orderStatusFilter !== 'all' ? 'con ese estado' : 'registrados'}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">No hay pedidos ${_orderSearch ? 'que coincidan con la búsqueda' : orderStatusFilter !== 'all' ? 'con ese estado' : 'registrados'}</td></tr>`;
       return;
     }
 
@@ -704,41 +708,60 @@ async function renderOrdersSection() {
     const SELECT_OPTIONS = ['pendiente', 'pagado', 'cancelado'];
 
     tbody.innerHTML = orders.map(o => {
-    const date   = new Date(o.date).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: '2-digit' });
-    const items  = o.items.map(i => `${sanitize(i.productName||'')} ${sanitize(i.size||'')} ×${parseInt(i.quantity)||1}`).join(', ');
-    const delivLabel = o.deliveryType === 'recojo' ? '🏪 Recojo' : '📦 Shalom';
+    const date       = new Date(o.date).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    const time       = new Date(o.date).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+    const delivIcon  = o.deliveryType === 'recojo' ? '🏪' : '📦';
+    const delivText  = o.deliveryType === 'recojo' ? 'Recojo' : 'Shalom';
     const safeStatus = o.status.replace(/[^a-z]/g, '');
-    // Si el pedido tiene un estado antiguo (enviado/entregado), mostrar en select como pendiente
     const selectVal  = SELECT_OPTIONS.includes(o.status) ? o.status : 'pendiente';
 
+    const itemsHtml = (o.items || []).map(i =>
+      `<div class="order-item-line">
+        <span class="order-item-name">${sanitize((i.brand||'') + (i.brand && i.productName ? ' ' : '') + (i.productName||''))}</span>
+        <span class="order-item-size-chip">${sanitize(i.size||'')} ×${parseInt(i.quantity)||1}</span>
+      </div>`
+    ).join('');
+
+    const payBadge = o.paymentMethod === 'efectivo'
+      ? '<div style="margin-top:.3rem"><span class="pay-badge pay-efectivo">💵 Efectivo</span></div>'
+      : o.paymentMethod === 'yape'
+      ? '<div style="margin-top:.3rem"><span class="pay-badge pay-yape">📱 Yape</span></div>'
+      : '';
+
     return `
-    <tr>
-      <td><span class="order-id">${sanitize(o.id)}</span></td>
-      <td><span class="order-customer">${sanitize(o.customerName || '—')}</span><br><span class="order-date">${sanitize(o.customerPhone || '')}</span></td>
-      <td class="order-date">${date}<br><small style="color:var(--text3)">${delivLabel}</small></td>
-      <td style="font-size:.75rem;color:var(--text2);max-width:200px">${sanitize(items)}</td>
-      <td class="order-total-cell">S/ ${o.total.toFixed(2)}</td>
-      <td>
-        <span class="status-badge status-${safeStatus}">${STATUS_LABELS[o.status] ?? sanitize(o.status)}</span>
-        ${o.paymentMethod === 'efectivo' ? '<br><span style="font-size:.68rem;color:#4caf50;font-weight:600">💵 Efectivo</span>' : ''}
-        ${o.paymentMethod === 'yape'     ? '<br><span style="font-size:.68rem;color:#7c3aed;font-weight:600">📱 Yape</span>'     : ''}
+    <tr class="order-row">
+      <td class="order-col-id">
+        <span class="order-id">${sanitize(o.id)}</span>
+        <div class="order-date" style="margin-top:.2rem">${date} · ${time}</div>
+        <div class="order-date">${delivIcon} ${delivText}</div>
       </td>
-      <td>
-        <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
+      <td class="order-col-client">
+        <span class="order-customer">${sanitize(o.customerName || '—')}</span>
+        ${o.customerPhone ? `<div class="order-date">${sanitize(o.customerPhone)}</div>` : ''}
+        ${o.customerDni   ? `<div class="order-date" style="font-size:.68rem">DNI ${sanitize(o.customerDni)}</div>` : ''}
+      </td>
+      <td class="order-col-items">
+        <div class="order-items-list">${itemsHtml}</div>
+      </td>
+      <td class="order-col-total">
+        <span class="order-total-cell">S/ ${o.total.toFixed(2)}</span>
+      </td>
+      <td class="order-col-status">
+        <span class="status-badge status-${safeStatus}">${STATUS_LABELS[o.status] ?? sanitize(o.status)}</span>
+        ${payBadge}
+      </td>
+      <td class="order-col-actions">
+        <div class="order-actions-stack">
           <select class="order-action-select" data-id="${escapeAttr(o.id)}" data-status="${escapeAttr(o.status)}" aria-label="Cambiar estado">
             ${SELECT_OPTIONS.map(s =>
               `<option value="${s}" ${selectVal === s ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`
             ).join('')}
           </select>
-          <button class="btn-order-detail" data-id="${escapeAttr(o.id)}">Ver</button>
-          <button class="btn-edit-order" data-id="${escapeAttr(o.id)}"
-                  style="font-size:.72rem;padding:.3rem .6rem;background:transparent;color:var(--gold-d);border:1px solid rgba(201,168,76,.35);border-radius:var(--r);cursor:pointer;font-weight:600;transition:background .15s,color .15s"
-                  onmouseover="this.style.background='rgba(201,168,76,.12)'"
-                  onmouseout="this.style.background='transparent'">Editar</button>
-          <button class="btn-delete-order" data-id="${escapeAttr(o.id)}"
-                  style="font-size:.72rem;padding:.3rem .6rem;background:transparent;color:#ef5350;border:1px solid #ef5350;border-radius:var(--r);cursor:pointer;font-weight:600;transition:background .15s,color .15s"
-                  onmouseover="this.style.background='#ef5350';this.style.color='#fff'"
-                  onmouseout="this.style.background='transparent';this.style.color='#ef5350'">Borrar</button>
+          <div class="order-btn-row">
+            <button class="btn-order-detail" data-id="${escapeAttr(o.id)}">Ver</button>
+            <button class="btn-edit-order"   data-id="${escapeAttr(o.id)}">Editar</button>
+            <button class="btn-delete-order" data-id="${escapeAttr(o.id)}" title="Eliminar pedido">✕</button>
+          </div>
         </div>
       </td>
     </tr>`;
@@ -894,7 +917,26 @@ async function openOrderDetail(id) {
       </div>
       <p style="font-size:.7rem;color:var(--text3);margin:.4rem 0 0">Solo afecta la contabilidad, no cambia los precios de los productos.</p>
     </div>
-    ${order.notes ? `<div class="order-detail-row" style="margin-top:.5rem"><span class="lbl">Notas</span><span class="val">${sanitize(order.notes)}</span></div>` : ''}
+    ${order.notes ? `<div class="order-detail-row" style="margin-top:.5rem"><span class="lbl">Notas cliente</span><span class="val">${sanitize(order.notes)}</span></div>` : ''}
+    <hr style="border-color:var(--border)">
+    <div>
+      <label style="font-size:.74rem;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.4rem">📌 Notas internas (solo tú las ves)</label>
+      <textarea id="adminNoteInput" rows="2" maxlength="400"
+        style="width:100%;padding:.5rem .75rem;background:var(--bg);border:1px solid rgba(201,168,76,.3);border-radius:var(--r);color:var(--text);font-size:.82rem;resize:vertical;box-sizing:border-box;font-family:Inter,sans-serif;line-height:1.4;outline:none;transition:border-color .2s"
+        onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='rgba(201,168,76,.3)'"
+        placeholder="Ej: Falta pagar el saldo, cliente frecuente, etc.">${getAdminNote(order.id)}</textarea>
+      <button id="saveAdminNoteBtn" data-id="${escapeAttr(order.id)}"
+        style="margin-top:.4rem;padding:.35rem .9rem;background:rgba(201,168,76,.12);color:var(--gold-d);border:1px solid rgba(201,168,76,.3);border-radius:var(--r);font-size:.75rem;font-weight:700;cursor:pointer;transition:background .15s"
+        onmouseover="this.style.background='rgba(201,168,76,.22)'" onmouseout="this.style.background='rgba(201,168,76,.12)'">
+        Guardar nota
+      </button>
+    </div>
+    ${order.deliveryType === 'envio' ? `
+    <button id="openShippingLabelBtn" data-id="${escapeAttr(order.id)}"
+      style="margin-top:.25rem;width:100%;padding:.55rem;background:rgba(33,150,243,.1);color:#64b5f6;border:1px solid rgba(33,150,243,.25);border-radius:var(--r);font-size:.82rem;font-weight:700;cursor:pointer;transition:background .15s"
+      onmouseover="this.style.background='rgba(33,150,243,.18)'" onmouseout="this.style.background='rgba(33,150,243,.1)'">
+      🖨 Imprimir etiqueta de envío
+    </button>` : ''}
   `;
 
   // Guardar método de pago
@@ -953,6 +995,21 @@ async function openOrderDetail(id) {
 
     btn.disabled    = false;
     btn.textContent = 'Guardar';
+  });
+
+  // Guardar nota interna
+  body.querySelector('#saveAdminNoteBtn')?.addEventListener('click', async () => {
+    const note = body.querySelector('#adminNoteInput')?.value.trim() || '';
+    const btn  = body.querySelector('#saveAdminNoteBtn');
+    btn.disabled = true; btn.textContent = 'Guardando…';
+    await saveAdminNote(order.id, note);
+    showToast('Nota interna guardada ✓');
+    btn.disabled = false; btn.textContent = 'Guardar nota';
+  });
+
+  // Abrir etiqueta de envío
+  body.querySelector('#openShippingLabelBtn')?.addEventListener('click', () => {
+    openShippingLabel(order.id).catch(console.error);
   });
 
   modal.classList.add('open');
@@ -3572,3 +3629,540 @@ async function renderStatsSection(forceRefresh = false) {
     _drawTopHBar('statsTopChart', topPerf.slice(0, 8));
   }, 60);
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── DASHBOARD / INICIO ───────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function renderDashboard() {
+  const el = document.getElementById('dashboardContent');
+  if (!el) return;
+
+  // Fecha y hora actual
+  const dateEl = document.getElementById('dashboardDate');
+  if (dateEl) {
+    dateEl.textContent = new Date().toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  // Skeleton mientras carga
+  el.innerHTML = `
+    <div class="dash-skeleton-wrap">
+      <div class="sk-block" style="height:90px;border-radius:var(--r-lg)"></div>
+      <div class="sk-block" style="height:90px;border-radius:var(--r-lg)"></div>
+      <div class="sk-block" style="height:90px;border-radius:var(--r-lg)"></div>
+      <div class="sk-block" style="height:90px;border-radius:var(--r-lg)"></div>
+    </div>`;
+
+  const [orders, products] = await Promise.all([
+    CloudOrders.getAll().catch(() => []),
+    CloudProducts.getAll().catch(() => [])
+  ]);
+
+  const today     = new Date().toDateString();
+  const todayOrds = orders.filter(o => new Date(o.date).toDateString() === today);
+  const pending   = orders.filter(o => o.status === 'pendiente');
+  const weekAgo   = Date.now() - 7 * 24 * 3600 * 1000;
+  const weekRevenue = orders
+    .filter(o => o.status === 'pagado' && new Date(o.date).getTime() > weekAgo)
+    .reduce((s, o) => s + o.total, 0);
+
+  // Stock bajo: decants con < 15ml restantes o enteros con stockQuantity < 2
+  const lowStock = products.filter(p => {
+    if (!p.inStock) return false;
+    if (p.type === 'entero') return (p.stockQuantity || 0) <= 1;
+    return p.bottleTotalMl > 0 && (p.bottleRemainingMl || 0) > 0 && (p.bottleRemainingMl || 0) < 15;
+  });
+
+  // Últimos 5 pedidos
+  const recent = [...orders].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+
+  const STATUS_COLORS = { pendiente: 'var(--orange)', pagado: 'var(--green)', cancelado: 'var(--red)', enviado: '#64b5f6', entregado: 'var(--gold)' };
+  const STATUS_LABELS_D = { pendiente: 'Pendiente', pagado: 'Pagado', cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado' };
+
+  el.innerHTML = `
+    <!-- KPIs -->
+    <div class="dash-kpi-grid">
+      <div class="dash-kpi">
+        <div class="dash-kpi-icon" style="background:rgba(201,168,76,.12);color:var(--gold)">📦</div>
+        <div class="dash-kpi-body">
+          <div class="dash-kpi-val">${todayOrds.length}</div>
+          <div class="dash-kpi-lbl">Pedidos hoy</div>
+        </div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-icon" style="background:rgba(76,175,80,.1);color:var(--green)">💰</div>
+        <div class="dash-kpi-body">
+          <div class="dash-kpi-val">S/ ${weekRevenue.toFixed(0)}</div>
+          <div class="dash-kpi-lbl">Ingresos esta semana</div>
+        </div>
+      </div>
+      <div class="dash-kpi ${pending.length > 0 ? 'dash-kpi-warn' : ''}">
+        <div class="dash-kpi-icon" style="background:rgba(255,152,0,.1);color:var(--orange)">⏳</div>
+        <div class="dash-kpi-body">
+          <div class="dash-kpi-val">${pending.length}</div>
+          <div class="dash-kpi-lbl">Por confirmar</div>
+        </div>
+      </div>
+      <div class="dash-kpi ${lowStock.length > 0 ? 'dash-kpi-alert' : ''}">
+        <div class="dash-kpi-icon" style="background:rgba(239,83,80,.1);color:var(--red)">⚠</div>
+        <div class="dash-kpi-body">
+          <div class="dash-kpi-val">${lowStock.length}</div>
+          <div class="dash-kpi-lbl">Stock bajo</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-two-col">
+      <!-- Últimos pedidos -->
+      <div class="dash-panel">
+        <div class="dash-panel-head">
+          <span>Últimos pedidos</span>
+          <button class="dash-panel-link" onclick="document.querySelector('[data-section=orders]').click()">Ver todos →</button>
+        </div>
+        <div class="dash-panel-body">
+          ${recent.length === 0
+            ? `<p style="text-align:center;color:var(--text2);padding:1.5rem;font-size:.82rem">No hay pedidos aún</p>`
+            : recent.map(o => `
+            <div class="dash-order-row">
+              <div>
+                <div class="dash-order-id">${sanitize(o.id)}</div>
+                <div class="dash-order-client">${sanitize(o.customerName || '—')}</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-weight:700;color:var(--gold);font-size:.85rem">S/ ${o.total.toFixed(2)}</div>
+                <span style="font-size:.68rem;font-weight:600;color:${STATUS_COLORS[o.status] || 'var(--text2)'}">${STATUS_LABELS_D[o.status] || o.status}</span>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- Alertas de stock bajo -->
+      <div class="dash-panel">
+        <div class="dash-panel-head">
+          <span>⚠ Stock bajo</span>
+          <button class="dash-panel-link" onclick="document.querySelector('[data-section=products]').click()">Ver perfumes →</button>
+        </div>
+        <div class="dash-panel-body">
+          ${lowStock.length === 0
+            ? `<p style="text-align:center;color:var(--green);padding:1.5rem;font-size:.82rem">✓ Todo el stock está bien</p>`
+            : lowStock.slice(0, 8).map(p => {
+                const detail = p.type === 'entero'
+                  ? `${p.stockQuantity || 0} und.`
+                  : `~${Math.round(p.bottleRemainingMl || 0)}ml`;
+                return `
+                <div class="dash-stock-row">
+                  <div class="dash-stock-info">
+                    <div class="dash-stock-name">${sanitize(p.brand)} — ${sanitize(p.name)}</div>
+                    <div class="dash-stock-detail">${detail} restantes</div>
+                  </div>
+                  <span class="dash-stock-badge">${detail}</span>
+                </div>`;
+              }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones rápidas -->
+    <div class="dash-actions">
+      <button class="dash-action-btn" onclick="document.querySelector('[data-section=orders]').click();setTimeout(()=>document.getElementById('registerOrderBtn')?.click(),300)">
+        <span>📝</span> Registrar pedido
+      </button>
+      <button class="dash-action-btn" onclick="document.querySelector('[data-section=products]').click();setTimeout(()=>document.getElementById('addProductBtn')?.click(),300)">
+        <span>✦</span> Agregar perfume
+      </button>
+      <button class="dash-action-btn" onclick="exportCatalogPDF()">
+        <span>📄</span> Exportar catálogo PDF
+      </button>
+      <button class="dash-action-btn" onclick="document.querySelector('[data-section=accounting]').click()">
+        <span>💳</span> Ver contabilidad
+      </button>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── HERRAMIENTAS ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function setupToolsSection() {
+  setupPriceCalculator();
+  setupCsvExport();
+  await setupWhatsAppTool();
+}
+
+// ── Calculadora de precios ────────────────────────────────────────────────────
+
+function setupPriceCalculator() {
+  const btn = document.getElementById('calcBtn');
+  if (!btn || btn._bound) return;
+  btn._bound = true;
+
+  btn.addEventListener('click', () => {
+    const bottlePrice = parseFloat(document.getElementById('calcBottlePrice').value);
+    const bottleMl    = parseFloat(document.getElementById('calcBottleMl').value);
+    const margin      = parseFloat(document.getElementById('calcMargin').value) / 100;
+    const result      = document.getElementById('calcResult');
+
+    if (isNaN(bottlePrice) || isNaN(bottleMl) || bottleMl <= 0 || bottlePrice <= 0) {
+      showToast('Ingresa precio del frasco y ml totales válidos.');
+      return;
+    }
+
+    const costPerMl = bottlePrice / bottleMl;
+    const sizes = [3, 5, 10, 15, 20];
+
+    result.style.display = 'block';
+    result.innerHTML = `
+      <div class="calc-result-header">
+        <span>Costo por ml: <strong>S/ ${costPerMl.toFixed(3)}</strong></span>
+        <span style="color:var(--text2)">Margen: ${Math.round(margin * 100)}%</span>
+      </div>
+      <div class="calc-sizes-grid">
+        ${sizes.map(ml => {
+          const cost = costPerMl * ml;
+          const price = cost * (1 + margin);
+          const rounded = Math.ceil(price / 0.5) * 0.5; // redondear a 0.5 más cercano
+          return `
+          <div class="calc-size-card">
+            <div class="calc-size-ml">${ml}ml</div>
+            <div class="calc-size-cost">Costo: S/ ${cost.toFixed(2)}</div>
+            <div class="calc-size-price">S/ ${rounded.toFixed(2)}</div>
+            <div class="calc-size-gain" style="color:var(--green)">+S/ ${(rounded - cost).toFixed(2)}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <p style="font-size:.72rem;color:var(--text3);margin-top:.5rem">*Precio redondeado al S/ 0.50 más cercano para facilitar el cobro.</p>`;
+  });
+}
+
+// ── Exportar pedidos a CSV ────────────────────────────────────────────────────
+
+function setupCsvExport() {
+  const btn = document.getElementById('exportCsvBtn');
+  if (!btn || btn._bound) return;
+  btn._bound = true;
+
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.textContent = 'Exportando…';
+    try {
+      const statusFilter = document.getElementById('csvStatusFilter')?.value || 'all';
+      let orders = await CloudOrders.getAll();
+      if (statusFilter !== 'all') orders = orders.filter(o => o.status === statusFilter);
+
+      const rows = [
+        ['ID', 'Fecha', 'Cliente', 'Teléfono', 'DNI', 'Entrega', 'Departamento', 'Productos', 'Total', 'Estado', 'Método Pago', 'Notas']
+      ];
+
+      orders.forEach(o => {
+        const items = (o.items || []).map(i => `${i.brand} ${i.productName} ${i.size} x${i.quantity}`).join(' | ');
+        const fecha = new Date(o.date).toLocaleDateString('es-PE');
+        rows.push([
+          o.id, fecha,
+          o.customerName || '', o.customerPhone || '', o.customerDni || '',
+          o.deliveryType === 'recojo' ? 'Recojo' : 'Shalom',
+          o.department || '',
+          items,
+          o.total.toFixed(2),
+          o.status,
+          o.paymentMethod || '',
+          o.notes || ''
+        ]);
+      });
+
+      const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `pedidos_micht_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`${orders.length} pedidos exportados ✓`);
+    } catch (err) {
+      console.error(err);
+      showToast('Error al exportar.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Descargar CSV`;
+    }
+  });
+}
+
+// ── WhatsApp masivo ───────────────────────────────────────────────────────────
+
+async function setupWhatsAppTool() {
+  const btn = document.getElementById('waGenBtn');
+  if (!btn || btn._bound) return;
+  btn._bound = true;
+
+  // Cargar teléfonos únicos de pedidos
+  const orders = await CloudOrders.getAll().catch(() => []);
+  const phoneMap = {};
+  orders.forEach(o => {
+    if (o.customerPhone && o.customerName) {
+      phoneMap[o.customerPhone] = o.customerName;
+    }
+  });
+  const phones = Object.entries(phoneMap);
+
+  const countEl = document.getElementById('waClientsCount');
+  if (countEl) countEl.textContent = `${phones.length} cliente${phones.length !== 1 ? 's' : ''} con teléfono`;
+
+  btn.addEventListener('click', () => {
+    const msg = document.getElementById('waMessageText')?.value.trim();
+    if (!msg) { showToast('Escribe un mensaje primero.'); return; }
+    if (!phones.length) { showToast('No hay clientes con teléfono registrado.'); return; }
+
+    const result = document.getElementById('waLinksResult');
+    const encoded = encodeURIComponent(msg);
+
+    result.innerHTML = `
+      <div style="font-size:.78rem;color:var(--text2);margin-bottom:.5rem">${phones.length} links generados — haz clic en cada uno para abrir WhatsApp:</div>
+      <div class="wa-links-grid">
+        ${phones.map(([phone, name]) => {
+          const cleanPhone = phone.replace(/\D/g, '');
+          const num = cleanPhone.startsWith('51') ? cleanPhone : `51${cleanPhone}`;
+          return `
+          <a class="wa-link-item" href="https://wa.me/${num}?text=${encoded}" target="_blank" rel="noopener noreferrer">
+            <span class="wa-link-name">${sanitize(name)}</span>
+            <span class="wa-link-phone">${sanitize(phone)}</span>
+            <span class="wa-link-icon">→</span>
+          </a>`;
+        }).join('')}
+      </div>`;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── ETIQUETA DE ENVÍO ────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function openShippingLabel(orderId) {
+  const order = await CloudOrders.getById(orderId);
+  if (!order) { showToast('No se pudo cargar el pedido.'); return; }
+  if (order.deliveryType !== 'envio') { showToast('Este pedido es de recojo en tienda, no tiene etiqueta de envío.'); return; }
+
+  const content = document.getElementById('shippingLabelContent');
+  if (!content) return;
+
+  const date = new Date(order.date).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const items = (order.items || []).map(i => `${i.brand} ${i.productName} ${i.size} ×${i.quantity}`).join('\n');
+
+  content.innerHTML = `
+    <div id="shippingLabelPrint" class="shipping-label">
+      <div class="sl-header">
+        <div class="sl-brand">MICHT Decants</div>
+        <div class="sl-id">${sanitize(order.id)}</div>
+      </div>
+      <div class="sl-divider"></div>
+      <div class="sl-section">
+        <div class="sl-label">DESTINATARIO</div>
+        <div class="sl-value sl-name">${sanitize(order.customerName || '—')}</div>
+        ${order.customerDni ? `<div class="sl-value">DNI: ${sanitize(order.customerDni)}</div>` : ''}
+        ${order.customerPhone ? `<div class="sl-value">Tel: ${sanitize(order.customerPhone)}</div>` : ''}
+      </div>
+      <div class="sl-divider"></div>
+      <div class="sl-section">
+        <div class="sl-label">DESTINO</div>
+        <div class="sl-value sl-name">${sanitize(order.department || '')}${order.province ? ` — ${sanitize(order.province)}` : ''}</div>
+        ${order.shalomOffice ? `<div class="sl-value">Agencia Shalom: ${sanitize(order.shalomOffice)}</div>` : ''}
+      </div>
+      <div class="sl-divider"></div>
+      <div class="sl-section">
+        <div class="sl-label">CONTENIDO</div>
+        ${(order.items || []).map(i => `
+          <div class="sl-item-row">
+            <span>${sanitize(i.brand)} ${sanitize(i.productName)} ${sanitize(i.size)}</span>
+            <span>×${i.quantity}</span>
+          </div>`).join('')}
+      </div>
+      <div class="sl-divider"></div>
+      <div class="sl-footer">
+        <span>Fecha: ${date}</span>
+        <span>Total: S/ ${order.total.toFixed(2)}</span>
+      </div>
+    </div>`;
+
+  document.getElementById('shippingLabelModal').classList.add('open');
+}
+
+function printShippingLabel() {
+  const label = document.getElementById('shippingLabelPrint');
+  if (!label) return;
+  const win = window.open('', '_blank', 'width=420,height=600');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Etiqueta de Envío</title>
+  <style>
+    body { margin: 0; padding: 20px; font-family: 'Courier New', monospace; background: #fff; color: #000; }
+    .shipping-label { border: 2px solid #000; border-radius: 8px; padding: 16px; max-width: 360px; margin: auto; }
+    .sl-header { display: flex; justify-content: space-between; align-items: center; }
+    .sl-brand { font-size: 1.1rem; font-weight: 900; letter-spacing: .08em; }
+    .sl-id { font-size: .75rem; color: #555; }
+    .sl-divider { border-top: 1px dashed #888; margin: 10px 0; }
+    .sl-section { margin-bottom: 4px; }
+    .sl-label { font-size: .65rem; font-weight: 700; letter-spacing: .12em; color: #555; text-transform: uppercase; margin-bottom: 3px; }
+    .sl-name { font-size: 1rem; font-weight: 700; }
+    .sl-value { font-size: .82rem; margin-bottom: 2px; }
+    .sl-item-row { display: flex; justify-content: space-between; font-size: .78rem; margin-bottom: 2px; }
+    .sl-footer { display: flex; justify-content: space-between; font-size: .75rem; color: #555; }
+  </style></head><body>${label.outerHTML}<script>window.onload=()=>{window.print();window.close();}<\/script></body></html>`);
+  win.document.close();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── NOTAS INTERNAS POR PEDIDO ────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function saveAdminNote(orderId, note) {
+  // Guardar en localStorage
+  const notes = JSON.parse(localStorage.getItem('micht_admin_notes') || '{}');
+  notes[orderId] = note;
+  localStorage.setItem('micht_admin_notes', JSON.stringify(notes));
+  // Intentar guardar en Supabase si existe la columna
+  if (db) {
+    try {
+      await db.from('pedidos').update({ admin_notes: note, updated_at: new Date().toISOString() }).eq('id', orderId);
+    } catch (_) {}
+  }
+}
+
+function getAdminNote(orderId) {
+  const notes = JSON.parse(localStorage.getItem('micht_admin_notes') || '{}');
+  return notes[orderId] || '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── ALERTAS DE STOCK EN SECCIÓN PERFUMES ────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function renderLowStockBanner() {
+  const container = document.getElementById('adminProductList');
+  if (!container) return;
+
+  const products = await CloudProducts.getAll().catch(() => []);
+  const low = products.filter(p => {
+    if (!p.inStock) return false;
+    if (p.type === 'entero') return (p.stockQuantity || 0) <= 1;
+    return p.bottleTotalMl > 0 && (p.bottleRemainingMl || 0) > 0 && (p.bottleRemainingMl || 0) < 15;
+  });
+
+  const existing = document.getElementById('lowStockBanner');
+  if (existing) existing.remove();
+  if (!low.length) return;
+
+  const banner = document.createElement('div');
+  banner.id = 'lowStockBanner';
+  banner.className = 'low-stock-banner';
+  banner.innerHTML = `
+    <div class="lsb-icon">⚠</div>
+    <div class="lsb-content">
+      <strong>${low.length} perfume${low.length !== 1 ? 's' : ''} con stock bajo:</strong>
+      <span class="lsb-list">${low.map(p => sanitize(p.brand + ' ' + p.name)).join(' · ')}</span>
+    </div>
+    <button class="lsb-close" onclick="this.parentElement.remove()">×</button>`;
+  container.parentElement.insertBefore(banner, container);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── SUPABASE REALTIME — notificación de nuevos pedidos ───────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let _realtimeChannel = null;
+
+function startRealtimeOrders() {
+  if (!db || _realtimeChannel) return;
+
+  // Solo activo si Supabase tiene Realtime habilitado en la tabla pedidos.
+  // Si no lo está, este bloque falla silenciosamente.
+  try {
+    _realtimeChannel = db
+      .channel('pedidos-changes')
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'pedidos' },
+        (payload) => {
+          const order = orderFromDB(payload.new);
+          _showNewOrderToast(order);
+          // Refrescar tabla y stats si la sección Pedidos está activa
+          const ordersSection = document.getElementById('section-orders');
+          if (ordersSection?.classList.contains('active')) {
+            renderOrdersSection().catch(console.error);
+          }
+          // Actualizar badge en nav si existe
+          _updatePendingBadge();
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.info('[MICHT Realtime] Canal no disponible — activa Realtime en Supabase para esta tabla.');
+          _realtimeChannel = null;
+        }
+      });
+  } catch (err) {
+    console.info('[MICHT Realtime] No disponible:', err?.message);
+    _realtimeChannel = null;
+  }
+}
+
+function _showNewOrderToast(order) {
+  const toast = document.getElementById('newOrderToast');
+  const msg   = document.getElementById('newOrderToastMsg');
+  if (!toast || !msg) return;
+
+  const name  = order.customerName ? `de ${order.customerName}` : '';
+  const total = order.total > 0 ? ` · S/ ${order.total.toFixed(2)}` : '';
+  msg.textContent = `Pedido ${name}${total}`;
+  toast.style.display = 'block';
+
+  // Auto-ocultar a los 12 segundos
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => { toast.style.display = 'none'; }, 12000);
+
+  // Sonido de notificación (tono suave)
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+  } catch (_) {}
+}
+
+function _updatePendingBadge() {
+  CloudOrders.getAll().then(orders => {
+    const pending = orders.filter(o => o.status === 'pendiente').length;
+    const btn = document.querySelector('[data-section="orders"]');
+    if (!btn) return;
+    let badge = btn.querySelector('.nav-badge');
+    if (pending > 0) {
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'nav-badge';
+        badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;background:#ef5350;color:#fff;border-radius:50px;font-size:.62rem;font-weight:800;margin-left:.35rem;line-height:1';
+        btn.appendChild(badge);
+      }
+      badge.textContent = pending > 99 ? '99+' : pending;
+    } else {
+      badge?.remove();
+    }
+  }).catch(() => {});
+}
+
+// Arrancar Realtime cuando el dashboard esté listo
+document.addEventListener('DOMContentLoaded', () => {
+  // Se inicia después de que showDashboard() confirme que el admin está autenticado.
+  // Usamos MutationObserver para esperar a que el dashboardSection sea visible.
+  const dashEl = document.getElementById('dashboardSection');
+  if (!dashEl) return;
+  const obs = new MutationObserver(() => {
+    if (dashEl.style.display !== 'none') {
+      obs.disconnect();
+      startRealtimeOrders();
+      _updatePendingBadge();
+    }
+  });
+  obs.observe(dashEl, { attributes: true, attributeFilter: ['style'] });
+});

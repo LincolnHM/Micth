@@ -64,11 +64,13 @@
       <div class="admin-header-inner">
         <p class="admin-logo">MICHT<span>Decants</span> <span style="color:var(--text2);font-size:.75rem;font-family:Inter,sans-serif;font-weight:400"> · Admin</span></p>
         <nav class="admin-nav">
+          <button class="admin-nav-btn" data-section="dashboard">🏠 Inicio</button>
           <button class="admin-nav-btn active" data-section="products">Perfumes</button>
           <button class="admin-nav-btn" data-section="orders">Pedidos</button>
           <button class="admin-nav-btn" data-section="users">Usuarios</button>
           <button class="admin-nav-btn" data-section="accounting">Contabilidad</button>
           <button class="admin-nav-btn" data-section="stats">Estadísticas</button>
+          <button class="admin-nav-btn" data-section="tools">Herramientas</button>
           <button class="admin-nav-btn" data-section="settings">Ajustes</button>
         </nav>
         <button class="btn-logout" id="logoutBtn">Cerrar sesión</button>
@@ -76,6 +78,112 @@
     </header>
 
     <div class="admin-body">
+
+      <!-- ── Sección: Dashboard / Inicio ─────────────────────────────────── -->
+      <div class="admin-section" id="section-dashboard">
+        <div class="admin-section-header">
+          <h2>Resumen General</h2>
+          <span id="dashboardDate" style="font-size:.8rem;color:var(--text2)"></span>
+        </div>
+        <div id="dashboardContent">
+          <div class="dash-skeleton-wrap">
+            <div class="sk-block" style="height:90px;border-radius:var(--r-lg)"></div>
+            <div class="sk-block" style="height:90px;border-radius:var(--r-lg)"></div>
+            <div class="sk-block" style="height:90px;border-radius:var(--r-lg)"></div>
+            <div class="sk-block" style="height:90px;border-radius:var(--r-lg)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Sección: Herramientas ─────────────────────────────────────────── -->
+      <div class="admin-section" id="section-tools">
+        <div class="admin-section-header">
+          <h2>Herramientas</h2>
+        </div>
+
+        <!-- Calculadora de precios -->
+        <div class="tools-card">
+          <div class="tools-card-header">
+            <span class="tools-icon">🧮</span>
+            <div>
+              <h3>Calculadora de Precios</h3>
+              <p>Calcula el precio sugerido para decants según el costo del frasco</p>
+            </div>
+          </div>
+          <div class="tools-card-body">
+            <div class="calc-grid">
+              <div class="calc-field">
+                <label>Precio del frasco (S/)</label>
+                <input type="number" id="calcBottlePrice" min="0" step="0.50" placeholder="Ej: 180" value="">
+              </div>
+              <div class="calc-field">
+                <label>Ml totales del frasco</label>
+                <input type="number" id="calcBottleMl" min="1" step="1" placeholder="Ej: 100" value="">
+              </div>
+              <div class="calc-field">
+                <label>Margen de ganancia (%)</label>
+                <input type="number" id="calcMargin" min="0" max="500" step="5" placeholder="Ej: 80" value="80">
+              </div>
+            </div>
+            <button class="btn-calc" id="calcBtn">Calcular precios</button>
+            <div id="calcResult" class="calc-result" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- WhatsApp masivo -->
+        <div class="tools-card" style="margin-top:1.25rem">
+          <div class="tools-card-header">
+            <span class="tools-icon">📲</span>
+            <div>
+              <h3>Mensajes WhatsApp a Clientes</h3>
+              <p>Genera links para enviar un mensaje a tus clientes registrados</p>
+            </div>
+          </div>
+          <div class="tools-card-body">
+            <label style="font-size:.82rem;color:var(--text2);font-weight:500;display:block;margin-bottom:.4rem">Mensaje a enviar</label>
+            <textarea id="waMessageText" rows="3"
+              placeholder="Ej: Hola! Te aviso que ya tenemos stock de Khamrah Waha 😊 Escríbenos para tu pedido."
+              style="width:100%;padding:.65rem .85rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;resize:vertical;box-sizing:border-box;font-family:Inter,sans-serif;line-height:1.5;outline:none;transition:border-color .2s"
+              onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            <div style="margin-top:.75rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+              <button class="btn-wa-gen" id="waGenBtn">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                Generar links
+              </button>
+              <span id="waClientsCount" style="font-size:.78rem;color:var(--text2)">Cargando clientes…</span>
+            </div>
+            <div id="waLinksResult" style="margin-top:.85rem"></div>
+          </div>
+        </div>
+
+        <!-- Exportar CSV -->
+        <div class="tools-card" style="margin-top:1.25rem">
+          <div class="tools-card-header">
+            <span class="tools-icon">📊</span>
+            <div>
+              <h3>Exportar Pedidos a Excel / CSV</h3>
+              <p>Descarga todos los pedidos para análisis en Excel o Google Sheets</p>
+            </div>
+          </div>
+          <div class="tools-card-body">
+            <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center">
+              <select id="csvStatusFilter"
+                style="padding:.45rem .75rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.82rem;cursor:pointer">
+                <option value="all">Todos los estados</option>
+                <option value="pendiente">Solo Pendientes</option>
+                <option value="pagado">Solo Pagados</option>
+                <option value="cancelado">Solo Cancelados</option>
+              </select>
+              <button class="btn-csv" id="exportCsvBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Descargar CSV
+              </button>
+            </div>
+            <p style="margin-top:.5rem;font-size:.74rem;color:var(--text3)">Incluye: ID, cliente, teléfono, DNI, fecha, productos, total, estado, método de pago.</p>
+          </div>
+        </div>
+
+      </div>
 
       <!-- ── Sección: Gestión de Perfumes ──────────────────────────────────── -->
       <div class="admin-section active" id="section-products">
@@ -154,9 +262,8 @@
           <table class="orders-table">
             <thead>
               <tr>
-                <th>ID</th>
+                <th>Pedido</th>
                 <th>Cliente</th>
-                <th>Fecha</th>
                 <th>Productos</th>
                 <th>Total</th>
                 <th>Estado</th>
@@ -165,7 +272,7 @@
             </thead>
             <tbody id="ordersTableBody">
               <tr>
-                <td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">
+                <td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">
                   Cargando pedidos…
                 </td>
               </tr>
@@ -659,9 +766,26 @@ CREATE POLICY "user_or_admin_select" ON perfiles_usuarios FOR SELECT TO authenti
     </div>
   </div>
 
+  <!-- ── Modal: Etiqueta de envío ─────────────────────────────────────────── -->
+  <div class="product-modal" id="shippingLabelModal" role="dialog" aria-modal="true">
+    <div class="product-modal-content" style="max-width:480px">
+      <div class="product-modal-header">
+        <h3>Etiqueta de Envío</h3>
+        <button class="close-btn" onclick="document.getElementById('shippingLabelModal').classList.remove('open')">×</button>
+      </div>
+      <div class="product-modal-body">
+        <div id="shippingLabelContent"></div>
+      </div>
+      <div class="product-modal-footer" style="gap:.5rem">
+        <button class="btn-cancel" onclick="document.getElementById('shippingLabelModal').classList.remove('open')">Cerrar</button>
+        <button class="btn-save" onclick="printShippingLabel()">🖨 Imprimir</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/data.js"></script>
   <script src="js/supabase-config.js?v=25"></script>
-  <script src="js/admin.js?v=25"></script>
+  <script src="js/admin.js?v=27"></script>
 </body>
 </html>

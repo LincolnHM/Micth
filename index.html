@@ -205,6 +205,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="imgGato/web.png">
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="css/style.css">
   <style>
     /* ── Perfumes Enteros — estilos adicionales ─────────── */
@@ -1209,6 +1210,85 @@
     document.getElementById('navEnteroLink')?.addEventListener('click', activarFiltroEntero);
     document.getElementById('mobileNavEnteroLink')?.addEventListener('click', activarFiltroEntero);
     document.getElementById('footerEnteroLink')?.addEventListener('click', activarFiltroEntero);
+  </script>
+
+  <!-- ── Banner de Cookies / Privacidad ──────────────────────────────────── -->
+  <div id="cookieBanner" class="cookie-banner" role="dialog" aria-label="Aviso de privacidad" style="display:none">
+    <div class="cookie-banner-inner">
+      <div class="cookie-banner-text">
+        <span class="cookie-banner-icon">🍪</span>
+        <p>Usamos datos básicos (nombre, DNI, teléfono) para gestionar tus pedidos y enviarte notificaciones por WhatsApp. No compartimos tu información con terceros.
+          <a href="#" id="cookiePrivacyLink" class="cookie-link">Ver política de privacidad</a>
+        </p>
+      </div>
+      <div class="cookie-banner-actions">
+        <button id="cookieAcceptBtn" class="cookie-btn cookie-btn-accept">Aceptar</button>
+        <button id="cookieRejectBtn" class="cookie-btn cookie-btn-reject">Solo esenciales</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal Política de Privacidad ────────────────────────────────────── -->
+  <div id="privacyPolicyOverlay" class="privacy-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="Política de privacidad">
+    <div class="privacy-modal">
+      <div class="privacy-modal-header">
+        <h2 class="privacy-modal-title">Política de Privacidad</h2>
+        <button class="privacy-close-btn" id="privacyCloseBtn" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="privacy-modal-body">
+        <h3>¿Qué datos recopilamos?</h3>
+        <p>Recopilamos nombre completo, DNI, número de teléfono y dirección de entrega, únicamente para procesar tus pedidos.</p>
+        <h3>¿Para qué los usamos?</h3>
+        <ul>
+          <li>Confirmar y gestionar tus pedidos.</li>
+          <li>Enviarte actualizaciones de tu pedido por WhatsApp.</li>
+          <li>Mejorar la experiencia de compra en nuestra tienda.</li>
+        </ul>
+        <h3>¿Compartimos tus datos?</h3>
+        <p>No vendemos ni compartimos tu información personal con terceros. Tus datos se almacenan de forma segura en nuestros servidores.</p>
+        <h3>¿Cuánto tiempo guardamos tus datos?</h3>
+        <p>Conservamos tus datos mientras mantengas una cuenta activa o sea necesario para cumplir con nuestras obligaciones legales.</p>
+        <h3>Tus derechos</h3>
+        <p>Puedes solicitar la eliminación de tus datos escribiéndonos al WhatsApp <strong>917 452 643</strong>.</p>
+        <p class="privacy-footer-note">Micht Decants · Soritor, San Martín, Perú</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var COOKIE_KEY = 'micht_cookie_consent';
+      var banner = document.getElementById('cookieBanner');
+
+      function hideBanner() { if (banner) banner.style.display = 'none'; }
+      function showBanner() { if (banner) banner.style.display = 'flex'; }
+
+      var consent = localStorage.getItem(COOKIE_KEY);
+      if (!consent) {
+        setTimeout(showBanner, 1200);
+      }
+
+      document.getElementById('cookieAcceptBtn')?.addEventListener('click', function () {
+        localStorage.setItem(COOKIE_KEY, 'accepted');
+        hideBanner();
+      });
+      document.getElementById('cookieRejectBtn')?.addEventListener('click', function () {
+        localStorage.setItem(COOKIE_KEY, 'essential');
+        hideBanner();
+      });
+
+      var privacyOverlay = document.getElementById('privacyPolicyOverlay');
+      document.getElementById('cookiePrivacyLink')?.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (privacyOverlay) privacyOverlay.style.display = 'flex';
+      });
+      document.getElementById('privacyCloseBtn')?.addEventListener('click', function () {
+        if (privacyOverlay) privacyOverlay.style.display = 'none';
+      });
+      privacyOverlay?.addEventListener('click', function (e) {
+        if (e.target === privacyOverlay) privacyOverlay.style.display = 'none';
+      });
+    })();
   </script>
 </body>
 </html>

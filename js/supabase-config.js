@@ -149,17 +149,21 @@ const CloudOrders = {
         if (localStatus && localStatus !== so.status) return { ...so, status: localStatus };
         return so;
       });
-      // Incluir pedidos en localStorage que aún no llegaron a Supabase
-      // Solo incluir los muy recientes (< 10 min) para evitar "zombies" de borrados
+      // Incluir pedidos en localStorage que aún no llegaron a Supabase.
+      // Los marcados con _pendingSync (insert falló) se mantienen indefinidamente.
       const supabaseIds  = new Set(mergedSupabase.map(o => o.id));
       const tenMinAgo    = Date.now() - 10 * 60 * 1000;
       const pendingLocal = localOrders.filter(o =>
-        !supabaseIds.has(o.id) && new Date(o.date).getTime() > tenMinAgo
+        !supabaseIds.has(o.id) && (o._pendingSync || new Date(o.date).getTime() > tenMinAgo)
       );
       // Limpiar zombies del localStorage (órdenes que ya no están en Supabase y son antiguas)
       // Solo limpiar si Supabase devolvió datos reales — evita borrar datos cuando hay error de auth/red
       const zombies = supabaseOrders.length > 0
-        ? localOrders.filter(o => !supabaseIds.has(o.id) && new Date(o.date).getTime() <= tenMinAgo)
+        ? localOrders.filter(o =>
+            !supabaseIds.has(o.id) &&
+            !o._pendingSync &&
+            new Date(o.date).getTime() <= tenMinAgo
+          )
         : [];
       if (zombies.length) Orders.save(localOrders.filter(o => !zombies.some(z => z.id === o.id)));
       this._lastFetchFromSupabase = true;
@@ -197,10 +201,25 @@ const CloudOrders = {
     try { this._localCreate(newOrder); } catch {}
 
     if (db) {
-      const { error } = await db.from('pedidos').insert(orderToDB(newOrder));
+      const dbData = orderToDB(newOrder);
+      let { error } = await db.from('pedidos').insert(dbData);
+
+      // Fallback: si falla por columna inexistente (ej: payment_method no agregada aún),
+      // reintentar sin ese campo para no perder el pedido
+      if (error && (error.code === '42703' || (error.message || '').includes('payment_method'))) {
+        const { payment_method, ...fallback } = dbData;
+        const retry = await db.from('pedidos').insert(fallback);
+        error = retry.error;
+      }
+
       if (error) {
         console.error('[MICHT] Error Supabase al guardar pedido:', error.code, error.message);
-        // Notificar visualmente si hay una función toast disponible
+        // Marcar como pendiente de sync — así no se limpiará como "zombie" del localStorage
+        try {
+          const stored = Orders.getAll();
+          const idx = stored.findIndex(o => o.id === newOrder.id);
+          if (idx !== -1) { stored[idx]._pendingSync = true; Orders.save(stored); }
+        } catch {}
         const _toast = typeof showToast === 'function' ? showToast
           : typeof showCartToast === 'function' ? showCartToast : null;
         if (_toast) _toast('⚠ Pedido guardado localmente. Error al sincronizar: ' + (error.message || error.code));

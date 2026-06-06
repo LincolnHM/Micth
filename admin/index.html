@@ -64,9 +64,13 @@
       <div class="admin-header-inner">
         <p class="admin-logo">MICHT<span>Decants</span> <span style="color:var(--text2);font-size:.75rem;font-family:Inter,sans-serif;font-weight:400"> · Admin</span></p>
         <nav class="admin-nav">
+          <button class="admin-nav-btn" data-section="dashboard">Dashboard</button>
           <button class="admin-nav-btn active" data-section="products">Perfumes</button>
           <button class="admin-nav-btn" data-section="orders">Pedidos</button>
+          <button class="admin-nav-btn" data-section="stats">Estadísticas</button>
+          <button class="admin-nav-btn" data-section="users">Clientes</button>
           <button class="admin-nav-btn" data-section="accounting">Contabilidad</button>
+          <button class="admin-nav-btn" data-section="tools">Herramientas</button>
           <button class="admin-nav-btn" data-section="settings">Ajustes</button>
         </nav>
         <button class="btn-logout" id="logoutBtn">Cerrar sesión</button>
@@ -74,6 +78,17 @@
     </header>
 
     <div class="admin-body">
+
+      <!-- ── Sección: Dashboard ────────────────────────────────────────────── -->
+      <div class="admin-section" id="section-dashboard">
+        <div class="admin-section-header">
+          <h2>Dashboard</h2>
+          <span id="dashboardDate" style="font-size:.82rem;color:var(--text2)"></span>
+        </div>
+        <div id="dashboardContent">
+          <p style="text-align:center;color:var(--text2);padding:3rem">Cargando…</p>
+        </div>
+      </div>
 
       <!-- ── Sección: Gestión de Perfumes ──────────────────────────────────── -->
       <div class="admin-section active" id="section-products">
@@ -117,7 +132,20 @@
       <div class="admin-section" id="section-orders">
         <div class="admin-section-header">
           <h2>Pedidos</h2>
-          <button class="btn-add" id="registerOrderBtn">+ Registrar Pedido</button>
+          <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+            <input type="text" id="orderSearch"
+                   placeholder="🔍  Buscar por cliente, DNI o ID…"
+                   style="flex:1;min-width:180px;max-width:300px;padding:.52rem .9rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;outline:none;transition:border-color .2s"
+                   onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='var(--border)'">
+            <button id="refreshOrdersBtn"
+                    style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;padding:.45rem .9rem;border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);color:var(--text2);cursor:pointer;transition:all .2s"
+                    onmouseover="this.style.borderColor='var(--gold-d)';this.style.color='var(--gold)'"
+                    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Actualizar
+            </button>
+            <button class="btn-add" id="registerOrderBtn">+ Registrar Pedido</button>
+          </div>
         </div>
 
         <!-- Stats bar -->
@@ -128,6 +156,7 @@
           <button class="order-filter-btn active" data-status="all">Todos</button>
           <button class="order-filter-btn" data-status="pendiente">Pendiente</button>
           <button class="order-filter-btn" data-status="pagado">Pagado</button>
+          <button class="order-filter-btn" data-status="enviado">Enviado</button>
           <button class="order-filter-btn" data-status="cancelado">Cancelado</button>
         </div>
 
@@ -273,6 +302,144 @@
 
         </div><!-- /accountingDailyView -->
 
+      </div>
+
+      <!-- ── Sección: Estadísticas ─────────────────────────────────────────── -->
+      <div class="admin-section" id="section-stats">
+        <div class="admin-section-header">
+          <h2>Estadísticas</h2>
+        </div>
+        <div id="statsContent">
+          <p style="text-align:center;color:var(--text2);padding:3rem">Cargando estadísticas…</p>
+        </div>
+      </div>
+
+      <!-- ── Sección: Clientes ──────────────────────────────────────────────── -->
+      <div class="admin-section" id="section-users">
+        <div class="admin-section-header">
+          <h2>Clientes</h2>
+          <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+            <input type="text" id="userSearch"
+                   placeholder="🔍  Buscar por nombre, DNI o teléfono…"
+                   style="flex:1;min-width:200px;max-width:340px;padding:.52rem .9rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;outline:none;transition:border-color .2s"
+                   onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='var(--border)'">
+            <button id="refreshUsersBtn"
+                    style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;padding:.45rem .9rem;border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);color:var(--text2);cursor:pointer;transition:all .2s"
+                    onmouseover="this.style.borderColor='var(--gold-d)';this.style.color='var(--gold)'"
+                    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Actualizar
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats de usuarios -->
+        <div id="usersStatsBar" class="order-stats-bar" style="margin-bottom:1.25rem"></div>
+
+        <!-- Hint SQL si la tabla no existe -->
+        <div id="usersSqlHint" style="display:none;background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.3);border-radius:var(--r);padding:.9rem 1.1rem;margin-bottom:1rem;font-size:.82rem;color:#ef9a9a;line-height:1.7">
+          <strong>⚠ Tabla no encontrada.</strong> Ejecuta este SQL en Supabase → SQL Editor:
+          <pre style="margin:.5rem 0 0;font-size:.75rem;color:var(--text2);background:var(--bg);border-radius:4px;padding:.5rem;overflow-x:auto">CREATE TABLE perfiles_usuarios (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  nombre_completo TEXT NOT NULL, dni TEXT NOT NULL UNIQUE,
+  telefono TEXT NOT NULL, primer_descuento_usado BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE perfiles_usuarios ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (true);</pre>
+        </div>
+
+        <!-- Tabla de usuarios -->
+        <div class="orders-table-wrap">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>DNI</th>
+                <th>Teléfono</th>
+                <th style="text-align:center">10% OFF</th>
+                <th>Registro</th>
+                <th style="text-align:center">Pedidos</th>
+                <th style="text-align:right">Total gastado</th>
+                <th style="text-align:center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr><td colspan="8" style="text-align:center;color:var(--text2);padding:2rem">Cargando clientes…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Sección: Herramientas ───────────────────────────────────────────── -->
+      <div class="admin-section" id="section-tools">
+        <div class="admin-section-header">
+          <h2>Herramientas</h2>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.25rem">
+
+          <!-- Calculadora de precios -->
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.5rem">
+            <h3 style="font-family:'Playfair Display',serif;color:var(--white);margin-bottom:.25rem;font-size:.95rem">🧮 Calculadora de Precios</h3>
+            <p style="color:var(--text2);font-size:.8rem;margin-bottom:1rem">Calcula el precio de tus decants según el costo del frasco.</p>
+            <div style="display:grid;gap:.65rem">
+              <div class="pass-field">
+                <label for="calcBottlePrice">Precio del frasco (S/)</label>
+                <input type="number" id="calcBottlePrice" min="0" step="0.01" placeholder="Ej: 120">
+              </div>
+              <div class="pass-field">
+                <label for="calcBottleMl">Total de ml del frasco</label>
+                <input type="number" id="calcBottleMl" min="1" step="1" placeholder="Ej: 100">
+              </div>
+              <div class="pass-field">
+                <label for="calcMargin">Margen de ganancia (%)</label>
+                <input type="number" id="calcMargin" min="0" max="500" step="5" value="50">
+              </div>
+              <button id="calcBtn" class="btn-save" style="width:100%">Calcular precios</button>
+            </div>
+            <div id="calcResult" style="display:none;margin-top:1rem"></div>
+          </div>
+
+          <!-- Exportar pedidos a CSV -->
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.5rem">
+            <h3 style="font-family:'Playfair Display',serif;color:var(--white);margin-bottom:.25rem;font-size:.95rem">📥 Exportar Pedidos</h3>
+            <p style="color:var(--text2);font-size:.8rem;margin-bottom:1rem">Descarga todos tus pedidos en formato CSV para Excel o Google Sheets.</p>
+            <div style="display:grid;gap:.65rem">
+              <div class="pass-field">
+                <label for="csvStatusFilter">Filtrar por estado</label>
+                <select id="csvStatusFilter" style="width:100%;padding:.52rem .8rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem">
+                  <option value="all">Todos los estados</option>
+                  <option value="pagado">Solo pagados</option>
+                  <option value="pendiente">Solo pendientes</option>
+                  <option value="cancelado">Solo cancelados</option>
+                </select>
+              </div>
+              <button id="exportCsvBtn" class="btn-save" style="width:100%;display:flex;align-items:center;justify-content:center;gap:.5rem">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Descargar CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- WhatsApp masivo -->
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.5rem">
+            <h3 style="font-family:'Playfair Display',serif;color:var(--white);margin-bottom:.25rem;font-size:.95rem">💬 WhatsApp a Clientes</h3>
+            <p style="color:var(--text2);font-size:.8rem;margin-bottom:.75rem">Genera links rápidos para enviar un mensaje a todos tus clientes.</p>
+            <p id="waClientsCount" style="font-size:.76rem;color:var(--gold-d);margin-bottom:.75rem">Cargando clientes…</p>
+            <div style="display:grid;gap:.65rem">
+              <div class="pass-field">
+                <label for="waMessageText">Mensaje a enviar</label>
+                <textarea id="waMessageText" rows="4" maxlength="1000"
+                          placeholder="Hola {nombre}, tenemos nuevas fragancias en MICHT Decants 🌸 ¿Te interesa alguna?"
+                          style="width:100%;padding:.52rem .8rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;resize:vertical;box-sizing:border-box;font-family:Inter,sans-serif"></textarea>
+              </div>
+              <button id="waGenBtn" class="btn-save" style="width:100%;background:#25d366">Generar links WhatsApp</button>
+            </div>
+            <div id="waLinksResult" style="margin-top:1rem;max-height:260px;overflow-y:auto"></div>
+          </div>
+
+        </div>
       </div>
 
       <!-- ── Sección: Ajustes ───────────────────────────────────────────────── -->
@@ -544,6 +711,42 @@
       </div>
     </div>
   </div>
+
+  <!-- ── Modal: Etiqueta de envío ──────────────────────────────────────────── -->
+  <div class="product-modal" id="shippingLabelModal" role="dialog" aria-modal="true">
+    <div class="product-modal-content" style="max-width:460px">
+      <div class="product-modal-header">
+        <h3>Etiqueta de Envío</h3>
+        <button class="close-btn" onclick="document.getElementById('shippingLabelModal').classList.remove('open')" aria-label="Cerrar">×</button>
+      </div>
+      <div class="product-modal-body">
+        <div id="shippingLabelContent"></div>
+      </div>
+      <div class="product-modal-footer">
+        <button class="btn-cancel" onclick="document.getElementById('shippingLabelModal').classList.remove('open')">Cerrar</button>
+        <button class="btn-save" onclick="printShippingLabel()" style="display:flex;align-items:center;gap:.4rem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimir etiqueta
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Notificación de nuevo pedido (Realtime) ───────────────────────────── -->
+  <div id="newOrderToast" style="display:none;position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;background:#1a1a1a;border:1px solid var(--gold);border-radius:10px;padding:1rem 1.25rem;box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:260px;max-width:340px;animation:slideInRight .3s ease">
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <span style="font-size:1.4rem">🔔</span>
+      <div style="flex:1">
+        <div style="font-weight:700;color:var(--gold);font-size:.88rem;margin-bottom:.15rem">¡Nuevo pedido!</div>
+        <div id="newOrderToastMsg" style="font-size:.78rem;color:var(--text2)">Un cliente acaba de hacer un pedido.</div>
+      </div>
+      <button onclick="document.getElementById('newOrderToast').style.display='none'" style="background:none;border:none;color:var(--text3);font-size:1.1rem;cursor:pointer;line-height:1;padding:0 .2rem;flex-shrink:0">×</button>
+    </div>
+    <button onclick="document.querySelector('[data-section=orders]').click();document.getElementById('newOrderToast').style.display='none'" style="margin-top:.6rem;width:100%;padding:.4rem;background:rgba(201,168,76,.12);color:var(--gold);border:1px solid rgba(201,168,76,.3);border-radius:6px;font-size:.76rem;font-weight:700;cursor:pointer">Ver pedidos →</button>
+  </div>
+  <style>
+    @keyframes slideInRight { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+  </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/data.js"></script>
