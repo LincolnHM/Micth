@@ -196,6 +196,10 @@
 
       <!-- Sidebar de navegación -->
       <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-head">
+          <p>Menú lateral</p>
+          <span>Accesos rápidos</span>
+        </div>
         <nav class="admin-nav">
 
           <span class="admin-nav-section-label">Principal</span>
@@ -607,13 +611,18 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
           <h2>Herramientas</h2>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.25rem">
+        <div class="tools-grid">
 
           <!-- Calculadora de precios -->
-          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.5rem">
-            <h3 style="font-family:'Playfair Display',serif;color:var(--white);margin-bottom:.25rem;font-size:.95rem">🧮 Calculadora de Precios</h3>
-            <p style="color:var(--text2);font-size:.8rem;margin-bottom:1rem">Calcula el precio de tus decants según el costo del frasco.</p>
-            <div style="display:grid;gap:.65rem">
+          <section class="tool-card tool-card-primary">
+            <div class="tool-card-head">
+              <span class="tool-icon">🧮</span>
+              <div>
+                <h3>Calculadora de Precios</h3>
+                <p>Calcula el precio de tus decants según el costo del frasco.</p>
+              </div>
+            </div>
+            <div class="tool-card-body">
               <div class="pass-field">
                 <label for="calcBottlePrice">Precio del frasco (S/)</label>
                 <input type="number" id="calcBottlePrice" min="0" step="0.01" placeholder="Ej: 120">
@@ -629,13 +638,18 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
               <button id="calcBtn" class="btn-save" style="width:100%">Calcular precios</button>
             </div>
             <div id="calcResult" style="display:none;margin-top:1rem"></div>
-          </div>
+          </section>
 
           <!-- Exportar pedidos a CSV -->
-          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.5rem">
-            <h3 style="font-family:'Playfair Display',serif;color:var(--white);margin-bottom:.25rem;font-size:.95rem">📥 Exportar Pedidos</h3>
-            <p style="color:var(--text2);font-size:.8rem;margin-bottom:1rem">Descarga todos tus pedidos en formato CSV para Excel o Google Sheets.</p>
-            <div style="display:grid;gap:.65rem">
+          <section class="tool-card">
+            <div class="tool-card-head">
+              <span class="tool-icon">📥</span>
+              <div>
+                <h3>Exportar Pedidos</h3>
+                <p>Descarga todos tus pedidos en formato CSV para Excel o Google Sheets.</p>
+              </div>
+            </div>
+            <div class="tool-card-body">
               <div class="pass-field">
                 <label for="csvStatusFilter">Filtrar por estado</label>
                 <select id="csvStatusFilter" style="width:100%;padding:.52rem .8rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem">
@@ -650,14 +664,19 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
                 Descargar CSV
               </button>
             </div>
-          </div>
+          </section>
 
           <!-- WhatsApp masivo -->
-          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.5rem">
-            <h3 style="font-family:'Playfair Display',serif;color:var(--white);margin-bottom:.25rem;font-size:.95rem">💬 WhatsApp a Clientes</h3>
-            <p style="color:var(--text2);font-size:.8rem;margin-bottom:.75rem">Genera links rápidos para enviar un mensaje a todos tus clientes.</p>
-            <p id="waClientsCount" style="font-size:.76rem;color:var(--gold-d);margin-bottom:.75rem">Cargando clientes…</p>
-            <div style="display:grid;gap:.65rem">
+          <section class="tool-card tool-card-highlight">
+            <div class="tool-card-head">
+              <span class="tool-icon">💬</span>
+              <div>
+                <h3>WhatsApp a Clientes</h3>
+                <p>Genera links rápidos para enviar un mensaje a todos tus clientes.</p>
+              </div>
+            </div>
+            <p id="waClientsCount" class="tool-count">Cargando clientes…</p>
+            <div class="tool-card-body">
               <div class="pass-field">
                 <label for="waMessageText">Mensaje a enviar</label>
                 <textarea id="waMessageText" rows="4" maxlength="1000"
@@ -666,8 +685,8 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
               </div>
               <button id="waGenBtn" class="btn-save" style="width:100%;background:#25d366">Generar links WhatsApp</button>
             </div>
-            <div id="waLinksResult" style="margin-top:1rem;max-height:260px;overflow-y:auto"></div>
-          </div>
+            <div id="waLinksResult" class="tool-result"></div>
+          </section>
 
         </div>
       </div>
