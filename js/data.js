@@ -1584,10 +1584,11 @@ const Orders = {
     return newOrder.id;
   },
 
-  updateStatus(id, status) {
+  updateStatus(id, status, paymentMethod = null) {
     const orders = this.getAll().map(o => {
       if (o.id !== id) return o;
       const updated = { ...o, status, updatedAt: new Date().toISOString() };
+      if (paymentMethod) updated.paymentMethod = paymentMethod;
 
       // Al confirmar el pago: descontar ml del inventario
       if (status === 'pagado' && o.status !== 'pagado') {

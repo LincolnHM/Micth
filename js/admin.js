@@ -823,6 +823,7 @@ async function renderOrdersSection() {
           try {
             await CloudOrders.updateStatus(id, newStatus, paymentMethod);
             sel.dataset.status = newStatus;
+            _statsCache = null;
             renderOrdersSection().catch(console.error);
             const payLabel = paymentMethod === 'efectivo' ? ' · 💵 Efectivo' : paymentMethod === 'yape' ? ' · 📱 Yape' : '';
             showToast(`Pedido ${id} → ${STATUS_LABELS[newStatus]}${payLabel}`);
@@ -991,6 +992,7 @@ async function openOrderDetail(id) {
     btn.disabled = true; btn.textContent = '…';
     try {
       await CloudOrders.update(order.id, { paymentMethod: pm });
+      _statsCache = null;
       const label = pm === 'efectivo' ? '💵 Efectivo' : pm === 'yape' ? '📱 Yape' : 'Por confirmar';
       showToast(`Método de pago actualizado: ${label} ✓`);
       renderOrdersSection().catch(console.error);

@@ -264,7 +264,7 @@ const CloudOrders = {
       }
     }
     // Actualizar localStorage siempre (fuente de verdad local)
-    Orders.updateStatus(id, status);
+    Orders.updateStatus(id, status, paymentMethod);
     if (db) {
       const patch = { status, updated_at: new Date().toISOString() };
       if (paymentMethod) patch.payment_method = paymentMethod;
