@@ -127,11 +127,11 @@ const Chatbot = {
       console.error('[MICHT Chatbot]', err.message);
 
       // Mensajes de error descriptivos según tipo
-      let userMsg = 'Ups, ocurrió un error 😅 Por favor escríbenos por WhatsApp: **+51 917 452 643**';
+      let userMsg = 'Ups, ocurrió un error 😅 Por favor inténtalo de nuevo más tarde.';
       if (err.message.includes('429') || err.message.toLowerCase().includes('demasiado')) {
         userMsg = 'Estás enviando muchos mensajes seguidos 😅 Espera un momento e intenta de nuevo.';
       } else if (err.message.includes('503') || err.message.toLowerCase().includes('disponible')) {
-        userMsg = 'El asistente no está disponible ahora mismo. Escríbenos directo por WhatsApp: **+51 917 452 643**';
+        userMsg = 'El asistente no está disponible ahora mismo. Por favor inténtalo de nuevo más tarde.';
       }
       this.addMessage('bot', userMsg);
     }

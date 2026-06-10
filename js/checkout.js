@@ -28,7 +28,7 @@ const PERU_GEO = {
   'Ucayali':        ['Coronel Portillo','Atalaya','Padre Abad','Purús']
 };
 
-const WHATSAPP_NUMBER = '51917452643';
+const WHATSAPP_NUMBER = '';
 
 // ─── Reglas de validación ─────────────────────────────────────────────────────
 
@@ -302,6 +302,8 @@ const Checkout = {
   },
 
   send() {
+    alert('Los pedidos están temporalmente suspendidos. Vuelve pronto.');
+    return;
     if (this._sending) return;
     if (Cart.items.length === 0) { alert('Tu carrito está vacío.'); return; }
 
@@ -404,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Copiar número de celular
   document.getElementById('copyPhoneBtn').addEventListener('click', function () {
-    const number = '917452643';
+    const number = '';
     const btn = this;
     const original = btn.innerHTML;
     const markCopied = () => {
