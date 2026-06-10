@@ -25,7 +25,7 @@ const Carousel = {
     },
     {
       tag:       'ENVÍOS A TODO PERÚ',
-      titleHtml: 'Desde <em class="c-gold">Soritor</em><br>a todo el Perú.',
+      titleHtml: 'Decants auténticos<br>a <em class="c-gold">todo el Perú</em>.',
       subtitle:  'Envíos seguros vía Shalom a cualquier ciudad del país. Recojo en tienda disponible también.',
       cta:       { text: 'Hacer Pedido', href: '#catalogo' },
       theme:     'slide-3'
