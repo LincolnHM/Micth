@@ -309,7 +309,7 @@
           goToScentStep(3);
         } else if (step === 3) {
           scentAnswers.note = val;
-          calculateScentResults();
+          calculateScentResults().catch(console.error);
         }
       });
     });
@@ -380,8 +380,8 @@
     document.getElementById('chatbotWrapper')?.style.setProperty('z-index', '9999');
   }
 
-  function calculateScentResults() {
-    goToScentStep(4); // Carga / Resultados
+  async function calculateScentResults() {
+    goToScentStep(4);
     const resultsContainer = document.getElementById('scentResultsList');
     if (!resultsContainer) return;
 
@@ -392,152 +392,227 @@
       </div>
     `;
 
-    setTimeout(() => {
-      // Traer todos los productos
-      const allProducts = window.CloudProducts?.productsCache || [];
-      if (!allProducts.length) {
-        resultsContainer.innerHTML = `<p style="text-align:center;color:var(--text3)">No se encontraron productos disponibles en caché.</p>`;
-        return;
+    await new Promise(resolve => setTimeout(resolve, 1400));
+
+    // Cargar productos: _allProducts → Products.getAll() → CloudProducts.getAll()
+    let allProducts = (Array.isArray(window._allProducts) && window._allProducts.length)
+      ? window._allProducts
+      : (typeof Products !== 'undefined' ? Products.getAll() : []);
+
+    if (!allProducts.length && typeof CloudProducts !== 'undefined') {
+      try {
+        allProducts = await CloudProducts.getAll();
+        if (allProducts.length) window._allProducts = allProducts;
+      } catch (e) {
+        console.error('[ScentFinder] Error cargando productos:', e);
+      }
+    }
+
+    if (!allProducts.length) {
+      resultsContainer.innerHTML = `
+        <div class="scent-empty-state">
+          <p>No pudimos cargar el catálogo en este momento.</p>
+          <p style="color:var(--text3);font-size:0.8rem;margin-top:0.4rem">Recarga la página e intenta de nuevo.</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Función de puntaje
+    const scoreProduct = (p) => {
+      let score = 0;
+      const olf   = (p.olfFamily   || '').toLowerCase();
+      const desc  = (p.description || '').toLowerCase();
+      const notes = [(p.topNotes || ''), (p.heartNotes || ''), (p.baseNotes || '')].join(' ').toLowerCase();
+
+      // Género (max 10)
+      if (scentAnswers.gender === 'hombre') {
+        if (p.gender === 'hombre') score += 10;
+        else if (p.gender === 'unisex') score += 5;
+      } else if (scentAnswers.gender === 'mujer') {
+        if (p.gender === 'mujer') score += 10;
+        else if (p.gender === 'unisex') score += 5;
+      } else {
+        if (p.gender === 'unisex') score += 10;
+        else score += 3;
       }
 
-      // Filtrar y calificar
-      const scored = allProducts.map(p => {
-        let score = 0;
-
-        // 1. Género
-        if (scentAnswers.gender === 'hombre') {
-          if (p.gender === 'hombre') score += 10;
-          else if (p.gender === 'unisex') score += 5;
-        } else if (scentAnswers.gender === 'mujer') {
-          if (p.gender === 'mujer') score += 10;
-          else if (p.gender === 'unisex') score += 5;
-        } else { // unisex
-          if (p.gender === 'unisex') score += 10;
-          else score += 3;
-        }
-
-        // 2. Vibra
-        const olf = (p.olfFamily || '').toLowerCase();
-        const desc = (p.description || '').toLowerCase();
-        if (scentAnswers.vibe === 'fresco') {
-          if (p.occasion === 'dia') score += 5;
-          if (olf.includes('cítrico') || olf.includes('fresco') || olf.includes('acuático') || olf.includes('aromático')) score += 8;
-        } else if (scentAnswers.vibe === 'elegante') {
-          if (p.occasion === 'dia' || p.occasion === 'ambas') score += 5;
-          if (olf.includes('amaderado') || olf.includes('fougere') || olf.includes('chipre')) score += 8;
-        } else if (scentAnswers.vibe === 'nocturno') {
-          if (p.occasion === 'noche' || p.occasion === 'ambas') score += 7;
-          if (olf.includes('ámbar') || olf.includes('especiado') || olf.includes('dulce') || olf.includes('oriental')) score += 8;
-        } else { // casual
-          if (p.occasion === 'dia' || p.occasion === 'ambas') score += 6;
-          if (olf.includes('almizcle') || olf.includes('frutal') || olf.includes('floral')) score += 5;
-        }
-
-        // 3. Notas
-        if (scentAnswers.note === 'citrico') {
-          if (olf.includes('cítrico') || olf.includes('fresco') || desc.includes('limón') || desc.includes('bergamota')) score += 12;
-        } else if (scentAnswers.note === 'vainilla') {
-          if (olf.includes('dulce') || olf.includes('vainilla') || olf.includes('gourmand') || desc.includes('vainilla') || desc.includes('azúcar')) score += 12;
-        } else if (scentAnswers.note === 'amaderado') {
-          if (olf.includes('amaderado') || olf.includes('cuero') || olf.includes('oud') || desc.includes('sándalo') || desc.includes('cedro') || desc.includes('maderas')) score += 12;
-        } else { // floral
-          if (olf.includes('floral') || olf.includes('rosa') || desc.includes('jazmín') || desc.includes('flores')) score += 12;
-        }
-
-        return { product: p, score };
-      });
-
-      // Ordenar por puntaje descendente y filtrar agotados si es posible
-      scored.sort((a, b) => b.score - a.score);
-      const matches = scored.slice(0, 3).map(x => x.product);
-
-      if (!matches.length) {
-        resultsContainer.innerHTML = `<p style="text-align:center;color:var(--text3)">No se encontraron coincidencias.</p>`;
-        return;
+      // Vibra (max 13)
+      if (scentAnswers.vibe === 'fresco') {
+        if (p.occasion === 'dia') score += 5;
+        if (olf.includes('cítrico') || olf.includes('fresco') || olf.includes('acuático') || olf.includes('aromático')) score += 8;
+      } else if (scentAnswers.vibe === 'elegante') {
+        if (p.occasion === 'dia' || p.occasion === 'ambas') score += 5;
+        if (olf.includes('amaderado') || olf.includes('fougere') || olf.includes('chipre') || olf.includes('cuero')) score += 8;
+      } else if (scentAnswers.vibe === 'nocturno') {
+        if (p.occasion === 'noche' || p.occasion === 'ambas') score += 7;
+        if (olf.includes('ámbar') || olf.includes('especiado') || olf.includes('dulce') || olf.includes('oriental')) score += 8;
+      } else {
+        if (p.occasion === 'dia' || p.occasion === 'ambas') score += 6;
+        if (olf.includes('almizcle') || olf.includes('frutal') || olf.includes('floral')) score += 8;
       }
 
-      // Renderizar resultados
-      resultsContainer.innerHTML = matches.map(p => {
-        const pPrices = Object.values(p.sizes || {}).filter(v => v > 0);
-        const minPrice = p.type === 'entero'
-          ? (p.enteroPrice > 0 ? p.enteroPrice : (pPrices.length ? Math.min(...pPrices) : 0))
-          : (pPrices.length ? Math.min(...pPrices) : 0);
+      // Notas olfativas (max 12) — también busca en notas del producto
+      if (scentAnswers.note === 'citrico') {
+        if (olf.includes('cítrico') || olf.includes('fresco')) score += 12;
+        else if (notes.includes('limón') || notes.includes('bergamota') || notes.includes('naranja') || notes.includes('pomelo')) score += 10;
+        else if (desc.includes('cítrico') || desc.includes('limón')) score += 6;
+      } else if (scentAnswers.note === 'vainilla') {
+        if (olf.includes('dulce') || olf.includes('vainilla') || olf.includes('gourmand')) score += 12;
+        else if (notes.includes('vainilla') || notes.includes('tonka') || notes.includes('caramelo')) score += 10;
+        else if (desc.includes('vainilla') || desc.includes('dulce')) score += 6;
+      } else if (scentAnswers.note === 'amaderado') {
+        if (olf.includes('amaderado') || olf.includes('oud') || olf.includes('cuero')) score += 12;
+        else if (notes.includes('sándalo') || notes.includes('cedro') || notes.includes('oud') || notes.includes('vetiver') || notes.includes('patchouli')) score += 10;
+        else if (desc.includes('madera') || desc.includes('sándalo')) score += 6;
+      } else {
+        if (olf.includes('floral')) score += 12;
+        else if (notes.includes('rosa') || notes.includes('jazmín') || notes.includes('lirio') || notes.includes('peonia')) score += 10;
+        else if (desc.includes('floral') || desc.includes('flores')) score += 6;
+      }
 
-        const imgHtml = p.imageUrl
-          ? `<img src="${p.imageUrl}" alt="${p.name}" class="scent-res-img" onerror="this.style.display='none'">`
-          : `<div class="scent-res-img-ph">🧪</div>`;
+      return score;
+    };
 
-        const sizeLabel = p.type === 'entero' ? 'Frasco' : 'Decant';
-        const genderLabel = p.gender === 'hombre' ? 'Hombre' : p.gender === 'mujer' ? 'Mujer' : 'Unisex';
+    const MAX_SCORE = 35;
 
-        return `
-          <div class="scent-res-card">
-            <div class="scent-res-left">
-              <div class="scent-res-img-wrap">${imgHtml}</div>
-              <div class="scent-res-info">
-                <span class="scent-res-brand">${p.brand}</span>
-                <h4 class="scent-res-name">${p.name}</h4>
-                <div class="scent-res-badges">
-                  <span>${p.olfFamily || 'Fragancia'}</span>
-                  <span>${genderLabel}</span>
-                </div>
-              </div>
-            </div>
-            <div class="scent-res-right">
-              ${minPrice > 0 ? `<span class="scent-res-price">S/ ${minPrice}</span>` : ''}
-              <button class="scent-action-btn scent-btn-view" data-id="${p.id}">Ver detalles</button>
-              <button class="scent-action-btn scent-btn-add ${!p.inStock ? 'disabled' : ''}" 
-                      data-id="${p.id}" ${!p.inStock ? 'disabled' : ''}>
-                ${!p.inStock ? 'Agotado' : 'Añadir'}
+    const scored = allProducts
+      .filter(p => p && (p.type === 'decant' || p.type === 'entero'))
+      .map(p => ({ product: p, score: scoreProduct(p) }))
+      .filter(x => x.score > 0);
+
+    // Ordenar: en stock primero, luego mayor puntaje
+    scored.sort((a, b) => {
+      const sA = a.product.inStock !== false ? 1 : 0;
+      const sB = b.product.inStock !== false ? 1 : 0;
+      if (sA !== sB) return sB - sA;
+      return b.score - a.score;
+    });
+
+    const matches = scored.slice(0, 5);
+
+    if (!matches.length) {
+      resultsContainer.innerHTML = `
+        <div class="scent-empty-state">
+          <p>No encontramos fragancias que coincidan con tu perfil.</p>
+          <p style="color:var(--text3);font-size:0.8rem;margin-top:0.4rem">Prueba con otras respuestas o explora el catálogo.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const matchLabel = (score) => {
+      const pct = Math.round((score / MAX_SCORE) * 100);
+      if (pct >= 80) return { label: 'Coincidencia perfecta', emoji: '✨', cls: 'match-perfect' };
+      if (pct >= 60) return { label: 'Alta coincidencia',     emoji: '⭐', cls: 'match-high'    };
+      if (pct >= 40) return { label: 'Buena coincidencia',    emoji: '👍', cls: 'match-good'    };
+      return              { label: 'Coincidencia',            emoji: '🔎', cls: 'match-low'     };
+    };
+
+    resultsContainer.innerHTML = matches.map(({ product: p, score }) => {
+      const match   = matchLabel(score);
+      const inStock = p.inStock !== false;
+      const gLabel  = p.gender === 'hombre' ? 'Hombre' : p.gender === 'mujer' ? 'Mujer' : 'Unisex';
+
+      const imgHtml = p.imageUrl
+        ? `<img src="${p.imageUrl}" alt="${p.name}" class="scent-res-img" onerror="this.style.display='none'">`
+        : `<div class="scent-res-img-ph">🧪</div>`;
+
+      let sizesHtml = '';
+      if (p.type === 'decant' && Object.keys(p.sizes || {}).length) {
+        const sizeEntries = Object.entries(p.sizes).filter(([, v]) => v > 0);
+        sizesHtml = `
+          <div class="scent-sizes" data-pid="${p.id}">
+            ${sizeEntries.map(([sz, pr], i) => `
+              <button class="scent-size-btn ${i === 0 ? 'active' : ''}" data-size="${sz}" data-price="${pr}">
+                ${sz} · S/${pr}
               </button>
-            </div>
+            `).join('')}
           </div>
         `;
-      }).join('');
-
-      // Agregar listeners
-      resultsContainer.querySelectorAll('.scent-btn-view').forEach(btn => {
-        btn.addEventListener('click', () => {
-          closeScentFinder();
-          if (typeof window.openPdModal === 'function') {
-            window.openPdModal(parseInt(btn.dataset.id));
-          }
-        });
-      });
-
-      resultsContainer.querySelectorAll('.scent-btn-add').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const pid = parseInt(btn.dataset.id);
-          const p = allProducts.find(x => x.id === pid);
-          if (!p) return;
-
-          // Añadir primer tamaño disponible
-          if (p.type === 'entero') {
-            const enteroPrice = p.enteroPrice > 0 ? p.enteroPrice : Math.min(...Object.values(p.sizes || {}));
-            window.Cart?.add(p, 'Unidad', enteroPrice);
-          } else {
-            const firstSize = Object.keys(p.sizes)[0];
-            const firstPrice = p.sizes[firstSize];
-            window.Cart?.add(p, firstSize, firstPrice);
-          }
-
-          btn.textContent = 'Añadido ✓';
-          btn.style.background = '#25d366';
-          btn.style.color = '#fff';
-          setTimeout(() => {
-            btn.textContent = 'Añadir';
-            btn.style.background = '';
-            btn.style.color = '';
-          }, 1500);
-        });
-      });
-
-      // Efecto confeti de GSAP / Partículas
-      if (window.burstCampaignDecor) {
-        window.burstCampaignDecor();
+      } else if (p.type === 'entero') {
+        const pr = p.enteroPrice > 0 ? p.enteroPrice : Math.min(...Object.values(p.sizes || { 0: 0 }));
+        sizesHtml = `<div class="scent-size-fixed">S/ ${pr > 0 ? pr : '—'}</div>`;
       }
 
-    }, 1500);
+      return `
+        <div class="scent-res-card ${!inStock ? 'out-of-stock' : ''}">
+          <div class="scent-match-badge ${match.cls}">${match.emoji} ${match.label}</div>
+          <div class="scent-res-body">
+            <div class="scent-res-img-wrap">${imgHtml}</div>
+            <div class="scent-res-info">
+              <span class="scent-res-brand">${p.brand}</span>
+              <h4 class="scent-res-name">${p.name}</h4>
+              <div class="scent-res-badges">
+                ${p.olfFamily ? `<span>${p.olfFamily}</span>` : ''}
+                <span>${gLabel}</span>
+                ${!inStock ? '<span class="scent-badge-agotado">Agotado</span>' : ''}
+              </div>
+              ${sizesHtml}
+            </div>
+          </div>
+          <div class="scent-res-actions">
+            <button class="scent-action-btn scent-btn-view" data-id="${p.id}">Ver detalles</button>
+            <button class="scent-action-btn scent-btn-add ${!inStock ? 'disabled' : ''}"
+                    data-id="${p.id}" ${!inStock ? 'disabled' : ''}>
+              ${!inStock ? '❌ Agotado' : '🛒 Añadir'}
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Listeners de selección de tamaño
+    resultsContainer.querySelectorAll('.scent-sizes').forEach(wrap => {
+      wrap.querySelectorAll('.scent-size-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          wrap.querySelectorAll('.scent-size-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+      });
+    });
+
+    // Ver detalles
+    resultsContainer.querySelectorAll('.scent-btn-view').forEach(btn => {
+      btn.addEventListener('click', () => {
+        closeScentFinder();
+        if (typeof window.openPdModal === 'function') {
+          window.openPdModal(parseInt(btn.dataset.id));
+        }
+      });
+    });
+
+    // Añadir al carrito
+    resultsContainer.querySelectorAll('.scent-btn-add').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pid = parseInt(btn.dataset.id);
+        const p   = allProducts.find(x => x.id === pid);
+        if (!p) return;
+
+        let sz, pr;
+        if (p.type === 'entero') {
+          sz = 'Unidad';
+          pr = p.enteroPrice > 0 ? p.enteroPrice : Math.min(...Object.values(p.sizes || { 0: 0 }));
+        } else {
+          const wrap      = resultsContainer.querySelector(`.scent-sizes[data-pid="${pid}"]`);
+          const activeBtn = wrap?.querySelector('.scent-size-btn.active');
+          sz = activeBtn?.dataset.size  || Object.keys(p.sizes || {})[0];
+          pr = activeBtn ? parseFloat(activeBtn.dataset.price) : Object.values(p.sizes || {})[0];
+        }
+
+        window.Cart?.add(p, sz, pr);
+        btn.textContent      = '✓ Añadido';
+        btn.style.background = '#25d366';
+        btn.style.color      = '#fff';
+        setTimeout(() => {
+          btn.textContent      = '🛒 Añadir';
+          btn.style.background = '';
+          btn.style.color      = '';
+        }, 1800);
+      });
+    });
+
+    window.burstCampaignDecor?.();
   }
 
   // Inicializar al cargar el DOM
