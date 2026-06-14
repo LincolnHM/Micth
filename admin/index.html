@@ -317,12 +317,12 @@
         <div class="admin-section-header">
           <h2>Gestión de Perfumes</h2>
           <div style="display:flex;gap:.6rem;align-items:center">
-            <button onclick="exportCatalogPDF()"
-               style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;padding:.45rem .9rem;border:1px solid var(--border);border-radius:var(--r);color:var(--text2);transition:all .2s;background:transparent;cursor:pointer"
+            <button onclick="exportCatalogPDF()" id="exportPdfBtn"
+               style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;padding:.45rem .9rem;border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);color:var(--text2);transition:all .2s;cursor:pointer"
                onmouseover="this.style.borderColor='var(--gold-d)';this.style.color='var(--gold)'"
                onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-              Exportar PDF
+              <span id="exportPdfLabel">Exportar PDF</span>
             </button>
             <button class="btn-add" id="addProductBtn">+ Agregar Perfume</button>
           </div>
@@ -717,7 +717,7 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
           </div>
 
           <div class="campaign-status-box">
-            <p class="campaign-status-title">Campaña activa</p>
+            <p class="campaign-status-title"><span class="pulse-dot"></span>Campaña activa</p>
             <p id="campaignStatusText" class="campaign-status-value">Cargando...</p>
             <p id="campaignUpdatedAt" class="campaign-status-meta"></p>
           </div>

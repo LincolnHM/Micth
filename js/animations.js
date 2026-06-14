@@ -142,6 +142,12 @@
       const ry     =  dx * 4;
       card.style.transform = `perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(4px)`;
       card.classList.add('tilted');
+
+      // Coordenadas locales para el brillo reflectivo
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      card.style.setProperty('--x', `${x}px`);
+      card.style.setProperty('--y', `${y}px`);
     });
 
     document.addEventListener('mouseleave', () => {

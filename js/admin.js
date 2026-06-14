@@ -1634,6 +1634,17 @@ async function refreshCampaignAdminUI() {
   const modeLabel = mode === 'auto' ? 'Automático' : 'Manual';
   statusEl.textContent = `${CAMPAIGN_LABELS[activeCampaign] || 'Diseño normal'} · ${modeLabel}`;
 
+  const statusBox = document.querySelector('.campaign-status-box');
+  if (statusBox) {
+    statusBox.className = 'campaign-status-box campaign-' + activeCampaign;
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(statusBox, 
+        { scale: 0.97, opacity: 0.85 }, 
+        { scale: 1, opacity: 1, duration: 0.45, ease: 'power2.out' }
+      );
+    }
+  }
+
   if (autoBtn) {
     autoBtn.classList.toggle('active', mode === 'auto');
     autoBtn.textContent = mode === 'auto' ? 'Modo automático activo' : 'Modo automático';
@@ -1672,6 +1683,14 @@ function setupCampaignEvents() {
       const prev = btn.innerHTML;
       btn.innerHTML = '<strong>Aplicando...</strong><span>Actualizando la tienda</span>';
 
+      if (typeof gsap !== 'undefined') {
+        gsap.to(btn, { scale: 0.94, duration: 0.1, yoyo: true, repeat: 1 });
+      }
+
+      if (window.burstCampaignDecor) {
+        window.burstCampaignDecor(btn, campaign);
+      }
+
       try {
         const result = await SiteTheme.setActiveCampaign(campaign);
         await refreshCampaignAdminUI();
@@ -1693,6 +1712,11 @@ function setupCampaignEvents() {
     btn.disabled = true;
     const prev = btn.textContent;
     btn.textContent = 'Desactivando...';
+
+    if (typeof gsap !== 'undefined') {
+      gsap.to(btn, { scale: 0.94, duration: 0.1, yoyo: true, repeat: 1 });
+    }
+
     try {
       const result = await SiteTheme.setActiveCampaign('default');
       await refreshCampaignAdminUI();
@@ -1713,6 +1737,11 @@ function setupCampaignEvents() {
     btn.disabled = true;
     const prev = btn.textContent;
     btn.textContent = 'Activando...';
+
+    if (typeof gsap !== 'undefined') {
+      gsap.to(btn, { scale: 0.94, duration: 0.1, yoyo: true, repeat: 1 });
+    }
+
     try {
       const result = await SiteTheme.setAutomaticMode();
       await refreshCampaignAdminUI();
@@ -1925,7 +1954,7 @@ async function exportCatalogPDF() {
 <base href="${base}/">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff;font-size:11pt;line-height:1.5}
+body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff;font-size:11pt;line-height:1.4}
 
 /* Barra acción */
 .pbar{position:sticky;top:0;z-index:200;background:#1a1005;padding:9px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
@@ -1934,65 +1963,64 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 .pbar-hint{color:#aaa;font-size:10px;font-family:sans-serif}
 
 /* Layout */
-.wrap{max-width:780px;margin:0 auto;padding:22px 26px 36px}
+.wrap{max-width:780px;margin:0 auto;padding:12px 16px 20px}
 
 /* Cabecera */
-.dh{text-align:center;padding-bottom:14px;margin-bottom:20px;border-bottom:2px solid #c9a84c}
-.logo{font-size:24pt;font-weight:900;letter-spacing:2px}
+.dh{text-align:center;padding-bottom:10px;margin-bottom:12px;border-bottom:2px solid #c9a84c}
+.logo{font-size:20pt;font-weight:900;letter-spacing:2px}
 .logo span{color:#c9a84c}
-.sub{font-size:7.5pt;letter-spacing:4px;text-transform:uppercase;color:#888;margin-top:2px}
-.meta{display:flex;justify-content:center;gap:20px;margin-top:8px;font-size:7.5pt;color:#666;font-family:sans-serif}
+.sub{font-size:7pt;letter-spacing:3px;text-transform:uppercase;color:#888;margin-top:2px}
+.meta{display:flex;justify-content:center;gap:16px;margin-top:6px;font-size:7pt;color:#666;font-family:sans-serif}
 .meta b{color:#c9a84c}
 
 /* Sección */
-.section{margin-bottom:14px}
-.sec-title{display:flex;align-items:center;gap:8px;font-size:10.5pt;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1a1005;border-bottom:1.5px solid #c9a84c;padding-bottom:5px;margin-bottom:10px}
-.sec-count{margin-left:auto;font-size:7.5pt;font-weight:400;color:#aaa;text-transform:none;letter-spacing:0;font-family:sans-serif}
+.section{margin-bottom:10px}
+.sec-title{display:flex;align-items:center;gap:8px;font-size:9.5pt;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1a1005;border-bottom:1.5px solid #c9a84c;padding-bottom:4px;margin-bottom:8px}
+.sec-count{margin-left:auto;font-size:7pt;font-weight:400;color:#aaa;text-transform:none;letter-spacing:0;font-family:sans-serif}
 
 /* Grid de 6 por página: 2 columnas × 3 filas de altura fija */
-.chunk-grid{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:75mm;gap:3mm;page-break-inside:avoid}
-.break-after{page-break-after:always}
-.new-page{page-break-before:always}
+.chunk-grid{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:68mm;gap:3mm;page-break-inside:avoid;break-inside:avoid}
+.break-after{page-break-after:always;break-after:page}
+.new-page{page-break-before:always;break-before:page}
 
 /* Tarjeta — altura fija por grid-auto-rows, overflow recortado */
-.card{border:1px solid #e8dfc8;border-radius:8px;padding:10px 13px;background:#fffef9;overflow:hidden;display:flex;flex-direction:column}
+.card{border:1px solid #e8dfc8;border-radius:8px;padding:8px 10px;background:#fffef9;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;height:100%}
 
-.c-head{display:flex;gap:9px;margin-bottom:8px}
-.c-img-wrap{flex-shrink:0;width:96px;height:96px}
-.c-img{width:96px;height:96px;object-fit:contain;border-radius:6px;border:1px solid #f0ebe0}
-.c-img-ph{width:96px;height:96px;background:#f5eed8;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:26pt;color:#c9a84c;font-weight:900;font-family:serif}
-.c-info{flex:1;min-width:0}
-.c-brand{font-size:8pt;letter-spacing:1.5px;text-transform:uppercase;color:#c9a84c;font-weight:700;font-family:sans-serif}
-.c-name{font-size:13.5pt;font-weight:700;color:#1a1005;line-height:1.2;margin:1px 0 4px}
-.c-badges{display:flex;flex-wrap:wrap;gap:4px}
-.badge{font-size:8pt;padding:2.5px 8px;border-radius:20px;font-family:sans-serif;font-weight:600;white-space:nowrap}
+.c-head{display:flex;gap:8px;margin-bottom:6px;align-items:center}
+.c-img-wrap{flex-shrink:0;width:76px;height:76px}
+.c-img{width:76px;height:76px;object-fit:contain;border-radius:6px;border:1px solid #f0ebe0}
+.c-img-ph{width:76px;height:76px;background:#f5eed8;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20pt;color:#c9a84c;font-weight:900;font-family:serif}
+.c-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.c-brand{font-size:7.5pt;letter-spacing:1px;text-transform:uppercase;color:#c9a84c;font-weight:700;font-family:sans-serif}
+.c-name{font-size:11.5pt;font-weight:700;color:#1a1005;line-height:1.25;margin:1px 0 3px}
+.c-badges{display:flex;flex-wrap:wrap;gap:3px;margin-top:1px}
+.badge{font-size:7pt;padding:1.5px 5px;border-radius:20px;font-family:sans-serif;font-weight:600;white-space:nowrap}
 .b-occ{background:#f5f0e4;color:#7a5f20;border:1px solid #d6c88a}
 .b-olf{background:#f4f4f4;color:#777;border:1px solid #e0e0e0;font-style:italic;font-weight:400}
 
 /* Precios */
-.c-prices{display:grid;grid-template-columns:1fr 1fr;gap:6px;border-top:1px solid #f0ebe0;padding-top:6px;margin-top:3px}
+.c-prices{display:grid;grid-template-columns:1fr 1fr;gap:6px;border-top:1px solid #f0ebe0;padding-top:4px;margin-top:2px}
 .pr-col{}
-.pr-lbl{font-size:7.5pt;text-transform:uppercase;letter-spacing:1.2px;color:#aaa;font-family:sans-serif;font-weight:700;margin-bottom:4px}
+.pr-lbl{font-size:7pt;text-transform:uppercase;letter-spacing:1px;color:#aaa;font-family:sans-serif;font-weight:700;margin-bottom:2px}
 .pt{width:100%;border-collapse:collapse;font-family:sans-serif}
 .pt tr{border-top:1px solid #f5f0ea}
 .pt tr:first-child{border-top:none}
-.td-s{color:#888;font-size:9.5pt;padding:2px 0}
-.td-p{text-align:right;font-weight:700;font-size:10.5pt;color:#1a1005;padding:2px 0}
-.blank-price{font-size:10pt;color:#888;font-family:sans-serif;margin-top:3px}
+.td-s{color:#777;font-size:8.5pt;padding:1.5px 0}
+.td-p{text-align:right;font-weight:700;font-size:9.5pt;color:#1a1005;padding:1.5px 0}
+.blank-price{font-size:9pt;color:#888;font-family:sans-serif;margin-top:2px}
 .blank-line{color:#bbb;letter-spacing:1px}
 
-
 /* Pie */
-.df{margin-top:24px;padding-top:10px;border-top:1px solid #e0d5b8;text-align:center;font-size:7.5pt;color:#aaa;font-family:sans-serif}
+.df{margin-top:20px;padding-top:8px;border-top:1px solid #e0d5b8;text-align:center;font-size:7.5pt;color:#aaa;font-family:sans-serif}
 .df b{color:#c9a84c}
 
 @media print{
   .pbar{display:none!important}
   body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  @page{margin:1cm 1.2cm;size:A4 portrait}
-  .wrap{padding:4px 14px 10px}
-  .sec-title{font-size:9pt;padding-bottom:3px;margin-bottom:4px}
-  .section{margin-bottom:6px}
+  @page{margin:0.8cm 1cm;size:A4 portrait}
+  .wrap{padding:2px 4px 6px}
+  .sec-title{font-size:8.5pt;padding-bottom:2px;margin-bottom:3px}
+  .section{margin-bottom:4px}
 }
 </style>
 </head>
@@ -3870,15 +3898,20 @@ function setupPriceCalculator() {
   if (!btn || btn._bound) return;
   btn._bound = true;
 
-  btn.addEventListener('click', () => {
-    const bottlePrice = parseFloat(document.getElementById('calcBottlePrice').value);
-    const bottleMl    = parseFloat(document.getElementById('calcBottleMl').value);
-    const margin      = parseFloat(document.getElementById('calcMargin').value) / 100;
-    const result      = document.getElementById('calcResult');
+  const priceInput = document.getElementById('calcBottlePrice');
+  const mlInput    = document.getElementById('calcBottleMl');
+  const marginInput = document.getElementById('calcMargin');
+  const result      = document.getElementById('calcResult');
+
+  function calculate() {
+    const bottlePrice = parseFloat(priceInput.value);
+    const bottleMl    = parseFloat(mlInput.value);
+    const marginVal   = parseFloat(marginInput.value);
+    const margin      = isNaN(marginVal) ? 0.8 : marginVal / 100;
 
     if (isNaN(bottlePrice) || isNaN(bottleMl) || bottleMl <= 0 || bottlePrice <= 0) {
-      showToast('Ingresa precio del frasco y ml totales válidos.');
-      return;
+      result.style.display = 'none';
+      return false;
     }
 
     const costPerMl = bottlePrice / bottleMl;
@@ -3894,7 +3927,7 @@ function setupPriceCalculator() {
         ${sizes.map(ml => {
           const cost = costPerMl * ml;
           const price = cost * (1 + margin);
-          const rounded = Math.ceil(price / 0.5) * 0.5; // redondear a 0.5 más cercano
+          const rounded = Math.ceil(price / 0.5) * 0.5;
           return `
           <div class="calc-size-card">
             <div class="calc-size-ml">${ml}ml</div>
@@ -3905,6 +3938,18 @@ function setupPriceCalculator() {
         }).join('')}
       </div>
       <p style="font-size:.72rem;color:var(--text3);margin-top:.5rem">*Precio redondeado al S/ 0.50 más cercano para facilitar el cobro.</p>`;
+    return true;
+  }
+
+  [priceInput, mlInput, marginInput].forEach(inp => {
+    inp?.addEventListener('input', calculate);
+  });
+
+  btn.addEventListener('click', () => {
+    const success = calculate();
+    if (!success) {
+      showToast('Ingresa precio del frasco y ml totales válidos.');
+    }
   });
 }
 

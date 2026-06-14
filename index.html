@@ -335,6 +335,40 @@
   </div>
   <!-- ── /Banner promocional ────────────────────────────────────────────────── -->
 
+  <!-- ── Instagram Stories Carousel (Social Proof) ────────────────────────── -->
+  <section class="stories-section" aria-label="Historias destacadas">
+    <div class="container">
+      <div class="stories-track">
+        <button class="story-item" data-story="unboxing" aria-label="Ver historia de Unboxing Premium">
+          <div class="story-ring">
+            <span class="story-icon-emoji">🎁</span>
+          </div>
+          <span class="story-title-lbl">Unboxing</span>
+        </button>
+        <button class="story-item" data-story="calidad" aria-label="Ver historia de Garantía de Calidad">
+          <div class="story-ring">
+            <span class="story-icon-emoji">🛡️</span>
+          </div>
+          <span class="story-title-lbl">Originales</span>
+        </button>
+        <button class="story-item" data-story="envios" aria-label="Ver historia de Envíos Nacionales">
+          <div class="story-ring">
+            <span class="story-icon-emoji">📦</span>
+          </div>
+          <span class="story-title-lbl">Envíos</span>
+        </button>
+        <button class="story-item" data-story="gato" aria-label="Ver historia de la Mascota Michty">
+          <div class="story-ring">
+            <div class="story-img-avatar">
+              <img src="imgGato/gato-removebg-preview.png" alt="Mascota">
+            </div>
+          </div>
+          <span class="story-title-lbl">Mascota 🐾</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
   <!-- ── Mobile menu overlay ─────────────────────────────────────────────── -->
   <div class="mobile-menu" id="mobileMenu" aria-hidden="true" role="dialog" aria-label="Menú principal">
     <span class="mobile-menu-brand">MICHT DECANTS</span>
@@ -523,6 +557,24 @@
   <!-- ── Catálogo ──────────────────────────────────────────────────────────── -->
   <main class="products-section">
     <div class="container">
+      <!-- Banner Scent Finder -->
+      <div class="scent-finder-banner" id="scentFinderBanner">
+        <div class="sfb-glow"></div>
+        <div class="sfb-content">
+          <div class="sfb-text">
+            <span class="sfb-badge">EXCLUSIVO MICHT</span>
+            <h3>✨ ¿No sabes qué perfume elegir?</h3>
+            <p>Responde 3 preguntas rápidas y encontraremos tu fragancia ideal en segundos.</p>
+          </div>
+          <button class="sfb-btn" id="startScentFinderBtn">
+            <span>Iniciar Scent Finder</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
       <div class="products-grid" id="productsGrid" role="list" aria-label="Catálogo de perfumes">
         <!-- Renderizado por store.js -->
       </div>
@@ -974,6 +1026,144 @@
   </div>
   <!-- ── /Modal: Historial de compras ─────────────────────────────────────── -->
 
+  <!-- ── Modal: Visor de Historias (Instagram-style) ───────────────────────── -->
+  <div class="stories-viewer-modal" id="storiesModal" role="dialog" aria-modal="true">
+    <div class="stories-modal-backdrop"></div>
+    <div class="stories-modal-panel">
+      <!-- Barras de progreso superiores -->
+      <div class="stories-progress-bars"></div>
+      
+      <!-- Cabecera de la historia -->
+      <div class="stories-header">
+        <div class="stories-user-info">
+          <div class="stories-user-avatar">🐈</div>
+          <span class="stories-user-name">MICHT DECANTS</span>
+        </div>
+        <button class="stories-modal-close" aria-label="Cerrar historias">×</button>
+      </div>
+
+      <!-- Zonas de clic para navegar -->
+      <div class="stories-click-left" title="Anterior"></div>
+      <div class="stories-click-right" title="Siguiente"></div>
+
+      <!-- Contenido de la historia -->
+      <div class="stories-slide-content">
+        <img id="storyImg" class="story-slide-image" src="" alt="">
+        <div class="stories-content-overlay">
+          <div class="stories-badge-row">
+            <span id="storyIcon" class="stories-badge-icon">🎁</span>
+            <span class="stories-badge-lbl">Info Destacada</span>
+          </div>
+          <h3 id="storyTitle" class="stories-slide-title">Unboxing Premium</h3>
+          <p id="storyText" class="stories-slide-text">Cargando...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ── /Modal: Visor de Historias ────────────────────────────────────────── -->
+
+  <!-- ── Modal: Scent Finder (Cuestionario de Fragancias) ────────────────────── -->
+  <div class="scent-finder-modal" id="scentFinderModal" role="dialog" aria-modal="true">
+    <div class="scent-modal-backdrop"></div>
+    <div class="scent-modal-box">
+      <div class="scent-modal-header">
+        <h3 class="scent-modal-title">🔮 Buscador de Fragancias</h3>
+        <span class="scent-step-indicator">Paso 1 de 3</span>
+        <button class="scent-modal-close" aria-label="Cerrar buscador">×</button>
+      </div>
+
+      <!-- Paso 1: Género -->
+      <div class="scent-step-panel" data-step="1">
+        <h4 class="scent-question">¿Para quién buscas el perfume?</h4>
+        <div class="scent-options-grid">
+          <button class="scent-option-btn" data-step="1" data-value="hombre">
+            <span class="scent-opt-emoji">♂️</span>
+            <span class="scent-opt-title">Para Él</span>
+            <span class="scent-opt-desc">Fragancias masculinas, maderas y cuero</span>
+          </button>
+          <button class="scent-option-btn" data-step="1" data-value="mujer">
+            <span class="scent-opt-emoji">♀️</span>
+            <span class="scent-opt-title">Para Ella</span>
+            <span class="scent-opt-desc">Fragancias femeninas, florales y frutales</span>
+          </button>
+          <button class="scent-option-btn" data-step="1" data-value="unisex">
+            <span class="scent-opt-emoji">⚥</span>
+            <span class="scent-opt-title">Para Ambos</span>
+            <span class="scent-opt-desc">Unisex y nicho, equilibrio perfecto</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Paso 2: Vibra/Ocasión -->
+      <div class="scent-step-panel" data-step="2" style="display:none">
+        <h4 class="scent-question">¿En qué ocasión o vibra lo usarás?</h4>
+        <div class="scent-options-grid">
+          <button class="scent-option-btn" data-step="2" data-value="fresco">
+            <span class="scent-opt-emoji">🍃</span>
+            <span class="scent-opt-title">Deportivo & Fresco</span>
+            <span class="scent-opt-desc">Gimnasio, días calurosos, ligereza</span>
+          </button>
+          <button class="scent-option-btn" data-step="2" data-value="elegante">
+            <span class="scent-opt-emoji">💼</span>
+            <span class="scent-opt-title">Elegante & Oficina</span>
+            <span class="scent-opt-desc">Trabajo, reuniones de negocio, distinción</span>
+          </button>
+          <button class="scent-option-btn" data-step="2" data-value="nocturno">
+            <span class="scent-opt-emoji">🌙</span>
+            <span class="scent-opt-title">Seductor & Nocturno</span>
+            <span class="scent-opt-desc">Citas, salidas de noche, atracción</span>
+          </button>
+          <button class="scent-option-btn" data-step="2" data-value="casual">
+            <span class="scent-opt-emoji">☀️</span>
+            <span class="scent-opt-title">Casual & Diario</span>
+            <span class="scent-opt-desc">Uso cotidiano, versátil, agradable</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Paso 3: Familia Olfativa -->
+      <div class="scent-step-panel" data-step="3" style="display:none">
+        <h4 class="scent-question">¿Qué notas aromáticas te atraen más?</h4>
+        <div class="scent-options-grid">
+          <button class="scent-option-btn" data-step="3" data-value="citrico">
+            <span class="scent-opt-emoji">🍋</span>
+            <span class="scent-opt-title">Cítrico & Limpio</span>
+            <span class="scent-opt-desc">Bergamota, limón, frescura cítrica</span>
+          </button>
+          <button class="scent-option-btn" data-step="3" data-value="vainilla">
+            <span class="scent-opt-emoji">🍦</span>
+            <span class="scent-opt-title">Dulces & Vainilla</span>
+            <span class="scent-opt-desc">Caramelo, ámbar, dulzor gourmand</span>
+          </button>
+          <button class="scent-option-btn" data-step="3" data-value="amaderado">
+            <span class="scent-opt-emoji">🪵</span>
+            <span class="scent-opt-title">Amaderado & Cuero</span>
+            <span class="scent-opt-desc">Sándalo, cedro, masculinidad, oud</span>
+          </button>
+          <button class="scent-option-btn" data-step="3" data-value="floral">
+            <span class="scent-opt-emoji">🌸</span>
+            <span class="scent-opt-title">Floral & Rosas</span>
+            <span class="scent-opt-desc">Jazmín, rosa, delicadeza floral</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Paso 4: Resultados -->
+      <div class="scent-step-panel" data-step="4" style="display:none">
+        <div class="scent-success-header">
+          <span class="scent-success-emoji">✨</span>
+          <h4 class="scent-success-title">Tus Combinaciones Ideales</h4>
+          <p class="scent-success-subtitle">Hemos seleccionado las fragancias que mejor se adaptan a tu perfil:</p>
+        </div>
+        <div class="scent-results-container" id="scentResultsList">
+          <!-- Inyectado dinámicamente -->
+        </div>
+        <button id="scentRestartBtn" class="scent-restart-btn">🔮 Hacer test de nuevo</button>
+      </div>
+    </div>
+  </div>
+  <!-- ── /Modal: Scent Finder ──────────────────────────────────────────────── -->
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.8.1/dist/vanilla-tilt.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
@@ -983,6 +1173,7 @@
   <script src="js/seasonal-theme.js?v=3"></script>
   <script src="js/carousel.js"></script>
   <script src="js/store.js?v=11"></script>
+  <script src="js/scent-finder.js?v=1"></script>
   <script src="js/checkout.js"></script>
   <script src="js/auth.js?v=2"></script>
   <script src="js/config.js"></script>

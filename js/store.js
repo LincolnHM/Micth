@@ -409,6 +409,7 @@ function renderProducts() {
 
     return `
       <article class="product-card ${!p.inStock ? 'out-of-stock' : ''} ${p.featured ? 'featured' : ''}">
+        <div class="card-glow-overlay"></div>
         <div class="product-img-wrap">
           ${imgHtml}
           <div class="product-img-placeholder" ${p.imageUrl ? 'style="display:none"' : ''}>
@@ -911,6 +912,53 @@ function _createPdModal() {
               <div id="pdGuideRows" class="pd-guide-rows"></div>
               <p class="pd-guide-note">Basado en 2-3 sprays por uso diario</p>
             </div>
+
+            <!-- Visualizador Interactivo de Frascos (Decants) -->
+            <div id="pdDecantVisualizer" class="pd-decant-visualizer" style="display:none">
+              <div class="pd-visual-bottles">
+                <!-- Botella 3ml -->
+                <div class="pd-visual-bottle-card" data-visual-size="3ml">
+                  <div class="pd-bottle-cap"></div>
+                  <div class="pd-bottle-body size-3ml">
+                    <div class="pd-bottle-liquid"></div>
+                    <span class="pd-bottle-label-ml">3ml</span>
+                  </div>
+                </div>
+                <!-- Botella 5ml -->
+                <div class="pd-visual-bottle-card" data-visual-size="5ml">
+                  <div class="pd-bottle-cap"></div>
+                  <div class="pd-bottle-body size-5ml">
+                    <div class="pd-bottle-liquid"></div>
+                    <span class="pd-bottle-label-ml">5ml</span>
+                  </div>
+                </div>
+                <!-- Botella 10ml -->
+                <div class="pd-visual-bottle-card" data-visual-size="10ml">
+                  <div class="pd-bottle-cap"></div>
+                  <div class="pd-bottle-body size-10ml">
+                    <div class="pd-bottle-liquid"></div>
+                    <span class="pd-bottle-label-ml">10ml</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Stats de duración y rendimiento -->
+              <div class="pd-visual-stats">
+                <div class="pd-stat-item">
+                  <div class="pd-stat-lbl-row">
+                    <span class="pd-stat-lbl">RENDIMIENTO APROX.</span>
+                    <span id="pdStatValSprays" class="pd-stat-val">~0 sprays</span>
+                  </div>
+                  <div class="pd-stat-bar-container">
+                    <div id="pdStatBarSprays" class="pd-stat-bar" style="width: 0%"></div>
+                  </div>
+                </div>
+                <div class="pd-stat-item pd-stat-duration-box">
+                  <span class="pd-stat-lbl">DURACIÓN ESTIMADA</span>
+                  <span id="pdStatValDuration" class="pd-stat-val-highlight">Selecciona un tamaño</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Notas olfativas — siempre visibles -->
@@ -1047,6 +1095,7 @@ function openPdModal(productId) {
 
   // ── Guía de decants (solo decants) ──────────────────────
   const guideBtn = document.getElementById('pdGuideBtn');
+  const decantVisualizer = document.getElementById('pdDecantVisualizer');
   document.getElementById('pdGuideTooltip').style.display = 'none';
   guideBtn.style.display = isEntero ? 'none' : 'inline-block';
 
@@ -1065,6 +1114,18 @@ function openPdModal(productId) {
         <span class="pd-guide-dur">${dur}</span>
       </div>`;
     }).join('');
+
+    // Mostrar visualizador
+    if (decantVisualizer) {
+      decantVisualizer.style.display = 'block';
+      // Resetear visualizador
+      decantVisualizer.querySelectorAll('.pd-visual-bottle-card').forEach(c => c.classList.remove('active'));
+      document.getElementById('pdStatBarSprays').style.width = '0%';
+      document.getElementById('pdStatValSprays').textContent = '~0 sprays';
+      document.getElementById('pdStatValDuration').textContent = 'Selecciona un tamaño';
+    }
+  } else {
+    if (decantVisualizer) decantVisualizer.style.display = 'none';
   }
 
   // ── Botones de tamaño ────────────────────────────────────
@@ -1108,6 +1169,44 @@ function openPdModal(productId) {
         ${sanitize(ml)}
       </button>`).join('');
 
+    const selectVisualSize = (sizeStr) => {
+      if (isEntero || !decantVisualizer) return;
+      const sizeVal = parseFloat(sizeStr);
+      let pct = 0;
+      let spraysText = '~0 sprays';
+      let durText = '';
+      if (sizeVal <= 3.5) {
+        pct = 33; spraysText = '~30-45 sprays'; durText = '🔥 5 a 10 días (Ideal para probar)';
+      } else if (sizeVal <= 6) {
+        pct = 60; spraysText = '~50-75 sprays'; durText = '✈️ 12 a 18 días (Ideal para viajes)';
+      } else {
+        pct = 100; spraysText = '~100-150 sprays'; durText = '👑 25 a 35 días (Uso continuo)';
+      }
+      
+      decantVisualizer.querySelectorAll('.pd-visual-bottle-card').forEach(c => {
+        const cSize = c.dataset.visualSize;
+        if (cSize === sizeStr || (cSize === '3ml' && sizeVal <= 3.5) || (cSize === '5ml' && sizeVal > 3.5 && sizeVal <= 6) || (cSize === '10ml' && sizeVal > 6)) {
+          c.classList.add('active');
+          if (window.gsap) {
+            window.gsap.fromTo(c, { scale: 0.95 }, { scale: 1.08, duration: 0.4, ease: "back.out(2.5)" });
+          }
+        } else {
+          c.classList.remove('active');
+        }
+      });
+      
+      if (window.gsap) {
+        window.gsap.to('#pdStatBarSprays', { width: pct + '%', duration: 0.5, ease: "power2.out" });
+      } else {
+        const bar = document.getElementById('pdStatBarSprays');
+        if (bar) bar.style.width = pct + '%';
+      }
+      const valSprays = document.getElementById('pdStatValSprays');
+      if (valSprays) valSprays.textContent = spraysText;
+      const valDuration = document.getElementById('pdStatValDuration');
+      if (valDuration) valDuration.textContent = durText;
+    };
+
     sizesRow.querySelectorAll('.pd-size-btn-new:not([disabled])').forEach(btn => {
       btn.addEventListener('click', () => {
         sizesRow.querySelectorAll('.pd-size-btn-new').forEach(b => b.classList.remove('active'));
@@ -1117,8 +1216,26 @@ function openPdModal(productId) {
         cartBtn.disabled = false;
         cartTxt.textContent = `AÑADIR AL CARRITO — S/ ${_pdSelPrice}`;
         cartBtn.classList.remove('added');
+        
+        selectVisualSize(btn.dataset.size);
       });
     });
+
+    // Vincular clics en las botellitas visuales hacia los botones de tamaño
+    if (decantVisualizer) {
+      decantVisualizer.querySelectorAll('.pd-visual-bottle-card').forEach(card => {
+        // Clonar para evitar listeners duplicados al reabrir modal
+        const newCard = card.cloneNode(true);
+        card.parentNode.replaceChild(newCard, card);
+        newCard.addEventListener('click', () => {
+          if (!p.inStock) return;
+          const targetSize = newCard.dataset.visualSize;
+          // Buscar botón de tamaño
+          const matchBtn = sizesRow.querySelector(`.pd-size-btn-new[data-size="${targetSize}"]`);
+          if (matchBtn) matchBtn.click();
+        });
+      });
+    }
   }
 
   // ── Descripción ──────────────────────────────────────────

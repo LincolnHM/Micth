@@ -328,6 +328,9 @@
     applyCampaign(readLocalCampaign());
   });
 
+  // Exponer burstDecor globalmente para el panel de administración
+  window.burstCampaignDecor = burstDecor;
+
   document.addEventListener('DOMContentLoaded', () => {
     setupBurstListener();
     loadCampaign().catch(console.error);
