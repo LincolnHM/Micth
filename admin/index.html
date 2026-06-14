@@ -1012,38 +1012,5 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
   <script src="../js/data.js"></script>
   <script src="../js/supabase-config.js?v=16"></script>
   <script src="../js/admin.js?v=16"></script>
-  <script>
-    (function () {
-      var toggle  = document.getElementById('sidebarToggle');
-      var sidebar = document.getElementById('adminSidebar');
-      var overlay = document.getElementById('sidebarOverlay');
-      if (!toggle || !sidebar || !overlay) return;
-
-      function openSidebar() {
-        sidebar.classList.add('open');
-        overlay.classList.add('visible');
-        toggle.setAttribute('aria-expanded', 'true');
-        document.body.style.overflow = 'hidden';
-      }
-      function closeSidebar() {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('visible');
-        toggle.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
-      }
-
-      toggle.addEventListener('click', function () {
-        sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
-      });
-      overlay.addEventListener('click', closeSidebar);
-
-      /* Cerrar sidebar al elegir sección en móvil */
-      document.querySelectorAll('.admin-nav-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          if (window.innerWidth <= 768) closeSidebar();
-        });
-      });
-    })();
-  </script>
 </body>
 </html>

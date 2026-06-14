@@ -63,16 +63,17 @@ const Cart = {
   clear()  { this.items = []; this._cartOpened = false; this.save(); this.render(); if (typeof renderProducts === 'function') renderProducts(); },
 
   showCart() {
-    document.getElementById('cartSidebar').classList.add('open');
-    document.getElementById('overlay').classList.add('active');
+    document.getElementById('cartSidebar')?.classList.add('open');
+    document.getElementById('overlay')?.classList.add('active');
   },
   hideCart() {
-    document.getElementById('cartSidebar').classList.remove('open');
-    document.getElementById('overlay').classList.remove('active');
+    document.getElementById('cartSidebar')?.classList.remove('open');
+    document.getElementById('overlay')?.classList.remove('active');
   },
 
   bounce() {
     const btn = document.getElementById('cartBtn');
+    if (!btn) return;
     btn.classList.add('bounce');
     setTimeout(() => btn.classList.remove('bounce'), 400);
   },
@@ -81,6 +82,7 @@ const Cart = {
     const container = document.getElementById('cartItems');
     const countEl   = document.getElementById('cartCount');
     const totalEl   = document.getElementById('cartTotal');
+    if (!container || !countEl || !totalEl) return;
 
     const n = this.count();
     countEl.textContent = n;

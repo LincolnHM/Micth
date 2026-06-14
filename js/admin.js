@@ -226,12 +226,14 @@ function setupSidebarControls() {
     sidebar.classList.add('open');
     overlay.classList.add('visible');
     toggle.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
   };
 
   const closeSidebar = () => {
     sidebar.classList.remove('open');
     overlay.classList.remove('visible');
     toggle.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
   };
 
   toggle.addEventListener('click', () => {
@@ -767,10 +769,14 @@ async function renderOrdersSection() {
       </div>`
     ).join('');
 
-    const payBadge = o.paymentMethod === 'efectivo'
-      ? '<div style="margin-top:.3rem"><span class="pay-badge pay-efectivo">💵 Efectivo</span></div>'
-      : o.paymentMethod === 'yape'
-      ? '<div style="margin-top:.3rem"><span class="pay-badge pay-yape">📱 Yape</span></div>'
+    const _PAY_BADGE_MAP = {
+      efectivo:      '<span class="pay-badge pay-efectivo">💵 Efectivo</span>',
+      yape:          '<span class="pay-badge pay-yape">📱 Yape</span>',
+      plin:          '<span class="pay-badge pay-plin">📲 Plin</span>',
+      transferencia: '<span class="pay-badge pay-transferencia">🏦 Transferencia</span>'
+    };
+    const payBadge = o.paymentMethod && _PAY_BADGE_MAP[o.paymentMethod]
+      ? `<div style="margin-top:.3rem">${_PAY_BADGE_MAP[o.paymentMethod]}</div>`
       : '';
 
     return `
@@ -825,7 +831,8 @@ async function renderOrdersSection() {
             sel.dataset.status = newStatus;
             _statsCache = null;
             renderOrdersSection().catch(console.error);
-            const payLabel = paymentMethod === 'efectivo' ? ' · 💵 Efectivo' : paymentMethod === 'yape' ? ' · 📱 Yape' : '';
+            const _payLabels = { efectivo: '💵 Efectivo', yape: '📱 Yape', plin: '📲 Plin', transferencia: '🏦 Transferencia' };
+            const payLabel = paymentMethod && _payLabels[paymentMethod] ? ` · ${_payLabels[paymentMethod]}` : '';
             showToast(`Pedido ${id} → ${STATUS_LABELS[newStatus]}${payLabel}`);
           } catch (err) {
             console.error('Error al actualizar estado:', err);
@@ -913,9 +920,11 @@ async function openOrderDetail(id) {
       <span class="lbl">Método pago</span>
       <span class="val" style="display:flex;align-items:center;gap:.5rem">
         <select id="detPayMethod" style="padding:.3rem .6rem;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:var(--r);font-size:.82rem">
-          <option value=""    ${!order.paymentMethod                    ?'selected':''}>⏳ Por confirmar</option>
-          <option value="efectivo" ${order.paymentMethod==='efectivo'   ?'selected':''}>💵 Efectivo</option>
-          <option value="yape"     ${order.paymentMethod==='yape'       ?'selected':''}>📱 Yape</option>
+          <option value=""              ${!order.paymentMethod                         ?'selected':''}>⏳ Por confirmar</option>
+          <option value="yape"          ${order.paymentMethod==='yape'          ?'selected':''}>📱 Yape</option>
+          <option value="plin"          ${order.paymentMethod==='plin'          ?'selected':''}>📲 Plin</option>
+          <option value="efectivo"      ${order.paymentMethod==='efectivo'      ?'selected':''}>💵 Efectivo</option>
+          <option value="transferencia" ${order.paymentMethod==='transferencia' ?'selected':''}>🏦 Transferencia</option>
         </select>
         <button id="savePayMethodBtn" style="font-size:.75rem;padding:.3rem .75rem;background:var(--gold);color:#111;border:none;border-radius:var(--r);font-weight:700;cursor:pointer">Guardar</button>
       </span>
@@ -2295,6 +2304,14 @@ function showPaymentModal(message, onConfirm, onCancel) {
           onmouseover="this.style.background='#2a2050'" onmouseout="this.style.background='#1e1a3a'">
           📱<br><span style="font-size:.8rem">Yape</span>
         </button>
+        <button id="pmPlin" style="padding:.7rem;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:700;background:#1a2a3a;border:2px solid #29b6f6;color:#4fc3f7;transition:all .15s"
+          onmouseover="this.style.background='#1e3347'" onmouseout="this.style.background='#1a2a3a'">
+          📲<br><span style="font-size:.8rem">Plin</span>
+        </button>
+        <button id="pmTransferencia" style="padding:.7rem;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:700;background:#1e2a1e;border:2px solid #66bb6a;color:#a5d6a7;transition:all .15s"
+          onmouseover="this.style.background='#263226'" onmouseout="this.style.background='#1e2a1e'">
+          🏦<br><span style="font-size:.8rem">Transferencia</span>
+        </button>
       </div>
       <button id="pmCancel" style="padding:.45rem;border-radius:6px;cursor:pointer;font-size:.82rem;font-weight:600;background:transparent;border:1px solid #444;color:#888">Cancelar</button>
     </div>`;
@@ -2304,8 +2321,10 @@ function showPaymentModal(message, onConfirm, onCancel) {
 
   function cleanup() { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 240); }
 
-  overlay.querySelector('#pmEfectivo').addEventListener('click', () => { cleanup(); onConfirm('efectivo'); });
-  overlay.querySelector('#pmYape').addEventListener('click',     () => { cleanup(); onConfirm('yape'); });
+  overlay.querySelector('#pmEfectivo').addEventListener('click',     () => { cleanup(); onConfirm('efectivo'); });
+  overlay.querySelector('#pmYape').addEventListener('click',         () => { cleanup(); onConfirm('yape'); });
+  overlay.querySelector('#pmPlin').addEventListener('click',         () => { cleanup(); onConfirm('plin'); });
+  overlay.querySelector('#pmTransferencia').addEventListener('click',() => { cleanup(); onConfirm('transferencia'); });
   overlay.querySelector('#pmCancel').addEventListener('click',   () => { cleanup(); if (onCancel) onCancel(); });
   overlay.querySelector('#pmClose').addEventListener('click',    () => { cleanup(); if (onCancel) onCancel(); });
   overlay.addEventListener('click', e => { if (e.target === overlay) { cleanup(); if (onCancel) onCancel(); } });

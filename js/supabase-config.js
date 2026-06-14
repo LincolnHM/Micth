@@ -22,9 +22,13 @@
 //   items          JSONB DEFAULT '[]',
 //   total          NUMERIC DEFAULT 0,
 //   status         TEXT DEFAULT 'pendiente',
+//   payment_method TEXT,
 //   created_at     TIMESTAMPTZ DEFAULT NOW(),
 //   updated_at     TIMESTAMPTZ
 // );
+//
+// -- Si la tabla ya existe, agrega la columna con este SQL:
+// ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS payment_method TEXT;
 //
 // -- SEGURIDAD: habilitar RLS y crear políticas
 // ALTER TABLE pedidos ENABLE ROW LEVEL SECURITY;
@@ -268,7 +272,13 @@ const CloudOrders = {
     if (db) {
       const patch = { status, updated_at: new Date().toISOString() };
       if (paymentMethod) patch.payment_method = paymentMethod;
-      const { error } = await db.from('pedidos').update(patch).eq('id', id);
+      let { error } = await db.from('pedidos').update(patch).eq('id', id);
+      // Fallback: si falla por columna payment_method inexistente, reintentar sin ella
+      if (error && paymentMethod && (error.code === '42703' || (error.message || '').includes('payment_method'))) {
+        const { payment_method, ...fallbackPatch } = patch;
+        const retry = await db.from('pedidos').update(fallbackPatch).eq('id', id);
+        error = retry.error;
+      }
       if (error) console.error('Supabase error al cambiar estado:', error?.code);
     }
   },
@@ -291,7 +301,13 @@ const CloudOrders = {
         notes: 'notes', paymentMethod: 'payment_method'
       };
       Object.entries(data).forEach(([k, v]) => { if (map[k]) patch[map[k]] = v; });
-      const { error } = await db.from('pedidos').update(patch).eq('id', id);
+      let { error } = await db.from('pedidos').update(patch).eq('id', id);
+      // Fallback: si falla por columna payment_method inexistente, reintentar sin ella
+      if (error && 'payment_method' in patch && (error.code === '42703' || (error.message || '').includes('payment_method'))) {
+        const { payment_method, ...fallbackPatch } = patch;
+        const retry = await db.from('pedidos').update(fallbackPatch).eq('id', id);
+        error = retry.error;
+      }
       if (error) { console.error('Supabase error al actualizar pedido:', error?.code); return error; }
     }
     return null;

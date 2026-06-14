@@ -718,6 +718,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Menú móvil ────────────────────────────────────────────────────────────
   const closeMobileMenu = () => {
     document.getElementById('mobileMenu')?.classList.remove('open');
+    document.getElementById('mobileMenu')?.setAttribute('aria-hidden', 'true');
+    document.getElementById('menuBtn')?.classList.remove('open');
+    document.getElementById('menuBtn')?.setAttribute('aria-expanded', 'false');
     document.body.style.overflow = '';
   };
 

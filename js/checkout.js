@@ -334,7 +334,8 @@ const Checkout = {
       shalomOffice:  isShipping ? document.getElementById('shalomInput').value.trim() : '',
       notes:         hasDiscount ? 'DESCUENTO 10% PRIMERA COMPRA aplicado' : '',
       items:         orderItems,
-      total:         orderTotal
+      total:         orderTotal,
+      paymentMethod: 'yape'
     };
 
     // Marcar descuento como usado (si aplica) antes de que la página cambie
