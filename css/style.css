@@ -7957,3 +7957,140 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   color: var(--gold);
 }
 
+/* ─── Módulo Control de Caja (POS) ───────────────────── */
+.caja-status-pill {
+  padding: .35rem .75rem;
+  border-radius: 20px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.caja-status-pill.open {
+  background: rgba(37, 211, 102, 0.12);
+  color: #25d366;
+  border: 1px solid rgba(37, 211, 102, 0.25);
+}
+.caja-status-pill.closed {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.caja-card-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.caja-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.caja-info-card {
+  background: var(--bg2);
+  border: 1px solid var(--border-l);
+  border-radius: var(--r);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+}
+
+.caja-info-title {
+  font-size: .65rem;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.caja-info-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--white);
+  font-family: var(--font-serif);
+}
+
+.caja-info-value.gold {
+  color: var(--gold);
+}
+
+.caja-info-value.green {
+  color: #25d366;
+}
+
+.caja-info-value.red {
+  color: #ef4444;
+}
+
+.caja-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+}
+
+.caja-form-group label {
+  font-size: .78rem;
+  color: var(--text2);
+  font-weight: 600;
+}
+
+.caja-form-group input,
+.caja-form-group textarea {
+  width: 100%;
+  padding: .5rem .75rem;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--r);
+  font-size: .85rem;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.caja-form-group input:focus,
+.caja-form-group textarea:focus {
+  border-color: var(--gold);
+}
+
+.caja-discrepancy-box {
+  padding: 1rem;
+  border-radius: var(--r);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: .85rem;
+  font-weight: 700;
+}
+
+.caja-discrepancy-box.neutral {
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.caja-discrepancy-box.ok {
+  background: rgba(37, 211, 102, 0.08);
+  border: 1px solid rgba(37, 211, 102, 0.2);
+  color: #25d366;
+}
+
+.caja-discrepancy-box.error {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.caja-discrepancy-box.surplus {
+  background: rgba(201, 168, 76, 0.08);
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  color: var(--gold);
+}
+

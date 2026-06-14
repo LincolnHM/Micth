@@ -251,6 +251,15 @@
             Contabilidad
           </button>
 
+          <button class="admin-nav-btn" data-section="caja">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <rect x="2" y="4" width="20" height="16" rx="2"/>
+              <line x1="12" y1="4" x2="12" y2="20"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            Control de Caja
+          </button>
+
           <button class="admin-nav-btn" data-section="users">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
               <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
@@ -525,6 +534,46 @@
 
         </div><!-- /accountingDailyView -->
 
+      </div>
+
+      <!-- ── Sección: Control de Caja ────────────────────────────────────────── -->
+      <div class="admin-section" id="section-caja">
+        <div class="admin-section-header">
+          <h2>Control de Caja</h2>
+          <span id="cajaStatusLabel" class="caja-status-pill closed">Cerrada</span>
+        </div>
+
+        <!-- Panel principal de caja activa o cerrada -->
+        <div id="cajaActivePanel" class="caja-card-panel">
+          <!-- Renderizado dinámicamente -->
+        </div>
+
+        <!-- Historial de cierres de caja -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-top:1.5rem">
+          <div style="padding:.9rem 1.2rem;border-bottom:1px solid var(--border)">
+            <h3 style="font-family:'Playfair Display',serif;color:var(--white);font-size:.95rem;margin:0">Historial de Turnos y Cierres</h3>
+          </div>
+          <div class="orders-table-wrap">
+            <table class="orders-table" style="min-width:680px">
+              <thead>
+                <tr>
+                  <th>Turno / Apertura</th>
+                  <th>Cierre</th>
+                  <th style="text-align:right">Monto Inicial</th>
+                  <th style="text-align:right">Ventas (Efectivo)</th>
+                  <th style="text-align:right">Esperado</th>
+                  <th style="text-align:right">Monto Real</th>
+                  <th style="text-align:right">Diferencia</th>
+                  <th style="text-align:center">Estado</th>
+                  <th style="text-align:center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="cajaHistoryTableBody">
+                <tr><td colspan="9" style="text-align:center;color:var(--text2);padding:2rem">Cargando historial…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <!-- ── Sección: Estadísticas ─────────────────────────────────────────── -->
