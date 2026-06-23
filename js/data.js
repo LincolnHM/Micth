@@ -791,6 +791,26 @@ const DEFAULT_PRODUCTS = [
     bottleTotalMl: 0
   },
 
+  {
+    id: 76,
+    name: 'Hawas Kobra',
+    brand: 'Rasasi',
+    type: 'arabe',
+    gender: 'hombre',
+    occasion: 'noche',
+    olfFamily: 'Oriental Especiado Amaderado',
+    topNotes: 'Bergamota, Cardamomo, Pimienta negra',
+    heartNotes: 'Oud, Rosa, Vetiver ahumado',
+    baseNotes: 'Ámbar oscuro, Sándalo, Almizcle',
+    description: 'Hawas Kobra: la joya más oscura y venenosa de la línea Hawas. Cardamomo y pimienta negra abren paso a un corazón de oud y vetiver ahumado, sellado por ámbar oscuro y sándalo. Intenso, misterioso e hipnótico.',
+    imageUrl: '',
+    sizes: { '3ml': 12, '5ml': 17, '10ml': 27 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 0,
+    bottleTotalMl: 0
+  },
+
   // ─── LATTAFA — SERIE NITRO ────────────────────────────────────────────────
   {
     id: 36,
@@ -1299,6 +1319,7 @@ const PRODUCT_IMAGE_MAP = {
   'Hawas Elixir':               '/img PERFUMES/Hawas_Elixir.png',
   'Hawas Ice':                  '/img PERFUMES/Hawas_Ice.png',
   'Hawas For Him':              '/img PERFUMES/Hawas_For_Him.png',
+  'Hawas Kobra':                '/img PERFUMES/HAWAS KOBRA.webp',
   'Nitro Red':                  '/img PERFUMES/Nitro_Red.png',
   'Nitro Elixir':               '/img PERFUMES/Nitro_Elixir.png',
   'Nitro Gold':                 '/img PERFUMES/Nitro_Gold.png',
