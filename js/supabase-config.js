@@ -30,6 +30,9 @@
 // -- Si la tabla ya existe, agrega la columna con este SQL:
 // ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS payment_method TEXT;
 //
+// -- COLUMNA COSTO DE ENTRADA (precio de compra por perfume):
+// ALTER TABLE productos ADD COLUMN IF NOT EXISTS cost_price NUMERIC DEFAULT 0;
+//
 // -- SEGURIDAD: habilitar RLS y crear políticas
 // ALTER TABLE pedidos ENABLE ROW LEVEL SECURITY;
 // -- Cualquier usuario (anon o autenticado) puede INSERTAR pedidos
@@ -249,9 +252,9 @@ const CloudOrders = {
           if (!product) continue;
 
           if (product.type === 'entero') {
-            if ((product.stockQuantity || 0) <= 0 && product.inStock) {
-              await CloudProducts.update(pid, { inStock: false });
-            }
+            const qty    = parseInt(item.quantity || 1);
+            const newQty = Math.max(0, (product.stockQuantity || 0) - qty);
+            await CloudProducts.update(pid, { stockQuantity: newQty, inStock: newQty > 0 });
             continue;
           }
 
@@ -404,6 +407,7 @@ function productFromDB(row) {
     availableAsEntero: row.available_as_entero             || false,
     enteroPrice:       parseFloat(row.entero_price)        || 0,
     stockQuantity:     parseInt(row.stock_quantity)        || 0,
+    costPrice:         parseFloat(row.cost_price)          || 0,
     date:              row.created_at,
     updatedAt:         row.updated_at
   };
@@ -432,7 +436,8 @@ function productToDB(product) {
     bottle_total_ml:     product.bottleTotalMl     || 0,
     available_as_entero: product.availableAsEntero || false,
     entero_price:        product.enteroPrice       || 0,
-    stock_quantity:      product.stockQuantity     || 0
+    stock_quantity:      product.stockQuantity     || 0,
+    cost_price:          product.costPrice         || 0
   };
 }
 
@@ -444,7 +449,8 @@ const _PRODUCT_FIELD_MAP = {
   imageUrl: 'image_url', sizes: 'sizes', inStock: 'in_stock',
   featured: 'featured', bottleRemainingMl: 'bottle_remaining_ml',
   bottleTotalMl: 'bottle_total_ml', availableAsEntero: 'available_as_entero',
-  enteroPrice: 'entero_price', stockQuantity: 'stock_quantity'
+  enteroPrice: 'entero_price', stockQuantity: 'stock_quantity',
+  costPrice: 'cost_price'
 };
 
 // ─── API de productos (async, usa Supabase si está configurado) ───────────────

@@ -131,6 +131,38 @@
     .admin-layout { flex-direction: row !important; }
     .admin-sidebar { order: 0 !important; left: 0 !important; right: auto !important; }
     .admin-main { order: 1 !important; }
+
+    /* ── Control de Precios ── */
+    .precios-product-row {
+      transition: border-color .18s;
+    }
+    .precios-table-header {
+      background: rgba(201,168,76,.06);
+      border: 1px solid rgba(201,168,76,.12);
+    }
+
+    @media (max-width: 900px) {
+      .precios-product-row,
+      .precios-table-header {
+        grid-template-columns: 1fr 1fr !important;
+      }
+      .precios-product-row > div:nth-child(3),
+      .precios-product-row > div:nth-child(4),
+      .precios-table-header > div:nth-child(3),
+      .precios-table-header > div:nth-child(4) {
+        display: none !important;
+      }
+    }
+    @media (max-width: 600px) {
+      .precios-product-row,
+      .precios-table-header {
+        grid-template-columns: 1fr !important;
+      }
+      .precios-product-row > div:nth-child(2),
+      .precios-table-header > div:nth-child(2) {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -230,6 +262,14 @@
               <line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/>
             </svg>
             Pedidos
+          </button>
+
+          <button class="admin-nav-btn" data-section="precios">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+            </svg>
+            Precios
           </button>
 
           <div class="admin-nav-divider"></div>
@@ -351,6 +391,41 @@
       </div>
 
 
+
+      <!-- ── Sección: Precios ──────────────────────────────────────────────── -->
+      <div class="admin-section" id="section-precios">
+        <div class="admin-section-header">
+          <div>
+            <h2>Control de Precios</h2>
+            <p style="color:var(--text2);font-size:.82rem;margin-top:.2rem">Precio de entrada (costo del frasco) y precio de salida (venta) por perfume</p>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:.65rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center">
+          <input type="text" id="preciosSearch"
+                 placeholder="🔍  Buscar por nombre o marca…"
+                 style="flex:1;min-width:200px;padding:.5rem .9rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;outline:none;transition:border-color .2s"
+                 onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='var(--border)'">
+          <div style="display:flex;gap:.35rem;flex-shrink:0">
+            <button class="precios-filter-btn active" data-ptype="all"
+                    style="padding:.4rem .85rem;border-radius:var(--r);font-size:.8rem;font-weight:600;border:1px solid var(--border);background:var(--gold);color:#111;cursor:pointer;transition:all .15s">
+              Todos
+            </button>
+            <button class="precios-filter-btn" data-ptype="decant"
+                    style="padding:.4rem .85rem;border-radius:var(--r);font-size:.8rem;font-weight:600;border:1px solid var(--border);background:var(--bg2);color:var(--text2);cursor:pointer;transition:all .15s">
+              Decants
+            </button>
+            <button class="precios-filter-btn" data-ptype="entero"
+                    style="padding:.4rem .85rem;border-radius:var(--r);font-size:.8rem;font-weight:600;border:1px solid var(--border);background:var(--bg2);color:var(--text2);cursor:pointer;transition:all .15s">
+              Enteros
+            </button>
+          </div>
+        </div>
+
+        <div id="preciosContent">
+          <p style="text-align:center;color:var(--text2);padding:3rem">Cargando precios…</p>
+        </div>
+      </div>
 
       <!-- ── Sección: Pedidos ───────────────────────────────────────────────── -->
       <div class="admin-section" id="section-orders">
@@ -723,6 +798,10 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
           </div>
 
           <div id="campaignButtonsGrid" class="campaign-buttons-grid">
+            <button class="campaign-apply-btn" type="button" data-campaign="fiestas-patrias">
+              <strong>🇵🇪 Fiestas Patrias</strong>
+              <span>28 y 29 de julio — rojo y blanco</span>
+            </button>
             <button class="campaign-apply-btn" type="button" data-campaign="dia-madre">
               <strong>Día de la Madre</strong>
               <span>Tonos rosados y cálidos</span>
@@ -738,6 +817,18 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
             <button class="campaign-apply-btn" type="button" data-campaign="navidad">
               <strong>Navidad</strong>
               <span>Rojo y verde navideño</span>
+            </button>
+            <button class="campaign-apply-btn" type="button" data-campaign="san-valentin">
+              <strong>San Valentín</strong>
+              <span>Amor y tonos rosados</span>
+            </button>
+            <button class="campaign-apply-btn" type="button" data-campaign="halloween">
+              <strong>Halloween</strong>
+              <span>Oscuro y misterioso</span>
+            </button>
+            <button class="campaign-apply-btn" type="button" data-campaign="anio-nuevo">
+              <strong>Año Nuevo</strong>
+              <span>Celebración dorada y festiva</span>
             </button>
           </div>
         </div>
