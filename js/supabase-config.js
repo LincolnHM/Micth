@@ -265,8 +265,10 @@ const CloudOrders = {
 
           const mlUsed = parseInt(item.size) * (item.quantity || 1);
           if (isNaN(mlUsed) || mlUsed <= 0) continue;
-          const newRemain = Math.max(0, (product.bottleRemainingMl || 0) - mlUsed);
-          await CloudProducts.update(pid, { bottleRemainingMl: newRemain });
+          const newRemain  = Math.max(0, (product.bottleRemainingMl || 0) - mlUsed);
+          const mlUpdate   = { bottleRemainingMl: newRemain };
+          if (newRemain === 0) mlUpdate.inStock = false;
+          await CloudProducts.update(pid, mlUpdate);
         }
       }
     }
@@ -564,9 +566,22 @@ const CloudProducts = {
         const col = _PRODUCT_FIELD_MAP[key];
         if (col) patch[col] = val;
       });
-      const { error } = await db.from('productos').update(patch).eq('id', id);
+      let { error } = await db.from('productos').update(patch).eq('id', id);
+      // Si falla por columna inexistente (stock_quantity, available_as_entero, etc.),
+      // reintentar solo con los campos que sí existen para no perder el update completo
+      if (error && error.code === '42703') {
+        const OPTIONAL_COLS = ['stock_quantity', 'available_as_entero', 'entero_price', 'cost_price', 'content_description'];
+        const fallback = { ...patch };
+        OPTIONAL_COLS.forEach(col => { delete fallback[col]; });
+        const retry = await db.from('productos').update(fallback).eq('id', id);
+        if (!retry.error) {
+          console.warn('[MICHT] Columna faltante en productos — ejecuta el SQL de migración en Supabase. Columna:', error.message);
+          return null;
+        }
+        error = retry.error;
+      }
       if (error) {
-        console.error('Supabase update error:', error?.code);
+        console.error('Supabase update error:', error?.code, error?.message);
         return error;
       }
     }

@@ -1441,7 +1441,7 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
   position: relative;
   top: 0;
   height: 100%;
-  overflow-y: hidden;
+  overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
@@ -2404,9 +2404,26 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
   #statsContent .stat-card-inner { overflow-x: auto; }
 
   /* Buscadores */
-  #orderSearch, #userSearch { max-width: 100% !important; }
+  #orderSearch, #userSearch, #adminProductSearch { max-width: 100% !important; }
   #section-orders .admin-section-header,
-  #section-users  .admin-section-header { flex-wrap: wrap; gap: .5rem; }
+  #section-users  .admin-section-header,
+  #section-products .admin-section-header { flex-wrap: wrap; gap: .5rem; }
+
+  /* Filtros de tipo de producto — scroll horizontal igual que filtros de pedidos */
+  #section-products .admin-section-header + div > div:last-child {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    max-width: 100%;
+  }
+  #section-products .admin-section-header + div > div:last-child::-webkit-scrollbar { display: none; }
+  #section-products .admin-section-header + div > div:last-child button { flex-shrink: 0; }
+
+  /* Tabla de clientes: ocultar columnas secundarias en móvil */
+  #section-users .orders-table th:nth-child(4),
+  #section-users .orders-table td:nth-child(4),
+  #section-users .orders-table th:nth-child(5),
+  #section-users .orders-table td:nth-child(5) { display: none; }
 
   /* Modales */
   .product-modal-content { margin: .5rem; border-radius: var(--r-lg); }

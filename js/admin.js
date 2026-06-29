@@ -224,19 +224,30 @@ function setupSidebarControls() {
 
   const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
 
+  let _sidebarScrollY = 0;
+
   const openSidebar = () => {
     if (!isMobile()) return;
+    _sidebarScrollY = window.scrollY;
     sidebar.classList.add('open');
     overlay.classList.add('visible');
     toggle.setAttribute('aria-expanded', 'true');
-    document.body.style.overflow = 'hidden';
+    // Truco para bloquear scroll en iOS Safari (overflow:hidden no funciona en iOS)
+    document.body.style.position = 'fixed';
+    document.body.style.top      = `-${_sidebarScrollY}px`;
+    document.body.style.width    = '100%';
   };
 
   const closeSidebar = () => {
+    const wasOpen = sidebar.classList.contains('open');
     sidebar.classList.remove('open');
     overlay.classList.remove('visible');
     toggle.setAttribute('aria-expanded', 'false');
-    document.body.style.overflow = '';
+    // Restaurar scroll position exacta al cerrar (solo si el sidebar estaba abierto)
+    document.body.style.position = '';
+    document.body.style.top      = '';
+    document.body.style.width    = '';
+    if (wasOpen) window.scrollTo(0, _sidebarScrollY);
   };
 
   toggle.addEventListener('click', () => {
@@ -715,7 +726,7 @@ async function updateOrderStats(allOrders = null) {
 async function renderOrdersSection() {
   const tbody = document.getElementById('ordersTableBody');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">Cargando pedidos…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">Cargando pedidos…</td></tr>';
 
   try {
     // Una sola query a Supabase — se reutiliza para stats y tabla
@@ -1178,7 +1189,7 @@ function _setupCustomerAutocomplete() {
       </div>`).join('');
 
     dropdown.querySelectorAll('.cust-opt').forEach(opt => {
-      opt.addEventListener('mousedown', e => {
+      const selectCust = e => {
         e.preventDefault();
         const nameEl  = document.getElementById('regCustomerName');
         const phoneEl = document.getElementById('regCustomerPhone');
@@ -1188,7 +1199,9 @@ function _setupCustomerAutocomplete() {
         if (opt.dataset.dni   && dniEl)   dniEl.value   = opt.dataset.dni;
         dropdown.style.display = 'none';
         showToast('✓ Datos del cliente cargados automáticamente');
-      });
+      };
+      opt.addEventListener('mousedown', selectCust);
+      opt.addEventListener('touchstart', selectCust, { passive: false });
     });
     dropdown.style.display = 'block';
   }
@@ -1207,7 +1220,7 @@ function _setupCustomerAutocomplete() {
     const idx = cur ? items.indexOf(cur) : -1;
     if (e.key === 'ArrowDown') { e.preventDefault(); cur?.classList.remove('focused'); items[Math.min(idx + 1, items.length - 1)]?.classList.add('focused'); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); cur?.classList.remove('focused'); items[Math.max(idx - 1, 0)]?.classList.add('focused'); }
-    else if (e.key === 'Enter' && cur) { e.preventDefault(); cur.dispatchEvent(new MouseEvent('mousedown')); }
+    else if (e.key === 'Enter' && cur) { e.preventDefault(); cur.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true })); }
     else if (e.key === 'Escape') { dropdown.style.display = 'none'; }
   });
 }
@@ -1294,21 +1307,24 @@ function addOrderItemRow() {
     dropdown.style.display = 'block';
 
     dropdown.querySelectorAll('.prod-opt').forEach(opt => {
-      opt.addEventListener('mousedown', e => {
+      const selectProd = e => {
         e.preventDefault();
         hiddenInput.value  = opt.dataset.value;
         searchInput.value  = opt.dataset.label;
         dropdown.style.display = 'none';
-      });
+      };
+      opt.addEventListener('mousedown', selectProd);
+      opt.addEventListener('touchstart', selectProd, { passive: false });
     });
   }
 
   searchInput.addEventListener('input',  () => renderDropdown(searchInput.value));
   searchInput.addEventListener('focus',  () => renderDropdown(searchInput.value));
-  searchInput.addEventListener('blur',   () => setTimeout(() => { dropdown.style.display = 'none'; }, 180));
+  searchInput.addEventListener('blur',   () => setTimeout(() => { dropdown.style.display = 'none'; }, 250));
 
   container.appendChild(row);
-  searchInput.focus();
+  // No forzar foco en móvil — abre teclado virtual automáticamente y causa saltos de scroll
+  if (!('ontouchstart' in window)) searchInput.focus();
 }
 
 async function saveManualOrder() {
@@ -1377,42 +1393,19 @@ async function saveManualOrder() {
   if (saveBtn) saveBtn.textContent = 'Guardando...';
 
   try {
-    await CloudOrders.create({ customerName: name, customerPhone: phone, customerDni: dni, deliveryType: dtype, notes, items, total, paymentMethod: payMeth || null, status: initStat });
+    // Siempre crear como 'pendiente' primero para que updateStatus pueda detectar el cambio
+    // de estado y descontar el stock una sola vez (evita doble deducción)
+    const orderId = await CloudOrders.create({ customerName: name, customerPhone: phone, customerDni: dni, deliveryType: dtype, notes, items, total, paymentMethod: payMeth || null, status: 'pendiente' });
 
-    // Descontar stock con datos frescos de Supabase
-    const agotados = [];
-    for (const item of items) {
-      try {
-        const product = prodLookup[item.productId];
-        if (!product) continue;
-
-        if (product.type === 'entero') {
-          const qty    = item.quantity || 1;
-          const newQty = Math.max(0, (product.stockQuantity || 0) - qty);
-          await CloudProducts.update(item.productId, { stockQuantity: newQty, inStock: newQty > 0 });
-          if (newQty === 0) agotados.push(product.name);
-
-        } else if (product.availableAsEntero && item.size === 'Unidad') {
-          await CloudProducts.update(item.productId, { availableAsEntero: false, bottleRemainingMl: 0, inStock: false });
-          agotados.push(product.name);
-
-        } else {
-          const mlUsed = parseInt(item.size) * (item.quantity || 1);
-          if (!isNaN(mlUsed) && mlUsed > 0 && product.bottleTotalMl > 0) {
-            const newRemain = Math.max(0, (product.bottleRemainingMl || 0) - mlUsed);
-            await CloudProducts.update(item.productId, { bottleRemainingMl: newRemain });
-            if (newRemain === 0) agotados.push(product.name);
-          }
-        }
-      } catch (_) {}
+    // Si el admin registra el pedido directo como 'pagado', aplicar el descuento de stock
+    // vía updateStatus (que también cambia el estado a 'pagado')
+    if (initStat === 'pagado') {
+      await CloudOrders.updateStatus(orderId, 'pagado', payMeth || null);
     }
 
     // Cerrar modal y mostrar éxito inmediatamente — el refresh es no-bloqueante
     document.getElementById('registerOrderModal').classList.remove('open');
-    const msg = agotados.length
-      ? `Pedido registrado ✓  |  Agotado: ${agotados.join(', ')}`
-      : 'Pedido registrado correctamente ✓';
-    showToast(msg);
+    showToast('Pedido registrado correctamente ✓');
     renderOrdersSection().catch(console.error);
     renderAdminProducts().catch(console.error);
 
@@ -1792,6 +1785,13 @@ async function exportCatalogPDF() {
   if (btn)   { btn.disabled = true; btn.style.opacity = '.55'; }
   if (label) { label.textContent = 'Generando…'; }
 
+  // Abrir ventana ANTES del await — iOS Safari bloquea window.open si no es
+  // respuesta directa y síncrona al click del usuario (popup blocker)
+  const win = window.open('', '_blank', 'width=920,height=760');
+  if (!win) { showToast('Activa las ventanas emergentes para exportar el PDF.'); if (btn) { btn.disabled = false; btn.style.opacity = ''; } if (label) { label.textContent = 'Exportar PDF'; } return; }
+  win.document.open();
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Generando catálogo…</title><style>body{background:#0a0a0a;color:#c9a84c;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-size:1.1rem;letter-spacing:.1em}</style></head><body>Generando catálogo…</body></html>');
+
   try {
     const all  = await CloudProducts.getAll();
 
@@ -2085,14 +2085,12 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 </body>
 </html>`;
 
-    const win = window.open('', '_blank', 'width=920,height=760');
-    if (!win) { showToast('Activa las ventanas emergentes para exportar el PDF.'); return; }
-    win.document.open();
     win.document.write(html);
     win.document.close();
 
   } catch (err) {
     console.error('[MICHT] Error generando PDF:', err);
+    if (win && !win.closed) win.close();
     showToast('Error al generar el catálogo. Intenta de nuevo.');
   } finally {
     if (btn)   { btn.disabled = false; btn.style.opacity = ''; }
@@ -2483,7 +2481,8 @@ function showToast(msg) {
   if (!t) {
     t = document.createElement('div');
     t.id = 'adminToast';
-    t.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:var(--card);border:1px solid var(--gold-d);color:var(--text);padding:.75rem 1.25rem;border-radius:var(--r);font-size:.85rem;z-index:9999;box-shadow:var(--sh);transition:all .3s;opacity:0;transform:translateY(10px)';
+    // En móvil se posiciona a la izquierda para no solapar con newOrderToast (derecha)
+    t.style.cssText = 'position:fixed;bottom:1.5rem;left:1rem;max-width:calc(100vw - 2rem);background:var(--card);border:1px solid var(--gold-d);color:var(--text);padding:.75rem 1.25rem;border-radius:var(--r);font-size:.85rem;z-index:9999;box-shadow:var(--sh);transition:all .3s;opacity:0;transform:translateY(10px)';
     document.body.appendChild(t);
   }
   t.textContent = msg;

@@ -1084,7 +1084,7 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
   </div>
 
   <!-- ── Notificación de nuevo pedido (Realtime) ───────────────────────────── -->
-  <div id="newOrderToast" style="display:none;position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;background:#1a1a1a;border:1px solid var(--gold);border-radius:10px;padding:1rem 1.25rem;box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:260px;max-width:340px;animation:slideInRight .3s ease">
+  <div id="newOrderToast" style="display:none;position:fixed;bottom:1.5rem;right:1rem;z-index:9999;background:#1a1a1a;border:1px solid var(--gold);border-radius:10px;padding:1rem 1.25rem;box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:min(260px,calc(100vw - 2rem));max-width:min(340px,calc(100vw - 2rem));animation:slideInRight .3s ease">
     <div style="display:flex;align-items:center;gap:.75rem">
       <span style="font-size:1.4rem">🔔</span>
       <div style="flex:1">
