@@ -310,12 +310,18 @@ function renderProducts() {
       return 1; // fuzzy match
     };
     allFiltered.sort((a, b) => {
-      if (a.inStock !== b.inStock) return a.inStock ? -1 : 1;
+      const aPurch = isDecantPurchasable(a) && (a.type !== 'entero' || a.inStock);
+      const bPurch = isDecantPurchasable(b) && (b.type !== 'entero' || b.inStock);
+      if (aPurch !== bPurch) return aPurch ? -1 : 1;
       return score(b) - score(a);
     });
   } else {
     // Sin búsqueda: agotados al fondo, resto en orden original
-    allFiltered.sort((a, b) => (a.inStock === b.inStock ? 0 : a.inStock ? -1 : 1));
+    allFiltered.sort((a, b) => {
+      const aPurch = isDecantPurchasable(a) && (a.type !== 'entero' || a.inStock);
+      const bPurch = isDecantPurchasable(b) && (b.type !== 'entero' || b.inStock);
+      return aPurch === bPurch ? 0 : aPurch ? -1 : 1;
+    });
   }
   const totalPages  = Pagination.totalPages(allFiltered.length);
 
@@ -377,12 +383,14 @@ function renderProducts() {
       </button>`;
         })()
       : Object.entries(p.sizes).map(([ml, price]) => {
-          const inCart = Cart.items.some(i => i.productId === p.id && i.size === ml);
+          const inCart    = Cart.items.some(i => i.productId === p.id && i.size === ml);
+          const noMl      = !bottleHasMl(p, ml);
+          const disabledSize = !p.inStock || (isEntero && price === 0) || noMl;
           const priceDisplay = price > 0 ? `S/${price}` : 'Consultar';
           return `
-      <button class="size-btn ${!p.inStock ? 'disabled' : ''} ${inCart ? 'selected' : ''}"
+      <button class="size-btn ${disabledSize ? 'disabled' : ''} ${inCart ? 'selected' : ''}"
               data-id="${p.id}" data-size="${escapeAttr(ml)}" data-price="${price}"
-              ${!p.inStock || (isEntero && price === 0) ? 'disabled aria-disabled="true"' : ''}>
+              ${disabledSize ? 'disabled aria-disabled="true"' : ''}>
         <span class="size-ml">${sanitize(ml)}</span>
         <span class="size-price">${priceDisplay}</span>
       </button>`;
@@ -401,14 +409,16 @@ function renderProducts() {
 
     // Badge NUEVO: si fue agregado en los últimos 30 días
     const isNew = p.date && (Date.now() - new Date(p.date).getTime()) < 30 * 24 * 3600 * 1000;
-    // Stock restante: mostrar si queda poco
-    const lowMlWarn = p.type !== 'entero' && p.bottleTotalMl > 0 && p.bottleRemainingMl > 0 && p.bottleRemainingMl < 15
+    // Calcular estado real de disponibilidad (considera ml restante)
+    const purchasable = isEntero ? p.inStock : isDecantPurchasable(p);
+    // Stock restante: mostrar si queda poco (solo si todavía hay algo disponible)
+    const lowMlWarn = !isEntero && p.bottleTotalMl > 0 && p.bottleRemainingMl > 0 && purchasable && p.bottleRemainingMl < 15
       ? `<div class="stock-low-tag">~${Math.round(p.bottleRemainingMl)}ml restantes</div>` : '';
     // Wishlist
     const isFav = Wishlist.has(p.id);
 
     return `
-      <article class="product-card ${!p.inStock ? 'out-of-stock' : ''} ${p.featured ? 'featured' : ''}">
+      <article class="product-card ${!purchasable ? 'out-of-stock' : ''} ${p.featured ? 'featured' : ''}">
         <div class="card-glow-overlay"></div>
         <div class="product-img-wrap">
           ${imgHtml}
@@ -424,7 +434,7 @@ function renderProducts() {
             ${p.featured ? '<span class="badge-featured">⭐ Popular</span>' : ''}
             ${isNew ? '<span class="badge-new">NUEVO</span>' : ''}
           </div>
-          ${!p.inStock ? '<div class="out-badge">Agotado</div>' : (p.type === 'entero' && p.stockQuantity === 1 ? '<div class="last-unit-badge">⚠ Última unidad</div>' : '')}
+          ${!purchasable ? '<div class="out-badge">Agotado</div>' : (p.type === 'entero' && p.stockQuantity === 1 ? '<div class="last-unit-badge">⚠ Última unidad</div>' : '')}
           ${lowMlWarn}
           ${p.olfFamily ? `<div class="olf-family-tag">${sanitize(p.olfFamily)}</div>` : ''}
           <button class="pd-open-btn" data-id="${p.id}" aria-label="Ver detalles de ${sanitize(p.name)}">Ver detalles →</button>
@@ -628,6 +638,8 @@ function validateCartStock() {
       if (item.quantity > product.stockQuantity) {
         errors.push({ name: `${item.brand} – ${item.productName}`, type: 'stock', available: product.stockQuantity, requested: item.quantity });
       }
+    } else if (!bottleHasMl(product, item.size)) {
+      errors.push({ name: `${item.brand} – ${item.productName} (${item.size})`, type: 'agotado' });
     }
   });
   return errors;
@@ -1162,12 +1174,15 @@ function openPdModal(productId) {
   } else {
     cartBtn.disabled = true;
     cartTxt.textContent = 'Selecciona un tamaño';
-    sizesRow.innerHTML = Object.entries(p.sizes).map(([ml, price]) => `
-      <button class="pd-size-btn-new ${!p.inStock ? 'pd-size-disabled' : ''}"
+    sizesRow.innerHTML = Object.entries(p.sizes).map(([ml, price]) => {
+      const sizeOff = !p.inStock || !bottleHasMl(p, ml);
+      return `
+      <button class="pd-size-btn-new ${sizeOff ? 'pd-size-disabled' : ''}"
               data-size="${escapeAttr(ml)}" data-price="${price}"
-              ${!p.inStock ? 'disabled' : ''}>
+              ${sizeOff ? 'disabled' : ''}>
         ${sanitize(ml)}
-      </button>`).join('');
+      </button>`;
+    }).join('');
 
     const selectVisualSize = (sizeStr) => {
       if (isEntero || !decantVisualizer) return;

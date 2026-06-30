@@ -541,6 +541,14 @@ async function renderAdminProducts() {
         return;
       }
 
+      // Si lo que queda ya no alcanza ni para el tamaño más chico, marcar agotado
+      // automáticamente (y reactivar si se rellena el frasco por encima de ese mínimo)
+      const product = products.find(pp => pp.id === id) || Products.getById(id);
+      if (total > 0 && product) {
+        const minSize = minDecantSizeMl(product.sizes);
+        updates.inStock = !minSize || remaining >= minSize;
+      }
+
       await CloudProducts.update(id, updates);
       renderAdminProducts().catch(console.error);
       showToast('Mililitros actualizados ✓');
@@ -1381,6 +1389,9 @@ async function saveManualOrder() {
       if (item.quantity > product.stockQuantity) {
         stockErrors.push(`${item.brand} – ${item.productName}: solo quedan ${product.stockQuantity} unidad(es)`);
       }
+    } else if (!bottleHasMl(product, item.size)) {
+      const rem = Math.round(product.bottleRemainingMl || 0);
+      stockErrors.push(`${item.brand} – ${item.productName}: solo quedan ~${rem}ml (pedido: ${item.size})`);
     }
   });
   if (stockErrors.length) {

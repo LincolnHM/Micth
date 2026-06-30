@@ -267,7 +267,8 @@ const CloudOrders = {
           if (isNaN(mlUsed) || mlUsed <= 0) continue;
           const newRemain  = Math.max(0, (product.bottleRemainingMl || 0) - mlUsed);
           const mlUpdate   = { bottleRemainingMl: newRemain };
-          if (newRemain === 0) mlUpdate.inStock = false;
+          // Agotado si lo que queda ya no alcanza ni para el tamaño más chico
+          if (newRemain < minDecantSizeMl(product.sizes)) mlUpdate.inStock = false;
           await CloudProducts.update(pid, mlUpdate);
         }
       }
@@ -413,6 +414,40 @@ function productFromDB(row) {
     date:              row.created_at,
     updatedAt:         row.updated_at
   };
+}
+
+// ─── Control de stock por mililitros (decants) ────────────────────────────────
+// Un perfume "decant" (no entero) que tiene frasco registrado (bottleTotalMl > 0)
+// solo puede vender un tamaño si el frasco tiene suficiente ml restante.
+// Si el producto no tiene frasco registrado (bottleTotalMl === 0), el stock se
+// controla solo con el flag inStock (comportamiento manual, sin tracking de ml).
+
+function minDecantSizeMl(sizes) {
+  const vals = Object.keys(sizes || {})
+    .map(k => parseFloat(k))
+    .filter(n => !isNaN(n) && n > 0);
+  return vals.length ? Math.min(...vals) : 0;
+}
+
+// ¿El tamaño solicitado (clave de `sizes`, ej. "5ml") cabe en el frasco restante?
+function bottleHasMl(product, sizeKey) {
+  if (!product || product.type === 'entero') return true;
+  if (!product.bottleTotalMl || product.bottleTotalMl <= 0) return true; // sin tracking
+  const sizeMl = parseFloat(sizeKey);
+  if (isNaN(sizeMl)) return true;
+  return (product.bottleRemainingMl || 0) >= sizeMl;
+}
+
+// ¿Queda algún tamaño vendible? Si el frasco está por debajo del tamaño mínimo,
+// el producto se considera agotado aunque inStock siga en true.
+function isDecantPurchasable(product) {
+  if (!product) return false;
+  if (!product.inStock) return false;
+  if (product.type === 'entero') return true;
+  if (!product.bottleTotalMl || product.bottleTotalMl <= 0) return true;
+  const minSize = minDecantSizeMl(product.sizes);
+  if (!minSize) return true;
+  return (product.bottleRemainingMl || 0) >= minSize;
 }
 
 function productToDB(product) {
