@@ -831,6 +831,9 @@
   </div>
 
   <!-- ── Chatbot IA ───────────────────────────────────────────────────────── -->
+  <!-- Desactivado a propósito: js/chatbot.js llama a /api/chat, que no existe en
+       GitHub Pages (era una función de Netlify que nunca se implementó). No quitar
+       display:none hasta tener un backend real (ej. Supabase Edge Function). -->
   <button class="chat-fab" id="chatFab" aria-label="Abrir asistente de fragancias" style="display:none">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
@@ -1144,7 +1147,6 @@
   <script src="js/scent-finder.js?v=1"></script>
   <script src="js/checkout.js"></script>
   <script src="js/auth.js?v=2"></script>
-  <script src="js/config.js"></script>
   <script src="js/chatbot.js"></script>
   <script src="js/animations.js"></script>
   <script src="js/gsap-animations.js"></script>

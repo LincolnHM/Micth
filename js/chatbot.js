@@ -1,6 +1,9 @@
 // ─── MICHT Decants · Chatbot IA ───────────────────────────────────────────────
-// La clave GROQ vive en el servidor (netlify/functions/chat.js).
-// El frontend solo envía el mensaje al endpoint /api/chat.
+// DESACTIVADO: el sitio se despliega en GitHub Pages (hosting estático puro),
+// que no puede ejecutar el backend /api/chat que este código espera. El botón
+// del chat está oculto en index.html (#chatFab, display:none) hasta que exista
+// un backend real (ej. Supabase Edge Function) que reciba el mensaje y llame
+// a Groq con la API key guardada del lado del servidor.
 
 let chatHistory     = [];
 let catalogReady    = false;
