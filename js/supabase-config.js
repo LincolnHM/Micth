@@ -430,12 +430,13 @@ function minDecantSizeMl(sizes) {
 }
 
 // ¿El tamaño solicitado (clave de `sizes`, ej. "5ml") cabe en el frasco restante?
-function bottleHasMl(product, sizeKey) {
+// `qty` permite validar varias unidades del mismo tamaño a la vez (ej. carrito o pedido manual).
+function bottleHasMl(product, sizeKey, qty = 1) {
   if (!product || product.type === 'entero') return true;
   if (!product.bottleTotalMl || product.bottleTotalMl <= 0) return true; // sin tracking
   const sizeMl = parseFloat(sizeKey);
   if (isNaN(sizeMl)) return true;
-  return (product.bottleRemainingMl || 0) >= sizeMl;
+  return (product.bottleRemainingMl || 0) >= sizeMl * (qty || 1);
 }
 
 // ¿Queda algún tamaño vendible? Si el frasco está por debajo del tamaño mínimo,

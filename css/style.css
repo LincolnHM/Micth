@@ -802,6 +802,23 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
 .filter-group-btn:hover { border-color: var(--gold-d); color: var(--gold); }
 .filter-group-btn.active { background: var(--gold-dim); color: var(--gold); border-color: rgba(201,168,76,.4); }
 
+/* Toggle "Solo favoritos" */
+.fav-filter-btn {
+  display: flex; align-items: center; gap: .35rem; flex-shrink: 0;
+  padding: .3rem .75rem; border-radius: 50px; font-size: .75rem;
+  border: 1px solid var(--border); color: var(--text2); background: var(--card);
+  transition: all var(--tr);
+}
+.fav-filter-btn:hover { border-color: rgba(239,83,80,.5); color: var(--red); }
+.fav-filter-btn.active { background: rgba(239,83,80,.12); color: var(--red); border-color: rgba(239,83,80,.4); }
+.fav-filter-btn.active svg { fill: currentColor; }
+.fav-filter-count {
+  background: rgba(255,255,255,.12); border-radius: 50px;
+  font-size: .68rem; font-weight: 700; line-height: 1;
+  padding: .18rem .4rem; min-width: 1.1rem; text-align: center;
+}
+.fav-filter-btn.active .fav-filter-count { background: rgba(239,83,80,.25); }
+
 /* Select de familia olfativa */
 .olf-select {
   padding: .3rem .75rem; border-radius: 50px; font-size: .75rem;
@@ -977,6 +994,12 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
   letter-spacing: -.01em;
 }
 .price-consultar { font-size: .8rem; color: var(--text3); font-style: italic; margin-bottom: .5rem; }
+.btn-consultar-wa {
+  display: inline-flex; align-items: center; gap: .35rem;
+  font-size: .8rem; font-weight: 700; color: #25d366;
+  text-decoration: none; margin-bottom: .5rem; transition: opacity var(--tr);
+}
+.btn-consultar-wa:hover { opacity: .8; }
 
 .sizes-row { display: flex; gap: .4rem; flex-wrap: wrap; }
 .size-btn {
@@ -1043,10 +1066,10 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
 .cart-item-name { font-size: .85rem; color: var(--white); font-weight: 500; }
 .cart-item-size { font-size: .75rem; color: var(--text2); display: flex; align-items: center; gap: .35rem; }
 .cart-item-controls { display: flex; align-items: center; gap: .4rem; }
-.qty-btn { background: var(--bg2); border: 1px solid var(--border-l); color: var(--text); width: 26px; height: 26px; border-radius: var(--r); font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all var(--tr); }
+.qty-btn { background: var(--bg2); border: 1px solid var(--border-l); color: var(--text); width: 40px; height: 40px; border-radius: var(--r); font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all var(--tr); }
 .qty-btn:hover { background: var(--gold); color: #000; border-color: var(--gold); }
 .qty-val { font-size: .85rem; min-width: 22px; text-align: center; }
-.remove-btn { margin-left: auto; color: var(--red); font-size: 1.1rem; width: 26px; height: 26px; border-radius: var(--r); display: flex; align-items: center; justify-content: center; transition: background var(--tr); }
+.remove-btn { margin-left: auto; color: var(--red); font-size: 1.1rem; width: 40px; height: 40px; border-radius: var(--r); display: flex; align-items: center; justify-content: center; transition: background var(--tr); }
 .remove-btn:hover { background: rgba(239,83,80,.15); }
 .cart-item-sub { font-size: .82rem; font-weight: 700; color: var(--gold); text-align: right; }
 
@@ -1192,7 +1215,7 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
 .shipping-form { display: flex; flex-direction: column; gap: .8rem; }
 .form-group { display: flex; flex-direction: column; gap: .3rem; }
 .form-group label { font-size: .75rem; color: var(--text2); font-weight: 500; letter-spacing: .04em; }
-.form-group input, .form-group select { background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: var(--r); padding: .6rem .85rem; font-size: .85rem; transition: border-color var(--tr); }
+.form-group input, .form-group select { background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: var(--r); padding: .6rem .85rem; font-size: 1rem; transition: border-color var(--tr); }
 .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--gold-d); }
 .form-group select option { background: var(--card); color: var(--text); }
 .form-group.fv-error input,
@@ -2363,8 +2386,8 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
   /* Admin cards */
   .admin-card-head { gap: .5rem; }
   .admin-product-thumb { width: 54px !important; height: 54px !important; }
-  .admin-card-actions { flex-direction: column; gap: .25rem; }
-  .admin-card-actions button { font-size: .68rem; padding: .25rem .5rem; }
+  .admin-card-actions { flex-direction: column; gap: .35rem; }
+  .admin-card-actions button { font-size: .78rem; padding: .55rem .7rem; min-height: 40px; }
   .admin-product-name { font-size: .88rem; }
 
   /* Paginación */
@@ -3662,7 +3685,7 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
   border-radius: 10px;
   color: var(--text);
   padding-inline: 50px;
-  font-size: .83rem;
+  font-size: 1rem;
   font-family: var(--font-sans);
 }
 .srch-input::placeholder { color: var(--text3); }
@@ -5301,7 +5324,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   border-radius: var(--r);
   padding: .65rem .85rem;
   font-family: var(--font-sans);
-  font-size: .88rem;
+  font-size: 1rem;
   color: var(--white);
   transition: border-color .2s, box-shadow .2s;
   box-sizing: border-box;
@@ -7161,6 +7184,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   top: 0; left: 0; right: 0; bottom: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   z-index: 100000;
   display: none;
   align-items: center;
@@ -7195,6 +7219,8 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   .stories-modal-panel {
     height: 100vh;
     max-height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
     border-radius: 0;
     border: none;
   }
@@ -7420,6 +7446,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   top: 0; left: 0; right: 0; bottom: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   z-index: 100000;
   display: none;
   align-items: center;

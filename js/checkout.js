@@ -28,7 +28,7 @@ const PERU_GEO = {
   'Ucayali':        ['Coronel Portillo','Atalaya','Padre Abad','Purús']
 };
 
-const WHATSAPP_NUMBER = '';
+const WHATSAPP_NUMBER = '51917452643';
 
 // ─── Reglas de validación ─────────────────────────────────────────────────────
 
@@ -124,9 +124,18 @@ const Checkout = {
     const modal = document.getElementById('checkoutModal');
     modal.classList.add('open');
     document.getElementById('overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
     this._showStep(1);
     this.renderSummary();
     this.populateDepartments();
+
+    // Restablecer el botón de enviar por si quedó deshabilitado/con texto de carga
+    // de un pedido anterior en la misma sesión
+    const sendBtn = document.getElementById('sendWhatsappBtn');
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      if (sendBtn.dataset.originalHtml) sendBtn.innerHTML = sendBtn.dataset.originalHtml;
+    }
 
     // Pre-rellenar datos del usuario si está logueado
     if (typeof UserAuth !== 'undefined' && UserAuth.isLoggedIn()) {
@@ -148,6 +157,7 @@ const Checkout = {
     this._sending = false;
     document.getElementById('checkoutModal').classList.remove('open');
     document.getElementById('overlay').classList.remove('active');
+    document.body.style.overflow = '';
   },
 
   _showStep(n) {
@@ -302,14 +312,16 @@ const Checkout = {
   },
 
   send() {
-    alert('Los pedidos están temporalmente suspendidos. Vuelve pronto.');
-    return;
     if (this._sending) return;
     if (Cart.items.length === 0) { alert('Tu carrito está vacío.'); return; }
 
     this._sending = true;
     const sendBtn = document.getElementById('sendWhatsappBtn');
-    if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = 'Enviando...'; }
+    if (sendBtn) {
+      if (!sendBtn.dataset.originalHtml) sendBtn.dataset.originalHtml = sendBtn.innerHTML;
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Enviando...';
+    }
 
     // Capturar datos del pedido ANTES de limpiar el carrito
     const isShipping    = this.deliveryType === 'shipping';
@@ -407,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Copiar número de celular
   document.getElementById('copyPhoneBtn').addEventListener('click', function () {
-    const number = '';
+    const number = '917452643';
     const btn = this;
     const original = btn.innerHTML;
     const markCopied = () => {

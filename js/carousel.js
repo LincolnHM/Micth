@@ -184,18 +184,24 @@ const Carousel = {
 
   initSwipe(wrapper) {
     let startX = 0;
+    let startY = 0;
     let isDragging = false;
 
     wrapper.addEventListener('touchstart', e => {
       startX     = e.touches[0].clientX;
+      startY     = e.touches[0].clientY;
       isDragging = true;
     }, { passive: true });
 
     wrapper.addEventListener('touchend', e => {
       if (!isDragging) return;
       isDragging = false;
-      const diff = startX - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 50) diff > 0 ? this.next() : this.prev();
+      const diffX = startX - e.changedTouches[0].clientX;
+      const diffY = startY - e.changedTouches[0].clientY;
+      // Ignora el gesto si fue mayormente scroll vertical (evita cambiar de slide sin querer)
+      if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+        diffX > 0 ? this.next() : this.prev();
+      }
     }, { passive: true });
   }
 };

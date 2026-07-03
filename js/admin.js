@@ -203,9 +203,9 @@ function setupNav() {
       const sec = document.getElementById('section-' + btn.dataset.section);
       if (sec) sec.classList.add('active');
       if (btn.dataset.section === 'dashboard')   renderDashboard().catch(console.error);
+      if (btn.dataset.section === 'products')    renderAdminProducts().catch(console.error);
       if (btn.dataset.section === 'inventory')   renderInventorySection().catch(console.error);
       if (btn.dataset.section === 'orders')      renderOrdersSection().catch(console.error);
-      if (btn.dataset.section === 'orders')      updateOrderStats().catch(console.error);
       if (btn.dataset.section === 'users')       renderUsersSection().catch(console.error);
       if (btn.dataset.section === 'accounting')  renderAccountingSection().catch(console.error);
       if (btn.dataset.section === 'stats')       renderStatsSection().catch(console.error);
@@ -927,7 +927,14 @@ async function renderOrdersSection() {
 }
 
 async function openOrderDetail(id) {
-  const order = await CloudOrders.getById(id);
+  let order;
+  try {
+    order = await withTimeout(CloudOrders.getById(id), 12000, 'el pedido');
+  } catch (err) {
+    console.error('[MICHT] Error cargando detalle de pedido:', err);
+    showToast('⚠ Conexión lenta: no se pudo cargar el detalle del pedido.');
+    return;
+  }
   if (!order) return;
   const modal = document.getElementById('orderDetailModal');
   const body  = document.getElementById('orderDetailBody');
@@ -1150,7 +1157,7 @@ async function openRegisterOrderModal() {
 
   // Cargar historial de clientes para autocomplete
   try {
-    const orders = await CloudOrders.getAll();
+    const orders = await withTimeout(CloudOrders.getAll(), 10000, 'el historial de clientes');
     const seen = new Set();
     _customerHistory = [];
     orders.forEach(o => {
@@ -1212,6 +1219,7 @@ function _setupCustomerAutocomplete() {
       opt.addEventListener('touchstart', selectCust, { passive: false });
     });
     dropdown.style.display = 'block';
+    requestAnimationFrame(() => dropdown.scrollIntoView({ block: 'nearest' }));
   }
 
   // Re-registrar listeners clonando el input para limpiar anteriores
@@ -1313,6 +1321,9 @@ function addOrderItemRow() {
     ).join('');
 
     dropdown.style.display = 'block';
+    // En móvil el modal es un contenedor con scroll — sin esto el dropdown puede
+    // quedar recortado fuera del área visible si la fila está cerca del borde inferior.
+    requestAnimationFrame(() => dropdown.scrollIntoView({ block: 'nearest' }));
 
     dropdown.querySelectorAll('.prod-opt').forEach(opt => {
       const selectProd = e => {
@@ -1372,7 +1383,7 @@ async function saveManualOrder() {
 
   let prodLookup = {};
   try {
-    const allProds = await CloudProducts.getAll();
+    const allProds = await withTimeout(CloudProducts.getAll(), 12000, 'los productos');
     allProds.forEach(p => { prodLookup[p.id] = p; });
   } catch (_) {
     Products.getAll().forEach(p => { prodLookup[p.id] = p; });
@@ -1389,9 +1400,9 @@ async function saveManualOrder() {
       if (item.quantity > product.stockQuantity) {
         stockErrors.push(`${item.brand} – ${item.productName}: solo quedan ${product.stockQuantity} unidad(es)`);
       }
-    } else if (!bottleHasMl(product, item.size)) {
+    } else if (!bottleHasMl(product, item.size, item.quantity)) {
       const rem = Math.round(product.bottleRemainingMl || 0);
-      stockErrors.push(`${item.brand} – ${item.productName}: solo quedan ~${rem}ml (pedido: ${item.size})`);
+      stockErrors.push(`${item.brand} – ${item.productName}: solo quedan ~${rem}ml (pedido: ${item.size} ×${item.quantity})`);
     }
   });
   if (stockErrors.length) {
@@ -1406,12 +1417,15 @@ async function saveManualOrder() {
   try {
     // Siempre crear como 'pendiente' primero para que updateStatus pueda detectar el cambio
     // de estado y descontar el stock una sola vez (evita doble deducción)
-    const orderId = await CloudOrders.create({ customerName: name, customerPhone: phone, customerDni: dni, deliveryType: dtype, notes, items, total, paymentMethod: payMeth || null, status: 'pendiente' });
+    const orderId = await withTimeout(
+      CloudOrders.create({ customerName: name, customerPhone: phone, customerDni: dni, deliveryType: dtype, notes, items, total, paymentMethod: payMeth || null, status: 'pendiente' }),
+      15000, 'el pedido'
+    );
 
     // Si el admin registra el pedido directo como 'pagado', aplicar el descuento de stock
     // vía updateStatus (que también cambia el estado a 'pagado')
     if (initStat === 'pagado') {
-      await CloudOrders.updateStatus(orderId, 'pagado', payMeth || null);
+      await withTimeout(CloudOrders.updateStatus(orderId, 'pagado', payMeth || null), 15000, 'el estado del pedido');
     }
 
     // Cerrar modal y mostrar éxito inmediatamente — el refresh es no-bloqueante
@@ -1422,7 +1436,15 @@ async function saveManualOrder() {
 
   } catch (err) {
     console.error('[MICHT] Error guardando pedido:', err);
-    showToast('Error al guardar el pedido. Inténtalo de nuevo.');
+    // El pedido ya se guarda en localStorage antes de intentar sincronizar con Supabase
+    // (ver CloudOrders.create), así que un timeout de red no significa que se perdió.
+    if (/Tiempo de espera agotado/.test(err?.message || '')) {
+      document.getElementById('registerOrderModal').classList.remove('open');
+      showToast('⚠ Conexión lenta: el pedido se guardó y se sincronizará cuando mejore la señal.');
+      renderOrdersSection().catch(console.error);
+    } else {
+      showToast('Error al guardar el pedido. Inténtalo de nuevo.');
+    }
   } finally {
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Guardar Pedido'; }
   }
@@ -1636,16 +1658,26 @@ function setupAdminEvents() {
     const msg  = document.getElementById('passChangeMsg');
     if (pw1.length < 8) { msg.textContent = 'Mínimo 8 caracteres.'; msg.className = 'msg-error'; msg.style.display = 'block'; return; }
     if (pw1 !== pw2)    { msg.textContent = 'Las contraseñas no coinciden.'; msg.className = 'msg-error'; msg.style.display = 'block'; return; }
-    const { error } = await db.auth.updateUser({ password: pw1 });
-    if (error) {
-      msg.textContent = 'Error al cambiar contraseña: ' + error.message;
+
+    const btn = e.target.querySelector('button[type=submit]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Cambiando…'; }
+
+    try {
+      const { error } = await withTimeout(db.auth.updateUser({ password: pw1 }), 12000, 'el cambio de contraseña');
+      if (error) {
+        msg.textContent = 'Error al cambiar contraseña: ' + error.message;
+        msg.className = 'msg-error';
+      } else {
+        msg.textContent = '¡Contraseña cambiada correctamente!';
+        msg.className = 'msg-success';
+        e.target.reset();
+      }
+    } catch (err) {
+      msg.textContent = 'Error al cambiar contraseña: ' + (err.message || 'inténtalo de nuevo.');
       msg.className = 'msg-error';
-    } else {
-      msg.textContent = '¡Contraseña cambiada correctamente!';
-      msg.className = 'msg-success';
     }
     msg.style.display = 'block';
-    e.target.reset();
+    if (btn) { btn.disabled = false; btn.textContent = 'Cambiar Contraseña'; }
   });
 
   setupCampaignEvents();
@@ -1804,7 +1836,7 @@ async function exportCatalogPDF() {
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Generando catálogo…</title><style>body{background:#0a0a0a;color:#c9a84c;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-size:1.1rem;letter-spacing:.1em}</style></head><body>Generando catálogo…</body></html>');
 
   try {
-    const all  = await CloudProducts.getAll();
+    const all  = await withTimeout(CloudProducts.getAll(), 15000, 'el catálogo');
 
     // Re-aplicar imágenes: PRODUCT_IMAGE_MAP > DEFAULT_PRODUCTS > lo que venga de Supabase
     const imgMap = typeof PRODUCT_IMAGE_MAP !== 'undefined' ? PRODUCT_IMAGE_MAP : {};
@@ -2112,7 +2144,14 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 // ─── Modal de edición de pedido ───────────────────────────────────────────────
 
 async function openEditOrderModal(id) {
-  const order = await CloudOrders.getById(id);
+  let order;
+  try {
+    order = await withTimeout(CloudOrders.getById(id), 12000, 'el pedido');
+  } catch (err) {
+    console.error('[MICHT] Error cargando pedido para editar:', err);
+    showToast('⚠ Conexión lenta: no se pudo cargar el pedido para editar.');
+    return;
+  }
   if (!order) { showToast('No se encontró el pedido.'); return; }
 
   const overlay = document.createElement('div');
@@ -2196,7 +2235,14 @@ async function openEditOrderModal(id) {
   overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
 
   // ── Renderizar items editables ─────────────────────────────────────────────
-  const allProducts = await CloudProducts.getAll();
+  let allProducts;
+  try {
+    allProducts = await withTimeout(CloudProducts.getAll(), 12000, 'los productos');
+  } catch (err) {
+    console.error('[MICHT] Error cargando productos para editar pedido:', err);
+    showToast('⚠ Conexión lenta: se muestran los productos guardados localmente.');
+    allProducts = Products.getAll();
+  }
   const prodLookup  = {};
   allProducts.forEach(p => { prodLookup[p.id] = p; });
 
@@ -2518,10 +2564,14 @@ async function renderUsersSection() {
     return;
   }
 
-  // ── Obtener perfiles (await directo — el builder de Supabase no es un Promise nativo) ──
+  // ── Obtener perfiles (Promise.resolve() envuelve el builder de Supabase, que no es
+  // un Promise nativo, para poder aplicarle withTimeout sin que falle .finally()) ──
   let profilesData = [], profilesErr = null;
   try {
-    const res = await db.from('perfiles_usuarios').select('*').order('created_at', { ascending: false });
+    const res = await withTimeout(
+      Promise.resolve(db.from('perfiles_usuarios').select('*').order('created_at', { ascending: false })),
+      15000, 'los clientes'
+    );
     profilesData = res.data  || [];
     profilesErr  = res.error || null;
   } catch (e) {
@@ -2786,7 +2836,15 @@ async function renderAccountingSection() {
   const yearSel = document.getElementById('accountingYear');
   if (!yearSel) return;
 
-  const allOrders = await CloudOrders.getAll();
+  let allOrders;
+  try {
+    allOrders = await withTimeout(CloudOrders.getAll(), 15000, 'la contabilidad');
+  } catch (err) {
+    console.error('[MICHT] Error cargando contabilidad:', err);
+    const tbody = document.getElementById('accountingTableBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">No se pudo cargar la contabilidad. Vuelve a intentar desde la pestaña Contabilidad.</td></tr>';
+    return;
+  }
 
   // Poblar años disponibles
   const rawYears  = allOrders.map(o => new Date(o.date).getFullYear()).filter(y => !isNaN(y));
@@ -3082,8 +3140,8 @@ async function openExpenseModal(month, year) {
 
 function setupAccountingEvents() {
   document.getElementById('accountingYear')?.addEventListener('change', () => {
-    const yearSel = document.getElementById('accountingYear');
-    if (yearSel) yearSel.dataset.filled = '';
+    // No tocar dataset.filled aquí: reconstruir el <select> resetea su value
+    // al primer <option> y hace que el año elegido por el admin se pierda.
     renderAccountingSection().catch(console.error);
   });
 
@@ -4322,7 +4380,7 @@ async function setupWhatsAppTool() {
   btn._bound = true;
 
   // Cargar teléfonos únicos de pedidos
-  const orders = await CloudOrders.getAll().catch(() => []);
+  const orders = await withTimeout(CloudOrders.getAll(), 12000, 'los clientes').catch(() => []);
   const phoneMap = {};
   orders.forEach(o => {
     if (o.customerPhone && o.customerName) {
@@ -4364,7 +4422,14 @@ async function setupWhatsAppTool() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 async function openShippingLabel(orderId) {
-  const order = await CloudOrders.getById(orderId);
+  let order;
+  try {
+    order = await withTimeout(CloudOrders.getById(orderId), 12000, 'el pedido');
+  } catch (err) {
+    console.error('[MICHT] Error cargando etiqueta de envío:', err);
+    showToast('⚠ Conexión lenta: no se pudo cargar el pedido.');
+    return;
+  }
   if (!order) { showToast('No se pudo cargar el pedido.'); return; }
   if (order.deliveryType !== 'envio') { showToast('Este pedido es de recojo en tienda, no tiene etiqueta de envío.'); return; }
 
@@ -4416,6 +4481,7 @@ function printShippingLabel() {
   const label = document.getElementById('shippingLabelPrint');
   if (!label) return;
   const win = window.open('', '_blank', 'width=420,height=600');
+  if (!win) { showToast('Activa las ventanas emergentes para imprimir la etiqueta.'); return; }
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Etiqueta de Envío</title>
   <style>
     body { margin: 0; padding: 20px; font-family: 'Courier New', monospace; background: #fff; color: #000; }

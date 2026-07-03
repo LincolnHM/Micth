@@ -65,10 +65,12 @@ const Cart = {
   showCart() {
     document.getElementById('cartSidebar')?.classList.add('open');
     document.getElementById('overlay')?.classList.add('active');
+    document.body.style.overflow = 'hidden';
   },
   hideCart() {
     document.getElementById('cartSidebar')?.classList.remove('open');
     document.getElementById('overlay')?.classList.remove('active');
+    document.body.style.overflow = '';
   },
 
   bounce() {
@@ -198,11 +200,13 @@ const Filter = {
   occasion:  'all',   // all | dia | noche | ambas
   olfFamily: 'all',   // all | <nombre>
   search:    '',
+  onlyFavorites: false,
 
-  reset() { this.type = this.gender = this.occasion = this.olfFamily = 'all'; this.search = ''; },
+  reset() { this.type = this.gender = this.occasion = this.olfFamily = 'all'; this.search = ''; this.onlyFavorites = false; },
 
   apply(products) {
     return products.filter(p => {
+      if (this.onlyFavorites && !Wishlist.has(p.id)) return false;
       if (this.type === 'entero') {
         if (p.type !== 'entero' && !p.availableAsEntero) return false;
       } else if (this.type !== 'all') {
@@ -223,7 +227,7 @@ const Filter = {
 
   hasActiveFilters() {
     return this.type !== 'all' || this.gender !== 'all' ||
-           this.occasion !== 'all' || this.olfFamily !== 'all' || this.search;
+           this.occasion !== 'all' || this.olfFamily !== 'all' || this.search || this.onlyFavorites;
   }
 };
 
@@ -347,12 +351,15 @@ function renderProducts() {
 
   if (!allFiltered.length) {
     const hasSearch = !!Filter.search;
+    const onlyFavEmpty = Filter.onlyFavorites && !hasSearch;
     grid.innerHTML = `
       <div class="no-results">
-        <div style="font-size:2.5rem;margin-bottom:.75rem">${hasSearch ? '🔍' : '✨'}</div>
+        <div style="font-size:2.5rem;margin-bottom:.75rem">${hasSearch ? '🔍' : onlyFavEmpty ? '🤍' : '✨'}</div>
         <p>${hasSearch
           ? `No encontramos ningún perfume para <strong style="color:var(--gold)">"${Filter.search}"</strong>.`
-          : 'No se encontraron fragancias con esos filtros.'}</p>
+          : onlyFavEmpty
+            ? 'Aún no guardaste ningún favorito. Toca el corazón ♡ en un perfume para guardarlo aquí.'
+            : 'No se encontraron fragancias con esos filtros.'}</p>
         <button onclick="resetAllFilters()" class="btn-reset-filter">Limpiar filtros</button>
       </div>`;
     renderPagination(0, 0);
@@ -401,10 +408,13 @@ function renderProducts() {
               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : '';
 
+    const waConsultUrl = isEntero && minPrice === 0
+      ? `https://wa.me/51917452643?text=${encodeURIComponent(`Hola, me interesa el perfume ${p.brand} – ${p.name}. ¿Cuál es el precio?`)}`
+      : '';
     const priceHtml = minPrice > 0
       ? `<p class="price-from">${isEntero ? '' : 'Desde '}<strong>S/ ${minPrice}</strong></p>`
       : isEntero
-        ? `<span class="price-consultar">Consultar precio</span>`
+        ? `<a class="btn-consultar-wa" href="${waConsultUrl}" target="_blank" rel="noopener noreferrer">💬 Consultar precio</a>`
         : `<p class="price-consultar">Consultar precio</p>`;
 
     // Badge NUEVO: si fue agregado en los últimos 30 días
@@ -523,6 +533,9 @@ function renderProducts() {
       btn.querySelector('svg').setAttribute('fill', active ? 'currentColor' : 'none');
       btn.setAttribute('aria-label', active ? 'Quitar de favoritos' : 'Agregar a favoritos');
       showCartToast(active ? '❤ Guardado en favoritos' : 'Quitado de favoritos');
+      updateFavFilterBadge();
+      // Si se está viendo "solo favoritos" y se quitó uno, sacarlo de la vista
+      if (Filter.onlyFavorites && !active) renderProducts();
     });
   });
 
@@ -569,6 +582,15 @@ const Wishlist = {
   count()     { this._load(); return this._ids.size; }
 };
 
+// Sincroniza el contador del botón "Favoritos" de la barra de filtros
+function updateFavFilterBadge() {
+  const badge = document.getElementById('favFilterCount');
+  if (!badge) return;
+  const n = Wishlist.count();
+  badge.textContent = n;
+  badge.style.display = n > 0 ? 'inline-block' : 'none';
+}
+
 // ─── Compartir perfume ────────────────────────────────────────────────────────
 
 function shareProduct(id, name) {
@@ -613,6 +635,8 @@ function resetAllFilters() {
   document.querySelector('.filter-btn[data-filter="all"]')?.classList.add('active');
   document.querySelectorAll('.filter-group-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.filter-group-btn[data-value="all"]').forEach(b => b.classList.add('active'));
+  const favBtn = document.getElementById('favFilterBtn');
+  if (favBtn) { favBtn.classList.remove('active'); favBtn.setAttribute('aria-pressed', 'false'); }
   const olf = document.getElementById('olfFamilyFilter');
   if (olf) olf.value = 'all';
   const search = document.getElementById('searchInput');
@@ -638,7 +662,7 @@ function validateCartStock() {
       if (item.quantity > product.stockQuantity) {
         errors.push({ name: `${item.brand} – ${item.productName}`, type: 'stock', available: product.stockQuantity, requested: item.quantity });
       }
-    } else if (!bottleHasMl(product, item.size)) {
+    } else if (!bottleHasMl(product, item.size, item.quantity)) {
       errors.push({ name: `${item.brand} – ${item.productName} (${item.size})`, type: 'agotado' });
     }
   });
@@ -674,11 +698,20 @@ function showStockAlert(errors) {
 
 document.addEventListener('DOMContentLoaded', async () => {
   Cart.load();
-  _allProducts = await CloudProducts.getAll();
+  try {
+    _allProducts = await Promise.race([
+      CloudProducts.getAll(),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))
+    ]);
+  } catch (_) {
+    // Red lenta o caída — mostrar el catálogo local para que la tienda siga siendo usable
+    _allProducts = Products.getAll();
+  }
   document.dispatchEvent(new CustomEvent('catalogLoaded', { detail: _allProducts }));
   populateOlfFamilyFilter();
   renderProducts();
   Cart.render();
+  updateFavFilterBadge();
 
   // ── Filtro de tipo (Todos / Árabe / Diseñador) ─────────────────────────────
   document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -689,6 +722,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       Pagination.reset();
       renderProducts();
     });
+  });
+
+  // ── Toggle "solo favoritos" ────────────────────────────────────────────────
+  document.getElementById('favFilterBtn')?.addEventListener('click', function () {
+    Filter.onlyFavorites = !Filter.onlyFavorites;
+    this.classList.toggle('active', Filter.onlyFavorites);
+    this.setAttribute('aria-pressed', String(Filter.onlyFavorites));
+    Pagination.reset();
+    renderProducts();
   });
 
   // ── Filtros de grupo (género, ocasión) ────────────────────────────────────
@@ -1100,7 +1142,10 @@ function openPdModal(productId) {
       priceRow.innerHTML = `<strong class="pd-price-main">S/ ${enteroPrice}</strong>`;
     } else {
       const waText = encodeURIComponent(`Hola, me interesa el perfume ${p.brand} – ${p.name}. ¿Cuál es el precio?`);
-      priceRow.innerHTML = '<span class="price-consultar">Consultar precio</span>';
+      priceRow.innerHTML = `<a href="https://wa.me/51917452643?text=${waText}" target="_blank" rel="noopener noreferrer" class="pd-consult-wa">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Consultar precio por WhatsApp
+      </a>`;
     }
     priceRow.style.display = 'flex';
   }
@@ -1168,8 +1213,13 @@ function openPdModal(productId) {
       // Sin precio en admin → botón WhatsApp
       sizesRow.innerHTML = '';
       cartBtn.disabled = false;
-      cartBtn.disabled = true;
-      cartTxt.textContent = 'No disponible';
+      cartBtn.classList.add('pd-cart-wa');
+      cartTxt.textContent = '💬 Consultar por WhatsApp';
+      const waText = encodeURIComponent(`Hola, me interesa el perfume ${p.brand} – ${p.name}. ¿Cuál es el precio?`);
+      cartBtn.onclick = (e) => {
+        e.preventDefault();
+        window.open(`https://wa.me/51917452643?text=${waText}`, '_blank');
+      };
     }
   } else {
     cartBtn.disabled = true;
