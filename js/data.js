@@ -1501,7 +1501,7 @@ const PRODUCT_IMAGE_MAP = {
   'Hawas Chrome':               '/img PERFUMES/Hawas_Chrome.png',
   'Hawas Malibu':               '/img PERFUMES/Hawas_Malibu.png',
   'Hawas Tropical':             '/img PERFUMES/Hawas_Tropical.png',
-  'Hawas Verde':                '/img PERFUMES/Hawas_Verde.png',
+  'Hawas Verde':                '/img PERFUMES/Hawas_Verde.webp',
   'Nitro Red':                  '/img PERFUMES/Nitro_Red.png',
   'Nitro Elixir':               '/img PERFUMES/Nitro_Elixir.png',
   'Nitro Gold':                 '/img PERFUMES/Nitro_Gold.png',
