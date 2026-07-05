@@ -539,6 +539,27 @@ const CloudProducts = {
         ? [...supabaseProducts, ...localExtras].sort((a, b) => a.id - b.id)
         : supabaseProducts;
       Products.save(products);
+
+      // Auto-sincronizar localExtras a Supabase si el admin está logueado
+      if (localExtras.length && _isAdminPage) {
+        (async () => {
+          try {
+            const { data: { session } } = await db.auth.getSession();
+            if (session) {
+              const rows = localExtras.map(productToDB);
+              const { error } = await db.from('productos').insert(rows);
+              if (error) {
+                console.error('[MICHT] Error al auto-sincronizar localExtras:', error.message);
+              } else {
+                console.log('[MICHT] Auto-sincronizados localExtras a Supabase:', rows.length);
+              }
+            }
+          } catch (e) {
+            console.error('[MICHT] Error en auto-sincronización:', e);
+          }
+        })();
+      }
+
       return products;
     }
     return Products.getAll();

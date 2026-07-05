@@ -1456,10 +1456,30 @@ const DEFAULT_PRODUCTS = [
     featured: false,
     bottleRemainingMl: 0,
     bottleTotalMl: 0
+  },
+  {
+    id: 86,
+    name: 'Acqua di Giò Profondo',
+    brand: 'Giorgio Armani',
+    type: 'diseñador',
+    gender: 'hombre',
+    occasion: 'dia',
+    olfFamily: 'Aromático Acuático',
+    topNotes: 'Notas marinas, Aquozone, Mandarina verde, Bergamota',
+    heartNotes: 'Romero, Lavanda, Ciprés, Lentisco',
+    baseNotes: 'Pachulí, Almizcle, Ámbar mineral',
+    description: 'Acqua di Giò Profondo: la intensidad del mar en una botella. Notas marinas y mandarina verde sobre un fondo mineral de pachulí y almizcle. Fresco, profundo y sumamente masculino.',
+    imageUrl: '',
+    sizes: { '3ml': 20, '5ml': 30, '10ml': 60 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 0,
+    bottleTotalMl: 0
   }
 ];
 
 const PRODUCT_IMAGE_MAP = {
+  'Acqua di Giò Profondo':       '/img PERFUMES/Acqua_di_gio_profondo.webp',
   'Creed Aventus':              '/img PERFUMES/Aventus_Creed.png',
   'Erba Pura':                  '/img PERFUMES/erba_pura.png',
   'Le Beau Le Parfum':          '/img PERFUMES/Le_Beau_Le_Parfum.png',
