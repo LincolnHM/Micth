@@ -1118,6 +1118,103 @@ const DEFAULT_PRODUCTS = [
     bottleRemainingMl: 0,
     bottleTotalMl: 0
   },
+  {
+    id: 87,
+    name: 'Odyssey Bahamas',
+    brand: 'Armaf',
+    type: 'arabe',
+    gender: 'unisex',
+    occasion: 'dia',
+    olfFamily: 'Frutal Floral',
+    topNotes: 'Piña, Coco, Bergamota',
+    heartNotes: 'Flor de tiaré, Jazmín',
+    baseNotes: 'Almizcle, Ámbar suave, Sándalo',
+    description: 'Odyssey Bahamas: un viaje tropical caribeño — piña y coco sobre flores blancas. Fresco, dulce y veraniego.',
+    imageUrl: '',
+    sizes: { '3ml': 10, '5ml': 15, '10ml': 25 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 0,
+    bottleTotalMl: 0
+  },
+  {
+    id: 88,
+    name: 'Odyssey Artisto',
+    brand: 'Armaf',
+    type: 'arabe',
+    gender: 'hombre',
+    occasion: 'ambas',
+    olfFamily: 'Amaderado Especiado',
+    topNotes: 'Bergamota, Pimienta rosa',
+    heartNotes: 'Especias, Cuero',
+    baseNotes: 'Oud, Ámbar, Almizcle',
+    description: 'Odyssey Artisto: una composición amaderada y especiada con carácter. Elegante y magnético para el día a día.',
+    imageUrl: '',
+    sizes: { '3ml': 10, '5ml': 15, '10ml': 25 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 0,
+    bottleTotalMl: 0
+  },
+  {
+    id: 89,
+    name: 'Odyssey Mandarin Sky Elixir',
+    brand: 'Armaf',
+    type: 'arabe',
+    gender: 'hombre',
+    occasion: 'noche',
+    olfFamily: 'Oriental Cítrico',
+    topNotes: 'Mandarina, Naranja sanguina, Bergamota',
+    heartNotes: 'Azafrán, Geranio, Lavanda',
+    baseNotes: 'Ámbar intenso, Oud, Almizcle cálido',
+    description: 'Odyssey Mandarin Sky Elixir: la versión intensificada de Mandarin Sky — el mismo cítrico solar, ahora con más cuerpo, ámbar y profundidad para la noche.',
+    imageUrl: '',
+    sizes: { '3ml': 10, '5ml': 15, '10ml': 25 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 0,
+    bottleTotalMl: 0
+  },
+
+  // ─── KING OF KINGS ────────────────────────────────────────────────────────
+  {
+    id: 90,
+    name: 'King of Kings Chapter 1',
+    brand: 'King of Kings',
+    type: 'arabe',
+    gender: 'hombre',
+    occasion: 'ambas',
+    olfFamily: 'Oriental Amaderado',
+    topNotes: 'Bergamota, Manzana especiada',
+    heartNotes: 'Oud, Rosa oscura',
+    baseNotes: 'Ámbar, Almizcle, Vainilla',
+    description: 'King of Kings Chapter 1: apertura de la colección — oud y ámbar con un toque especiado. Imponente y versátil.',
+    imageUrl: '',
+    sizes: { '3ml': 10, '5ml': 15, '10ml': 25 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 0,
+    bottleTotalMl: 0
+  },
+  {
+    id: 91,
+    name: 'King of Kings Nebula',
+    brand: 'King of Kings',
+    type: 'arabe',
+    gender: 'hombre',
+    occasion: 'noche',
+    olfFamily: 'Oriental Ahumado',
+    topNotes: 'Cardamomo, Bergamota',
+    heartNotes: 'Incienso, Oud ahumado',
+    baseNotes: 'Ámbar, Almizcle, Madera seca',
+    description: 'King of Kings Nebula: un oriental ahumado y envolvente, como un cielo nocturno cargado de incienso y ámbar profundo.',
+    imageUrl: '',
+    sizes: { '3ml': 10, '5ml': 15, '10ml': 25 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 0,
+    bottleTotalMl: 0
+  },
 
   // ─── OTROS ÁRABES ─────────────────────────────────────────────────────────
   {
@@ -1549,7 +1646,12 @@ const PRODUCT_IMAGE_MAP = {
   'Badee Al Oud Sublime':       '/img PERFUMES/Badee_Al_Oud_Sublime.png',
   'Club de Nuit Intense':       '/img PERFUMES/Club_de_Nuit_Intense.png',
   'Game Of Spades Full House':  '/img PERFUMES/Game_Of_Spades_Full_House.png',
-  'Game Of Spades Wildcard 3.4':'/img PERFUMES/Game_Of_Spades_Wildcard.png'
+  'Game Of Spades Wildcard 3.4':'/img PERFUMES/Game_Of_Spades_Wildcard.png',
+  'Odyssey Bahamas':             '/img PERFUMES/Odyssey BA HA MAS.png',
+  'Odyssey Artisto':             '/img PERFUMES/odyssey artisto.png',
+  'Odyssey Mandarin Sky Elixir': '/img PERFUMES/odyssey mandarin sky elixir.webp',
+  'King of Kings Chapter 1':     '/img PERFUMES/king of kings chapter 1.png',
+  'King of Kings Nebula':        '/img PERFUMES/king of kings Nebula.png'
 };
 
 DEFAULT_PRODUCTS.forEach(p => {

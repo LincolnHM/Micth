@@ -137,8 +137,8 @@
       transition: border-color .18s;
     }
     .precios-table-header {
-      background: rgba(201,168,76,.06);
-      border: 1px solid rgba(201,168,76,.12);
+      background: rgba(31,122,114,.06);
+      border: 1px solid rgba(31,122,114,.12);
     }
 
     @media (max-width: 900px) {
@@ -521,7 +521,7 @@
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;flex-wrap:wrap;gap:.5rem">
               <h3 style="font-family:'Playfair Display',serif;color:var(--white);font-size:.95rem;margin:0">Ingresos por Mes (S/)</h3>
               <div style="display:flex;gap:1rem;font-size:.73rem;color:var(--text3)">
-                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#c9a84c"></span>Mejor mes</span>
+                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#1f7a72"></span>Mejor mes</span>
                 <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#4da6ff"></span>Mes actual</span>
                 <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#5a5a5a"></span>Otros</span>
               </div>
@@ -579,7 +579,7 @@
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;flex-wrap:wrap;gap:.5rem">
               <h3 style="font-family:'Playfair Display',serif;color:var(--white);font-size:.95rem;margin:0">Ingresos por Día (S/)</h3>
               <div style="display:flex;gap:1rem;font-size:.73rem;color:var(--text3)">
-                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#c9a84c"></span>Mejor día</span>
+                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#1f7a72"></span>Mejor día</span>
                 <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#4da6ff"></span>Hoy</span>
               </div>
             </div>
@@ -1142,7 +1142,7 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
       </div>
       <button onclick="document.getElementById('newOrderToast').style.display='none'" style="background:none;border:none;color:var(--text3);font-size:1.1rem;cursor:pointer;line-height:1;padding:0 .2rem;flex-shrink:0">×</button>
     </div>
-    <button onclick="document.querySelector('[data-section=orders]').click();document.getElementById('newOrderToast').style.display='none'" style="margin-top:.6rem;width:100%;padding:.4rem;background:rgba(201,168,76,.12);color:var(--gold);border:1px solid rgba(201,168,76,.3);border-radius:6px;font-size:.76rem;font-weight:700;cursor:pointer">Ver pedidos →</button>
+    <button onclick="document.querySelector('[data-section=orders]').click();document.getElementById('newOrderToast').style.display='none'" style="margin-top:.6rem;width:100%;padding:.4rem;background:rgba(31,122,114,.12);color:var(--gold);border:1px solid rgba(31,122,114,.3);border-radius:6px;font-size:.76rem;font-weight:700;cursor:pointer">Ver pedidos →</button>
   </div>
   <style>
     @keyframes slideInRight { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }

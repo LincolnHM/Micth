@@ -42,6 +42,22 @@ CREATE POLICY "admin_all_productos" ON productos FOR ALL TO authenticated
 -- WHERE tablename IN ('pedidos','productos');
 
 
+-- ─── 1b. Fix adicional (encontrado al aplicar lo anterior en producción) ────
+-- Al ejecutar el bloque 1, apareció otra política preexistente en `pedidos`
+-- llamada "select_pedidos" (no documentada en este archivo hasta ahora) que
+-- le daba a cada cliente logueado acceso a SUS PROPIOS pedidos por DNI —la
+-- función "Mis compras" de auth.js— pero comprobaba el rol admin consultando
+-- `auth.users` directamente, lo cual el rol `authenticated` no puede leer y
+-- rompía TODA la lectura de pedidos con: 42501 permission denied for table users.
+-- Se reemplaza dejando solo su función real (el chequeo de admin ya lo cubren
+-- admin_select_pedidos/admin_update_pedidos/admin_delete_pedidos de arriba):
+DROP POLICY IF EXISTS "select_pedidos" ON pedidos;
+CREATE POLICY "select_pedidos" ON pedidos FOR SELECT TO authenticated
+  USING (
+    customer_dni = (SELECT dni FROM perfiles_usuarios WHERE id = auth.uid())
+  );
+
+
 -- ─── 2. H-02 — Límite de frecuencia por IP para creación de pedidos ──────────
 
 CREATE TABLE IF NOT EXISTS order_rate_limits (
