@@ -137,8 +137,8 @@
       transition: border-color .18s;
     }
     .precios-table-header {
-      background: rgba(31,122,114,.06);
-      border: 1px solid rgba(31,122,114,.12);
+      background: rgba(124,79,176,.06);
+      border: 1px solid rgba(124,79,176,.12);
     }
 
     @media (max-width: 900px) {
@@ -521,7 +521,7 @@
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;flex-wrap:wrap;gap:.5rem">
               <h3 style="font-family:'Playfair Display',serif;color:var(--white);font-size:.95rem;margin:0">Ingresos por Mes (S/)</h3>
               <div style="display:flex;gap:1rem;font-size:.73rem;color:var(--text3)">
-                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#1f7a72"></span>Mejor mes</span>
+                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#7c4fb0"></span>Mejor mes</span>
                 <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#4da6ff"></span>Mes actual</span>
                 <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#5a5a5a"></span>Otros</span>
               </div>
@@ -579,7 +579,7 @@
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;flex-wrap:wrap;gap:.5rem">
               <h3 style="font-family:'Playfair Display',serif;color:var(--white);font-size:.95rem;margin:0">Ingresos por Día (S/)</h3>
               <div style="display:flex;gap:1rem;font-size:.73rem;color:var(--text3)">
-                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#1f7a72"></span>Mejor día</span>
+                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#7c4fb0"></span>Mejor día</span>
                 <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#4da6ff"></span>Hoy</span>
               </div>
             </div>
@@ -882,6 +882,83 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
           </div>
         </div>
 
+        <div class="campaign-admin-card" style="margin-top:1.25rem">
+          <div>
+            <h3 style="font-family:'Playfair Display',serif;color:var(--white);margin-bottom:.35rem">Anuncio de Bienvenida</h3>
+            <p style="color:var(--text2);font-size:.82rem;max-width:620px;line-height:1.6;margin-bottom:1.1rem">
+              Se muestra como una ventana emergente una vez por visita cuando alguien entra a la tienda. Déjalo apagado si no quieres anunciar nada por ahora.
+            </p>
+          </div>
+
+          <label style="display:flex;align-items:center;gap:.6rem;margin-bottom:1.15rem;cursor:pointer;width:fit-content">
+            <input type="checkbox" id="annEnabled" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer">
+            <span style="font-size:.88rem;font-weight:600;color:var(--white)">Mostrar anuncio a los visitantes</span>
+          </label>
+
+          <div class="field" style="margin-bottom:1rem">
+            <label>Imagen del anuncio (opcional, recomendado)</label>
+            <div class="img-upload-zone" id="annImgUploadZone" role="button" tabindex="0" aria-label="Subir imagen del anuncio">
+              <img id="annImgPreview" src="" alt="Vista previa" style="display:none">
+              <div class="img-upload-placeholder" id="annImgPlaceholder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span>Haz clic o arrastra una foto</span>
+                <small>JPG · PNG · WebP · máx 5 MB — como el afiche de una promoción</small>
+              </div>
+              <input type="file" id="annImgFileInput" accept="image/jpeg,image/png,image/webp" style="display:none" aria-hidden="true" tabindex="-1">
+            </div>
+            <div class="img-upload-actions" id="annImgUploadActions" style="display:none">
+              <button type="button" class="btn-img-change" id="annImgChangeBtn">Cambiar imagen</button>
+              <button type="button" class="btn-img-remove" id="annImgRemoveBtn">Quitar imagen</button>
+            </div>
+            <input type="hidden" id="annImageUrl">
+          </div>
+
+          <p style="font-size:.76rem;color:var(--text3);margin-bottom:.6rem">Opcional — si no subes foto, se muestra solo con emoji + texto. Si subes foto, el texto aparece como leyenda debajo.</p>
+
+          <div style="display:grid;grid-template-columns:90px 1fr;gap:.9rem;margin-bottom:.9rem">
+            <div class="pass-field" style="margin:0">
+              <label for="annEmoji">Emoji</label>
+              <input type="text" id="annEmoji" maxlength="8" placeholder="📢"
+                     style="width:100%;padding:.5rem;text-align:center;font-size:1.2rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text)">
+            </div>
+            <div class="pass-field" style="margin:0">
+              <label for="annTitle">Título</label>
+              <input type="text" id="annTitle" maxlength="80" placeholder="¡Nuevos perfumes ya disponibles!"
+                     style="width:100%;padding:.5rem .75rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;box-sizing:border-box">
+            </div>
+          </div>
+
+          <div class="pass-field" style="margin-bottom:.9rem">
+            <label for="annMessage">Mensaje</label>
+            <textarea id="annMessage" rows="3" maxlength="260" placeholder="Llegaron 5 fragancias nuevas de Armaf y King of Kings. ¡Ven a conocerlas!"
+                      style="width:100%;padding:.5rem .75rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;resize:vertical;box-sizing:border-box;font-family:Inter,sans-serif"></textarea>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 180px;gap:.9rem;margin-bottom:1.25rem">
+            <div class="pass-field" style="margin:0">
+              <label for="annCtaText">Texto del botón (opcional)</label>
+              <input type="text" id="annCtaText" maxlength="40" placeholder="Ver catálogo"
+                     style="width:100%;padding:.5rem .75rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;box-sizing:border-box">
+            </div>
+            <div class="pass-field" style="margin:0">
+              <label for="annCtaAction">Acción del botón</label>
+              <select id="annCtaAction"
+                      style="width:100%;padding:.5rem .6rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem">
+                <option value="none">Ninguna</option>
+                <option value="catalog">Ir al catálogo</option>
+                <option value="whatsapp">Abrir WhatsApp</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:.9rem;flex-wrap:wrap">
+            <button id="annSaveBtn" class="btn-save" type="button" style="width:auto;padding:.6rem 1.6rem">Guardar anuncio</button>
+            <span id="annStatusText" style="font-size:.78rem;color:var(--text3)"></span>
+          </div>
+        </div>
+
         <div style="margin-top:2rem;background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.5rem;max-width:420px">
           <h3 style="font-family:'Playfair Display',serif;color:var(--white);margin-bottom:.75rem">Enlace a la tienda</h3>
           <p style="color:var(--text2);font-size:.85rem;margin-bottom:.75rem">
@@ -1142,7 +1219,7 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
       </div>
       <button onclick="document.getElementById('newOrderToast').style.display='none'" style="background:none;border:none;color:var(--text3);font-size:1.1rem;cursor:pointer;line-height:1;padding:0 .2rem;flex-shrink:0">×</button>
     </div>
-    <button onclick="document.querySelector('[data-section=orders]').click();document.getElementById('newOrderToast').style.display='none'" style="margin-top:.6rem;width:100%;padding:.4rem;background:rgba(31,122,114,.12);color:var(--gold);border:1px solid rgba(31,122,114,.3);border-radius:6px;font-size:.76rem;font-weight:700;cursor:pointer">Ver pedidos →</button>
+    <button onclick="document.querySelector('[data-section=orders]').click();document.getElementById('newOrderToast').style.display='none'" style="margin-top:.6rem;width:100%;padding:.4rem;background:rgba(124,79,176,.12);color:var(--gold);border:1px solid rgba(124,79,176,.3);border-radius:6px;font-size:.76rem;font-weight:700;cursor:pointer">Ver pedidos →</button>
   </div>
   <style>
     @keyframes slideInRight { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }

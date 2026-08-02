@@ -2116,6 +2116,81 @@ const SiteTheme = {
   }
 };
 
+// ─── Anuncio de bienvenida (modal al entrar a la tienda) ──────────────────────
+// Reutiliza la misma tabla genérica `site_settings` que SiteTheme (key/value),
+// así no hace falta crear ninguna tabla nueva en Supabase.
+
+const ANNOUNCEMENT_KEY = 'micht_announcement';
+
+function normalizeCtaAction(value) {
+  return (value === 'catalog' || value === 'whatsapp') ? value : 'none';
+}
+
+const SiteAnnouncement = {
+  async getSettings() {
+    if (typeof db !== 'undefined' && db) {
+      const { data, error } = await db
+        .from('site_settings')
+        .select('value, updated_at')
+        .eq('key', 'announcement')
+        .maybeSingle();
+
+      if (!error && data) {
+        const value = (data.value && typeof data.value === 'object') ? data.value : {};
+        const settings = this._normalize(value, data.updated_at);
+        this._saveLocal(settings);
+        return settings;
+      }
+    }
+    return this._readLocal();
+  },
+
+  async save(input) {
+    const payload = this._normalize(input, nowIso());
+
+    this._saveLocal(payload);
+
+    if (typeof db !== 'undefined' && db) {
+      const { error } = await db
+        .from('site_settings')
+        .upsert(
+          { key: 'announcement', value: payload, updated_at: nowIso() },
+          { onConflict: 'key' }
+        );
+      if (!error) return { ...payload, synced: true };
+      return { ...payload, synced: false, error };
+    }
+    return { ...payload, synced: false };
+  },
+
+  _normalize(value, updatedAtFallback) {
+    return {
+      enabled:    !!value?.enabled,
+      imageUrl:   String(value?.imageUrl ?? '').trim(),
+      emoji:      String(value?.emoji ?? '📢').trim().slice(0, 8) || '📢',
+      title:      String(value?.title ?? '').trim().slice(0, 80),
+      message:    String(value?.message ?? '').trim().slice(0, 260),
+      ctaText:    String(value?.ctaText ?? '').trim().slice(0, 40),
+      ctaAction:  normalizeCtaAction(value?.ctaAction),
+      updatedAt:  value?.updatedAt || updatedAtFallback || null
+    };
+  },
+
+  _readLocal() {
+    try {
+      const raw = localStorage.getItem(ANNOUNCEMENT_KEY);
+      if (!raw) return this._normalize({}, null);
+      return this._normalize(JSON.parse(raw), null);
+    } catch {
+      return this._normalize({}, null);
+    }
+  },
+
+  _saveLocal(settings) {
+    try { localStorage.setItem(ANNOUNCEMENT_KEY, JSON.stringify(settings)); } catch {}
+  }
+};
+
 // ─── Sanitización ─────────────────────────────────────────────────────────────
 
 function sanitize(str) {

@@ -1006,12 +1006,12 @@ async function openOrderDetail(id) {
     <div>
       <label style="font-size:.74rem;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.4rem">📌 Notas internas (solo tú las ves)</label>
       <textarea id="adminNoteInput" rows="2" maxlength="400"
-        style="width:100%;padding:.5rem .75rem;background:var(--bg);border:1px solid rgba(31,122,114,.3);border-radius:var(--r);color:var(--text);font-size:.82rem;resize:vertical;box-sizing:border-box;font-family:Inter,sans-serif;line-height:1.4;outline:none;transition:border-color .2s"
-        onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='rgba(31,122,114,.3)'"
+        style="width:100%;padding:.5rem .75rem;background:var(--bg);border:1px solid rgba(124,79,176,.3);border-radius:var(--r);color:var(--text);font-size:.82rem;resize:vertical;box-sizing:border-box;font-family:Inter,sans-serif;line-height:1.4;outline:none;transition:border-color .2s"
+        onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='rgba(124,79,176,.3)'"
         placeholder="Ej: Falta pagar el saldo, cliente frecuente, etc.">${getAdminNote(order.id)}</textarea>
       <button id="saveAdminNoteBtn" data-id="${escapeAttr(order.id)}"
-        style="margin-top:.4rem;padding:.35rem .9rem;background:rgba(31,122,114,.12);color:var(--gold-d);border:1px solid rgba(31,122,114,.3);border-radius:var(--r);font-size:.75rem;font-weight:700;cursor:pointer;transition:background .15s"
-        onmouseover="this.style.background='rgba(31,122,114,.22)'" onmouseout="this.style.background='rgba(31,122,114,.12)'">
+        style="margin-top:.4rem;padding:.35rem .9rem;background:rgba(124,79,176,.12);color:var(--gold-d);border:1px solid rgba(124,79,176,.3);border-radius:var(--r);font-size:.75rem;font-weight:700;cursor:pointer;transition:background .15s"
+        onmouseover="this.style.background='rgba(124,79,176,.22)'" onmouseout="this.style.background='rgba(124,79,176,.12)'">
         Guardar nota
       </button>
     </div>
@@ -1681,6 +1681,7 @@ function setupAdminEvents() {
   });
 
   setupCampaignEvents();
+  setupAnnouncementEvents();
 }
 
 async function refreshCampaignAdminUI() {
@@ -1725,6 +1726,126 @@ async function refreshCampaignAdminUI() {
     btn.classList.toggle('active', isActive);
     btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
   });
+}
+
+function updateAnnImgPreview(url) {
+  const preview     = document.getElementById('annImgPreview');
+  const placeholder = document.getElementById('annImgPlaceholder');
+  const zone        = document.getElementById('annImgUploadZone');
+  const actions     = document.getElementById('annImgUploadActions');
+  if (url) {
+    preview.src            = url;
+    preview.style.display  = 'block';
+    placeholder.style.display = 'none';
+    zone.classList.add('has-image');
+    actions.style.display = 'flex';
+  } else {
+    preview.src            = '';
+    preview.style.display  = 'none';
+    placeholder.style.display = 'flex';
+    zone.classList.remove('has-image');
+    actions.style.display = 'none';
+  }
+}
+
+function handleAnnImageFile(file) {
+  if (!file || !file.type.startsWith('image/')) { showToast('Selecciona una imagen válida (JPG, PNG o WebP).'); return; }
+  if (file.size > 5 * 1024 * 1024) { showToast('La imagen supera los 5 MB.'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('annImageUrl').value = e.target.result;
+    updateAnnImgPreview(e.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function refreshAnnouncementAdminUI() {
+  const enabledEl = document.getElementById('annEnabled');
+  if (!enabledEl || typeof SiteAnnouncement === 'undefined') return;
+
+  const settings = await SiteAnnouncement.getSettings();
+  enabledEl.checked = !!settings.enabled;
+  document.getElementById('annImageUrl').value  = settings.imageUrl || '';
+  updateAnnImgPreview(settings.imageUrl || '');
+  document.getElementById('annEmoji').value     = settings.emoji || '';
+  document.getElementById('annTitle').value     = settings.title || '';
+  document.getElementById('annMessage').value   = settings.message || '';
+  document.getElementById('annCtaText').value   = settings.ctaText || '';
+  document.getElementById('annCtaAction').value = settings.ctaAction || 'none';
+
+  const statusEl = document.getElementById('annStatusText');
+  if (statusEl) {
+    statusEl.textContent = settings.updatedAt
+      ? `Última actualización: ${new Date(settings.updatedAt).toLocaleString('es-PE')}`
+      : '';
+  }
+}
+
+function setupAnnouncementEvents() {
+  const btn = document.getElementById('annSaveBtn');
+  if (!btn || btn.dataset.ready === '1') {
+    refreshAnnouncementAdminUI().catch(console.error);
+    return;
+  }
+  btn.dataset.ready = '1';
+
+  // ── Subida de imagen del anuncio (mismo patrón que la imagen de producto) ──
+  const imgZone   = document.getElementById('annImgUploadZone');
+  const imgInput  = document.getElementById('annImgFileInput');
+  const imgChange = document.getElementById('annImgChangeBtn');
+  const imgRemove = document.getElementById('annImgRemoveBtn');
+
+  imgZone?.addEventListener('click', () => imgInput?.click());
+  imgZone?.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') imgInput?.click(); });
+  imgInput?.addEventListener('change', () => { if (imgInput.files[0]) handleAnnImageFile(imgInput.files[0]); });
+
+  imgZone?.addEventListener('dragover', e => { e.preventDefault(); imgZone.classList.add('drag-over'); });
+  imgZone?.addEventListener('dragleave', () => imgZone.classList.remove('drag-over'));
+  imgZone?.addEventListener('drop', e => {
+    e.preventDefault();
+    imgZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handleAnnImageFile(e.dataTransfer.files[0]);
+  });
+
+  imgChange?.addEventListener('click', e => { e.stopPropagation(); imgInput.click(); });
+  imgRemove?.addEventListener('click', e => {
+    e.stopPropagation();
+    document.getElementById('annImageUrl').value = '';
+    updateAnnImgPreview('');
+    imgInput.value = '';
+  });
+
+  btn.addEventListener('click', async () => {
+    if (typeof SiteAnnouncement === 'undefined') return;
+    btn.disabled = true;
+    const prev = btn.textContent;
+    btn.textContent = 'Guardando…';
+
+    const input = {
+      enabled:   document.getElementById('annEnabled').checked,
+      imageUrl:  document.getElementById('annImageUrl').value,
+      emoji:     document.getElementById('annEmoji').value,
+      title:     document.getElementById('annTitle').value,
+      message:   document.getElementById('annMessage').value,
+      ctaText:   document.getElementById('annCtaText').value,
+      ctaAction: document.getElementById('annCtaAction').value
+    };
+
+    try {
+      const result = await SiteAnnouncement.save(input);
+      await refreshAnnouncementAdminUI();
+      if (result?.synced) showToast('Anuncio guardado ✓');
+      else showToast('Anuncio guardado en este navegador ✓');
+    } catch (err) {
+      console.error(err);
+      showToast('No se pudo guardar el anuncio. Inténtalo de nuevo.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = prev;
+    }
+  });
+
+  refreshAnnouncementAdminUI().catch(console.error);
 }
 
 function setupCampaignEvents() {
@@ -1833,7 +1954,7 @@ async function exportCatalogPDF() {
   const win = window.open('', '_blank', 'width=920,height=760');
   if (!win) { showToast('Activa las ventanas emergentes para exportar el PDF.'); if (btn) { btn.disabled = false; btn.style.opacity = ''; } if (label) { label.textContent = 'Exportar PDF'; } return; }
   win.document.open();
-  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Generando catálogo…</title><style>body{background:#0a0a0a;color:#1f7a72;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-size:1.1rem;letter-spacing:.1em}</style></head><body>Generando catálogo…</body></html>');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Generando catálogo…</title><style>body{background:#0a0a0a;color:#7c4fb0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-size:1.1rem;letter-spacing:.1em}</style></head><body>Generando catálogo…</body></html>');
 
   try {
     const all  = await withTimeout(CloudProducts.getAll(), 15000, 'el catálogo');
@@ -2026,24 +2147,24 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 
 /* Barra acción */
 .pbar{position:sticky;top:0;z-index:200;background:#1a1005;padding:9px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.pbar-btn{background:#1f7a72;color:#111;border:none;border-radius:6px;padding:7px 20px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px}
-.pbar-btn:hover{background:#2bb8a8}
+.pbar-btn{background:#7c4fb0;color:#111;border:none;border-radius:6px;padding:7px 20px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px}
+.pbar-btn:hover{background:#a87fd0}
 .pbar-hint{color:#aaa;font-size:10px;font-family:sans-serif}
 
 /* Layout */
 .wrap{max-width:780px;margin:0 auto;padding:12px 16px 20px}
 
 /* Cabecera */
-.dh{text-align:center;padding-bottom:10px;margin-bottom:12px;border-bottom:2px solid #1f7a72}
+.dh{text-align:center;padding-bottom:10px;margin-bottom:12px;border-bottom:2px solid #7c4fb0}
 .logo{font-size:20pt;font-weight:900;letter-spacing:2px}
-.logo span{color:#1f7a72}
+.logo span{color:#7c4fb0}
 .sub{font-size:7pt;letter-spacing:3px;text-transform:uppercase;color:#888;margin-top:2px}
 .meta{display:flex;justify-content:center;gap:16px;margin-top:6px;font-size:7pt;color:#666;font-family:sans-serif}
-.meta b{color:#1f7a72}
+.meta b{color:#7c4fb0}
 
 /* Sección */
 .section{margin-bottom:10px}
-.sec-title{display:flex;align-items:center;gap:8px;font-size:9.5pt;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1a1005;border-bottom:1.5px solid #1f7a72;padding-bottom:4px;margin-bottom:8px}
+.sec-title{display:flex;align-items:center;gap:8px;font-size:9.5pt;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1a1005;border-bottom:1.5px solid #7c4fb0;padding-bottom:4px;margin-bottom:8px}
 .sec-count{margin-left:auto;font-size:7pt;font-weight:400;color:#aaa;text-transform:none;letter-spacing:0;font-family:sans-serif}
 
 /* Grid de 6 por página: 2 columnas × 3 filas de altura fija */
@@ -2052,14 +2173,14 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 .new-page{page-break-before:always;break-before:page}
 
 /* Tarjeta — altura fija por grid-auto-rows, overflow recortado */
-.card{border:1px solid #dcd4b8;border-radius:10px;padding:12px 14px;background:#fffef9;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;height:100%;box-shadow:inset 0 0 10px rgba(31,122,114,0.03)}
+.card{border:1px solid #dcd4b8;border-radius:10px;padding:12px 14px;background:#fffef9;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;height:100%;box-shadow:inset 0 0 10px rgba(124,79,176,0.03)}
 
 .c-head{display:flex;gap:12px;margin-bottom:8px;align-items:center}
 .c-img-wrap{flex-shrink:0;width:86px;height:86px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:8px;border:1px solid #eae5d8;padding:4px}
 .c-img{max-width:100%;max-height:100%;object-fit:contain;border-radius:4px}
-.c-img-ph{width:86px;height:86px;background:#dcf0ed;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22pt;color:#1f7a72;font-weight:900;font-family:serif}
+.c-img-ph{width:86px;height:86px;background:#efe6f7;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22pt;color:#7c4fb0;font-weight:900;font-family:serif}
 .c-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px}
-.c-brand{font-size:8pt;letter-spacing:1px;text-transform:uppercase;color:#1c8478;font-weight:700;font-family:sans-serif}
+.c-brand{font-size:8pt;letter-spacing:1px;text-transform:uppercase;color:#8f5fc0;font-weight:700;font-family:sans-serif}
 .c-name{font-size:12.5pt;font-weight:800;color:#1a1005;line-height:1.2;font-family:'Georgia',serif;margin:1px 0 3px}
 .c-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
 .badge{font-size:7.2pt;padding:2px 6px;border-radius:20px;font-family:sans-serif;font-weight:600;white-space:nowrap}
@@ -2079,15 +2200,15 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 .blank-line{color:#ccc;letter-spacing:1px}
 
 /* Pie */
-.df{margin-top:15px;padding-top:6px;border-top:1px solid #cde8e3;text-align:center;font-size:7pt;color:#aaa;font-family:sans-serif}
-.df b{color:#1f7a72}
+.df{margin-top:15px;padding-top:6px;border-top:1px solid #ddc9ef;text-align:center;font-size:7pt;color:#aaa;font-family:sans-serif}
+.df b{color:#7c4fb0}
 
 @media print{
   .pbar{display:none!important}
   body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   @page{margin:0.4cm 0.6cm;size:A4 portrait}
   .wrap{max-width:100%!important;width:100%!important;margin:0!important;padding:2px 4px 6px!important}
-  .dh{display:flex!important;justify-content:space-between!important;align-items:center!important;padding-bottom:4px!important;margin-bottom:8px!important;border-bottom:1.5px solid #1f7a72!important;text-align:left!important}
+  .dh{display:flex!important;justify-content:space-between!important;align-items:center!important;padding-bottom:4px!important;margin-bottom:8px!important;border-bottom:1.5px solid #7c4fb0!important;text-align:left!important}
   .logo{font-size:16pt!important;font-weight:900!important}
   .sub{display:none!important}
   .meta{margin-top:0!important;font-size:7.2pt!important;gap:12px!important;display:flex!important;flex-direction:row!important}
@@ -2100,7 +2221,7 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 
 <div class="pbar">
   <button class="pbar-btn" onclick="window.print()">🖨&nbsp; Imprimir / Guardar PDF</button>
-  <span class="pbar-hint">Elige <b style="color:#1f7a72">"Guardar como PDF"</b> como destino · Incluye <b style="color:#1f7a72">todos</b> los perfumes</span>
+  <span class="pbar-hint">Elige <b style="color:#7c4fb0">"Guardar como PDF"</b> como destino · Incluye <b style="color:#7c4fb0">todos</b> los perfumes</span>
 </div>
 
 <div class="wrap">
@@ -2400,9 +2521,9 @@ function showPaymentModal(message, onConfirm, onCancel) {
   overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;transition:opacity .22s ease';
 
   overlay.innerHTML = `
-    <div style="background:#1a1a1a;border:1px solid #1f7a72;border-radius:10px;padding:1.5rem 1.75rem;max-width:380px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:1rem">
+    <div style="background:#1a1a1a;border:1px solid #7c4fb0;border-radius:10px;padding:1.5rem 1.75rem;max-width:380px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:1rem">
       <div style="display:flex;align-items:center;justify-content:space-between">
-        <h3 style="margin:0;font-size:1rem;color:#1f7a72;font-weight:700">Confirmar pago</h3>
+        <h3 style="margin:0;font-size:1rem;color:#7c4fb0;font-weight:700">Confirmar pago</h3>
         <button id="pmClose" style="background:none;border:none;color:#888;font-size:1.1rem;cursor:pointer">✕</button>
       </div>
       <p style="margin:0;color:#e0d5c5;font-size:.88rem;white-space:pre-line;line-height:1.55">${sanitize(message)}</p>
@@ -2459,7 +2580,7 @@ function showConfirmModal(message, onOk, onCancel) {
   const box = document.createElement('div');
   box.style.cssText = [
     'background:#1a1a1a',
-    'border:1px solid #1f7a72',
+    'border:1px solid #7c4fb0',
     'border-radius:10px',
     'padding:1.5rem 1.75rem',
     'max-width:420px;width:100%',
@@ -2473,7 +2594,7 @@ function showConfirmModal(message, onOk, onCancel) {
 
   const title = document.createElement('h3');
   title.textContent = 'Confirmar acción';
-  title.style.cssText = 'margin:0;font-size:1rem;color:#1f7a72;font-weight:700';
+  title.style.cssText = 'margin:0;font-size:1rem;color:#7c4fb0;font-weight:700';
 
   const closeBtn = document.createElement('button');
   closeBtn.textContent = '✕';
@@ -2502,7 +2623,7 @@ function showConfirmModal(message, onOk, onCancel) {
   btnOk.textContent = 'Confirmar';
   btnOk.style.cssText = [
     'padding:.55rem 1.25rem;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:700',
-    'background:#1f7a72;border:1px solid #1f7a72;color:#111'
+    'background:#7c4fb0;border:1px solid #7c4fb0;color:#111'
   ].join(';');
 
   footer.appendChild(btnCan);
@@ -2901,7 +3022,7 @@ async function renderAccountingSection() {
     const isCurrent = m.month === now.getMonth() && year === thisYear;
     const isBest    = m.revenue > 0 && m.month === bestMonth.month;
     return `
-    <tr style="${isCurrent ? 'background:rgba(31,122,114,.06)' : ''}">
+    <tr style="${isCurrent ? 'background:rgba(124,79,176,.06)' : ''}">
       <td>
         <span style="font-weight:${isCurrent ? '700' : '400'};color:${isCurrent ? 'var(--gold)' : 'var(--text)'}">
           ${m.name}${isCurrent ? '&nbsp;<span style="font-size:.66rem;color:var(--gold-d);font-weight:400">(actual)</span>' : ''}
@@ -2925,7 +3046,7 @@ async function renderAccountingSection() {
       <td style="text-align:center">
         <button class="btn-days-detail" data-month="${m.month}" data-year="${year}"
                 style="font-size:.78rem;padding:.2rem .55rem;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:3px;cursor:pointer;transition:all .15s"
-                onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)';this.style.background='rgba(31,122,114,.08)'"
+                onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)';this.style.background='rgba(124,79,176,.08)'"
                 onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)';this.style.background='transparent'"
                 title="Ver días de ${m.name}">📅</button>
       </td>
@@ -3014,8 +3135,8 @@ function drawAccountingChart(stats, year) {
     } else {
       const grad = ctx.createLinearGradient(0, y, 0, padT + cH);
       if (isBest) {
-        grad.addColorStop(0, '#1f7a72');
-        grad.addColorStop(1, '#0f3d38');
+        grad.addColorStop(0, '#7c4fb0');
+        grad.addColorStop(1, '#3d2560');
       } else if (isCurrent) {
         grad.addColorStop(0, '#4da6ff');
         grad.addColorStop(1, '#1a4a7a');
@@ -3045,7 +3166,7 @@ function drawAccountingChart(stats, year) {
     }
 
     // Etiqueta mes
-    ctx.fillStyle = isCurrent ? '#1f7a72' : '#666';
+    ctx.fillStyle = isCurrent ? '#7c4fb0' : '#666';
     ctx.font      = `${isCurrent ? '600 ' : ''}10px Inter, sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText(m.name.slice(0, 3), x + bw / 2, padT + cH + 16);
@@ -3224,7 +3345,7 @@ function renderDailyView(allOrders, year, month) {
     const isBest  = d.revenue > 0 && d.revenue === bestRev;
     const isToday = isCurrentMonth && d.day === today;
     return `
-    <tr style="${isToday ? 'background:rgba(31,122,114,.06)' : ''}">
+    <tr style="${isToday ? 'background:rgba(124,79,176,.06)' : ''}">
       <td>
         <span style="font-weight:700;color:${isToday ? 'var(--gold)' : 'var(--text)'}">
           ${d.day} de ${monthName}
@@ -3310,7 +3431,7 @@ function drawDailyChart(dailyStats, year, month) {
     } else {
       const grad = ctx.createLinearGradient(0, y, 0, padT + cH);
       if (isBest) {
-        grad.addColorStop(0, '#1f7a72'); grad.addColorStop(1, '#0f3d38');
+        grad.addColorStop(0, '#7c4fb0'); grad.addColorStop(1, '#3d2560');
       } else if (isToday) {
         grad.addColorStop(0, '#4da6ff'); grad.addColorStop(1, '#1a4a7a');
       } else {
@@ -3340,7 +3461,7 @@ function drawDailyChart(dailyStats, year, month) {
     // Etiqueta día — mostrar todos si hay espacio, si no cada 5
     const showLabel = bw >= 10 || d.day === 1 || d.day % 5 === 0 || d.day === n;
     if (showLabel) {
-      ctx.fillStyle = isToday ? '#1f7a72' : isBest ? '#1f7a72' : '#666';
+      ctx.fillStyle = isToday ? '#7c4fb0' : isBest ? '#7c4fb0' : '#666';
       ctx.font      = `${(isToday || isBest) ? '700 ' : ''}${bw > 12 ? '9' : '8'}px Inter, sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText(`${d.day}`, x + bw / 2, padT + cH + 14);
@@ -3394,8 +3515,8 @@ function _drawTrendChart(id, months) {
   }));
 
   const grad = ctx.createLinearGradient(0, padT, 0, padT + cH);
-  grad.addColorStop(0, 'rgba(31,122,114,.35)');
-  grad.addColorStop(1, 'rgba(31,122,114,0)');
+  grad.addColorStop(0, 'rgba(124,79,176,.35)');
+  grad.addColorStop(1, 'rgba(124,79,176,0)');
   ctx.beginPath();
   ctx.moveTo(pts[0].x, padT + cH);
   pts.forEach(p => ctx.lineTo(p.x, p.y));
@@ -3406,16 +3527,16 @@ function _drawTrendChart(id, months) {
   // Line
   ctx.beginPath();
   pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-  ctx.strokeStyle = '#1f7a72'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.strokeStyle = '#7c4fb0'; ctx.lineWidth = 2; ctx.stroke();
 
   // Dots + labels
   pts.forEach((p, i) => {
     ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
-    ctx.fillStyle = '#1f7a72'; ctx.fill();
+    ctx.fillStyle = '#7c4fb0'; ctx.fill();
     ctx.fillStyle = '#888'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
     ctx.fillText(months[i].label, p.x, H - 5);
     if (months[i].rev > 0) {
-      ctx.fillStyle = '#1f7a72'; ctx.font = 'bold 8px sans-serif';
+      ctx.fillStyle = '#7c4fb0'; ctx.font = 'bold 8px sans-serif';
       ctx.fillText(`${months[i].rev.toFixed(0)}`, p.x, p.y - 7);
     }
   });
@@ -3458,7 +3579,7 @@ function _drawPayDonut(id, nEfect, nYape, nSin, total) {
 
   // Center text
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#1f7a72'; ctx.font = `bold ${size * .15}px sans-serif`;
+  ctx.fillStyle = '#7c4fb0'; ctx.font = `bold ${size * .15}px sans-serif`;
   ctx.fillText(total, cx, cy - 7);
   ctx.fillStyle = '#888'; ctx.font = `${size * .09}px sans-serif`;
   ctx.fillText('pagados', cx, cy + 9);
@@ -3473,7 +3594,7 @@ function _drawTopHBar(id, items) {
   const maxV  = items[0]?.qty || 1;
   const padL  = 120, padR = 48;
   const barW  = W - padL - padR;
-  const GOLD  = '#1f7a72';
+  const GOLD  = '#7c4fb0';
   const DARK  = '#2e2e2e';
 
   items.forEach((item, i) => {
@@ -3882,7 +4003,7 @@ async function renderDashboard() {
     <!-- KPIs -->
     <div class="dash-kpi-grid">
       <div class="dash-kpi">
-        <div class="dash-kpi-icon" style="background:rgba(31,122,114,.12);color:var(--gold)">📦</div>
+        <div class="dash-kpi-icon" style="background:rgba(124,79,176,.12);color:var(--gold)">📦</div>
         <div class="dash-kpi-body">
           <div class="dash-kpi-val">${todayOrds.length}</div>
           <div class="dash-kpi-lbl">Pedidos hoy</div>
@@ -4140,7 +4261,7 @@ async function renderPreciosSection() {
     return `
     <div class="admin-card precios-product-row" data-id="${p.id}"
          style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:1rem;align-items:start;padding:1rem 1.1rem;margin-bottom:.5rem;transition:border-color .2s"
-         onmouseenter="this.style.borderColor='rgba(31,122,114,.25)'" onmouseleave="this.style.borderColor=''">
+         onmouseenter="this.style.borderColor='rgba(124,79,176,.25)'" onmouseleave="this.style.borderColor=''">
 
       <!-- Col 1: Perfume info -->
       <div style="display:flex;gap:.75rem;align-items:flex-start;min-width:0">
@@ -4170,8 +4291,8 @@ async function renderPreciosSection() {
                  onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border-l)'">
         </div>
         <button class="btn-save-cost" data-id="${p.id}"
-                style="font-size:.72rem;padding:.3rem .8rem;background:rgba(31,122,114,.12);color:var(--gold-d);border:1px solid rgba(31,122,114,.3);border-radius:var(--r);cursor:pointer;font-weight:700;white-space:nowrap;transition:background .15s"
-                onmouseover="this.style.background='rgba(31,122,114,.24)'" onmouseout="this.style.background='rgba(31,122,114,.12)'">
+                style="font-size:.72rem;padding:.3rem .8rem;background:rgba(124,79,176,.12);color:var(--gold-d);border:1px solid rgba(124,79,176,.3);border-radius:var(--r);cursor:pointer;font-weight:700;white-space:nowrap;transition:background .15s"
+                onmouseover="this.style.background='rgba(124,79,176,.24)'" onmouseout="this.style.background='rgba(124,79,176,.12)'">
           Guardar costo
         </button>
         ${isEntero && !hasCost ? '' : !isEntero && p.bottleTotalMl > 0 && hasCost ? `<div style="font-size:.68rem;color:var(--text3);text-align:right">S/${(costPrice/p.bottleTotalMl).toFixed(3)}/ml</div>` : ''}
