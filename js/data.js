@@ -2,8 +2,6 @@
 
 const STORAGE_KEY  = 'micht_products_v2';
 const ORDERS_KEY   = 'micht_orders';
-const AUTH_KEY     = 'micht_admin_hash';
-const SESSION_KEY  = 'micht_session';
 const SITE_THEME_KEY = 'micht_site_theme';
 
 function escapeXml(value) {
@@ -2014,22 +2012,6 @@ const SiteTheme = {
     localStorage.setItem(SITE_THEME_KEY, JSON.stringify(payload));
     return payload;
   }
-};
-
-// ─── Autenticación de administrador ──────────────────────────────────────────
-
-const Auth = {
-  async hash(password) {
-    const enc = new TextEncoder().encode(password);
-    const buf = await crypto.subtle.digest('SHA-256', enc);
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-  },
-  hasPassword()           { return !!localStorage.getItem(AUTH_KEY); },
-  async setPassword(pw)   { localStorage.setItem(AUTH_KEY, await this.hash(pw)); },
-  async verify(pw)        { const s = localStorage.getItem(AUTH_KEY); return !!s && s === await this.hash(pw); },
-  login()                 { sessionStorage.setItem(SESSION_KEY, '1'); },
-  logout()                { sessionStorage.removeItem(SESSION_KEY); },
-  isLoggedIn()            { return sessionStorage.getItem(SESSION_KEY) === '1'; }
 };
 
 // ─── Sanitización ─────────────────────────────────────────────────────────────

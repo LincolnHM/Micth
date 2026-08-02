@@ -86,7 +86,9 @@ const Chatbot = {
     const messages = document.getElementById('chatMessages');
     const div = document.createElement('div');
     div.className = `chat-msg chat-msg-${role}`;
-    const html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Escapar SIEMPRE antes de aplicar el formato — evita que texto del usuario
+    // o de la IA se interprete como HTML (ver auditoría de seguridad, M-03).
+    const html = sanitize(text).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     div.innerHTML = `<div class="chat-bubble">${html}</div>`;
     messages.appendChild(div);
     messages.scrollTop = messages.scrollHeight;

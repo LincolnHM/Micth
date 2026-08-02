@@ -38,10 +38,17 @@
 // -- Cualquier usuario (anon o autenticado) puede INSERTAR pedidos
 // CREATE POLICY "anon_insert_pedidos"          ON pedidos FOR INSERT TO anon          WITH CHECK (true);
 // CREATE POLICY "authenticated_insert_pedidos" ON pedidos FOR INSERT TO authenticated WITH CHECK (true);
-// -- Solo el admin autenticado puede leer, actualizar y eliminar
-// CREATE POLICY "admin_select_pedidos" ON pedidos FOR SELECT TO authenticated USING (true);
-// CREATE POLICY "admin_update_pedidos" ON pedidos FOR UPDATE TO authenticated USING (true);
-// CREATE POLICY "admin_delete_pedidos" ON pedidos FOR DELETE TO authenticated USING (true);
+// -- Solo el admin (rol real, no "cualquier autenticado") puede leer, actualizar y eliminar.
+// -- ¡OJO! "USING (true)" aquí sería el bug de seguridad C-01 del informe de
+// -- auditoría (2026-08-02): dejaría que CUALQUIER cliente logueado lea/edite/
+// -- borre los pedidos de todos. El chequeo de app_metadata.role es obligatorio.
+// CREATE POLICY "admin_select_pedidos" ON pedidos FOR SELECT TO authenticated
+//   USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+// CREATE POLICY "admin_update_pedidos" ON pedidos FOR UPDATE TO authenticated
+//   USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+// CREATE POLICY "admin_delete_pedidos" ON pedidos FOR DELETE TO authenticated
+//   USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+// -- SQL completo, listo para copiar/pegar: supabase/sql/2026-08-02-security-fixes.sql
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -208,6 +215,46 @@ const CloudOrders = {
     try { this._localCreate(newOrder); } catch {}
 
     if (db) {
+      // Ruta preferida: Edge Function create-order — revalida los precios
+      // contra el catálogo real y aplica límite de frecuencia por IP antes
+      // de guardar (ver auditoría de seguridad, hallazgo H-02). Si la función
+      // todavía no está desplegada o no responde, cae al insert directo de
+      // siempre como respaldo — el pedido nunca se pierde.
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/create-order`, {
+          method: 'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'apikey':        SUPABASE_ANON_KEY
+          },
+          body: JSON.stringify({ ...order, id: newOrder.id })
+        });
+
+        if (res.ok) {
+          const serverOrder = await res.json().catch(() => null);
+          this._markSynced(newOrder.id, serverOrder?.total);
+          return newOrder.id;
+        }
+
+        // La función respondió pero rechazó el pedido (datos inválidos o
+        // demasiados intentos seguidos) — no seguir al insert directo, que
+        // se saltaría exactamente esa validación.
+        if (res.status === 400 || res.status === 429) {
+          const errBody = await res.json().catch(() => ({}));
+          this._markPending(newOrder.id);
+          const _toast = typeof showToast === 'function' ? showToast
+            : typeof showCartToast === 'function' ? showCartToast : null;
+          if (_toast) _toast('⚠ ' + (errBody.error || 'No se pudo registrar el pedido.'));
+          return newOrder.id;
+        }
+
+        throw new Error(`create-order respondió ${res.status}`);
+      } catch (fnErr) {
+        console.warn('[MICHT] Edge Function create-order no disponible, uso insert directo:', fnErr.message);
+      }
+
+      // ── Respaldo: insert directo (comportamiento previo a la Edge Function) ──
       const dbData = orderToDB(newOrder);
       let { error } = await db.from('pedidos').insert(dbData);
 
@@ -221,18 +268,37 @@ const CloudOrders = {
 
       if (error) {
         console.error('[MICHT] Error Supabase al guardar pedido:', error.code, error.message);
-        // Marcar como pendiente de sync — así no se limpiará como "zombie" del localStorage
-        try {
-          const stored = Orders.getAll();
-          const idx = stored.findIndex(o => o.id === newOrder.id);
-          if (idx !== -1) { stored[idx]._pendingSync = true; Orders.save(stored); }
-        } catch {}
+        this._markPending(newOrder.id);
         const _toast = typeof showToast === 'function' ? showToast
           : typeof showCartToast === 'function' ? showCartToast : null;
         if (_toast) _toast('⚠ Pedido guardado localmente. Error al sincronizar: ' + (error.message || error.code));
       }
     }
     return newOrder.id;
+  },
+
+  // Marca un pedido local como "pendiente de sincronizar" — evita que se
+  // limpie como zombie mientras no se confirme que llegó a Supabase.
+  _markPending(id) {
+    try {
+      const stored = Orders.getAll();
+      const idx = stored.findIndex(o => o.id === id);
+      if (idx !== -1) { stored[idx]._pendingSync = true; Orders.save(stored); }
+    } catch {}
+  },
+
+  // Marca un pedido local como sincronizado y adopta el total autoritativo
+  // que devolvió el servidor (puede diferir un poco si el precio cambió).
+  _markSynced(id, serverTotal) {
+    try {
+      const stored = Orders.getAll();
+      const idx = stored.findIndex(o => o.id === id);
+      if (idx !== -1) {
+        if (typeof serverTotal === 'number') stored[idx].total = serverTotal;
+        delete stored[idx]._pendingSync;
+        Orders.save(stored);
+      }
+    } catch {}
   },
 
   async updateStatus(id, status, paymentMethod = null) {
@@ -382,8 +448,11 @@ const CloudOrders = {
 // ALTER TABLE productos ENABLE ROW LEVEL SECURITY;
 // -- Clientes anónimos pueden LEER productos (ver catálogo)
 // CREATE POLICY "anon_read_productos" ON productos FOR SELECT TO anon USING (true);
-// -- Solo el admin autenticado puede crear, editar y eliminar productos
-// CREATE POLICY "admin_all_productos" ON productos FOR ALL TO authenticated USING (true);
+// -- Solo el admin (rol real) puede crear, editar y eliminar productos.
+// -- "TO authenticated USING (true)" sería el mismo bug C-01 que en `pedidos`.
+// CREATE POLICY "admin_all_productos" ON productos FOR ALL TO authenticated
+//   USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
+//   WITH CHECK ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
