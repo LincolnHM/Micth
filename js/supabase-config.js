@@ -35,9 +35,18 @@
 //
 // -- SEGURIDAD: habilitar RLS y crear políticas
 // ALTER TABLE pedidos ENABLE ROW LEVEL SECURITY;
-// -- Cualquier usuario (anon o autenticado) puede INSERTAR pedidos
+// -- Cualquier usuario (anon o autenticado) puede INSERTAR pedidos (temporal —
+// -- ver aviso abajo, esto se cierra en cuanto la Edge Function create-order
+// -- esté desplegada y confirmada funcionando).
 // CREATE POLICY "anon_insert_pedidos"          ON pedidos FOR INSERT TO anon          WITH CHECK (true);
 // CREATE POLICY "authenticated_insert_pedidos" ON pedidos FOR INSERT TO authenticated WITH CHECK (true);
+// -- ¡IMPORTANTE! Con solo esto, cualquiera puede insertar un pedido con el
+// -- total que quiera con un POST directo (curl, Postman, etc.), saltándose
+// -- checkout.js por completo — así lo demostró un test real (2026-08-04).
+// -- En cuanto despliegues supabase/functions/create-order y confirmes que
+// -- funciona, ejecuta supabase/sql/2026-08-04-cerrar-insert-directo.sql para
+// -- eliminar estas 2 políticas y forzar que TODO pedido pase por la validación
+// -- de precios y el límite de frecuencia del servidor.
 // -- Solo el admin (rol real, no "cualquier autenticado") puede leer, actualizar y eliminar.
 // -- ¡OJO! "USING (true)" aquí sería el bug de seguridad C-01 del informe de
 // -- auditoría (2026-08-02): dejaría que CUALQUIER cliente logueado lea/edite/

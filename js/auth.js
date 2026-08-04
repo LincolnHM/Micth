@@ -351,9 +351,13 @@ async function openHistoryModal() {
     return;
   }
 
+  // Se piden solo las columnas que la tarjeta de historial realmente muestra
+  // (no nombre/teléfono/dirección) — así, aunque alguien inspeccione la
+  // respuesta de red, no se filtran más datos personales de los que ya se ven
+  // en pantalla.
   const { data: orders, error } = await authClient
     .from('pedidos')
-    .select('*')
+    .select('id, status, created_at, items, total, delivery_type')
     .eq('customer_dni', profile.dni)
     .order('created_at', { ascending: false });
 

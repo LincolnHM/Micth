@@ -9,20 +9,29 @@
 //
 // El insert directo se mantiene en el cliente SOLO como respaldo si esta
 // función no está desplegada o no responde (ver js/supabase-config.js) —
-// para que nunca se pierda un pedido por una caída de la función.
+// para que nunca se pierda un pedido por una caída de la función. Una vez
+// desplegada esta función y confirmado que funciona, hay que cerrar ese
+// respaldo a nivel de base de datos (ver supabase/sql/2026-08-04-cerrar-insert-directo.sql)
+// para que YA NO se pueda insertar un pedido saltándose esta validación
+// (como hizo la prueba con curl directo a /rest/v1/pedidos).
 //
 // Desplegar (Supabase CLI):
 //   supabase functions deploy create-order
-// SUPABASE_URL y SUPABASE_ANON_KEY ya los inyecta Supabase automáticamente,
-// no hace falta configurar variables de entorno.
+// SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY ya los inyecta Supabase
+// automáticamente en cada función, no hace falta configurar variables de entorno.
 //
 // Requiere el SQL de supabase/sql/2026-08-02-security-fixes.sql ya ejecutado
 // (crea la función check_order_rate_limit que se usa abajo).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.111.0';
 
-const SUPABASE_URL      = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
+const SUPABASE_URL         = Deno.env.get('SUPABASE_URL')!;
+// Service role: necesaria para poder insertar en `pedidos` una vez que el
+// insert directo con la key pública se cierra (ver SQL 2026-08-04). Supabase
+// la inyecta sola en cada Edge Function, no hace falta configurarla a mano.
+// Es segura de usar aquí PORQUE el pedido ya pasó por toda la validación de
+// arriba (precios recalculados, límite de frecuencia) — nunca se expone al navegador.
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const ALLOWED_ORIGINS = new Set([
   'https://michtdecants.com',
@@ -63,7 +72,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers });
   if (req.method !== 'POST')    return json({ error: 'Método no permitido' }, 405, headers);
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   let body: any;
   try {
