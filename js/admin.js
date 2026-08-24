@@ -1136,7 +1136,25 @@ function setupOrderEvents() {
   });
 
   // Guardar pedido manual
-  document.getElementById('saveOrderBtn')?.addEventListener('click', () => saveManualOrder().catch(console.error));
+  // En móvil, si el teclado virtual sigue abierto (foco en Notas/cantidad/etc.) al
+  // tocar este botón, el toque primero cierra el teclado y desplaza el layout antes
+  // de soltar el dedo — el navegador nunca sintetiza el "click" y el botón parece no
+  // reaccionar. Se resuelve escuchando "touchend" directamente (mismo patrón ya usado
+  // en las opciones del buscador de productos, más abajo en addOrderItemRow).
+  (() => {
+    const saveOrderBtnEl = document.getElementById('saveOrderBtn');
+    if (!saveOrderBtnEl) return;
+    let savedViaTouch = false;
+    saveOrderBtnEl.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      savedViaTouch = true;
+      saveManualOrder().catch(console.error);
+    }, { passive: false });
+    saveOrderBtnEl.addEventListener('click', () => {
+      if (savedViaTouch) { savedViaTouch = false; return; }
+      saveManualOrder().catch(console.error);
+    });
+  })();
   document.getElementById('cancelOrderModal')?.addEventListener('click', () => {
     document.getElementById('registerOrderModal').classList.remove('open');
   });

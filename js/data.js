@@ -1665,6 +1665,25 @@ const DEFAULT_PRODUCTS = [
     featured: false,
     bottleRemainingMl: 0,
     bottleTotalMl: 0
+  },
+  {
+    id: 97,
+    name: 'Scandal Le Parfum',
+    brand: 'Jean Paul Gaultier',
+    type: 'diseñador',
+    gender: 'mujer',
+    occasion: 'noche',
+    olfFamily: 'Ambarado Floral',
+    topNotes: 'Naranja sanguina',
+    heartNotes: 'Miel, Tuberosa',
+    baseNotes: 'Pachulí, Cera de abejas',
+    description: 'Scandal Le Parfum: la versión más intensa y sensual de Scandal. Naranja sanguina sobre miel y tuberosa, cerrando con pachulí y cera de abejas. Seductor y magnético.',
+    imageUrl: '',
+    sizes: { '3ml': 20, '5ml': 30, '10ml': 60 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 100,
+    bottleTotalMl: 100
   }
 ];
 
@@ -1751,7 +1770,8 @@ const PRODUCT_IMAGE_MAP = {
   'The Kingdom Dama':            '/img PERFUMES/the kingdom dama.png',
   'Nebras':                      '/img PERFUMES/nebras.webp',
   'Valentino Extradose':         '/img PERFUMES/valentino extradose.webp',
-  'Yum Yum':                     '/img PERFUMES/yum yum armaf.webp'
+  'Yum Yum':                     '/img PERFUMES/yum yum armaf.webp',
+  'Scandal Le Parfum':           '/img PERFUMES/SCANDAL_LE_PARFUM.webp'
 };
 
 DEFAULT_PRODUCTS.forEach(p => {
