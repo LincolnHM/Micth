@@ -370,7 +370,8 @@ function renderProducts() {
     const showAsEntero = Filter.type === 'entero' && p.availableAsEntero === true && p.type !== 'entero';
     const isEntero     = p.type === 'entero' || showAsEntero;
     const sizeValues   = showAsEntero ? [p.enteroPrice || 0] : Object.values(p.sizes || {});
-    const minPrice     = sizeValues.length ? Math.min(...sizeValues) : 0;
+    const positiveSizeValues = sizeValues.filter(v => v > 0);
+    const minPrice     = positiveSizeValues.length ? Math.min(...positiveSizeValues) : 0;
     const genderIcon  = { hombre: '♂', mujer: '♀', unisex: '⚥' }[p.gender] || '';
     const occasionLbl = { dia: 'Día', noche: 'Noche', ambas: 'Día & Noche' }[p.occasion] || '';
     const typeLabel   = showAsEntero ? 'Entero' : (p.type === 'arabe' ? 'Árabe' : isEntero ? 'Entero' : 'Diseñador');
@@ -392,7 +393,7 @@ function renderProducts() {
       : Object.entries(p.sizes).map(([ml, price]) => {
           const inCart    = Cart.items.some(i => i.productId === p.id && i.size === ml);
           const noMl      = !bottleHasMl(p, ml);
-          const disabledSize = !p.inStock || (isEntero && price === 0) || noMl;
+          const disabledSize = !p.inStock || price === 0 || noMl;
           const priceDisplay = price > 0 ? `S/${price}` : 'Consultar';
           return `
       <button class="size-btn ${disabledSize ? 'disabled' : ''} ${inCart ? 'selected' : ''}"
@@ -1015,6 +1016,12 @@ function _createPdModal() {
             </div>
           </div>
 
+          <!-- Momento ideal de uso — Día / Noche -->
+          <div id="pdOccasionSection" class="pd-occasion-section">
+            <p class="pd-notes-section-title">MOMENTO IDEAL</p>
+            <div id="pdOccasionBadge" class="pd-occasion-badge"></div>
+          </div>
+
           <!-- Acordes principales — estilo Fragrantica, siempre visibles -->
           <div id="pdAccordsSection" class="pd-accords-section">
             <p class="pd-notes-section-title">ACORDES PRINCIPALES</p>
@@ -1134,8 +1141,8 @@ function openPdModal(productId) {
   // ── Precio (solo decants) ────────────────────────────────
   const priceRow = document.getElementById('pdPriceRow');
   if (!isEntero) {
-    const sizes = Object.values(p.sizes);
-    const minPrice = sizes.length ? Math.min(...sizes) : 0;
+    const positiveSizes = Object.values(p.sizes).filter(v => v > 0);
+    const minPrice = positiveSizes.length ? Math.min(...positiveSizes) : 0;
     priceRow.innerHTML = minPrice > 0
       ? `<span class="pd-price-from">Desde</span> <strong class="pd-price-main">S/ ${minPrice}</strong>`
       : `<span class="pd-price-consultar">Consultar precio</span>`;
@@ -1231,7 +1238,7 @@ function openPdModal(productId) {
     cartBtn.disabled = true;
     cartTxt.textContent = 'Selecciona un tamaño';
     sizesRow.innerHTML = Object.entries(p.sizes).map(([ml, price]) => {
-      const sizeOff = !p.inStock || !bottleHasMl(p, ml);
+      const sizeOff = !p.inStock || !bottleHasMl(p, ml) || price === 0;
       return `
       <button class="pd-size-btn-new ${sizeOff ? 'pd-size-disabled' : ''}"
               data-size="${escapeAttr(ml)}" data-price="${price}"
@@ -1314,6 +1321,24 @@ function openPdModal(productId) {
 
   // ── Descripción ──────────────────────────────────────────
   document.getElementById('pdDesc').textContent = p.description || '';
+
+  // ── Momento ideal de uso (Día / Noche) ───────────────────
+  const OCCASION_INFO = {
+    dia:   { icon: '☀️',  cls: 'pd-occ-dia',   text: 'Ideal para el día' },
+    noche: { icon: '🌙',  cls: 'pd-occ-noche', text: 'Ideal para la noche' },
+    ambas: { icon: '☀️🌙', cls: 'pd-occ-ambas', text: 'Ideal para el día y la noche' }
+  };
+  const occSection = document.getElementById('pdOccasionSection');
+  const occBadge   = document.getElementById('pdOccasionBadge');
+  const occInfo    = OCCASION_INFO[p.occasion];
+  if (occInfo) {
+    occBadge.className = `pd-occasion-badge ${occInfo.cls}`;
+    occBadge.innerHTML = `<span class="pd-occasion-icon">${occInfo.icon}</span><span class="pd-occasion-text">${occInfo.text}</span>`;
+    occSection.style.display = 'block';
+  } else {
+    occBadge.innerHTML = '';
+    occSection.style.display = 'none';
+  }
 
   // ── Acordes principales (estilo Fragrantica) ─────────────
   const accordsList = document.getElementById('pdAccordsList');

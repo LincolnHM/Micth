@@ -3518,6 +3518,23 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
 .pd-guide-dur { color: var(--gold-d); font-weight: 600; text-align: right; }
 .pd-guide-note { font-size: .63rem; color: var(--text3); margin-top: .55rem; font-style: italic; }
 
+/* ── Momento ideal de uso — Día / Noche ───────────────────── */
+.pd-occasion-section { display: flex; flex-direction: column; gap: .65rem; }
+
+.pd-occasion-badge {
+  display: flex; align-items: center; gap: .7rem;
+  padding: .8rem 1.1rem;
+  border-radius: var(--r-lg);
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.07);
+  border-left-width: 3px;
+  font-size: .84rem; font-weight: 600; color: var(--text);
+}
+.pd-occasion-icon { font-size: 1.15rem; line-height: 1; flex-shrink: 0; }
+.pd-occ-dia   { border-left-color: #d9a441; background: rgba(217,164,65,.08); }
+.pd-occ-noche { border-left-color: #6f5fc0; background: rgba(111,95,192,.1); }
+.pd-occ-ambas { border-left-color: #c98a4b; background: linear-gradient(90deg, rgba(217,164,65,.09), rgba(111,95,192,.09)); }
+
 /* ── Acordes principales — estilo Fragrantica ────────────── */
 .pd-accords-section { display: flex; flex-direction: column; gap: .65rem; }
 
