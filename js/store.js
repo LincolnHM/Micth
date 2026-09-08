@@ -1287,7 +1287,10 @@ function openPdModal(productId) {
         cartBtn.disabled = false;
         cartTxt.textContent = `AÑADIR AL CARRITO — S/ ${_pdSelPrice}`;
         cartBtn.classList.remove('added');
-        
+        priceRow.innerHTML = _pdSelPrice > 0
+          ? `<strong class="pd-price-main">S/ ${_pdSelPrice}</strong>`
+          : `<span class="pd-price-consultar">Consultar precio</span>`;
+
         selectVisualSize(btn.dataset.size);
       });
     });
