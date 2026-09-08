@@ -1015,6 +1015,12 @@ function _createPdModal() {
             </div>
           </div>
 
+          <!-- Acordes principales — estilo Fragrantica, siempre visibles -->
+          <div id="pdAccordsSection" class="pd-accords-section">
+            <p class="pd-notes-section-title">ACORDES PRINCIPALES</p>
+            <div id="pdAccordsList" class="pd-accords-list"></div>
+          </div>
+
           <!-- Notas olfativas — siempre visibles -->
           <div id="pdAccNotes" class="pd-notes-section">
             <p class="pd-notes-section-title">NOTAS OLFATIVAS</p>
@@ -1306,6 +1312,23 @@ function openPdModal(productId) {
   // ── Descripción ──────────────────────────────────────────
   document.getElementById('pdDesc').textContent = p.description || '';
 
+  // ── Acordes principales (estilo Fragrantica) ─────────────
+  const accordsList = document.getElementById('pdAccordsList');
+  const accordsSec  = document.getElementById('pdAccordsSection');
+  if (Array.isArray(p.accords) && p.accords.length) {
+    const maxPct = Math.max(...p.accords.map(a => a.pct || 0), 1);
+    accordsList.innerHTML = p.accords.map(a => {
+      const bg   = accordColor(a.name);
+      const fg   = accordTextColor(bg);
+      const wPct = Math.max(28, Math.round((a.pct || 0) / maxPct * 100));
+      return `<div class="pd-accord-bar" style="width:${wPct}%;background:${bg};color:${fg}">${sanitize(a.name)}</div>`;
+    }).join('');
+    accordsSec.style.display = 'block';
+  } else {
+    accordsList.innerHTML = '';
+    accordsSec.style.display = 'none';
+  }
+
   // ── Notas olfativas ──────────────────────────────────────
   const notesList = document.getElementById('pdNotesList');
   const notesAcc  = document.getElementById('pdAccNotes');
@@ -1340,7 +1363,8 @@ function openPdModal(productId) {
   const all = _allProducts || Products.getAll();
   const similar = all
     .filter(x => {
-      if (x.id === p.id || x.inStock === false) return false;
+      const xPurchasable = x.type === 'entero' ? x.inStock !== false : isDecantPurchasable(x);
+      if (x.id === p.id || !xPurchasable) return false;
       if (p.gender === 'hombre') return x.gender === 'hombre' || x.gender === 'unisex';
       if (p.gender === 'mujer')  return x.gender === 'mujer'  || x.gender === 'unisex';
       return true;

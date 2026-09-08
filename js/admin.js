@@ -1518,6 +1518,7 @@ function openProductModal(id = null) {
   document.getElementById('editTopNotes').value    = product?.topNotes ?? '';
   document.getElementById('editHeartNotes').value  = product?.heartNotes ?? '';
   document.getElementById('editBaseNotes').value   = product?.baseNotes ?? '';
+  document.getElementById('editAccords').value     = accordsToText(product?.accords);
   document.getElementById('editDescription').value   = product?.description ?? '';
   document.getElementById('editContentDesc').value   = product?.contentDescription ?? '';
   const imageUrl = product?.imageUrl ?? '';
@@ -1624,7 +1625,14 @@ function setupAdminEvents() {
     });
     if (!Object.keys(sizes).length) { alert('Agrega al menos una talla.'); return; }
 
-    const data = { name, brand, type, gender, occasion, olfFamily, topNotes, heartNotes, baseNotes, description, contentDescription, imageUrl, sizes, inStock: true, bottleRemainingMl: 0, bottleTotalMl: 0, featured: false };
+    const accords = parseAccordsText(document.getElementById('editAccords').value);
+
+    // No pisar stock/destacado al editar: solo se fijan valores por defecto
+    // al crear un perfume nuevo. Antes esto siempre reseteaba inStock a true
+    // y bottleRemainingMl/bottleTotalMl a 0 en cada edición, borrando el
+    // seguimiento de stock de un producto ya agotado.
+    const data = { name, brand, type, gender, occasion, olfFamily, topNotes, heartNotes, baseNotes, accords, description, contentDescription, imageUrl, sizes };
+    if (!id) Object.assign(data, { inStock: true, bottleRemainingMl: 0, bottleTotalMl: 0, featured: false });
 
     const saveBtn = document.getElementById('saveProductBtn');
     saveBtn.disabled = true; saveBtn.textContent = 'Guardando...';

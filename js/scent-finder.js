@@ -481,10 +481,16 @@
       .map(p => ({ product: p, score: scoreProduct(p) }))
       .filter(x => x.score > 0);
 
+    // Disponibilidad real: para decants considera también el ml restante del
+    // frasco (no solo el flag manual inStock), igual que el catálogo y la ficha.
+    const isReallyPurchasable = (prod) => prod.type === 'entero'
+      ? prod.inStock !== false
+      : (typeof isDecantPurchasable === 'function' ? isDecantPurchasable(prod) : prod.inStock !== false);
+
     // Ordenar: en stock primero, luego mayor puntaje
     scored.sort((a, b) => {
-      const sA = a.product.inStock !== false ? 1 : 0;
-      const sB = b.product.inStock !== false ? 1 : 0;
+      const sA = isReallyPurchasable(a.product) ? 1 : 0;
+      const sB = isReallyPurchasable(b.product) ? 1 : 0;
       if (sA !== sB) return sB - sA;
       return b.score - a.score;
     });
@@ -511,7 +517,7 @@
 
     resultsContainer.innerHTML = matches.map(({ product: p, score }) => {
       const match   = matchLabel(score);
-      const inStock = p.inStock !== false;
+      const inStock = isReallyPurchasable(p);
       const gLabel  = p.gender === 'hombre' ? 'Hombre' : p.gender === 'mujer' ? 'Mujer' : 'Unisex';
 
       const imgHtml = p.imageUrl
@@ -521,13 +527,18 @@
       let sizesHtml = '';
       if (p.type === 'decant' && Object.keys(p.sizes || {}).length) {
         const sizeEntries = Object.entries(p.sizes).filter(([, v]) => v > 0);
+        const firstAvailable = sizeEntries.findIndex(([sz]) => inStock && (typeof bottleHasMl !== 'function' || bottleHasMl(p, sz)));
         sizesHtml = `
           <div class="scent-sizes" data-pid="${p.id}">
-            ${sizeEntries.map(([sz, pr], i) => `
-              <button class="scent-size-btn ${i === 0 ? 'active' : ''}" data-size="${sz}" data-price="${pr}">
+            ${sizeEntries.map(([sz, pr], i) => {
+              const sizeOff = !inStock || (typeof bottleHasMl === 'function' && !bottleHasMl(p, sz));
+              return `
+              <button class="scent-size-btn ${sizeOff ? 'disabled' : ''} ${!sizeOff && i === firstAvailable ? 'active' : ''}"
+                      data-size="${sz}" data-price="${pr}" ${sizeOff ? 'disabled' : ''}>
                 ${sz} · S/${pr}
               </button>
-            `).join('')}
+            `;
+            }).join('')}
           </div>
         `;
       } else if (p.type === 'entero') {
@@ -596,8 +607,9 @@
         } else {
           const wrap      = resultsContainer.querySelector(`.scent-sizes[data-pid="${pid}"]`);
           const activeBtn = wrap?.querySelector('.scent-size-btn.active');
-          sz = activeBtn?.dataset.size  || Object.keys(p.sizes || {})[0];
-          pr = activeBtn ? parseFloat(activeBtn.dataset.price) : Object.values(p.sizes || {})[0];
+          if (!activeBtn) return; // sin tamaño disponible, no se puede agregar
+          sz = activeBtn.dataset.size;
+          pr = parseFloat(activeBtn.dataset.price);
         }
 
         window.Cart?.add(p, sz, pr);

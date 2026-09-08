@@ -447,12 +447,15 @@ const CloudOrders = {
 //   bottle_remaining_ml NUMERIC DEFAULT 0,
 //   bottle_total_ml     NUMERIC DEFAULT 0,
 //   stock_quantity      INTEGER DEFAULT 0,
+//   accords             JSONB DEFAULT '[]',
 //   created_at          TIMESTAMPTZ DEFAULT NOW(),
 //   updated_at          TIMESTAMPTZ
 // );
 //
 // -- Si ya tienes la tabla creada, ejecuta esto para agregar la columna:
 // ALTER TABLE productos ADD COLUMN IF NOT EXISTS stock_quantity INTEGER DEFAULT 0;
+// -- Acordes principales (ver supabase/sql/2026-09-08-accords.sql para el detalle):
+// ALTER TABLE productos ADD COLUMN IF NOT EXISTS accords JSONB DEFAULT '[]';
 // -- SEGURIDAD: habilitar RLS y crear políticas
 // ALTER TABLE productos ENABLE ROW LEVEL SECURITY;
 // -- Clientes anónimos pueden LEER productos (ver catálogo)
@@ -489,6 +492,7 @@ function productFromDB(row) {
     enteroPrice:       parseFloat(row.entero_price)        || 0,
     stockQuantity:     parseInt(row.stock_quantity)        || 0,
     costPrice:         parseFloat(row.cost_price)          || 0,
+    accords:           Array.isArray(row.accords) ? row.accords : [],
     date:              row.created_at,
     updatedAt:         row.updated_at
   };
@@ -553,7 +557,8 @@ function productToDB(product) {
     available_as_entero: product.availableAsEntero || false,
     entero_price:        product.enteroPrice       || 0,
     stock_quantity:      product.stockQuantity     || 0,
-    cost_price:          product.costPrice         || 0
+    cost_price:          product.costPrice         || 0,
+    accords:             product.accords           || []
   };
 }
 
@@ -566,7 +571,7 @@ const _PRODUCT_FIELD_MAP = {
   featured: 'featured', bottleRemainingMl: 'bottle_remaining_ml',
   bottleTotalMl: 'bottle_total_ml', availableAsEntero: 'available_as_entero',
   enteroPrice: 'entero_price', stockQuantity: 'stock_quantity',
-  costPrice: 'cost_price'
+  costPrice: 'cost_price', accords: 'accords'
 };
 
 // ─── API de productos (async, usa Supabase si está configurado) ───────────────
@@ -604,6 +609,10 @@ const CloudProducts = {
           const cached = storedProducts.find(sp => sp.id === p.id);
           p.availableAsEntero = cached?.availableAsEntero || false;
           p.enteroPrice       = cached?.enteroPrice       || 0;
+        }
+        if (!('accords' in row)) {
+          const cached = storedProducts.find(sp => sp.id === p.id);
+          p.accords = cached?.accords || [];
         }
         return p;
       });
@@ -666,6 +675,9 @@ const CloudProducts = {
         p.availableAsEntero = cached?.availableAsEntero || false;
         p.enteroPrice       = cached?.enteroPrice       || 0;
       }
+      if (!('accords' in data)) {
+        p.accords = Products.getById(id)?.accords || [];
+      }
       return p;
     }
     return Products.getById(id);
@@ -705,7 +717,7 @@ const CloudProducts = {
       // Si falla por columna inexistente (stock_quantity, available_as_entero, etc.),
       // reintentar solo con los campos que sí existen para no perder el update completo
       if (error && error.code === '42703') {
-        const OPTIONAL_COLS = ['stock_quantity', 'available_as_entero', 'entero_price', 'cost_price', 'content_description'];
+        const OPTIONAL_COLS = ['stock_quantity', 'available_as_entero', 'entero_price', 'cost_price', 'content_description', 'accords'];
         const fallback = { ...patch };
         OPTIONAL_COLS.forEach(col => { delete fallback[col]; });
         const retry = await db.from('productos').update(fallback).eq('id', id);

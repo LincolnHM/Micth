@@ -3518,6 +3518,23 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
 .pd-guide-dur { color: var(--gold-d); font-weight: 600; text-align: right; }
 .pd-guide-note { font-size: .63rem; color: var(--text3); margin-top: .55rem; font-style: italic; }
 
+/* ── Acordes principales — estilo Fragrantica ────────────── */
+.pd-accords-section { display: flex; flex-direction: column; gap: .65rem; }
+
+.pd-accords-list { display: flex; flex-direction: column; gap: .38rem; }
+
+.pd-accord-bar {
+  display: flex; align-items: center;
+  height: 2.15rem;
+  padding: 0 .9rem;
+  border-radius: var(--r-sm);
+  font-size: .72rem; font-weight: 700; letter-spacing: .01em;
+  text-transform: lowercase;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: width .5s ease;
+  min-width: 28%;
+}
+
 /* ── Notas olfativas — siempre visibles ──────────────────── */
 .pd-notes-section { display: flex; flex-direction: column; gap: .65rem; }
 
@@ -7802,6 +7819,11 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   border-color: var(--gold-d);
   color: var(--gold);
   background: rgba(124,79,176,0.08);
+}
+.scent-size-btn.disabled {
+  opacity: .35;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 .scent-size-fixed {
   margin-top: 0.45rem;
