@@ -143,7 +143,7 @@ const DEFAULT_PRODUCTS = [
     accords: [ { name: 'cítrico', pct: 100 }, { name: 'afrutados', pct: 99 }, { name: 'dulce', pct: 83 }, { name: 'almizclado', pct: 74 }, { name: 'atalcado', pct: 67 }, { name: 'avainillado', pct: 62 }, { name: 'ámbar', pct: 55 }, { name: 'fresco especiado', pct: 46 } ],
     description: 'Frescura mediterránea con flor de naranja de Sicilia y base almizcleña. Luminoso, sensual y deliciosamente único.',
     imageUrl: '',
-    sizes: { '2ml': 15, '3ml': 29, '5ml': 45, '10ml': 89 },
+    sizes: { '2ml': 25, '3ml': 29, '5ml': 45, '10ml': 89 },
     inStock: true,
     featured: true,
     bottleRemainingMl: 0,
