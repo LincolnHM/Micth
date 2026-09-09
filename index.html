@@ -607,6 +607,29 @@
     <div class="parallax-divider-line"></div>
   </div>
 
+  <!-- ── Envíos y Clientes ────────────────────────────────────────────────── -->
+  <section id="galeria" class="gallery-section" aria-label="Envíos y clientes" hidden>
+    <div class="container">
+      <div class="gallery-block" id="galleryBlockEnvios" hidden>
+        <p class="gallery-label">Nuestro trabajo</p>
+        <h2 class="gallery-title">📦 Envíos que hacemos</h2>
+        <div class="gallery-strip" id="galleryStripEnvios"></div>
+      </div>
+
+      <div class="gallery-block" id="galleryBlockClientes" hidden>
+        <p class="gallery-label">Confianza real</p>
+        <h2 class="gallery-title">💛 Nuestros clientes</h2>
+        <div class="gallery-strip" id="galleryStripClientes"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Lightbox de galería ──────────────────────────────────────────────── -->
+  <div class="gallery-lightbox" id="galleryLightbox" hidden>
+    <button type="button" class="gallery-lightbox-close" id="galleryLightboxClose" aria-label="Cerrar">✕</button>
+    <img id="galleryLightboxImg" src="" alt="">
+  </div>
+
   <!-- ── Contacto ──────────────────────────────────────────────────────────── -->
   <section id="contacto" class="contact-section">
     <div class="container">
@@ -1185,12 +1208,13 @@
   <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.8.1/dist/vanilla-tilt.min.js" integrity="sha384-0k1dj5tm+KUH/4vkNk/i90XsjDA8Ltmt+ybcrFoH4t0dgv/WZsPpVBnkhcroX8UL" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
-  <script src="js/data.js?v=11"></script>
-  <script src="js/supabase-config.js?v=17"></script>
+  <script src="js/data.js?v=12"></script>
+  <script src="js/supabase-config.js?v=18"></script>
   <script src="js/announcement.js?v=1"></script>
   <script src="js/seasonal-theme.js?v=3"></script>
   <script src="js/carousel.js"></script>
   <script src="js/store.js?v=12"></script>
+  <script src="js/gallery.js?v=1"></script>
   <script src="js/scent-finder.js?v=1"></script>
   <script src="js/checkout.js"></script>
   <script src="js/auth.js?v=2"></script>

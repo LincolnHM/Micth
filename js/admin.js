@@ -319,7 +319,6 @@ async function renderAdminProducts() {
     const typeBadge = p.type === 'arabe' ? 'badge-arabe' : p.type === 'entero' ? 'badge-entero' : 'badge-dis';
     const gLabel    = { hombre: '♂ Hombre', mujer: '♀ Mujer', unisex: '⚥ Unisex' }[p.gender] || '';
     const isEntero  = p.type === 'entero';
-    const isFull    = p.bottleTotalMl > 0 && p.bottleRemainingMl >= p.bottleTotalMl;
     const adminImg  = _normAdminImg(p.imageUrl) || buildProductImage(p);
 
     return `
@@ -370,21 +369,27 @@ async function renderAdminProducts() {
           </label>
         </div>
 
-        <!-- Toggle "Como Entero": visible solo cuando el frasco está 100% lleno -->
-        ${!isEntero && isFull ? `
-        <div class="admin-info-row">
-          <label class="toggle-label">
-            <span>Como Entero:</span>
-            <label class="toggle">
-              <input type="checkbox" class="entero-avail-toggle" data-id="${p.id}" ${p.availableAsEntero ? 'checked' : ''}>
-              <span class="toggle-slider"></span>
-            </label>
-            <span class="stock-status ${p.availableAsEntero ? 'in-stock' : 'out-stock'}">
-              ${p.availableAsEntero ? '🛍 Visible en catálogo enteros' : 'Solo decants'}
-            </span>
-          </label>
+        <!-- Stock de "entero" para decants: frascos sellados aparte del que se -->
+        <!-- usa para sacar decants — cantidad real, no un simple sí/no. -->
+        ${!isEntero ? `
+        <div class="admin-info-row" style="align-items:center;gap:.6rem;flex-wrap:wrap">
+          <strong style="font-size:.76rem;color:var(--text2)">Frascos enteros en stock:</strong>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <input type="number" class="entero-stock-input" data-id="${p.id}"
+                   value="${p.enteroStock || 0}" min="0" max="99" step="1"
+                   style="width:56px;background:transparent;border:none;border-bottom:1px solid var(--border-l);color:var(--text);font-size:.82rem;font-weight:600;padding:.1rem .2rem;outline:none;text-align:right"
+                   onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border-l)'">
+            <button class="btn-save-entero-stock" data-id="${p.id}"
+                    style="font-size:.72rem;padding:.3rem .75rem;background:var(--gold);color:#111;border:none;border-radius:var(--r);font-weight:700;cursor:pointer;transition:background .2s"
+                    onmouseover="this.style.background='var(--gold-l)'" onmouseout="this.style.background='var(--gold)'">
+              Guardar stock
+            </button>
+          </div>
+          <span class="stock-status ${(p.enteroStock || 0) > 0 ? 'in-stock' : 'out-stock'}">
+            ${(p.enteroStock || 0) > 0 ? `🛍 ${p.enteroStock} disponible${p.enteroStock === 1 ? '' : 's'} como entero` : 'Solo decants'}
+          </span>
         </div>
-        ${p.availableAsEntero ? `
+        ${(p.enteroStock || 0) > 0 ? `
         <div class="admin-info-row" style="align-items:center;gap:.75rem;flex-wrap:wrap">
           <strong style="font-size:.76rem;color:var(--text2)">Precio entero (S/):</strong>
           <div style="display:flex;align-items:center;gap:.5rem">
@@ -398,10 +403,7 @@ async function renderAdminProducts() {
               Guardar precio
             </button>
           </div>
-        </div>` : ''}` : !isEntero && p.bottleTotalMl > 0 ? `
-        <div class="admin-info-row" style="padding:.25rem 0">
-          <span style="font-size:.72rem;color:var(--text3)">💡 Frasco al 100% (${p.bottleRemainingMl}/${p.bottleTotalMl} ml) para habilitar como entero</span>
-        </div>` : ''}
+        </div>` : ''}` : ''}
 
         <!-- Precios editables inline -->
         <div class="sizes-admin">
@@ -489,14 +491,18 @@ async function renderAdminProducts() {
     });
   });
 
-  container.querySelectorAll('.entero-avail-toggle').forEach(chk => {
-    chk.addEventListener('change', async () => {
-      const id  = parseInt(chk.dataset.id);
-      const err = await CloudProducts.update(id, { availableAsEntero: chk.checked });
+  container.querySelectorAll('.btn-save-entero-stock').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id   = parseInt(btn.dataset.id);
+      const card = btn.closest('.admin-card');
+      const inp  = card.querySelector('.entero-stock-input');
+      const qty  = parseInt(inp?.value ?? '0');
+      if (isNaN(qty) || qty < 0) { showToast('El stock debe ser un número positivo.'); return; }
+      const err = await CloudProducts.update(id, { enteroStock: qty, availableAsEntero: qty > 0 });
       if (err) {
         showToast(`❌ Error Supabase: ${err.message || JSON.stringify(err)}`);
       } else {
-        showToast(chk.checked ? '✓ Guardado en nube como entero' : '✓ Desactivado en nube');
+        showToast(qty > 0 ? `✓ ${qty} frasco${qty === 1 ? '' : 's'} entero disponible${qty === 1 ? '' : 's'}` : '✓ Sin frascos enteros — solo decants');
       }
       renderAdminProducts().catch(console.error);
     });
@@ -1282,7 +1288,7 @@ function addOrderItemRow() {
   });
 
   // Decants habilitados como entero (opción extra Unidad)
-  decantProds.filter(p => p.availableAsEntero && (p.enteroPrice || 0) > 0).forEach(p => {
+  decantProds.filter(p => (p.enteroStock || 0) > 0 && (p.enteroPrice || 0) > 0).forEach(p => {
     allOptions.push({
       value: `${p.id}|Unidad|${p.enteroPrice}|${p.name}|${p.brand}`,
       label: `🛍 ENTERO · ${p.brand} – ${p.name} (Unidad) S/${p.enteroPrice}`
@@ -1708,6 +1714,96 @@ function setupAdminEvents() {
 
   setupCampaignEvents();
   setupAnnouncementEvents();
+  setupGalleryEvents();
+}
+
+// ─── Sección: Galería pública (Envíos + Clientes) ──────────────────────────────
+
+const GALLERY_GRID_IDS = { envios: 'galeriaGridEnvios', clientes: 'galeriaGridClientes' };
+
+async function renderGalleryGrid(categoria) {
+  const container = document.getElementById(GALLERY_GRID_IDS[categoria]);
+  if (!container) return;
+  container.querySelectorAll('.gallery-admin-thumb').forEach(el => el.remove());
+  let photos = [];
+  try { photos = await CloudGallery.getAll(categoria); } catch (err) { console.error(err); }
+  photos.forEach(p => {
+    const thumb = document.createElement('div');
+    thumb.className = 'gallery-admin-thumb';
+    thumb.innerHTML = `
+      <img src="${escapeAttr(p.image_url)}" alt="" loading="lazy">
+      <button type="button" class="gallery-admin-thumb-remove" aria-label="Eliminar foto"
+              data-id="${escapeAttr(String(p.id))}" data-path="${escapeAttr(p.image_path || '')}">×</button>
+    `;
+    container.appendChild(thumb);
+  });
+}
+
+async function renderGallerySection() {
+  await Promise.all([renderGalleryGrid('envios'), renderGalleryGrid('clientes')]);
+}
+
+async function handleGalleryUpload(file, categoria, zone) {
+  if (zone) zone.style.opacity = '.5';
+  try {
+    await CloudGallery.upload(file, categoria);
+    showToast('Foto subida ✓');
+    await renderGalleryGrid(categoria);
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'No se pudo subir la foto.');
+  } finally {
+    if (zone) zone.style.opacity = '1';
+  }
+}
+
+function wireGalleryUpload(categoria, zoneId, inputId) {
+  const zone  = document.getElementById(zoneId);
+  const input = document.getElementById(inputId);
+  if (!zone || !input) return;
+
+  zone.addEventListener('click', () => input.click());
+  zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') input.click(); });
+  input.addEventListener('change', () => {
+    if (input.files[0]) handleGalleryUpload(input.files[0], categoria, zone);
+    input.value = '';
+  });
+
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handleGalleryUpload(e.dataTransfer.files[0], categoria, zone);
+  });
+}
+
+async function handleGalleryDeleteClick(e) {
+  const btn = e.target.closest('.gallery-admin-thumb-remove');
+  if (!btn) return;
+  if (!confirm('¿Eliminar esta foto? Se quitará también de la página pública.')) return;
+  btn.disabled = true;
+  try {
+    await CloudGallery.remove(btn.dataset.id, btn.dataset.path);
+    btn.closest('.gallery-admin-thumb')?.remove();
+    showToast('Foto eliminada ✓');
+  } catch (err) {
+    console.error(err);
+    showToast('No se pudo eliminar la foto.');
+    btn.disabled = false;
+  }
+}
+
+function setupGalleryEvents() {
+  const marker = document.getElementById('galeriaAddEnvios');
+  if (marker && marker.dataset.ready !== '1') {
+    marker.dataset.ready = '1';
+    wireGalleryUpload('envios',   'galeriaAddEnvios',   'galeriaFileEnvios');
+    wireGalleryUpload('clientes', 'galeriaAddClientes', 'galeriaFileClientes');
+    document.getElementById('galeriaGridEnvios')?.addEventListener('click', handleGalleryDeleteClick);
+    document.getElementById('galeriaGridClientes')?.addEventListener('click', handleGalleryDeleteClick);
+  }
+  renderGallerySection().catch(console.error);
 }
 
 async function refreshCampaignAdminUI() {
@@ -2036,8 +2132,8 @@ async function exportCatalogPDF() {
       if (matchedEntero && !usedEnteroKeys.has(key)) {
         usedEnteroKeys.add(key);
         enteroInfo = { sizes: matchedEntero.sizes, inStock: matchedEntero.inStock };
-      } else if (d.availableAsEntero && d.enteroPrice > 0) {
-        enteroInfo = { sizes: { 'Unidad': d.enteroPrice }, inStock: true };
+      } else if ((d.enteroStock || 0) > 0 && d.enteroPrice > 0) {
+        enteroInfo = { sizes: { 'Unidad': d.enteroPrice }, inStock: d.enteroStock > 0 };
       }
 
       mergedCards.push({ ...d, _decantSizes: d.sizes, _enteroInfo: enteroInfo });

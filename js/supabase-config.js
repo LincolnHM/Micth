@@ -333,8 +333,16 @@ const CloudOrders = {
             continue;
           }
 
-          if (product.availableAsEntero && item.size === 'Unidad') {
-            await CloudProducts.update(pid, { availableAsEntero: false, bottleRemainingMl: 0, inStock: false });
+          // Entero vendido a partir de un decant (frasco sellado aparte, no el
+          // que se usa para sacar decants) — descuenta solo el stock de
+          // enteros, sin tocar el ml del frasco de decant ni el inStock general.
+          if ((product.enteroStock || 0) > 0 && item.size === 'Unidad') {
+            const qty      = parseInt(item.quantity || 1);
+            const newStock = Math.max(0, (product.enteroStock || 0) - qty);
+            await CloudProducts.update(pid, {
+              enteroStock:       newStock,
+              availableAsEntero: newStock > 0
+            });
             continue;
           }
 
@@ -426,6 +434,90 @@ const CloudOrders = {
   }
 };
 
+// ─── Tabla 'galeria_fotos' + bucket 'galeria' en Supabase ────────────────────
+// Esquema completo y políticas RLS: ver supabase/sql/2026-09-09-galeria-fotos.sql
+//
+// Redimensiona/comprime una foto en el navegador antes de subirla — una foto
+// de celular sin comprimir puede pesar varios MB, y eso hace lenta la carga
+// de la página pública para los visitantes.
+function compressImageFile(file, maxWidth = 1600, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale  = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        blob => blob ? resolve(blob) : reject(new Error('No se pudo procesar la imagen.')),
+        'image/jpeg',
+        quality
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Imagen inválida.')); };
+    img.src = url;
+  });
+}
+
+const CloudGallery = {
+
+  async getAll(categoria) {
+    if (!db) return [];
+    const { data, error } = await db
+      .from('galeria_fotos')
+      .select('*')
+      .eq('categoria', categoria)
+      .order('orden', { ascending: true })
+      .order('created_at', { ascending: true });
+    if (error) {
+      console.error('Supabase error (galeria_fotos):', error?.code, error?.message);
+      return [];
+    }
+    return data || [];
+  },
+
+  async upload(file, categoria, caption = '') {
+    if (!db) throw new Error('Sin conexión a Supabase.');
+    if (!file || !file.type.startsWith('image/')) throw new Error('Selecciona una imagen válida (JPG, PNG o WebP).');
+    if (file.size > 8 * 1024 * 1024) throw new Error('La imagen supera los 8 MB.');
+
+    const blob = await compressImageFile(file);
+    const path = `${categoria}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+
+    const { error: uploadError } = await db.storage.from('galeria').upload(path, blob, {
+      contentType: 'image/jpeg',
+      upsert: false
+    });
+    if (uploadError) throw new Error(uploadError.message || 'Error al subir la imagen.');
+
+    const { data: pub } = db.storage.from('galeria').getPublicUrl(path);
+
+    const { data, error } = await db
+      .from('galeria_fotos')
+      .insert({ categoria, image_url: pub.publicUrl, image_path: path, caption: caption || null })
+      .select()
+      .single();
+    if (error) {
+      // La imagen ya se subió al bucket pero no se pudo registrar en la tabla —
+      // limpiar el archivo huérfano para no dejar basura en el bucket.
+      await db.storage.from('galeria').remove([path]).catch(() => {});
+      throw new Error(error.message || 'Error al guardar la foto.');
+    }
+    return data;
+  },
+
+  async remove(id, imagePath) {
+    if (!db) return;
+    const { error } = await db.from('galeria_fotos').delete().eq('id', id);
+    if (error) { console.error('Supabase error al eliminar foto:', error?.code, error?.message); throw new Error(error.message); }
+    if (imagePath) await db.storage.from('galeria').remove([imagePath]).catch(() => {});
+  }
+};
+
 // ─── Tabla 'productos' en Supabase — ejecutar en SQL Editor ──────────────────
 //
 // CREATE TABLE productos (
@@ -468,6 +560,28 @@ const CloudOrders = {
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Columnas visibles para el rol anon (ver supabase/sql/2026-08-04b-ocultar-cost-price.sql)
+// — cost_price y updated_at quedan fuera a propósito. select('*') funciona
+// para el admin logueado (rol authenticated ve la tabla completa) pero
+// Postgres lo rechaza con 42501 para anon en cuanto falta el permiso de UNA
+// sola columna — por eso getAll/getById reintentan con esta lista explícita
+// si select('*') falla por permisos.
+//
+// OJO: NO incluir aquí columnas agregadas después de esta lista base
+// (`accords`, `entero_stock`) — si el sitio le pide a Supabase una columna
+// que todavía no existe en un proyecto que no corrió esa migración, la
+// consulta falla con 42703 y rompe este mismo fallback. Esas dos columnas ya
+// tienen manejo de "si no viene en la fila, usar el valor cacheado" más abajo.
+const _PRODUCT_PUBLIC_COLUMNS = [
+  'id', 'name', 'brand', 'type', 'gender', 'occasion',
+  'olf_family', 'top_notes', 'heart_notes', 'base_notes',
+  'description', 'content_description', 'image_url',
+  'sizes', 'in_stock', 'featured',
+  'bottle_remaining_ml', 'bottle_total_ml',
+  'available_as_entero', 'entero_price', 'stock_quantity',
+  'created_at'
+].join(', ');
+
 function productFromDB(row) {
   return {
     id:                row.id,
@@ -490,6 +604,7 @@ function productFromDB(row) {
     bottleTotalMl:     parseFloat(row.bottle_total_ml)     || 0,
     availableAsEntero: row.available_as_entero             || false,
     enteroPrice:       parseFloat(row.entero_price)        || 0,
+    enteroStock:       parseInt(row.entero_stock)          || 0,
     stockQuantity:     parseInt(row.stock_quantity)        || 0,
     costPrice:         parseFloat(row.cost_price)          || 0,
     accords:           Array.isArray(row.accords) ? row.accords : [],
@@ -556,6 +671,7 @@ function productToDB(product) {
     bottle_total_ml:     product.bottleTotalMl     || 0,
     available_as_entero: product.availableAsEntero || false,
     entero_price:        product.enteroPrice       || 0,
+    entero_stock:        product.enteroStock       || 0,
     stock_quantity:      product.stockQuantity     || 0,
     cost_price:          product.costPrice         || 0,
     accords:             product.accords           || []
@@ -570,7 +686,7 @@ const _PRODUCT_FIELD_MAP = {
   imageUrl: 'image_url', sizes: 'sizes', inStock: 'in_stock',
   featured: 'featured', bottleRemainingMl: 'bottle_remaining_ml',
   bottleTotalMl: 'bottle_total_ml', availableAsEntero: 'available_as_entero',
-  enteroPrice: 'entero_price', stockQuantity: 'stock_quantity',
+  enteroPrice: 'entero_price', enteroStock: 'entero_stock', stockQuantity: 'stock_quantity',
   costPrice: 'cost_price', accords: 'accords'
 };
 
@@ -580,10 +696,19 @@ const CloudProducts = {
 
   async getAll() {
     if (db) {
-      const { data, error } = await db
+      let { data, error } = await db
         .from('productos')
         .select('*')
         .order('id', { ascending: true });
+      // anon no tiene permiso de columna sobre TODA la tabla (cost_price queda
+      // oculto a propósito) — select('*') falla con 42501 aunque las columnas
+      // públicas sí sean legibles. Reintentar solo con esas.
+      if (error && error.code === '42501') {
+        ({ data, error } = await db
+          .from('productos')
+          .select(_PRODUCT_PUBLIC_COLUMNS)
+          .order('id', { ascending: true }));
+      }
       if (error) { console.error('Supabase error:', error?.code, error?.message); return Products.getAll(); }
       if (!data || !data.length) return this._seedFromDefaults();
       // Leer localStorage antes del map para preservar campos que aún no están en Supabase
@@ -613,6 +738,10 @@ const CloudProducts = {
         if (!('accords' in row)) {
           const cached = storedProducts.find(sp => sp.id === p.id);
           p.accords = cached?.accords || [];
+        }
+        if (!('entero_stock' in row)) {
+          const cached = storedProducts.find(sp => sp.id === p.id);
+          p.enteroStock = cached?.enteroStock || (p.availableAsEntero ? 1 : 0);
         }
         return p;
       });
@@ -654,8 +783,12 @@ const CloudProducts = {
 
   async getById(id) {
     if (db) {
-      const { data, error } = await db
+      let { data, error } = await db
         .from('productos').select('*').eq('id', id).single();
+      if (error && error.code === '42501') {
+        ({ data, error } = await db
+          .from('productos').select(_PRODUCT_PUBLIC_COLUMNS).eq('id', id).single());
+      }
       if (error || !data) return Products.getById(id);
       const p = productFromDB(data);
       const mapImg     = typeof PRODUCT_IMAGE_MAP !== 'undefined' && PRODUCT_IMAGE_MAP[p.name];
@@ -677,6 +810,9 @@ const CloudProducts = {
       }
       if (!('accords' in data)) {
         p.accords = Products.getById(id)?.accords || [];
+      }
+      if (!('entero_stock' in data)) {
+        p.enteroStock = Products.getById(id)?.enteroStock || (p.availableAsEntero ? 1 : 0);
       }
       return p;
     }
@@ -717,7 +853,7 @@ const CloudProducts = {
       // Si falla por columna inexistente (stock_quantity, available_as_entero, etc.),
       // reintentar solo con los campos que sí existen para no perder el update completo
       if (error && error.code === '42703') {
-        const OPTIONAL_COLS = ['stock_quantity', 'available_as_entero', 'entero_price', 'cost_price', 'content_description', 'accords'];
+        const OPTIONAL_COLS = ['stock_quantity', 'available_as_entero', 'entero_price', 'entero_stock', 'cost_price', 'content_description', 'accords'];
         const fallback = { ...patch };
         OPTIONAL_COLS.forEach(col => { delete fallback[col]; });
         const retry = await db.from('productos').update(fallback).eq('id', id);

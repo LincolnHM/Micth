@@ -208,7 +208,7 @@ const Filter = {
     return products.filter(p => {
       if (this.onlyFavorites && !Wishlist.has(p.id)) return false;
       if (this.type === 'entero') {
-        if (p.type !== 'entero' && !p.availableAsEntero) return false;
+        if (p.type !== 'entero' && !((p.enteroStock || 0) > 0)) return false;
       } else if (this.type !== 'all') {
         if (p.type !== this.type) return false;
       }
@@ -367,7 +367,7 @@ function renderProducts() {
   }
 
   grid.innerHTML = products.map(p => {
-    const showAsEntero = Filter.type === 'entero' && p.availableAsEntero === true && p.type !== 'entero';
+    const showAsEntero = Filter.type === 'entero' && (p.enteroStock || 0) > 0 && p.type !== 'entero';
     const isEntero     = p.type === 'entero' || showAsEntero;
     const sizeValues   = showAsEntero ? [p.enteroPrice || 0] : Object.values(p.sizes || {});
     const positiveSizeValues = sizeValues.filter(v => v > 0);
@@ -445,7 +445,7 @@ function renderProducts() {
             ${p.featured ? '<span class="badge-featured">⭐ Popular</span>' : ''}
             ${isNew ? '<span class="badge-new">NUEVO</span>' : ''}
           </div>
-          ${!purchasable ? '<div class="out-badge">Agotado</div>' : (p.type === 'entero' && p.stockQuantity === 1 ? '<div class="last-unit-badge">⚠ Última unidad</div>' : '')}
+          ${!purchasable ? '<div class="out-badge">Agotado</div>' : ((p.type === 'entero' && p.stockQuantity === 1) || (showAsEntero && p.enteroStock === 1) ? '<div class="last-unit-badge">⚠ Última unidad</div>' : '')}
           ${lowMlWarn}
           ${p.olfFamily ? `<div class="olf-family-tag">${sanitize(p.olfFamily)}</div>` : ''}
           <button class="pd-open-btn" data-id="${p.id}" aria-label="Ver detalles de ${sanitize(p.name)}">Ver detalles →</button>
@@ -662,6 +662,11 @@ function validateCartStock() {
     } else if (product.type === 'entero' && typeof product.stockQuantity === 'number') {
       if (item.quantity > product.stockQuantity) {
         errors.push({ name: `${item.brand} – ${item.productName}`, type: 'stock', available: product.stockQuantity, requested: item.quantity });
+      }
+    } else if (item.size === 'Unidad') {
+      const available = product.enteroStock || 0;
+      if (item.quantity > available) {
+        errors.push({ name: `${item.brand} – ${item.productName}`, type: 'stock', available, requested: item.quantity });
       }
     } else if (!bottleHasMl(product, item.size, item.quantity)) {
       errors.push({ name: `${item.brand} – ${item.productName} (${item.size})`, type: 'agotado' });
