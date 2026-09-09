@@ -7950,6 +7950,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   box-shadow: inset 0 2px 5px rgba(124,79,176,0.15), 0 5px 14px rgba(124,79,176,0.12);
 }
 
+.size-2ml { width: 16px; height: 38px; }
 .size-3ml { width: 20px; height: 48px; }
 .size-5ml { width: 24px; height: 60px; }
 .size-10ml { width: 30px; height: 80px; }

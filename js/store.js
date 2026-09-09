@@ -971,6 +971,14 @@ function _createPdModal() {
             <!-- Visualizador Interactivo de Frascos (Decants) -->
             <div id="pdDecantVisualizer" class="pd-decant-visualizer" style="display:none">
               <div class="pd-visual-bottles">
+                <!-- Botella 2ml -->
+                <div class="pd-visual-bottle-card" data-visual-size="2ml">
+                  <div class="pd-bottle-cap"></div>
+                  <div class="pd-bottle-body size-2ml">
+                    <div class="pd-bottle-liquid"></div>
+                    <span class="pd-bottle-label-ml">2ml</span>
+                  </div>
+                </div>
                 <!-- Botella 3ml -->
                 <div class="pd-visual-bottle-card" data-visual-size="3ml">
                   <div class="pd-bottle-cap"></div>
@@ -1253,17 +1261,19 @@ function openPdModal(productId) {
       let pct = 0;
       let spraysText = '~0 sprays';
       let durText = '';
-      if (sizeVal <= 3.5) {
+      if (sizeVal <= 2.5) {
+        pct = 18; spraysText = '~15-20 sprays'; durText = '🧪 2 a 5 días (Ideal para probar)';
+      } else if (sizeVal <= 3.5) {
         pct = 33; spraysText = '~30-45 sprays'; durText = '🔥 5 a 10 días (Ideal para probar)';
       } else if (sizeVal <= 6) {
         pct = 60; spraysText = '~50-75 sprays'; durText = '✈️ 12 a 18 días (Ideal para viajes)';
       } else {
         pct = 100; spraysText = '~100-150 sprays'; durText = '👑 25 a 35 días (Uso continuo)';
       }
-      
+
       decantVisualizer.querySelectorAll('.pd-visual-bottle-card').forEach(c => {
         const cSize = c.dataset.visualSize;
-        if (cSize === sizeStr || (cSize === '3ml' && sizeVal <= 3.5) || (cSize === '5ml' && sizeVal > 3.5 && sizeVal <= 6) || (cSize === '10ml' && sizeVal > 6)) {
+        if (cSize === sizeStr || (cSize === '2ml' && sizeVal <= 2.5) || (cSize === '3ml' && sizeVal > 2.5 && sizeVal <= 3.5) || (cSize === '5ml' && sizeVal > 3.5 && sizeVal <= 6) || (cSize === '10ml' && sizeVal > 6)) {
           c.classList.add('active');
           if (window.gsap) {
             window.gsap.fromTo(c, { scale: 0.95 }, { scale: 1.08, duration: 0.4, ease: "back.out(2.5)" });
