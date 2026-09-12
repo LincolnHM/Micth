@@ -1496,6 +1496,19 @@ function updateImgPreview(url) {
   }
 }
 
+function updateDupeImgPreview(url) {
+  const wrap    = document.getElementById('dupeImgPreviewWrap');
+  const preview = document.getElementById('dupeImgPreview');
+  if (url) {
+    preview.src = url;
+    preview.onerror = () => { wrap.style.display = 'none'; };
+    preview.onload  = () => { wrap.style.display = 'flex'; };
+  } else {
+    wrap.style.display = 'none';
+    preview.src = '';
+  }
+}
+
 function handleImageFile(file) {
   if (!file || !file.type.startsWith('image/')) { showToast('Selecciona una imagen válida (JPG, PNG o WebP).'); return; }
   if (file.size > 5 * 1024 * 1024) { showToast('La imagen supera los 5 MB.'); return; }
@@ -1525,6 +1538,10 @@ function openProductModal(id = null) {
   document.getElementById('editHeartNotes').value  = product?.heartNotes ?? '';
   document.getElementById('editBaseNotes').value   = product?.baseNotes ?? '';
   document.getElementById('editAccords').value     = accordsToText(product?.accords);
+  document.getElementById('editDupeName').value      = product?.dupeOf?.name  ?? '';
+  document.getElementById('editDupeBrand').value     = product?.dupeOf?.brand ?? '';
+  document.getElementById('editDupeImageUrl').value  = product?.dupeOf?.imageUrl ?? '';
+  updateDupeImgPreview(product?.dupeOf?.imageUrl ?? '');
   document.getElementById('editDescription').value   = product?.description ?? '';
   document.getElementById('editContentDesc').value   = product?.contentDescription ?? '';
   const imageUrl = product?.imageUrl ?? '';
@@ -1633,11 +1650,16 @@ function setupAdminEvents() {
 
     const accords = parseAccordsText(document.getElementById('editAccords').value);
 
+    const dupeName = document.getElementById('editDupeName').value.trim();
+    const dupeBrand = document.getElementById('editDupeBrand').value.trim();
+    const dupeImageUrl = document.getElementById('editDupeImageUrl').value.trim();
+    const dupeOf = dupeName ? { name: dupeName, brand: dupeBrand, imageUrl: dupeImageUrl } : null;
+
     // No pisar stock/destacado al editar: solo se fijan valores por defecto
     // al crear un perfume nuevo. Antes esto siempre reseteaba inStock a true
     // y bottleRemainingMl/bottleTotalMl a 0 en cada edición, borrando el
     // seguimiento de stock de un producto ya agotado.
-    const data = { name, brand, type, gender, occasion, olfFamily, topNotes, heartNotes, baseNotes, accords, description, contentDescription, imageUrl, sizes };
+    const data = { name, brand, type, gender, occasion, olfFamily, topNotes, heartNotes, baseNotes, accords, dupeOf, description, contentDescription, imageUrl, sizes };
     if (!id) Object.assign(data, { inStock: true, bottleRemainingMl: 0, bottleTotalMl: 0, featured: false });
 
     const saveBtn = document.getElementById('saveProductBtn');
@@ -1680,6 +1702,11 @@ function setupAdminEvents() {
     document.getElementById('editImageUrl').value = '';
     updateImgPreview('');
     imgInput.value = '';
+  });
+
+  // ── "Se parece a" (dupe) — vista previa en vivo de la ruta pegada ───────────
+  document.getElementById('editDupeImageUrl')?.addEventListener('input', e => {
+    updateDupeImgPreview(e.target.value.trim());
   });
 
   // Cambiar contraseña (usa Supabase Auth)

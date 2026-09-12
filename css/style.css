@@ -1822,6 +1822,10 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
 .notes-section { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: .85rem; }
 .notes-section-title { font-size: .72rem; color: var(--gold-d); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin-bottom: .65rem; }
 
+.dupe-img-preview-wrap { margin-top: .6rem; display: flex; align-items: center; gap: .6rem; }
+.dupe-img-preview-wrap img { width: 42px; height: 56px; object-fit: contain; border-radius: 6px; background: var(--card); border: 1px solid var(--border); }
+.dupe-img-preview-wrap span { font-size: .72rem; color: var(--text3); }
+
 .btn-cancel { background: var(--card); color: var(--text2); font-size: .85rem; padding: .55rem 1.1rem; border-radius: var(--r); border: 1px solid var(--border); transition: all var(--tr); }
 .btn-cancel:hover { color: var(--text); border-color: var(--border-l); }
 .btn-save { background: var(--gold); color: #000; font-weight: 700; padding: .55rem 1.3rem; border-radius: var(--r); font-size: .85rem; transition: background var(--tr); }
@@ -3370,7 +3374,8 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
 .pd-hero-img-wrap {
   width: 100%;
   position: relative;
-  display: flex; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.1rem;
   padding: 3rem 2rem;
 }
 @media(min-width:768px) {
@@ -3393,6 +3398,32 @@ input, select, textarea { font-family: inherit; touch-action: manipulation; }
   opacity: .25;
 }
 .pd-img-ph svg { width: 100%; height: 100%; stroke: #555; }
+
+/* ── "Se parece a" — tarjeta con la foto del perfume que dupea/inspira ─── */
+.pd-dupe-card {
+  display: flex; align-items: center; gap: .7rem;
+  padding: .55rem .95rem .55rem .55rem;
+  border-radius: var(--r-lg);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.09);
+  max-width: 260px;
+}
+.pd-dupe-img {
+  width: 34px; height: 46px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: rgba(255,255,255,.06);
+  flex-shrink: 0;
+}
+.pd-dupe-info { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.pd-dupe-label {
+  font-size: .56rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--gold-d);
+}
+.pd-dupe-name {
+  font-size: .8rem; font-weight: 600; color: var(--text);
+  line-height: 1.25;
+}
 
 /* Columna derecha — tema oscuro */
 .pd-right-col {

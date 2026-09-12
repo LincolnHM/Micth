@@ -940,6 +940,13 @@ function _createPdModal() {
                 <line x1="2" y1="14" x2="30" y2="14"/>
               </svg>
             </div>
+            <div id="pdDupeCard" class="pd-dupe-card" style="display:none">
+              <img id="pdDupeImg" class="pd-dupe-img" alt="">
+              <div class="pd-dupe-info">
+                <span class="pd-dupe-label">Se parece a</span>
+                <span id="pdDupeName" class="pd-dupe-name"></span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1141,6 +1148,25 @@ function openPdModal(productId) {
   } else {
     imgEl.style.display = 'none';
     imgPh.style.display = 'flex';
+  }
+
+  // ── "Se parece a" (perfume de diseñador que dupea/inspira) ──
+  const dupeCard = document.getElementById('pdDupeCard');
+  const dupeImg  = document.getElementById('pdDupeImg');
+  const dupeName = document.getElementById('pdDupeName');
+  if (p.dupeOf && p.dupeOf.name) {
+    dupeName.textContent = [p.dupeOf.name, p.dupeOf.brand].filter(Boolean).join(' · ');
+    if (p.dupeOf.imageUrl) {
+      dupeImg.src = p.dupeOf.imageUrl;
+      dupeImg.style.display = 'block';
+      dupeImg.onerror = () => { dupeImg.style.display = 'none'; };
+    } else {
+      dupeImg.removeAttribute('src');
+      dupeImg.style.display = 'none';
+    }
+    dupeCard.style.display = 'flex';
+  } else {
+    dupeCard.style.display = 'none';
   }
 
   // ── Breadcrumb + Nombre ──────────────────────────────────

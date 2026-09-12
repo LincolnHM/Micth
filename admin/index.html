@@ -1117,6 +1117,29 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
           </div>
         </div>
 
+        <!-- Se parece a (dupe) -->
+        <div class="notes-section">
+          <p class="notes-section-title">Se Parece A <span style="color:var(--text3);font-size:.75rem;font-weight:400">(perfume de diseñador que dupea/inspira — opcional, deja vacío si no está confirmado)</span></p>
+          <div class="field-grid-2">
+            <div class="field">
+              <label for="editDupeName">Nombre del perfume original</label>
+              <input type="text" id="editDupeName" maxlength="80" placeholder="Ej: Sauvage" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="editDupeBrand">Marca del original</label>
+              <input type="text" id="editDupeBrand" maxlength="80" placeholder="Ej: Dior" autocomplete="off">
+            </div>
+          </div>
+          <div class="field">
+            <label for="editDupeImageUrl">Ruta o URL de la foto del original</label>
+            <input type="text" id="editDupeImageUrl" maxlength="300" placeholder="Ej: /img PERFUMES/Dior_Sauvage.png" autocomplete="off">
+          </div>
+          <div class="dupe-img-preview-wrap" id="dupeImgPreviewWrap" style="display:none">
+            <img id="dupeImgPreview" src="" alt="Vista previa">
+            <span>Vista previa</span>
+          </div>
+        </div>
+
         <!-- Imagen -->
         <div class="field">
           <label>Imagen del Perfume</label>

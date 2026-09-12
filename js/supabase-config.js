@@ -608,6 +608,7 @@ function productFromDB(row) {
     stockQuantity:     parseInt(row.stock_quantity)        || 0,
     costPrice:         parseFloat(row.cost_price)          || 0,
     accords:           Array.isArray(row.accords) ? row.accords : [],
+    dupeOf:            row.dupe_of && row.dupe_of.name ? row.dupe_of : null,
     date:              row.created_at,
     updatedAt:         row.updated_at
   };
@@ -674,7 +675,8 @@ function productToDB(product) {
     entero_stock:        product.enteroStock       || 0,
     stock_quantity:      product.stockQuantity     || 0,
     cost_price:          product.costPrice         || 0,
-    accords:             product.accords           || []
+    accords:             product.accords           || [],
+    dupe_of:             product.dupeOf            || null
   };
 }
 
@@ -687,7 +689,7 @@ const _PRODUCT_FIELD_MAP = {
   featured: 'featured', bottleRemainingMl: 'bottle_remaining_ml',
   bottleTotalMl: 'bottle_total_ml', availableAsEntero: 'available_as_entero',
   enteroPrice: 'entero_price', enteroStock: 'entero_stock', stockQuantity: 'stock_quantity',
-  costPrice: 'cost_price', accords: 'accords'
+  costPrice: 'cost_price', accords: 'accords', dupeOf: 'dupe_of'
 };
 
 // ─── API de productos (async, usa Supabase si está configurado) ───────────────
@@ -738,6 +740,10 @@ const CloudProducts = {
         if (!('accords' in row)) {
           const cached = storedProducts.find(sp => sp.id === p.id);
           p.accords = cached?.accords || [];
+        }
+        if (!('dupe_of' in row)) {
+          const cached = storedProducts.find(sp => sp.id === p.id);
+          p.dupeOf = cached?.dupeOf || null;
         }
         if (!('entero_stock' in row)) {
           const cached = storedProducts.find(sp => sp.id === p.id);
@@ -811,6 +817,9 @@ const CloudProducts = {
       if (!('accords' in data)) {
         p.accords = Products.getById(id)?.accords || [];
       }
+      if (!('dupe_of' in data)) {
+        p.dupeOf = Products.getById(id)?.dupeOf || null;
+      }
       if (!('entero_stock' in data)) {
         p.enteroStock = Products.getById(id)?.enteroStock || (p.availableAsEntero ? 1 : 0);
       }
@@ -853,7 +862,7 @@ const CloudProducts = {
       // Si falla por columna inexistente (stock_quantity, available_as_entero, etc.),
       // reintentar solo con los campos que sí existen para no perder el update completo
       if (error && error.code === '42703') {
-        const OPTIONAL_COLS = ['stock_quantity', 'available_as_entero', 'entero_price', 'entero_stock', 'cost_price', 'content_description', 'accords'];
+        const OPTIONAL_COLS = ['stock_quantity', 'available_as_entero', 'entero_price', 'entero_stock', 'cost_price', 'content_description', 'accords', 'dupe_of'];
         const fallback = { ...patch };
         OPTIONAL_COLS.forEach(col => { delete fallback[col]; });
         const retry = await db.from('productos').update(fallback).eq('id', id);
