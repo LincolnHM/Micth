@@ -321,7 +321,15 @@ const CloudOrders = {
         const prodLookup  = {};
         allProducts.forEach(p => { prodLookup[p.id] = p; });
 
-        for (const item of (order.items || [])) {
+        // Un item de combo no es un producto real — trae su propio desglose
+        // (comboItems) con los perfumes que sí hay que descontar del frasco.
+        const flatItems = (order.items || []).flatMap(item =>
+          Array.isArray(item.comboItems) && item.comboItems.length
+            ? item.comboItems.map(ci => ({ ...ci, quantity: (ci.qty || 1) * (item.quantity || 1) }))
+            : [item]
+        );
+
+        for (const item of flatItems) {
           const pid     = parseInt(item.productId);
           const product = prodLookup[pid];
           if (!product) continue;
@@ -751,12 +759,31 @@ const CloudProducts = {
         }
         return p;
       });
-      // Incluir productos de DEFAULT_PRODUCTS que todavía no están en Supabase
-      // Se usa localStorage para capturar cambios de stock/featured ya aplicados localmente
+      // Incluir productos de DEFAULT_PRODUCTS que todavía no están en Supabase.
+      // Ojo: la base es SIEMPRE el DEFAULT_PRODUCTS fresco (no el objeto cacheado
+      // completo) — antes se usaba el objeto de localStorage entero si existía,
+      // así que un producto nunca sincronizado (ej. "fantasma") quedaba atascado
+      // para siempre con los datos viejos con los que se cacheó la primera vez
+      // (precios, tallas, etc.), aunque luego se corrigiera en data.js. Solo se
+      // recuperan del caché los campos que de verdad son estado local mutable
+      // (stock/destacado), no el catálogo completo.
       const supabaseIds   = new Set(supabaseProducts.map(p => p.id));
       const localExtras   = DEFAULT_PRODUCTS
         .filter(p => !supabaseIds.has(p.id))
-        .map(p => storedProducts.find(sp => sp.id === p.id) || p);
+        .map(p => {
+          const cached = storedProducts.find(sp => sp.id === p.id);
+          return cached ? {
+            ...p,
+            inStock:            cached.inStock,
+            featured:           cached.featured,
+            stockQuantity:      cached.stockQuantity,
+            bottleRemainingMl:  cached.bottleRemainingMl,
+            bottleTotalMl:      cached.bottleTotalMl,
+            availableAsEntero:  cached.availableAsEntero,
+            enteroPrice:        cached.enteroPrice,
+            enteroStock:        cached.enteroStock
+          } : p;
+        });
       const products = localExtras.length
         ? [...supabaseProducts, ...localExtras].sort((a, b) => a.id - b.id)
         : supabaseProducts;
@@ -899,6 +926,115 @@ const CloudProducts = {
     }
     Products.save(products);
     return products;
+  }
+};
+
+// ─── API de combos (async, usa Supabase si está configurado) ─────────────────
+// Mismo patrón que CloudProducts: local primero, Supabase si hay conexión,
+// con fallback silencioso a localStorage si la tabla `combos` todavía no
+// existe (el usuario debe correr supabase/sql/2026-09-22-combos.sql una vez).
+
+function comboFromDB(row) {
+  return {
+    id:          row.id,
+    title:       row.title       || '',
+    description: row.description || '',
+    items:       Array.isArray(row.items) ? row.items : [],
+    price:       parseFloat(row.price) || 0,
+    imageUrl:    row.image_url    || '',
+    active:      row.active !== null ? row.active : true,
+    date:        row.created_at,
+    updatedAt:   row.updated_at
+  };
+}
+
+function comboToDB(combo) {
+  return {
+    title:       combo.title       || '',
+    description: combo.description || '',
+    items:       combo.items       || [],
+    price:       combo.price       || 0,
+    image_url:   combo.imageUrl    || '',
+    active:      combo.active      !== undefined ? combo.active : true
+  };
+}
+
+const CloudCombos = {
+
+  async getAll() {
+    if (db) {
+      const { data, error } = await db
+        .from('combos')
+        .select('*')
+        .order('id', { ascending: true });
+      if (error) {
+        // Tabla aún no creada (42P01) u otro error — no romper el sitio,
+        // usar lo que haya en localStorage mientras tanto.
+        if (error.code !== '42P01') console.error('Supabase error (combos):', error?.code, error?.message);
+        return Combos.getAll();
+      }
+      const combos = (data || []).map(comboFromDB);
+      Combos.save(combos);
+      return combos;
+    }
+    return Combos.getAll();
+  },
+
+  async getById(id) {
+    if (db) {
+      const { data, error } = await db.from('combos').select('*').eq('id', id).single();
+      if (error || !data) return Combos.getById(id);
+      return comboFromDB(data);
+    }
+    return Combos.getById(id);
+  },
+
+  async add(combo) {
+    if (db) {
+      let { data, error } = await db.from('combos').insert(comboToDB(combo)).select('id').single();
+      // Columna image_url todavía no existe (SQL viejo sin correr la versión con foto) — reintentar sin ella
+      if (error && error.code === '42703') {
+        const { image_url, ...fallback } = comboToDB(combo);
+        ({ data, error } = await db.from('combos').insert(fallback).select('id').single());
+      }
+      if (!error && data) {
+        const local = Combos.getAll();
+        local.push({ ...combo, id: data.id });
+        Combos.save(local);
+        return data.id;
+      }
+      console.error('Supabase error (combos insert):', error?.code, error?.message);
+    }
+    return Combos.add(combo);
+  },
+
+  async update(id, data) {
+    Combos.update(id, data); // localStorage primero
+    if (db) {
+      const patch = { updated_at: new Date().toISOString() };
+      if (data.title       !== undefined) patch.title       = data.title;
+      if (data.description !== undefined) patch.description = data.description;
+      if (data.items       !== undefined) patch.items       = data.items;
+      if (data.price       !== undefined) patch.price       = data.price;
+      if (data.imageUrl    !== undefined) patch.image_url   = data.imageUrl;
+      if (data.active      !== undefined) patch.active      = data.active;
+      let { error } = await db.from('combos').update(patch).eq('id', id);
+      if (error && error.code === '42703') {
+        const { image_url, ...fallback } = patch;
+        const retry = await db.from('combos').update(fallback).eq('id', id);
+        error = retry.error;
+        if (!error) console.warn('[MICHT] Columna image_url faltante en combos — ejecuta el SQL de migración en Supabase.');
+      }
+      if (error) console.error('Supabase update error (combos):', error?.code, error?.message);
+    }
+  },
+
+  async delete(id) {
+    if (db) {
+      const { error } = await db.from('combos').delete().eq('id', id);
+      if (error) console.error('Supabase error (combos delete):', error?.code, error?.message);
+    }
+    Combos.delete(id);
   }
 };
 

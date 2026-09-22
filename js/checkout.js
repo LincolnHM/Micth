@@ -214,7 +214,7 @@ const Checkout = {
       <ul class="order-list">
         ${Cart.items.map(i => `
           <li>
-            <span>${sanitize(i.brand)} – ${sanitize(i.productName)} (${sanitize(i.size)}) × ${i.quantity}</span>
+            <span>${sanitize(i.brand)} – ${sanitize(i.productName)} (${sanitize(i.size)}) × ${i.quantity}${i.isCombo && i.comboComposition ? `<br><small style="color:var(--text3)">Incluye: ${sanitize(i.comboComposition)}</small>` : ''}</span>
             <span>S/ ${(i.price * i.quantity).toFixed(2)}</span>
           </li>
         `).join('')}
@@ -246,6 +246,9 @@ const Checkout = {
     lines.push('*Productos:*');
     Cart.items.forEach(i => {
       lines.push(`  • ${i.brand} – ${i.productName} (${i.size}) × ${i.quantity} = S/ ${(i.price * i.quantity).toFixed(2)}`);
+      if (i.isCombo && i.comboComposition) {
+        lines.push(`      ↳ Incluye: ${i.comboComposition}`);
+      }
     });
 
     if (hasDisc) {
@@ -332,7 +335,8 @@ const Checkout = {
       brand:       i.brand,
       size:        i.size,
       price:       i.price,
-      quantity:    i.quantity
+      quantity:    i.quantity,
+      ...(i.isCombo ? { isCombo: true, comboId: i.comboId, comboItems: i.comboItems, comboComposition: i.comboComposition } : {})
     }));
     const orderTotal    = this._effectiveTotal();
     const profile       = (typeof UserAuth !== 'undefined') ? UserAuth.getProfile() : null;

@@ -96,6 +96,12 @@ Deno.serve(async (req) => {
   if (!items.length)     return json({ error: 'El pedido no tiene productos.' }, 400, headers);
   if (items.length > 30) return json({ error: 'Demasiados productos en un solo pedido.' }, 400, headers);
 
+  // Un "combo" no es una fila de `productos` — es un set fijo (tabla `combos`)
+  // marcado por el cliente con isCombo:true + comboId. Se valida aparte más
+  // abajo (existe, está activo, precio real) antes de tocar el catálogo normal.
+  const comboLines   = items.filter((i: any) => i.isCombo === true);
+  const regularLines = items.filter((i: any) => i.isCombo !== true);
+
   const customerName = String(body.customerName || '').trim();
   if (!RULES.name(customerName)) {
     return json({ error: 'Nombre inválido.' }, 400, headers);
@@ -114,25 +120,58 @@ Deno.serve(async (req) => {
     }
   }
 
-  // ── 3. Recalcular precios reales desde el catálogo — el total del navegador nunca se usa tal cual ──
-  const productIds = [...new Set(
-    items.map((i: any) => parseInt(i.productId)).filter((n: number) => !isNaN(n))
+  // ── 3a. Validar los combos pedidos (existen, siguen activos) ────────────────
+  const comboIds = [...new Set(
+    comboLines.map((i: any) => parseInt(i.comboId)).filter((n: number) => !isNaN(n))
   )];
-  if (!productIds.length) return json({ error: 'Productos inválidos.' }, 400, headers);
 
-  const { data: products, error: prodError } = await supabase
-    .from('productos')
-    .select('id, name, brand, type, sizes, entero_price')
-    .in('id', productIds);
-
-  if (prodError || !products) {
-    return json({ error: 'No se pudo verificar el catálogo. Intenta de nuevo.' }, 502, headers);
+  let combosMap = new Map<number, any>();
+  if (comboIds.length) {
+    const { data: combos, error: comboError } = await supabase
+      .from('combos')
+      .select('id, title, items, price, active')
+      .in('id', comboIds);
+    if (comboError) return json({ error: 'No se pudo verificar los combos. Intenta de nuevo.' }, 502, headers);
+    combosMap = new Map((combos || []).map((c: any) => [c.id, c]));
   }
-  const productMap = new Map(products.map((p: any) => [p.id, p]));
+
+  const comboProductIds: number[] = [];
+  for (const line of comboLines) {
+    const combo = combosMap.get(parseInt(line.comboId));
+    if (!combo || !combo.active) {
+      return json({ error: 'Uno de los combos ya no está disponible.' }, 400, headers);
+    }
+    (combo.items || []).forEach((it: any) => {
+      const pid = parseInt(it.productId);
+      if (!isNaN(pid)) comboProductIds.push(pid);
+    });
+  }
+
+  // ── 3b. Recalcular precios reales desde el catálogo — el total del navegador
+  // nunca se usa tal cual. Se consulta una sola vez, incluyendo tanto los
+  // productos sueltos del carrito como los que forman parte de algún combo
+  // (para poder mostrar nombre/marca de cada perfume incluido en el combo). ──
+  const regularProductIds = regularLines.map((i: any) => parseInt(i.productId)).filter((n: number) => !isNaN(n));
+  const productIds = [...new Set([...regularProductIds, ...comboProductIds])];
+  if (!productIds.length && !comboLines.length) return json({ error: 'Productos inválidos.' }, 400, headers);
+
+  let productMap = new Map<number, any>();
+  if (productIds.length) {
+    const { data: products, error: prodError } = await supabase
+      .from('productos')
+      .select('id, name, brand, type, sizes, entero_price')
+      .in('id', productIds);
+
+    if (prodError || !products) {
+      return json({ error: 'No se pudo verificar el catálogo. Intenta de nuevo.' }, 502, headers);
+    }
+    productMap = new Map(products.map((p: any) => [p.id, p]));
+  }
 
   let subtotal = 0;
   const itemsSnapshot: any[] = [];
-  for (const raw of items) {
+
+  for (const raw of regularLines) {
     const productId = parseInt(raw.productId);
     const product = productMap.get(productId);
     if (!product) return json({ error: `Uno de los productos ya no existe (id ${raw.productId}).` }, 400, headers);
@@ -155,6 +194,47 @@ Deno.serve(async (req) => {
       size: size || 'Unidad', price: unitPrice, quantity,
     });
   }
+
+  // El precio de un combo SIEMPRE sale de la tabla `combos` (nunca del navegador)
+  // — igual que arriba con los productos sueltos.
+  for (const raw of comboLines) {
+    const comboId = parseInt(raw.comboId);
+    const combo   = combosMap.get(comboId)!; // ya validado que existe y está activo
+
+    const quantity  = Math.min(Math.max(parseInt(raw.quantity) || 1, 1), 10);
+    const unitPrice = parseFloat(combo.price) || 0;
+    if (unitPrice <= 0) {
+      return json({ error: `El combo "${combo.title}" no tiene un precio válido.` }, 400, headers);
+    }
+
+    const comboItemsResolved = (combo.items || []).map((it: any) => {
+      const p = productMap.get(parseInt(it.productId));
+      return {
+        productId: parseInt(it.productId),
+        size: it.size,
+        qty: it.qty || 1,
+        name: p?.name || '',
+        brand: p?.brand || '',
+      };
+    });
+    const comboComposition = comboItemsResolved
+      .map((ci: any) => `${ci.brand} ${ci.name} (${ci.size})${ci.qty > 1 ? ' ×' + ci.qty : ''}`)
+      .join(', ');
+
+    subtotal += unitPrice * quantity;
+    itemsSnapshot.push({
+      productId: -comboId,
+      productName: combo.title,
+      brand: 'Combo MICHT',
+      size: `${(combo.items || []).length} perfumes`,
+      price: unitPrice,
+      quantity,
+      comboItems: comboItemsResolved,
+      comboComposition,
+    });
+  }
+
+  if (!itemsSnapshot.length) return json({ error: 'El pedido no tiene productos válidos.' }, 400, headers);
 
   // Nota (limitación conocida — ver informe de seguridad M-01/C-01): el 10%
   // de primera compra se aplica sobre el subtotal ya verificado, pero esta

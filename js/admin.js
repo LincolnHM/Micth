@@ -39,6 +39,68 @@ function withTimeout(promise, ms, label = 'operacion') {
   ]);
 }
 
+// ─── Búsqueda tolerante a errores de tipeo (acentos + distancia de edición) ───
+function _normalizeSearchText(s) {
+  return (s || '').toString().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+
+function _levenshtein(a, b) {
+  if (a === b) return 0;
+  const m = a.length, n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  const dp = new Array(n + 1);
+  for (let j = 0; j <= n; j++) dp[j] = j;
+  for (let i = 1; i <= m; i++) {
+    let prev = dp[0];
+    dp[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const tmp = dp[j];
+      dp[j] = a[i - 1] === b[j - 1] ? prev : 1 + Math.min(prev, dp[j], dp[j - 1]);
+      prev = tmp;
+    }
+  }
+  return dp[n];
+}
+
+// Puntúa qué tan bien "queryWords" (lo que escribió el usuario) matchea contra
+// "targetWords" (nombre + marca + talla normalizados de una opción). Menor = mejor.
+// Devuelve null si alguna palabra de la búsqueda no matchea nada razonable (se descarta la opción).
+function _fuzzyMatchScore(queryWords, targetWords) {
+  let total = 0;
+  for (const qw of queryWords) {
+    let best = null;
+    for (const tw of targetWords) {
+      if (tw.startsWith(qw) || tw.includes(qw)) { best = 0; break; }
+      const maxDist = qw.length <= 3 ? 1 : qw.length <= 6 ? 2 : 3;
+      const d = _levenshtein(qw, tw);
+      if (d <= maxDist && (best === null || d < best)) best = d;
+    }
+    if (best === null) return null;
+    total += best;
+  }
+  return total;
+}
+
+// Une "escuchar tap (click/touch) sin bloquear el scroll táctil" — si el dedo se
+// mueve más que unos px entre touchstart y touchend, se asume que era un gesto de
+// scroll y se ignora el tap (evita seleccionar por error Y permite bajar la lista).
+function _bindTapSelect(el, handler) {
+  el.addEventListener('mousedown', handler);
+  let startY = null, moved = false;
+  el.addEventListener('touchstart', (e) => {
+    startY = e.touches[0].clientY;
+    moved = false;
+  }, { passive: true });
+  el.addEventListener('touchmove', (e) => {
+    if (startY !== null && Math.abs(e.touches[0].clientY - startY) > 8) moved = true;
+  }, { passive: true });
+  el.addEventListener('touchend', (e) => {
+    if (!moved) handler(e);
+    startY = null;
+  }, { passive: false });
+}
+
 function setAdminErrorState(containerId, title, message) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -143,6 +205,7 @@ async function showDashboard() {
     setupUsersEvents();
     setupAccountingEvents();
     setupPreciosEvents();
+    setupComboEvents();
     setupNav();
     setupSidebarControls();
   }
@@ -212,6 +275,7 @@ function setupNav() {
       if (btn.dataset.section === 'caja')        renderCajaSection().catch(console.error);
       if (btn.dataset.section === 'tools')       setupToolsSection().catch(console.error);
       if (btn.dataset.section === 'precios')     renderPreciosSection().catch(console.error);
+      if (btn.dataset.section === 'combos')      renderAdminCombos().catch(console.error);
     });
   });
 }
@@ -979,9 +1043,12 @@ async function openOrderDetail(id) {
     <strong style="color:var(--text2);font-size:.75rem;text-transform:uppercase;letter-spacing:.08em">Productos</strong>
     <ul style="margin-top:.5rem;display:flex;flex-direction:column;gap:.4rem">
       ${order.items.map(i => `
-      <li style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--text2)">
-        <span>${sanitize(i.brand || '')} ${sanitize(i.productName)} <span class="decant-chip">${sanitize(i.size)}</span> ×${i.quantity}</span>
-        <strong style="color:var(--gold)">S/ ${(i.price * i.quantity).toFixed(2)}</strong>
+      <li style="display:flex;flex-direction:column;gap:.15rem;font-size:.82rem;color:var(--text2)">
+        <div style="display:flex;justify-content:space-between">
+          <span>${sanitize(i.brand || '')} ${sanitize(i.productName)} <span class="decant-chip">${sanitize(i.size)}</span> ×${i.quantity}</span>
+          <strong style="color:var(--gold)">S/ ${(i.price * i.quantity).toFixed(2)}</strong>
+        </div>
+        ${i.comboComposition ? `<span style="font-size:.72rem;color:var(--text3)">Incluye: ${sanitize(i.comboComposition)}</span>` : ''}
       </li>`).join('')}
     </ul>
     <div style="margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--border-l)">
@@ -1239,8 +1306,7 @@ function _setupCustomerAutocomplete() {
         dropdown.style.display = 'none';
         showToast('✓ Datos del cliente cargados automáticamente');
       };
-      opt.addEventListener('mousedown', selectCust);
-      opt.addEventListener('touchstart', selectCust, { passive: false });
+      _bindTapSelect(opt, selectCust);
     });
     dropdown.style.display = 'block';
     requestAnimationFrame(() => dropdown.scrollIntoView({ block: 'nearest' }));
@@ -1276,13 +1342,19 @@ function addOrderItemRow() {
 
   const allOptions = [];
 
+  // searchWords: texto normalizado (sin acentos, sin emoji/precio) usado solo para
+  // matchear la búsqueda — el "label" sigue siendo lo que se muestra tal cual.
+  const buildSearchWords = (p, sizeLabel) =>
+    _normalizeSearchText(`${p.brand} ${p.name} ${sizeLabel}`).split(/\s+/).filter(Boolean);
+
   // Perfumes Enteros (tipo entero)
   enteroProds.forEach(p => {
     Object.entries(p.sizes).forEach(([sizeLabel, price]) => {
       const priceStr = price > 0 ? `S/${price}` : 'Consultar';
       allOptions.push({
         value: `${p.id}|${sizeLabel}|${price}|${p.name}|${p.brand}`,
-        label: `🛍 ENTERO · ${p.brand} – ${p.name} (${sizeLabel}) ${priceStr}`
+        label: `🛍 ENTERO · ${p.brand} – ${p.name} (${sizeLabel}) ${priceStr}`,
+        searchWords: buildSearchWords(p, sizeLabel)
       });
     });
   });
@@ -1291,7 +1363,8 @@ function addOrderItemRow() {
   decantProds.filter(p => (p.enteroStock || 0) > 0 && (p.enteroPrice || 0) > 0).forEach(p => {
     allOptions.push({
       value: `${p.id}|Unidad|${p.enteroPrice}|${p.name}|${p.brand}`,
-      label: `🛍 ENTERO · ${p.brand} – ${p.name} (Unidad) S/${p.enteroPrice}`
+      label: `🛍 ENTERO · ${p.brand} – ${p.name} (Unidad) S/${p.enteroPrice}`,
+      searchWords: buildSearchWords(p, 'Unidad')
     });
   });
 
@@ -1301,7 +1374,8 @@ function addOrderItemRow() {
       const priceStr = price > 0 ? `S/${price}` : 'Consultar';
       allOptions.push({
         value: `${p.id}|${ml}|${price}|${p.name}|${p.brand}`,
-        label: `💧 Decant · ${p.brand} – ${p.name} (${ml}) ${priceStr}`
+        label: `💧 Decant · ${p.brand} – ${p.name} (${ml}) ${priceStr}`,
+        searchWords: buildSearchWords(p, ml)
       });
     });
   });
@@ -1330,10 +1404,19 @@ function addOrderItemRow() {
   const hiddenInput   = row.querySelector('.order-product-value');
 
   function renderDropdown(filter) {
-    const q = filter.toLowerCase().trim();
-    const matches = q
-      ? allOptions.filter(o => o.label.toLowerCase().includes(q)).slice(0, 25)
-      : allOptions.slice(0, 25);
+    const q = _normalizeSearchText(filter);
+    let matches;
+    if (!q) {
+      matches = allOptions.slice(0, 25);
+    } else {
+      const qWords = q.split(/\s+/).filter(Boolean);
+      matches = allOptions
+        .map(o => ({ o, score: _fuzzyMatchScore(qWords, o.searchWords) }))
+        .filter(x => x.score !== null)
+        .sort((a, b) => a.score - b.score)
+        .slice(0, 25)
+        .map(x => x.o);
+    }
 
     if (!matches.length) { dropdown.style.display = 'none'; return; }
 
@@ -1356,8 +1439,11 @@ function addOrderItemRow() {
         searchInput.value  = opt.dataset.label;
         dropdown.style.display = 'none';
       };
-      opt.addEventListener('mousedown', selectProd);
-      opt.addEventListener('touchstart', selectProd, { passive: false });
+      // _bindTapSelect distingue un tap (selecciona) de un arrastre (scroll) — antes,
+      // cualquier toque sobre una opción seleccionaba al instante y bloqueaba el
+      // gesto de scroll, por lo que en móvil no se podía bajar la lista para ver
+      // más resultados.
+      _bindTapSelect(opt, selectProd);
     });
   }
 
@@ -1568,6 +1654,407 @@ function addSizeRow(ml = '', price = '') {
   `;
   row.querySelector('.remove-size-btn')?.addEventListener('click', () => row.remove());
   container.appendChild(row);
+}
+
+// ─── Sección: Combos de Decants ──────────────────────────────────────────────
+// El admin arma cada combo eligiendo perfumes + talla + cantidad (mismo picker
+// con búsqueda fuzzy que "Registrar Pedido"). El "precio antes" se recalcula
+// siempre en vivo sumando el precio actual de cada talla elegida — nunca se
+// guarda congelado, así nunca queda desactualizado si cambia un precio.
+
+let _comboProductsCache = null;
+
+function _comboMarginColor(pct) {
+  if (pct >= 15) return '#4caf50';
+  if (pct > 0)   return '#ff9800';
+  return '#ef5350';
+}
+
+async function renderAdminCombos() {
+  const container = document.getElementById('adminComboList');
+  if (!container) return;
+  container.innerHTML = `<div style="text-align:center;color:var(--text2);padding:2.5rem;font-size:.85rem">Cargando combos…</div>`;
+
+  let combos = [], products = [];
+  try {
+    [combos, products] = await Promise.all([
+      withTimeout(CloudCombos.getAll(), 15000, 'los combos'),
+      withTimeout(CloudProducts.getAll(), 15000, 'los perfumes')
+    ]);
+  } catch (err) {
+    container.innerHTML = `<div style="text-align:center;color:#ef5350;padding:2rem">No se pudieron cargar los combos. Recarga la página.</div>`;
+    return;
+  }
+
+  if (!combos.length) {
+    container.innerHTML = `
+      <div style="text-align:center;color:var(--text2);padding:3rem 1.5rem">
+        <p style="margin-bottom:.5rem;font-size:.95rem">Todavía no armaste ningún combo.</p>
+        <p style="font-size:.8rem;color:var(--text3)">Presiona "+ Nuevo Combo" para elegir los perfumes, la talla y cantidad de cada uno, y poner el precio final.</p>
+      </div>`;
+    return;
+  }
+
+  const prodLookup = {};
+  products.forEach(p => { prodLookup[p.id] = p; });
+
+  container.innerHTML = combos.map(combo => {
+    const items   = combo.items || [];
+    const before  = comboBeforeTotal(combo, products);
+    const price   = parseFloat(combo.price || 0);
+    const savings = before - price;
+    const pct     = before > 0 ? (savings / before * 100) : 0;
+    const sColor  = _comboMarginColor(pct);
+
+    // Si el admin subió una foto propia del combo, esa manda; si no, se arma
+    // un collage automático con las fotos de los perfumes incluidos.
+    const thumbs = combo.imageUrl
+      ? `<img src="${escapeAttr(combo.imageUrl)}" alt="" class="combo-thumb combo-thumb-custom" loading="lazy" onerror="this.style.display='none'">`
+      : items.slice(0, 4).map(it => {
+          const p = prodLookup[it.productId];
+          if (!p) return '';
+          const img = _normAdminImg(p.imageUrl) || buildProductImage(p);
+          return `<img src="${escapeAttr(img)}" alt="" class="combo-thumb" loading="lazy" onerror="this.style.display='none'">`;
+        }).join('');
+    const extra = !combo.imageUrl && items.length > 4 ? `<span class="combo-thumb-extra">+${items.length - 4}</span>` : '';
+
+    const itemsListHtml = items.map(it => {
+      const p = prodLookup[it.productId];
+      const label = p ? `${sanitize(p.brand)} ${sanitize(p.name)}` : `⚠ Perfume #${it.productId} (ya no existe)`;
+      return `<span class="combo-item-chip">${label} · ${sanitize(it.size)} ×${it.qty || 1}</span>`;
+    }).join('');
+
+    return `
+    <div class="admin-card combo-admin-card" data-id="${combo.id}">
+      <div class="combo-admin-card-top">
+        <div class="combo-thumbs">${thumbs}${extra}</div>
+        <div class="combo-admin-card-info">
+          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+            <h3 style="margin:0">${sanitize(combo.title)}</h3>
+            <span class="combo-status-badge ${combo.active ? 'active' : 'inactive'}">${combo.active ? 'Activo' : 'Inactivo'}</span>
+          </div>
+          ${combo.description ? `<p class="combo-admin-desc">${sanitize(combo.description)}</p>` : ''}
+          <div class="combo-items-chips">${itemsListHtml || '<span style="color:var(--text3);font-size:.78rem">Sin perfumes agregados</span>'}</div>
+        </div>
+        <div class="combo-admin-prices">
+          <div class="combo-admin-price-before">Antes: S/ ${before.toFixed(2)}</div>
+          <div class="combo-admin-price-final">S/ ${price.toFixed(2)}</div>
+          <div class="combo-admin-savings" style="color:${sColor}">${savings >= 0 ? 'Ahorra' : 'Pierde'} S/ ${Math.abs(savings).toFixed(2)} (${pct.toFixed(0)}%)</div>
+        </div>
+      </div>
+      <div class="combo-admin-actions">
+        <button class="btn-edit-combo" data-id="${combo.id}">Editar</button>
+        <button class="btn-toggle-combo" data-id="${combo.id}" data-active="${combo.active}">${combo.active ? 'Desactivar' : 'Activar'}</button>
+        <button class="btn-delete-combo" data-id="${combo.id}">Eliminar</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  container.querySelectorAll('.btn-edit-combo').forEach(btn => {
+    btn.addEventListener('click', () => openComboModal(parseInt(btn.dataset.id)));
+  });
+  container.querySelectorAll('.btn-toggle-combo').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = parseInt(btn.dataset.id);
+      const isActive = btn.dataset.active === 'true';
+      btn.disabled = true;
+      try {
+        await CloudCombos.update(id, { active: !isActive });
+        showToast(isActive ? 'Combo desactivado' : 'Combo activado ✓');
+        await renderAdminCombos();
+      } catch (err) {
+        console.error('[MICHT] Error al cambiar estado del combo:', err);
+        showToast('Error al actualizar el combo.');
+        btn.disabled = false;
+      }
+    });
+  });
+  container.querySelectorAll('.btn-delete-combo').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = parseInt(btn.dataset.id);
+      const combo = combos.find(c => c.id === id);
+      showConfirmModal(`¿Eliminar el combo "${combo?.title || ''}"? Esta acción no se puede deshacer.`, async () => {
+        try {
+          await CloudCombos.delete(id);
+          showToast('Combo eliminado ✓');
+          await renderAdminCombos();
+        } catch (err) {
+          console.error('[MICHT] Error al eliminar combo:', err);
+          showToast('Error al eliminar el combo.');
+        }
+      });
+    });
+  });
+}
+
+function updateComboImgPreview(url) {
+  const preview     = document.getElementById('comboImgPreview');
+  const placeholder = document.getElementById('comboImgPlaceholder');
+  const zone        = document.getElementById('comboImgUploadZone');
+  const actions     = document.getElementById('comboImgUploadActions');
+  if (url) {
+    preview.src          = url;
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+    zone.classList.add('has-image');
+    actions.style.display = 'flex';
+  } else {
+    preview.src          = '';
+    preview.style.display = 'none';
+    placeholder.style.display = 'flex';
+    zone.classList.remove('has-image');
+    actions.style.display = 'none';
+  }
+}
+
+function handleComboImageFile(file) {
+  if (!file || !file.type.startsWith('image/')) { showToast('Selecciona una imagen válida (JPG, PNG o WebP).'); return; }
+  if (file.size > 5 * 1024 * 1024) { showToast('La imagen supera los 5 MB.'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('comboImageUrl').value = e.target.result;
+    updateComboImgPreview(e.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function openComboModal(id = null) {
+  const modal = document.getElementById('comboModal');
+  let combo = null;
+  if (id) {
+    try { combo = await withTimeout(CloudCombos.getById(id), 12000, 'el combo'); }
+    catch { combo = Combos.getById(id); }
+  }
+
+  document.getElementById('modalComboTitle').textContent = combo ? 'Editar Combo' : 'Nuevo Combo';
+  document.getElementById('comboEditId').value       = combo?.id ?? '';
+  document.getElementById('comboTitle').value        = combo?.title ?? '';
+  document.getElementById('comboDescription').value  = combo?.description ?? '';
+  document.getElementById('comboFinalPrice').value   = combo?.price ? combo.price : '';
+  document.getElementById('comboActive').checked     = combo ? !!combo.active : true;
+  const comboImageUrl = combo?.imageUrl ?? '';
+  document.getElementById('comboImageUrl').value = comboImageUrl;
+  updateComboImgPreview(comboImageUrl);
+  document.getElementById('comboImgFileInput').value = '';
+
+  const saveBtn = document.getElementById('saveComboBtn');
+  const originalLabel = 'Guardar Combo';
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Cargando catálogo…';
+  try {
+    _comboProductsCache = await withTimeout(CloudProducts.getAll(), 15000, 'el catálogo');
+  } catch {
+    _comboProductsCache = Products.getAll();
+  }
+  saveBtn.disabled = false;
+  saveBtn.textContent = originalLabel;
+
+  const itemsContainer = document.getElementById('comboItemsContainer');
+  itemsContainer.innerHTML = '';
+  if (combo?.items?.length) combo.items.forEach(it => addComboItemRow(it));
+  else addComboItemRow();
+
+  recalcComboSummary();
+  modal.classList.add('open');
+}
+
+function addComboItemRow(existingItem = null) {
+  const container = document.getElementById('comboItemsContainer');
+  const products  = (_comboProductsCache || Products.getAll()).filter(p => p.type !== 'entero');
+
+  const buildSearchWords = (p, sizeLabel) =>
+    _normalizeSearchText(`${p.brand} ${p.name} ${sizeLabel}`).split(/\s+/).filter(Boolean);
+
+  const allOptions = [];
+  products.forEach(p => {
+    Object.entries(p.sizes || {}).forEach(([ml, price]) => {
+      if (!(price > 0)) return; // no tiene sentido meter al combo una talla sin precio
+      allOptions.push({
+        value: `${p.id}|${ml}|${price}|${p.name}|${p.brand}`,
+        label: `${p.brand} – ${p.name} (${ml}) S/${price}`,
+        searchWords: buildSearchWords(p, ml)
+      });
+    });
+  });
+
+  const row = document.createElement('div');
+  row.className = 'combo-item-row';
+  row.innerHTML = `
+    <div class="combo-item-search-wrap">
+      <input type="text" class="combo-item-search" placeholder="Escribe para buscar perfume..." autocomplete="off">
+      <div class="product-search-dropdown combo-item-dropdown" style="display:none"></div>
+      <input type="hidden" class="combo-item-value">
+    </div>
+    <input type="number" class="combo-item-qty" min="1" max="20" value="${existingItem?.qty || 1}" aria-label="Cantidad">
+    <button type="button" class="remove-size-btn combo-item-remove">×</button>
+  `;
+
+  const searchInput = row.querySelector('.combo-item-search');
+  const dropdown    = row.querySelector('.combo-item-dropdown');
+  const hiddenInput = row.querySelector('.combo-item-value');
+  const qtyInput    = row.querySelector('.combo-item-qty');
+
+  if (existingItem) {
+    const product = products.find(p => p.id === existingItem.productId);
+    const price   = product?.sizes?.[existingItem.size] || 0;
+    if (product) {
+      hiddenInput.value = `${product.id}|${existingItem.size}|${price}|${product.name}|${product.brand}`;
+      searchInput.value = `${product.brand} – ${product.name} (${existingItem.size}) S/${price}`;
+    } else {
+      searchInput.value = `⚠ Perfume #${existingItem.productId} ya no existe en el catálogo`;
+      searchInput.style.color = '#ef5350';
+    }
+  }
+
+  function renderDropdown(filter) {
+    const q = _normalizeSearchText(filter);
+    let matches;
+    if (!q) {
+      matches = allOptions.slice(0, 25);
+    } else {
+      const qWords = q.split(/\s+/).filter(Boolean);
+      matches = allOptions
+        .map(o => ({ o, score: _fuzzyMatchScore(qWords, o.searchWords) }))
+        .filter(x => x.score !== null)
+        .sort((a, b) => a.score - b.score)
+        .slice(0, 25)
+        .map(x => x.o);
+    }
+    if (!matches.length) { dropdown.style.display = 'none'; return; }
+    dropdown.innerHTML = matches.map(o =>
+      `<div class="prod-opt" data-value="${escapeAttr(o.value)}" data-label="${escapeAttr(o.label)}"
+            style="padding:.42rem .75rem;cursor:pointer;font-size:.82rem;color:var(--text2);border-bottom:1px solid var(--border);transition:background .12s"
+            onmouseenter="this.style.background='var(--gold-dim)';this.style.color='var(--text)'"
+            onmouseleave="this.style.background='';this.style.color='var(--text2)'">${o.label}</div>`
+    ).join('');
+    dropdown.style.display = 'block';
+    requestAnimationFrame(() => dropdown.scrollIntoView({ block: 'nearest' }));
+    dropdown.querySelectorAll('.prod-opt').forEach(opt => {
+      const selectProd = e => {
+        e.preventDefault();
+        hiddenInput.value = opt.dataset.value;
+        searchInput.value = opt.dataset.label;
+        searchInput.style.color = '';
+        dropdown.style.display = 'none';
+        recalcComboSummary();
+      };
+      _bindTapSelect(opt, selectProd);
+    });
+  }
+
+  searchInput.addEventListener('input', () => renderDropdown(searchInput.value));
+  searchInput.addEventListener('focus',  () => renderDropdown(searchInput.value));
+  searchInput.addEventListener('blur',   () => setTimeout(() => { dropdown.style.display = 'none'; }, 250));
+  qtyInput.addEventListener('input', recalcComboSummary);
+  row.querySelector('.combo-item-remove').addEventListener('click', () => { row.remove(); recalcComboSummary(); });
+
+  container.appendChild(row);
+  if (!existingItem && !('ontouchstart' in window)) searchInput.focus();
+}
+
+function recalcComboSummary() {
+  let before = 0;
+  document.querySelectorAll('#comboItemsContainer .combo-item-row').forEach(row => {
+    const val = row.querySelector('.combo-item-value')?.value;
+    const qty = parseInt(row.querySelector('.combo-item-qty')?.value) || 1;
+    if (!val) return;
+    const price = parseFloat(val.split('|')[2]) || 0;
+    before += price * qty;
+  });
+  document.getElementById('comboBeforePrice').textContent = `S/ ${before.toFixed(2)}`;
+
+  const finalPrice = parseFloat(document.getElementById('comboFinalPrice').value) || 0;
+  const savings = before - finalPrice;
+  const pct = before > 0 ? (savings / before * 100) : 0;
+
+  const savEl = document.getElementById('comboSavingsValue');
+  savEl.textContent = `${savings >= 0 ? 'Ahorra' : 'Pierde'} S/ ${Math.abs(savings).toFixed(2)} (${pct.toFixed(0)}%)`;
+  savEl.style.color = _comboMarginColor(pct);
+}
+
+async function saveCombo() {
+  const id          = document.getElementById('comboEditId').value;
+  const title       = document.getElementById('comboTitle').value.trim();
+  const description = document.getElementById('comboDescription').value.trim();
+  const price       = parseFloat(document.getElementById('comboFinalPrice').value);
+  const imageUrl    = document.getElementById('comboImageUrl').value.trim();
+  const active      = document.getElementById('comboActive').checked;
+
+  if (!title) { showToast('Ponle un nombre al combo.'); return; }
+
+  const items = [];
+  document.querySelectorAll('#comboItemsContainer .combo-item-row').forEach(row => {
+    const val = row.querySelector('.combo-item-value')?.value;
+    const qty = parseInt(row.querySelector('.combo-item-qty')?.value) || 1;
+    if (!val) return;
+    const [pid, size] = val.split('|');
+    items.push({ productId: parseInt(pid), size, qty });
+  });
+
+  if (!items.length) { showToast('Agrega al menos un perfume al combo.'); return; }
+  if (isNaN(price) || price <= 0) { showToast('Ingresa el precio final del combo.'); return; }
+
+  const saveBtn = document.getElementById('saveComboBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Guardando...';
+
+  try {
+    const comboData = { title, description, items, price, imageUrl, active };
+    if (id) {
+      await withTimeout(CloudCombos.update(parseInt(id), comboData), 15000, 'el combo');
+      showToast('Combo actualizado ✓');
+    } else {
+      await withTimeout(CloudCombos.add(comboData), 15000, 'el combo');
+      showToast('Combo creado ✓');
+    }
+    document.getElementById('comboModal').classList.remove('open');
+    renderAdminCombos().catch(console.error);
+  } catch (err) {
+    console.error('[MICHT] Error guardando combo:', err);
+    showToast('Error al guardar el combo. Inténtalo de nuevo.');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Guardar Combo';
+  }
+}
+
+function setupComboEvents() {
+  document.getElementById('addComboBtn')?.addEventListener('click', () => openComboModal());
+  document.getElementById('addComboItemBtn')?.addEventListener('click', () => addComboItemRow());
+  document.getElementById('closeComboModal')?.addEventListener('click', () => {
+    document.getElementById('comboModal').classList.remove('open');
+  });
+  document.getElementById('cancelComboModal')?.addEventListener('click', () => {
+    document.getElementById('comboModal').classList.remove('open');
+  });
+  document.getElementById('saveComboBtn')?.addEventListener('click', saveCombo);
+  document.getElementById('comboFinalPrice')?.addEventListener('input', recalcComboSummary);
+
+  // ── Subida de imagen del combo ──────────────────────────────────────────────
+  const comboImgZone   = document.getElementById('comboImgUploadZone');
+  const comboImgInput  = document.getElementById('comboImgFileInput');
+  const comboImgChange = document.getElementById('comboImgChangeBtn');
+  const comboImgRemove = document.getElementById('comboImgRemoveBtn');
+
+  comboImgZone?.addEventListener('click', () => comboImgInput?.click());
+  comboImgZone?.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') comboImgInput?.click(); });
+  comboImgInput?.addEventListener('change', () => { if (comboImgInput.files[0]) handleComboImageFile(comboImgInput.files[0]); });
+
+  comboImgZone?.addEventListener('dragover', e => { e.preventDefault(); comboImgZone.classList.add('drag-over'); });
+  comboImgZone?.addEventListener('dragleave', () => comboImgZone.classList.remove('drag-over'));
+  comboImgZone?.addEventListener('drop', e => {
+    e.preventDefault();
+    comboImgZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handleComboImageFile(e.dataTransfer.files[0]);
+  });
+
+  comboImgChange?.addEventListener('click', e => { e.stopPropagation(); comboImgInput.click(); });
+  comboImgRemove?.addEventListener('click', e => {
+    e.stopPropagation();
+    document.getElementById('comboImageUrl').value = '';
+    updateComboImgPreview('');
+    comboImgInput.value = '';
+  });
 }
 
 function setupAdminEvents() {

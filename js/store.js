@@ -51,7 +51,52 @@ const Cart = {
     this.bounce();
   },
 
-  remove(pid, size)  { this.items = this.items.filter(i => !(i.productId === pid && i.size === size)); this.save(); this.render(); },
+  addCombo(combo, allProducts) {
+    const lookup = new Map((allProducts || _allProducts || Products.getAll()).map(p => [p.id, p]));
+    const existing = this.items.find(i => i.isCombo && i.comboId === combo.id);
+    if (existing) {
+      if (existing.quantity >= 10) { showCartToast('Máximo 10 combos por pedido.'); return; }
+      existing.quantity++;
+    } else {
+      const comboItems = (combo.items || []).map(it => {
+        const p = lookup.get(it.productId);
+        return { productId: it.productId, size: it.size, qty: it.qty || 1, name: p?.name || '', brand: p?.brand || '' };
+      });
+      const firstImg = (combo.items || []).map(it => lookup.get(it.productId)?.imageUrl).find(Boolean) || '';
+      const compositionLabel = comboItems
+        .map(ci => `${ci.brand} ${ci.name} (${ci.size})${ci.qty > 1 ? ' ×' + ci.qty : ''}`)
+        .join(', ');
+      this.items.push({
+        productId: -combo.id,
+        isCombo: true,
+        comboId: combo.id,
+        productName: combo.title,
+        brand: 'Combo MICHT',
+        size: `${(combo.items || []).length} perfumes`,
+        price: combo.price,
+        quantity: 1,
+        imageUrl: firstImg,
+        comboItems,
+        comboComposition: compositionLabel
+      });
+    }
+    showCartToast(`Combo "${combo.title}" agregado`);
+    this.save();
+    this.render();
+    if (typeof renderCombos === 'function') renderCombos();
+    if (!this._cartOpened) {
+      this._cartOpened = true;
+      this.showCart();
+    }
+    this.bounce();
+  },
+
+  remove(pid, size)  {
+    this.items = this.items.filter(i => !(i.productId === pid && i.size === size));
+    this.save();
+    this.render();
+    if (pid < 0 && typeof renderCombos === 'function') renderCombos();
+  },
   updateQty(pid, size, qty) {
     const item = this.items.find(i => i.productId === pid && i.size === size);
     if (!item) return;
@@ -118,6 +163,7 @@ const Cart = {
           <div class="cart-item-info">
             <p class="cart-item-name">${sanitize(item.brand)} · ${sanitize(item.productName)}</p>
             <p class="cart-item-size"><span class="decant-chip">${sanitize(item.size)}</span> S/ ${item.price.toFixed(2)} c/u</p>
+            ${item.isCombo && item.comboComposition ? `<p class="cart-item-combo-composition">Incluye: ${sanitize(item.comboComposition)}</p>` : ''}
           </div>
         </div>
         <div class="cart-item-controls">
@@ -702,6 +748,116 @@ function showStockAlert(errors) {
   modal.classList.add('open');
 }
 
+// ─── Combos de Decants (vitrina pública) ───────────────────────────────────
+// Un combo NO es un producto: es un set fijo armado por el admin (perfumes +
+// talla + cantidad) a un precio final. El "antes" se recalcula en vivo contra
+// el catálogo actual (comboBeforeTotal, definida en data.js).
+
+let _allCombos = null;
+
+async function renderCombos() {
+  const section = document.getElementById('combos');
+  const grid    = document.getElementById('combosGrid');
+  if (!section || !grid) return;
+
+  let combos = [];
+  try {
+    combos = await Promise.race([
+      CloudCombos.getAll(),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))
+    ]);
+  } catch (_) {
+    combos = Combos.getAll();
+  }
+  combos = combos.filter(c => c.active);
+  _allCombos = combos;
+
+  if (!combos.length) { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  const products = _allProducts || Products.getAll();
+  const prodLookup = {};
+  products.forEach(p => { prodLookup[p.id] = p; });
+
+  grid.innerHTML = combos.map(combo => {
+    const items  = (combo.items || []).filter(it => prodLookup[it.productId]);
+    if (!items.length) return '';
+    const before = comboBeforeTotal(combo, products);
+    const price  = parseFloat(combo.price || 0);
+    const savings = before - price;
+    const pct = before > 0 ? Math.round(savings / before * 100) : 0;
+
+    // Foto propia del combo (subida por el admin) tiene prioridad; si no hay,
+    // se arma un collage automático con las fotos de los perfumes incluidos.
+    const bannerHtml = combo.imageUrl
+      ? `<div class="combo-card-banner"><img src="${escapeAttr(combo.imageUrl)}" alt="${escapeAttr(combo.title)}" loading="lazy"></div>`
+      : '';
+    const thumbsHtml = !combo.imageUrl
+      ? items.slice(0, 4)
+          .map(it => prodLookup[it.productId].imageUrl)
+          .filter(Boolean)
+          .map(img => `<img src="${escapeAttr(img)}" alt="" class="combo-card-thumb" loading="lazy">`)
+          .join('')
+      : '';
+
+    const itemsChips = items.map(it => {
+      const p = prodLookup[it.productId];
+      return `<span class="combo-card-item-chip">${sanitize(p.brand)} ${sanitize(p.name)} · ${sanitize(it.size)}${(it.qty || 1) > 1 ? ' ×' + it.qty : ''}</span>`;
+    }).join('');
+
+    const inCart = Cart.items.some(i => i.isCombo && i.comboId === combo.id);
+
+    return `
+      <article class="combo-card" data-combo-id="${combo.id}" role="listitem">
+        ${pct > 0 ? `<div class="combo-card-ribbon">-${pct}%</div>` : ''}
+        <div class="combo-card-badge">Combo</div>
+        ${bannerHtml}
+        ${thumbsHtml ? `<div class="combo-card-thumbs">${thumbsHtml}</div>` : ''}
+        <h3 class="combo-card-name">${sanitize(combo.title)}</h3>
+        ${combo.description ? `<p class="combo-card-desc">${sanitize(combo.description)}</p>` : ''}
+        <div class="combo-card-items">${itemsChips}</div>
+        <div class="combo-card-footer">
+          <div class="combo-card-prices">
+            ${before > price ? `<span class="combo-card-before">S/ ${before.toFixed(2)}</span>` : ''}
+            <span class="combo-card-final">S/ ${price.toFixed(2)}</span>
+          </div>
+          ${savings > 0 ? `<span class="combo-card-savings">Ahorras S/ ${savings.toFixed(2)} (${pct}%)</span>` : ''}
+          <button class="combo-card-add-btn ${inCart ? 'added' : ''}" data-combo-id="${combo.id}">
+            ${inCart ? '✓ En el carrito' : 'Agregar combo al carrito'}
+          </button>
+        </div>
+      </article>`;
+  }).join('');
+
+  if (!grid.innerHTML.trim()) { section.style.display = 'none'; return; }
+
+  grid.querySelectorAll('.combo-card-add-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const combo = combos.find(c => c.id === parseInt(btn.dataset.comboId));
+      if (combo) Cart.addCombo(combo, products);
+    });
+  });
+}
+
+// Flechas del carrusel de combos — desplazan el track una tarjeta a la vez.
+// Se enganchan una sola vez: el contenedor #combosGrid no se reemplaza entre
+// renders, solo su contenido interno.
+function initCombosCarousel() {
+  const track = document.getElementById('combosGrid');
+  const prev  = document.getElementById('combosPrev');
+  const next  = document.getElementById('combosNext');
+  if (!track || !prev || !next) return;
+
+  const scrollByCard = dir => {
+    const card = track.querySelector('.combo-card');
+    const amount = card ? card.getBoundingClientRect().width + 18 : track.clientWidth * 0.8;
+    track.scrollBy({ left: dir * amount, behavior: 'smooth' });
+  };
+
+  prev.addEventListener('click', () => scrollByCard(-1));
+  next.addEventListener('click', () => scrollByCard(1));
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   Cart.load();
   try {
@@ -716,6 +872,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.dispatchEvent(new CustomEvent('catalogLoaded', { detail: _allProducts }));
   populateOlfFamilyFilter();
   renderProducts();
+  renderCombos().catch(err => console.error('[MICHT] Error cargando combos:', err));
+  initCombosCarousel();
   Cart.render();
   updateFavFilterBadge();
 

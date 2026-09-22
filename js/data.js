@@ -3,6 +3,7 @@
 const STORAGE_KEY  = 'micht_products_v2';
 const ORDERS_KEY   = 'micht_orders';
 const SITE_THEME_KEY = 'micht_site_theme';
+const COMBOS_KEY   = 'micht_combos_v1';
 
 function escapeXml(value) {
   return String(value)
@@ -1959,6 +1960,26 @@ const DEFAULT_PRODUCTS = [
     featured: false,
     bottleRemainingMl: 0,
     bottleTotalMl: 0
+  },
+  {
+    id: 105,
+    name: 'Sauvage Elixir',
+    brand: 'Dior',
+    type: 'diseñador',
+    gender: 'hombre',
+    occasion: 'noche',
+    olfFamily: 'Ámbar Especiado',
+    topNotes: 'Canela, Nuez moscada, Anís estrellado',
+    heartNotes: 'Lavanda',
+    baseNotes: 'Amberwood (ámbar amaderado)',
+    accords: [ { name: 'ámbar', pct: 100 }, { name: 'cálido especiado', pct: 88 }, { name: 'amaderado', pct: 74 }, { name: 'aromático', pct: 62 }, { name: 'especiado suave', pct: 58 }, { name: 'dulce', pct: 45 }, { name: 'lavanda', pct: 40 }, { name: 'almizclado', pct: 33 } ],
+    description: 'Sauvage Elixir de Dior: la versión más intensa y concentrada de Sauvage. Canela y especias cálidas sobre lavanda, cerrando en un ámbar amaderado envolvente. Potencia y elegancia salvaje en su máxima expresión.',
+    imageUrl: '/img PERFUMES/Sauvage_Elixir_Dior.webp',
+    sizes: { '2ml': 25, '3ml': 29, '5ml': 49, '10ml': 99 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 0,
+    bottleTotalMl: 0
   }
 ];
 
@@ -1966,6 +1987,7 @@ const PRODUCT_IMAGE_MAP = {
   "L'Immensité":                 '/img PERFUMES/limmensite.webp',
   '212 VIP Black Elixir':        '/img PERFUMES/212 vip black elixir.webp',
   'Forever Wanted Elixir':       '/img PERFUMES/azzaro forever wanted elixir.png',
+  'Sauvage Elixir':              '/img PERFUMES/Sauvage_Elixir_Dior.webp',
   'Acqua di Giò Profondo':       '/img PERFUMES/Acqua_di_gio_profondo.webp',
   'Creed Aventus':              '/img PERFUMES/Aventus_Creed.png',
   'Erba Pura':                  '/img PERFUMES/erba_pura.png',
@@ -2407,6 +2429,54 @@ const Products = {
   delete(id) { this.save(this.getAll().filter(p => p.id !== id)); }
 };
 
+// ─── API de combos de decants ──────────────────────────────────────────────────
+// Un combo NO guarda precios congelados de sus perfumes — solo referencias
+// { productId, size, qty }. El "precio antes" siempre se recalcula en vivo
+// contra el catálogo actual (Products/CloudProducts), así nunca queda
+// desactualizado si el admin cambia un precio en la sección Precios.
+
+const Combos = {
+  getAll() {
+    try {
+      const raw = localStorage.getItem(COMBOS_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  },
+  save(combos) { localStorage.setItem(COMBOS_KEY, JSON.stringify(combos)); },
+  getById(id) { return this.getAll().find(c => c.id === id); },
+  add(combo) {
+    const combos = this.getAll();
+    const newId = combos.length ? Math.max(...combos.map(c => c.id)) + 1 : 1;
+    const newCombo = { ...combo, id: newId };
+    combos.push(newCombo);
+    this.save(combos);
+    return newId;
+  },
+  update(id, data) { this.save(this.getAll().map(c => c.id === id ? { ...c, ...data } : c)); },
+  delete(id) { this.save(this.getAll().filter(c => c.id !== id)); }
+};
+
+// Precio de un tamaño de producto dado (0 si no existe la talla o el producto).
+function comboItemUnitPrice(product, size) {
+  if (!product) return 0;
+  const price = product.sizes ? product.sizes[size] : undefined;
+  return typeof price === 'number' ? price : parseFloat(price) || 0;
+}
+
+// Calcula el precio "antes" (suma de comprar cada perfume por separado) de un
+// combo, buscando el precio vigente de cada talla en la lista de productos dada.
+function comboBeforeTotal(combo, allProducts) {
+  const lookup = new Map((allProducts || []).map(p => [p.id, p]));
+  return (combo?.items || []).reduce((sum, item) => {
+    const product = lookup.get(item.productId);
+    const unit = comboItemUnitPrice(product, item.size);
+    return sum + unit * (item.qty || 1);
+  }, 0);
+}
+
 // ─── API de pedidos ───────────────────────────────────────────────────────────
 
 const Orders = {
@@ -2439,10 +2509,18 @@ const Orders = {
 
       // Al confirmar el pago: descontar ml del inventario
       if (status === 'pagado' && o.status !== 'pagado') {
-        o.items.forEach(item => {
+        // Un item de combo no es un producto real — trae su propio desglose
+        // (comboItems) con los perfumes que sí hay que descontar del frasco.
+        const flatItems = o.items.flatMap(item =>
+          Array.isArray(item.comboItems) && item.comboItems.length
+            ? item.comboItems.map(ci => ({ ...ci, quantity: (ci.qty || 1) * (item.quantity || 1) }))
+            : [item]
+        );
+        flatItems.forEach(item => {
           const product = Products.getById(item.productId);
           if (!product) return;
           const mlUsed    = parseInt(item.size) * item.quantity;
+          if (isNaN(mlUsed) || mlUsed <= 0) return;
           const newRemain = Math.max(0, product.bottleRemainingMl - mlUsed);
           Products.update(item.productId, { bottleRemainingMl: newRemain });
         });

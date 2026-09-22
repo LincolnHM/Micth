@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../imgGato/web.png">
-  <link rel="stylesheet" href="../css/style.css?v=20260606-admin-black3">
+  <link rel="stylesheet" href="../css/style.css?v=20260922-combos-img">
   <style>
     html, body {
       background: #050505 !important;
@@ -132,6 +132,15 @@
     .admin-sidebar { order: 0 !important; left: 0 !important; right: auto !important; }
     .admin-main { order: 1 !important; }
 
+    /* Los modales deben ir SIEMPRE por encima del header sticky (900) y de la barra
+       inferior fija en móvil (.admin-nav-bar, 1000) — si no, en pantallas chicas el
+       header/nav inferior queda encima del modal y los toques (cerrar, guardar, tocar
+       un campo) terminan "cayendo" sobre esos elementos en vez del modal. */
+    .product-modal,
+    .order-modal {
+      z-index: 2000 !important;
+    }
+
     /* ── Control de Precios ── */
     .precios-product-row {
       transition: border-color .18s;
@@ -253,6 +262,14 @@
               <path d="M9 3h6M10 3v4.5L6.5 10c-1.2 1.6-1.5 3.2-1.5 5a7 7 0 0 0 14 0c0-1.8-.3-3.4-1.5-5L14 7.5V3"/>
             </svg>
             Perfumes
+          </button>
+
+          <button class="admin-nav-btn" data-section="combos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <rect x="3" y="7" width="7" height="7" rx="1.2"/><rect x="14" y="7" width="7" height="7" rx="1.2"/>
+              <rect x="8.5" y="14.5" width="7" height="7" rx="1.2"/>
+            </svg>
+            Combos
           </button>
 
           <button class="admin-nav-btn" data-section="orders">
@@ -406,6 +423,18 @@
           </div>
         </div>
         <div id="adminProductList"></div>
+      </div>
+
+      <!-- ── Sección: Combos de Decants ────────────────────────────────────── -->
+      <div class="admin-section" id="section-combos">
+        <div class="admin-section-header">
+          <div>
+            <h2>Combos de Decants</h2>
+            <p style="color:var(--text2);font-size:.82rem;margin-top:.2rem">Arma combos con los perfumes que quieras, pon el precio final y el ahorro se calcula solo</p>
+          </div>
+          <button class="btn-add" id="addComboBtn">+ Nuevo Combo</button>
+        </div>
+        <div id="adminComboList"></div>
       </div>
 
 
@@ -1180,6 +1209,85 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
     </div>
   </div>
 
+  <!-- ── Modal: Combo de decants (crear/editar) ────────────────────────────── -->
+  <div class="product-modal" id="comboModal" role="dialog" aria-modal="true" aria-labelledby="modalComboTitle">
+    <div class="product-modal-content">
+      <div class="product-modal-header">
+        <h3 id="modalComboTitle">Nuevo Combo</h3>
+        <button class="close-btn" id="closeComboModal" aria-label="Cerrar">×</button>
+      </div>
+      <div class="product-modal-body">
+        <input type="hidden" id="comboEditId">
+
+        <div class="field">
+          <label for="comboTitle">Nombre del combo *</label>
+          <input type="text" id="comboTitle" maxlength="80" placeholder="Ej: Trío Noche" autocomplete="off">
+        </div>
+
+        <div class="field">
+          <label for="comboDescription">Descripción corta <span style="color:var(--text3);font-size:.75rem">(opcional, se muestra en la tienda)</span></label>
+          <textarea id="comboDescription" maxlength="200" placeholder="Ej: 3 decants ideales para salidas nocturnas"></textarea>
+        </div>
+
+        <!-- Imagen del combo -->
+        <div class="field">
+          <label>Imagen del combo <span style="color:var(--text3);font-size:.75rem">(opcional — si no subes una, se arma un collage automático con las fotos de los perfumes elegidos)</span></label>
+          <div class="img-upload-zone" id="comboImgUploadZone" role="button" tabindex="0" aria-label="Subir imagen del combo">
+            <img id="comboImgPreview" src="" alt="Vista previa" style="display:none">
+            <div class="img-upload-placeholder" id="comboImgPlaceholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              <span>Haz clic o arrastra una imagen</span>
+              <small>JPG · PNG · WebP · máx 5 MB</small>
+            </div>
+            <input type="file" id="comboImgFileInput" accept="image/jpeg,image/png,image/webp" style="display:none" aria-hidden="true" tabindex="-1">
+          </div>
+          <div class="img-upload-actions" id="comboImgUploadActions" style="display:none">
+            <button type="button" class="btn-img-change" id="comboImgChangeBtn">Cambiar imagen</button>
+            <button type="button" class="btn-img-remove" id="comboImgRemoveBtn">Quitar imagen</button>
+          </div>
+          <input type="hidden" id="comboImageUrl">
+        </div>
+
+        <!-- Perfumes incluidos -->
+        <div>
+          <div class="sizes-label">
+            <span>Perfumes incluidos en el combo *</span>
+            <button type="button" class="btn-add-size" id="addComboItemBtn">+ Agregar perfume</button>
+          </div>
+          <p style="font-size:.73rem;color:var(--text3);margin-bottom:.5rem">Busca cada perfume, elige su talla y cuántas unidades lleva el combo.</p>
+          <div id="comboItemsContainer" style="margin-top:.4rem"></div>
+        </div>
+
+        <!-- Resumen de precios -->
+        <div class="combo-price-summary" id="comboPriceSummary">
+          <div class="combo-price-row">
+            <span>Precio comprando por separado</span>
+            <strong id="comboBeforePrice">S/ 0.00</strong>
+          </div>
+          <div class="field" style="margin:.6rem 0 0">
+            <label for="comboFinalPrice">Precio del combo (S/) *</label>
+            <input type="number" id="comboFinalPrice" min="0" max="9999" step="0.5" placeholder="0.00">
+          </div>
+          <div class="combo-price-row combo-savings-row" id="comboSavingsRow">
+            <span>Ahorro para el cliente</span>
+            <strong id="comboSavingsValue">S/ 0.00 (0%)</strong>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:1rem;display:flex;align-items:center;gap:.55rem">
+          <input type="checkbox" id="comboActive" checked style="width:auto;accent-color:var(--gold)">
+          <label for="comboActive" style="margin:0;cursor:pointer">Combo activo (visible en la tienda)</label>
+        </div>
+      </div>
+      <div class="product-modal-footer">
+        <button class="btn-cancel" id="cancelComboModal">Cancelar</button>
+        <button class="btn-save" id="saveComboBtn">Guardar Combo</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Modal: Registrar pedido manual ────────────────────────────────────── -->
   <div class="product-modal" id="registerOrderModal" role="dialog" aria-modal="true" aria-labelledby="regOrderTitle">
     <div class="product-modal-content">
@@ -1309,8 +1417,8 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.min.js" integrity="sha384-fPWur1rx/DE6YtXP/x0MD6dd90RgnVsz5yX/DIg7CcVAnTBZsENWuIcpvVTM39ti" crossorigin="anonymous"></script>
-  <script src="../js/data.js"></script>
-  <script src="../js/supabase-config.js?v=29"></script>
-  <script src="../js/admin.js?v=29"></script>
+  <script src="../js/data.js?v=2"></script>
+  <script src="../js/supabase-config.js?v=31"></script>
+  <script src="../js/admin.js?v=31"></script>
 </body>
 </html>

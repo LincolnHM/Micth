@@ -243,6 +243,51 @@
 </head>
 <body>
 
+  <!-- ── Pantalla de carga ──────────────────────────────────────────────────
+       Se muestra al entrar a la tienda y se oculta sola cuando la página y
+       el catálogo terminan de cargar (con un mínimo/máximo de tiempo para
+       que nunca se sienta ni muy brusca ni eterna). Ver script al final de
+       este bloque y estilos en css/style.css (.page-loader). -->
+  <div id="pageLoader" class="page-loader" role="status" aria-live="polite" aria-label="Cargando Micht Decants">
+    <div class="pl-glow" aria-hidden="true"></div>
+    <div class="pl-content">
+      <img src="imgGato/gato-removebg-preview.png" alt="" class="pl-mascot" aria-hidden="true">
+      <p class="pl-wordmark">Micht<span> Decants</span></p>
+      <div class="pl-bar"><div class="pl-bar-fill"></div></div>
+      <p class="pl-caption">Preparando tu experiencia</p>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var loader = document.getElementById('pageLoader');
+      if (!loader) return;
+      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      document.documentElement.classList.add('pl-lock');
+
+      function hide() {
+        document.documentElement.classList.remove('pl-lock');
+        loader.classList.add('pl-hide');
+        setTimeout(function () { loader.remove(); }, reduced ? 0 : 500);
+      }
+
+      if (reduced) {
+        window.addEventListener('load', hide, { once: true });
+        setTimeout(hide, 4000);
+        return;
+      }
+
+      var minDelay = new Promise(function (res) { setTimeout(res, 900); });
+      var pageLoad  = new Promise(function (res) {
+        if (document.readyState === 'complete') return res();
+        window.addEventListener('load', res, { once: true });
+      });
+      Promise.all([minDelay, pageLoad]).then(hide);
+      // Red lenta o algún recurso que nunca termina de cargar: no dejar a
+      // nadie atrapado mirando el logo — se oculta sí o sí a los 4s.
+      setTimeout(hide, 4000);
+    })();
+  </script>
+
   <!-- Animated background blobs -->
   <div class="bg-blobs" aria-hidden="true">
     <div class="blob blob-1"></div>
@@ -264,6 +309,7 @@
       </a>
       <nav class="nav" aria-label="Principal">
         <a href="#catalogo" id="navCatalogLink">Catálogo</a>
+        <a href="#combos" id="navCombosLink">Combos</a>
         <a href="#catalogo" id="navEnteroLink" style="color:var(--gold) !important;font-weight:600">Perfumes Enteros</a>
         <a href="nosotros/">Nosotros</a>
         <a href="contacto/">Contacto</a>
@@ -360,6 +406,7 @@
     <span class="mobile-menu-brand">MICHT DECANTS</span>
     <nav class="mobile-nav">
       <a href="#catalogo" class="mobile-nav-link" id="mobileCatalogLink">Catálogo</a>
+      <a href="#combos" class="mobile-nav-link" id="mobileCombosLink">Combos</a>
       <a href="#catalogo" class="mobile-nav-link" id="mobileNavEnteroLink" style="color:var(--gold)">✦ Perfumes Enteros</a>
       <a href="nosotros/" class="mobile-nav-link">Nosotros</a>
       <a href="contacto/" class="mobile-nav-link">Contacto</a>
@@ -410,6 +457,26 @@
     </div>
     <div class="hero-mascot" aria-hidden="true">
       <img src="imgGato/gato-removebg-preview.png" alt="Mascota MICHT" class="mascot-img">
+    </div>
+  </section>
+
+  <!-- ── Combos de Decants ───────────────────────────────────────────────── -->
+  <section class="combos-section" id="combos" aria-label="Combos de decants" style="display:none">
+    <div class="combos-spotlight">
+      <div class="container">
+        <div class="combos-heading">
+          <span class="combos-eyebrow">🔥 Ofertas especiales</span>
+          <h2 class="combos-title">Combos que <em>ahorran</em> de verdad</h2>
+          <p class="combos-subtitle">Sets armados a precio especial — llévate más perfumes y paga menos</p>
+        </div>
+        <div class="combos-carousel">
+          <button class="combos-arrow combos-arrow-prev" id="combosPrev" aria-label="Combo anterior" type="button">‹</button>
+          <div class="combos-track" id="combosGrid" role="list">
+            <!-- Renderizado por store.js -->
+          </div>
+          <button class="combos-arrow combos-arrow-next" id="combosNext" aria-label="Siguiente combo" type="button">›</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1208,15 +1275,15 @@
   <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.8.1/dist/vanilla-tilt.min.js" integrity="sha384-0k1dj5tm+KUH/4vkNk/i90XsjDA8Ltmt+ybcrFoH4t0dgv/WZsPpVBnkhcroX8UL" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
-  <script src="js/data.js?v=12"></script>
-  <script src="js/supabase-config.js?v=18"></script>
+  <script src="js/data.js?v=13"></script>
+  <script src="js/supabase-config.js?v=20"></script>
   <script src="js/announcement.js?v=1"></script>
   <script src="js/seasonal-theme.js?v=3"></script>
   <script src="js/carousel.js"></script>
-  <script src="js/store.js?v=12"></script>
+  <script src="js/store.js?v=15"></script>
   <script src="js/gallery.js?v=1"></script>
   <script src="js/scent-finder.js?v=1"></script>
-  <script src="js/checkout.js"></script>
+  <script src="js/checkout.js?v=2"></script>
   <script src="js/auth.js?v=2"></script>
   <script src="js/chatbot.js"></script>
   <script src="js/animations.js"></script>
