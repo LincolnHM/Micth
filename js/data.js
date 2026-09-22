@@ -2430,10 +2430,15 @@ const Products = {
 };
 
 // ─── API de combos de decants ──────────────────────────────────────────────────
-// Un combo NO guarda precios congelados de sus perfumes — solo referencias
-// { productId, size, qty }. El "precio antes" siempre se recalcula en vivo
-// contra el catálogo actual (Products/CloudProducts), así nunca queda
-// desactualizado si el admin cambia un precio en la sección Precios.
+// Un combo es un set fijo de 2-3 perfumes (uno de cada uno, `items` = lista de
+// productId). NO tiene un único precio: tiene hasta 4 precios, uno por talla
+// (COMBO_SIZES) — el cliente elige con qué talla quiere TODOS los perfumes del
+// combo y paga el precio de esa talla. Una talla con precio 0/ausente no se
+// ofrece en ese combo (mismo criterio que ya se usa en `sizes` de productos).
+// El "precio antes" NUNCA se guarda congelado — se recalcula en vivo contra el
+// catálogo actual para cada talla.
+
+const COMBO_SIZES = ['2ml', '3ml', '5ml', '10ml'];
 
 const Combos = {
   getAll() {
@@ -2466,15 +2471,31 @@ function comboItemUnitPrice(product, size) {
   return typeof price === 'number' ? price : parseFloat(price) || 0;
 }
 
-// Calcula el precio "antes" (suma de comprar cada perfume por separado) de un
-// combo, buscando el precio vigente de cada talla en la lista de productos dada.
-function comboBeforeTotal(combo, allProducts) {
+// Info de un combo para UNA talla dada: cuánto costaría comprar cada perfume
+// por separado en esa talla (`before`), y si esa talla está realmente
+// disponible para TODOS los perfumes del combo (`available` — si a alguno le
+// falta precio en esa talla, no tiene sentido ofrecerla, aunque el admin haya
+// puesto un precio de combo ahí por error).
+function comboSizeInfo(combo, allProducts, size) {
   const lookup = new Map((allProducts || []).map(p => [p.id, p]));
-  return (combo?.items || []).reduce((sum, item) => {
-    const product = lookup.get(item.productId);
-    const unit = comboItemUnitPrice(product, item.size);
-    return sum + unit * (item.qty || 1);
-  }, 0);
+  let before = 0;
+  let available = true;
+  (combo?.items || []).forEach(productId => {
+    const product = lookup.get(productId);
+    const unit = comboItemUnitPrice(product, size);
+    if (!(unit > 0)) available = false;
+    before += unit;
+  });
+  if (!(combo?.items || []).length) available = false;
+  return { before, available };
+}
+
+// Todas las tallas del combo que tienen precio puesto Y siguen disponibles
+// para los perfumes elegidos — lo que realmente se puede ofrecer al cliente.
+function comboAvailableSizes(combo, allProducts) {
+  return COMBO_SIZES
+    .map(size => ({ size, price: parseFloat(combo?.prices?.[size]) || 0, ...comboSizeInfo(combo, allProducts, size) }))
+    .filter(s => s.price > 0 && s.available);
 }
 
 // ─── API de pedidos ───────────────────────────────────────────────────────────

@@ -939,8 +939,8 @@ function comboFromDB(row) {
     id:          row.id,
     title:       row.title       || '',
     description: row.description || '',
-    items:       Array.isArray(row.items) ? row.items : [],
-    price:       parseFloat(row.price) || 0,
+    items:       Array.isArray(row.items) ? row.items : [], // lista de productId (uno de cada uno)
+    prices:      (row.prices && typeof row.prices === 'object') ? row.prices : {}, // { '2ml': 12, '5ml': 17, ... }
     imageUrl:    row.image_url    || '',
     active:      row.active !== null ? row.active : true,
     date:        row.created_at,
@@ -953,7 +953,7 @@ function comboToDB(combo) {
     title:       combo.title       || '',
     description: combo.description || '',
     items:       combo.items       || [],
-    price:       combo.price       || 0,
+    prices:      combo.prices      || {},
     image_url:   combo.imageUrl    || '',
     active:      combo.active      !== undefined ? combo.active : true
   };
@@ -992,10 +992,11 @@ const CloudCombos = {
   async add(combo) {
     if (db) {
       let { data, error } = await db.from('combos').insert(comboToDB(combo)).select('id').single();
-      // Columna image_url todavía no existe (SQL viejo sin correr la versión con foto) — reintentar sin ella
+      // Columna image_url y/o prices todavía no existen (SQL viejo) — reintentar sin ellas
       if (error && error.code === '42703') {
-        const { image_url, ...fallback } = comboToDB(combo);
+        const { image_url, prices, ...fallback } = comboToDB(combo);
         ({ data, error } = await db.from('combos').insert(fallback).select('id').single());
+        if (!error) console.warn('[MICHT] Faltan columnas en combos (image_url/prices) — ejecuta el SQL de migración en Supabase.');
       }
       if (!error && data) {
         const local = Combos.getAll();
@@ -1015,15 +1016,15 @@ const CloudCombos = {
       if (data.title       !== undefined) patch.title       = data.title;
       if (data.description !== undefined) patch.description = data.description;
       if (data.items       !== undefined) patch.items       = data.items;
-      if (data.price       !== undefined) patch.price       = data.price;
+      if (data.prices      !== undefined) patch.prices      = data.prices;
       if (data.imageUrl    !== undefined) patch.image_url   = data.imageUrl;
       if (data.active      !== undefined) patch.active      = data.active;
       let { error } = await db.from('combos').update(patch).eq('id', id);
       if (error && error.code === '42703') {
-        const { image_url, ...fallback } = patch;
+        const { image_url, prices, ...fallback } = patch;
         const retry = await db.from('combos').update(fallback).eq('id', id);
         error = retry.error;
-        if (!error) console.warn('[MICHT] Columna image_url faltante en combos — ejecuta el SQL de migración en Supabase.');
+        if (!error) console.warn('[MICHT] Faltan columnas en combos (image_url/prices) — ejecuta el SQL de migración en Supabase.');
       }
       if (error) console.error('Supabase update error (combos):', error?.code, error?.message);
     }

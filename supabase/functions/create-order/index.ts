@@ -129,21 +129,23 @@ Deno.serve(async (req) => {
   if (comboIds.length) {
     const { data: combos, error: comboError } = await supabase
       .from('combos')
-      .select('id, title, items, price, active')
+      .select('id, title, items, prices, active')
       .in('id', comboIds);
     if (comboError) return json({ error: 'No se pudo verificar los combos. Intenta de nuevo.' }, 502, headers);
     combosMap = new Map((combos || []).map((c: any) => [c.id, c]));
   }
 
+  // combo.items ahora es una lista plana de productId (uno de cada perfume,
+  // no {productId,size,qty} como antes) — la talla se elige a nivel de combo.
   const comboProductIds: number[] = [];
   for (const line of comboLines) {
     const combo = combosMap.get(parseInt(line.comboId));
     if (!combo || !combo.active) {
       return json({ error: 'Uno de los combos ya no está disponible.' }, 400, headers);
     }
-    (combo.items || []).forEach((it: any) => {
-      const pid = parseInt(it.productId);
-      if (!isNaN(pid)) comboProductIds.push(pid);
+    (combo.items || []).forEach((pid: any) => {
+      const id = parseInt(pid);
+      if (!isNaN(id)) comboProductIds.push(id);
     });
   }
 
@@ -195,38 +197,53 @@ Deno.serve(async (req) => {
     });
   }
 
-  // El precio de un combo SIEMPRE sale de la tabla `combos` (nunca del navegador)
-  // — igual que arriba con los productos sueltos.
+  // El precio de un combo SIEMPRE sale de la tabla `combos` (nunca del
+  // navegador) — igual que arriba con los productos sueltos. Un combo no
+  // tiene un único precio: el cliente elige la talla (raw.size) y esa talla
+  // aplica a TODOS los perfumes del combo por igual.
+  const COMBO_SIZES = ['2ml', '3ml', '5ml', '10ml'];
   for (const raw of comboLines) {
     const comboId = parseInt(raw.comboId);
     const combo   = combosMap.get(comboId)!; // ya validado que existe y está activo
+    const size    = String(raw.size || '').trim();
 
-    const quantity  = Math.min(Math.max(parseInt(raw.quantity) || 1, 1), 10);
-    const unitPrice = parseFloat(combo.price) || 0;
-    if (unitPrice <= 0) {
-      return json({ error: `El combo "${combo.title}" no tiene un precio válido.` }, 400, headers);
+    if (!COMBO_SIZES.includes(size)) {
+      return json({ error: `Talla inválida para el combo "${combo.title}".` }, 400, headers);
     }
 
-    const comboItemsResolved = (combo.items || []).map((it: any) => {
-      const p = productMap.get(parseInt(it.productId));
+    const quantity  = Math.min(Math.max(parseInt(raw.quantity) || 1, 1), 10);
+    const unitPrice = parseFloat(combo.prices?.[size]) || 0;
+    if (unitPrice <= 0) {
+      return json({ error: `El combo "${combo.title}" no está disponible en talla ${size}.` }, 400, headers);
+    }
+
+    // Revalidar que TODOS los perfumes del combo de verdad tengan esa talla
+    // con precio — si el catálogo cambió después de armar el combo, no se
+    // vende una talla que ya no existe para alguno de los perfumes.
+    const comboItemsResolved = (combo.items || []).map((pid: any) => {
+      const id = parseInt(pid);
+      const p = productMap.get(id);
       return {
-        productId: parseInt(it.productId),
-        size: it.size,
-        qty: it.qty || 1,
+        productId: id,
+        size,
+        qty: 1,
         name: p?.name || '',
         brand: p?.brand || '',
+        _sizePrice: parseFloat((p?.sizes || {})[size]) || 0,
       };
     });
-    const comboComposition = comboItemsResolved
-      .map((ci: any) => `${ci.brand} ${ci.name} (${ci.size})${ci.qty > 1 ? ' ×' + ci.qty : ''}`)
-      .join(', ');
+    if (comboItemsResolved.some((ci: any) => !(ci._sizePrice > 0))) {
+      return json({ error: `El combo "${combo.title}" ya no está disponible en talla ${size}.` }, 400, headers);
+    }
+    const comboComposition = comboItemsResolved.map((ci: any) => `${ci.brand} ${ci.name}`).join(', ');
+    comboItemsResolved.forEach((ci: any) => { delete ci._sizePrice; });
 
     subtotal += unitPrice * quantity;
     itemsSnapshot.push({
       productId: -comboId,
       productName: combo.title,
       brand: 'Combo MICHT',
-      size: `${(combo.items || []).length} perfumes`,
+      size,
       price: unitPrice,
       quantity,
       comboItems: comboItemsResolved,

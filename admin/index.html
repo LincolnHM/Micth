@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../imgGato/web.png">
-  <link rel="stylesheet" href="../css/style.css?v=20260922-combos-sizes">
+  <link rel="stylesheet" href="../css/style.css?v=20260922-combos-tiers">
   <style>
     html, body {
       background: #050505 !important;
@@ -1251,29 +1251,22 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
         </div>
 
         <!-- Perfumes incluidos -->
-        <div>
-          <div class="sizes-label">
-            <span>Perfumes incluidos en el combo *</span>
-            <button type="button" class="btn-add-size" id="addComboItemBtn">+ Agregar perfume</button>
+        <div class="field">
+          <label for="comboItemSearch">Perfumes incluidos <span style="color:var(--text3);font-size:.75rem">(2 o 3 — uno de cada uno)</span></label>
+          <div class="combo-item-search-wrap" style="position:relative">
+            <input type="text" id="comboItemSearch" placeholder="Escribe para buscar y agregar un perfume..." autocomplete="off">
+            <div class="product-search-dropdown combo-item-dropdown" id="comboItemDropdown" style="display:none"></div>
           </div>
-          <p style="font-size:.73rem;color:var(--text3);margin-bottom:.5rem">Busca cada perfume, elige su talla y cuántas unidades lleva el combo.</p>
-          <div id="comboItemsContainer" style="margin-top:.4rem"></div>
+          <div id="comboItemsChips" class="combo-items-chips" style="margin-top:.6rem"></div>
         </div>
 
-        <!-- Resumen de precios -->
-        <div class="combo-price-summary" id="comboPriceSummary">
-          <div class="combo-price-row">
-            <span>Precio comprando por separado</span>
-            <strong id="comboBeforePrice">S/ 0.00</strong>
+        <!-- Precio por talla -->
+        <div>
+          <div class="sizes-label">
+            <span>Precio del combo por talla *</span>
           </div>
-          <div class="field" style="margin:.6rem 0 0">
-            <label for="comboFinalPrice">Precio del combo (S/) *</label>
-            <input type="number" id="comboFinalPrice" min="0" max="9999" step="0.5" placeholder="0.00">
-          </div>
-          <div class="combo-price-row combo-savings-row" id="comboSavingsRow">
-            <span>Ahorro para el cliente</span>
-            <strong id="comboSavingsValue">S/ 0.00 (0%)</strong>
-          </div>
+          <p style="font-size:.73rem;color:var(--text3);margin-bottom:.6rem">Pon el precio en las tallas que quieras ofrecer para este combo. Deja vacía la que no ofrezcas.</p>
+          <div id="comboSizeTiers"></div>
         </div>
 
         <div class="field" style="margin-top:1rem;display:flex;align-items:center;gap:.55rem">
@@ -1417,8 +1410,8 @@ CREATE POLICY "admin_all" ON perfiles_usuarios FOR ALL TO authenticated USING (t
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.min.js" integrity="sha384-fPWur1rx/DE6YtXP/x0MD6dd90RgnVsz5yX/DIg7CcVAnTBZsENWuIcpvVTM39ti" crossorigin="anonymous"></script>
-  <script src="../js/data.js?v=2"></script>
-  <script src="../js/supabase-config.js?v=31"></script>
-  <script src="../js/admin.js?v=32"></script>
+  <script src="../js/data.js?v=3"></script>
+  <script src="../js/supabase-config.js?v=33"></script>
+  <script src="../js/admin.js?v=34"></script>
 </body>
 </html>
