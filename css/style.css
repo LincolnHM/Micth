@@ -1993,13 +1993,33 @@ html.pl-lock, html.pl-lock body { overflow: hidden; height: 100%; }
 .btn-delete-combo:hover { background: rgba(239,83,80,.2); }
 
 /* Filas "agregar perfume al combo" (mismo mecanismo que Registrar Pedido) */
-.combo-item-row { display: flex; gap: .5rem; align-items: flex-start; margin-bottom: .6rem; flex-wrap: wrap; }
+.combo-item-row { padding: .7rem; margin-bottom: .6rem; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); }
+.combo-item-row-main { display: flex; gap: .5rem; align-items: flex-start; flex-wrap: wrap; }
 .combo-item-search-wrap { flex: 2; min-width: 200px; position: relative; }
 .combo-item-search { width: 100%; padding: .45rem .65rem; font-size: .82rem; background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: var(--r); }
 .combo-item-search:focus { outline: none; border-color: var(--gold-d); }
 .combo-item-dropdown { position: absolute; top: calc(100% + 2px); left: 0; right: 0; background: var(--card); border: 1px solid var(--border-l); border-radius: var(--r); z-index: 200; max-height: 220px; overflow-y: auto; box-shadow: var(--sh); }
 .combo-item-qty { width: 62px; background: var(--card); border: 1px solid var(--border); color: var(--text); padding: .45rem .5rem; border-radius: var(--r); font-size: .82rem; }
 .combo-item-qty:focus { outline: none; border-color: var(--gold-d); }
+
+/* Botones de talla — TODAS las tallas del perfume a la vista (no un
+   desplegable escondido); la seleccionada queda resaltada. */
+.combo-item-sizes { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .55rem; }
+.combo-size-btn {
+  display: flex; flex-direction: column; align-items: center; gap: .1rem;
+  background: var(--card); border: 1px solid var(--border-l);
+  color: var(--text2); border-radius: var(--r);
+  padding: .35rem .6rem; font-size: .68rem;
+  min-width: 48px; cursor: pointer; transition: all var(--tr);
+}
+.combo-size-ml { font-weight: 700; color: var(--text); font-size: .74rem; }
+.combo-size-price { color: var(--gold-l); font-weight: 700; }
+.combo-size-btn:hover:not(.disabled) { border-color: var(--gold-d); background: var(--gold-dim); }
+.combo-size-btn.selected { background: var(--gold); border-color: var(--gold); }
+.combo-size-btn.selected .combo-size-ml,
+.combo-size-btn.selected .combo-size-price { color: #000; }
+.combo-size-btn.disabled { opacity: .4; cursor: not-allowed; }
+.combo-size-btn.disabled .combo-size-price { color: var(--text3); }
 
 /* Resumen de precio antes/después dentro del modal */
 .combo-price-summary { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: .9rem 1rem; margin-top: .9rem; }

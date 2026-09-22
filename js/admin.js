@@ -1865,41 +1865,92 @@ function addComboItemRow(existingItem = null) {
   const buildSearchWords = (p, sizeLabel) =>
     _normalizeSearchText(`${p.brand} ${p.name} ${sizeLabel}`).split(/\s+/).filter(Boolean);
 
-  const allOptions = [];
-  products.forEach(p => {
-    Object.entries(p.sizes || {}).forEach(([ml, price]) => {
-      if (!(price > 0)) return; // no tiene sentido meter al combo una talla sin precio
-      allOptions.push({
-        value: `${p.id}|${ml}|${price}|${p.name}|${p.brand}`,
-        label: `${p.brand} – ${p.name} (${ml}) S/${price}`,
-        searchWords: buildSearchWords(p, ml)
-      });
-    });
-  });
+  // Una opción por PERFUME (no por talla) — la talla se elige aparte, en su
+  // propio selector, para que quede a la vista y no escondida dentro del
+  // texto de búsqueda (antes se podía guardar "ASAD" sin talla elegida y
+  // el precio quedaba en S/0 sin que fuera obvio por qué).
+  const allOptions = products
+    .filter(p => Object.values(p.sizes || {}).some(price => price > 0))
+    .map(p => ({
+      value: String(p.id),
+      label: `${p.brand} – ${p.name}`,
+      searchWords: buildSearchWords(p, '')
+    }));
 
   const row = document.createElement('div');
   row.className = 'combo-item-row';
   row.innerHTML = `
-    <div class="combo-item-search-wrap">
-      <input type="text" class="combo-item-search" placeholder="Escribe para buscar perfume..." autocomplete="off">
-      <div class="product-search-dropdown combo-item-dropdown" style="display:none"></div>
-      <input type="hidden" class="combo-item-value">
+    <div class="combo-item-row-main">
+      <div class="combo-item-search-wrap">
+        <input type="text" class="combo-item-search" placeholder="Escribe para buscar perfume..." autocomplete="off">
+        <div class="product-search-dropdown combo-item-dropdown" style="display:none"></div>
+      </div>
+      <input type="number" class="combo-item-qty" min="1" max="20" value="${existingItem?.qty || 1}" aria-label="Cantidad">
+      <button type="button" class="remove-size-btn combo-item-remove">×</button>
     </div>
-    <input type="number" class="combo-item-qty" min="1" max="20" value="${existingItem?.qty || 1}" aria-label="Cantidad">
-    <button type="button" class="remove-size-btn combo-item-remove">×</button>
+    <div class="combo-item-sizes" role="group" aria-label="Talla"></div>
   `;
 
   const searchInput = row.querySelector('.combo-item-search');
   const dropdown    = row.querySelector('.combo-item-dropdown');
-  const hiddenInput = row.querySelector('.combo-item-value');
+  const sizesWrap   = row.querySelector('.combo-item-sizes');
   const qtyInput    = row.querySelector('.combo-item-qty');
+
+  // Muestra TODAS las tallas que tiene el perfume (2, 3, 5, 10ml — las que
+  // existan), no solo una escondida en un desplegable. Las que todavía no
+  // tienen precio puesto se ven igual pero deshabilitadas, para que sea
+  // obvio que faltan completarlas en Precios, en vez de desaparecer.
+  function fillSizes(product, preselectSize) {
+    const entries = Object.entries(product.sizes || {})
+      .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]));
+    if (!entries.length) {
+      sizesWrap.innerHTML = '<span style="font-size:.76rem;color:var(--text3)">Este perfume no tiene tallas configuradas.</span>';
+      row.dataset.selectedSize = '';
+      recalcComboSummary();
+      return;
+    }
+    const withPrice = entries.filter(([, price]) => price > 0);
+    const initial = withPrice.some(([ml]) => ml === preselectSize)
+      ? preselectSize
+      : (withPrice[0]?.[0] || '');
+    row.dataset.selectedSize = initial;
+
+    sizesWrap.innerHTML = entries.map(([ml, price]) => {
+      const disabled = !(price > 0);
+      const selected = !disabled && ml === initial;
+      return `
+        <button type="button" class="combo-size-btn ${selected ? 'selected' : ''} ${disabled ? 'disabled' : ''}"
+                data-ml="${escapeAttr(ml)}" ${disabled ? 'disabled aria-disabled="true"' : ''}>
+          <span class="combo-size-ml">${sanitize(ml)}</span>
+          <span class="combo-size-price">${disabled ? 'Sin precio' : `S/${price}`}</span>
+        </button>`;
+    }).join('');
+
+    sizesWrap.querySelectorAll('.combo-size-btn:not(.disabled)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        sizesWrap.querySelectorAll('.combo-size-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        row.dataset.selectedSize = btn.dataset.ml;
+        recalcComboSummary();
+      });
+    });
+
+    recalcComboSummary();
+  }
+
+  function selectProduct(product) {
+    row.dataset.productId = product.id;
+    searchInput.value = `${product.brand} – ${product.name}`;
+    searchInput.style.color = '';
+    fillSizes(product);
+  }
 
   if (existingItem) {
     const product = products.find(p => p.id === existingItem.productId);
-    const price   = product?.sizes?.[existingItem.size] || 0;
     if (product) {
-      hiddenInput.value = `${product.id}|${existingItem.size}|${price}|${product.name}|${product.brand}`;
-      searchInput.value = `${product.brand} – ${product.name} (${existingItem.size}) S/${price}`;
+      row.dataset.productId = product.id;
+      searchInput.value = `${product.brand} – ${product.name}`;
+      fillSizes(product, existingItem.size);
     } else {
       searchInput.value = `⚠ Perfume #${existingItem.productId} ya no existe en el catálogo`;
       searchInput.style.color = '#ef5350';
@@ -1922,7 +1973,7 @@ function addComboItemRow(existingItem = null) {
     }
     if (!matches.length) { dropdown.style.display = 'none'; return; }
     dropdown.innerHTML = matches.map(o =>
-      `<div class="prod-opt" data-value="${escapeAttr(o.value)}" data-label="${escapeAttr(o.label)}"
+      `<div class="prod-opt" data-value="${escapeAttr(o.value)}"
             style="padding:.42rem .75rem;cursor:pointer;font-size:.82rem;color:var(--text2);border-bottom:1px solid var(--border);transition:background .12s"
             onmouseenter="this.style.background='var(--gold-dim)';this.style.color='var(--text)'"
             onmouseleave="this.style.background='';this.style.color='var(--text2)'">${o.label}</div>`
@@ -1930,21 +1981,25 @@ function addComboItemRow(existingItem = null) {
     dropdown.style.display = 'block';
     requestAnimationFrame(() => dropdown.scrollIntoView({ block: 'nearest' }));
     dropdown.querySelectorAll('.prod-opt').forEach(opt => {
-      const selectProd = e => {
+      const pickProduct = e => {
         e.preventDefault();
-        hiddenInput.value = opt.dataset.value;
-        searchInput.value = opt.dataset.label;
-        searchInput.style.color = '';
+        const product = products.find(p => p.id === parseInt(opt.dataset.value));
         dropdown.style.display = 'none';
-        recalcComboSummary();
+        if (product) selectProduct(product);
       };
-      _bindTapSelect(opt, selectProd);
+      _bindTapSelect(opt, pickProduct);
     });
   }
 
-  searchInput.addEventListener('input', () => renderDropdown(searchInput.value));
-  searchInput.addEventListener('focus',  () => renderDropdown(searchInput.value));
-  searchInput.addEventListener('blur',   () => setTimeout(() => { dropdown.style.display = 'none'; }, 250));
+  searchInput.addEventListener('input', () => {
+    delete row.dataset.productId;
+    row.dataset.selectedSize = '';
+    sizesWrap.innerHTML = '';
+    renderDropdown(searchInput.value);
+    recalcComboSummary();
+  });
+  searchInput.addEventListener('focus', () => renderDropdown(searchInput.value));
+  searchInput.addEventListener('blur',  () => setTimeout(() => { dropdown.style.display = 'none'; }, 250));
   qtyInput.addEventListener('input', recalcComboSummary);
   row.querySelector('.combo-item-remove').addEventListener('click', () => { row.remove(); recalcComboSummary(); });
 
@@ -1952,14 +2007,23 @@ function addComboItemRow(existingItem = null) {
   if (!existingItem && !('ontouchstart' in window)) searchInput.focus();
 }
 
+// Lee {productId, size, qty, price} de una fila si tiene perfume + talla
+// elegidos; null si todavía está incompleta (para no contarla a medias).
+function _readComboItemRow(row) {
+  const pid = parseInt(row.dataset.productId);
+  const size = row.dataset.selectedSize;
+  const qty  = parseInt(row.querySelector('.combo-item-qty')?.value) || 1;
+  if (isNaN(pid) || !size) return null;
+  const product = (_comboProductsCache || []).find(p => p.id === pid);
+  const price = comboItemUnitPrice(product, size);
+  return { productId: pid, size, qty, price };
+}
+
 function recalcComboSummary() {
   let before = 0;
   document.querySelectorAll('#comboItemsContainer .combo-item-row').forEach(row => {
-    const val = row.querySelector('.combo-item-value')?.value;
-    const qty = parseInt(row.querySelector('.combo-item-qty')?.value) || 1;
-    if (!val) return;
-    const price = parseFloat(val.split('|')[2]) || 0;
-    before += price * qty;
+    const item = _readComboItemRow(row);
+    if (item) before += item.price * item.qty;
   });
   document.getElementById('comboBeforePrice').textContent = `S/ ${before.toFixed(2)}`;
 
@@ -1982,15 +2046,16 @@ async function saveCombo() {
 
   if (!title) { showToast('Ponle un nombre al combo.'); return; }
 
+  const rows = document.querySelectorAll('#comboItemsContainer .combo-item-row');
   const items = [];
-  document.querySelectorAll('#comboItemsContainer .combo-item-row').forEach(row => {
-    const val = row.querySelector('.combo-item-value')?.value;
-    const qty = parseInt(row.querySelector('.combo-item-qty')?.value) || 1;
-    if (!val) return;
-    const [pid, size] = val.split('|');
-    items.push({ productId: parseInt(pid), size, qty });
+  let incomplete = false;
+  rows.forEach(row => {
+    const item = _readComboItemRow(row);
+    if (item) items.push({ productId: item.productId, size: item.size, qty: item.qty });
+    else if (row.querySelector('.combo-item-search')?.value.trim()) incomplete = true;
   });
 
+  if (incomplete) { showToast('Hay un perfume sin talla elegida — selecciónala en cada fila.'); return; }
   if (!items.length) { showToast('Agrega al menos un perfume al combo.'); return; }
   if (isNaN(price) || price <= 0) { showToast('Ingresa el precio final del combo.'); return; }
 
