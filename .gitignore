@@ -1,1 +1,13 @@
-js/config.js
+# Configuración local / herramientas (no van al sitio)
+frontend/js/config.js
+.claude/
+
+# Archivos del sistema y del editor
+.DS_Store
+Thumbs.db
+desktop.ini
+node_modules/
+*.log
+
+# Páginas temporales de pruebas locales
+_*.html
