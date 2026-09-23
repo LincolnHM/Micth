@@ -12,7 +12,11 @@
 const SUPABASE_URL      = 'https://nvttfrpbdrdtgxulkyln.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_2xUgHEI6yI1KjmQSZk3chg_ar98tDZf';
 
-
+// Cómo se guardan los pedidos de la tienda:
+//   false → directo en la tabla `pedidos` (un solo envío; los precios los valida el
+//           trigger de la base de datos, ver backend/supabase/sql/2026-09-23-validar-pedidos.sql)
+//   true  → pasando por la Edge Function `create-order` (solo si la desplegaste)
+const USE_EDGE_CREATE_ORDER = false;
 
 // ─── Detectar si Supabase está configurado ────────────────────────────────────
 const SUPABASE_READY = (

@@ -123,10 +123,10 @@ async function openEditOrderModal(id) {
         <select class="edit-size-sel" data-idx="${idx}"
           style="padding:.3rem .5rem;background:var(--card);border:1px solid var(--border-l);color:var(--text);border-radius:var(--r);font-size:.78rem;cursor:pointer">
           ${sizes.length
-            ? sizes.map(([s, p]) => `<option value="${escapeAttr(s)}|${p}" ${s===item.size?'selected':''}>${s} — S/${p}</option>`).join('')
-            : `<option value="${escapeAttr(item.size||'')}|${item.price||0}">${sanitize(item.size||'')} — S/${item.price||0}</option>`}
+            ? sizes.map(([s, p]) => `<option value="${escapeAttr(s)}|${Number(p) || 0}" ${s===item.size?'selected':''}>${sanitize(s)} — S/${Number(p) || 0}</option>`).join('')
+            : `<option value="${escapeAttr(item.size||'')}|${Number(item.price) || 0}">${sanitize(item.size||'')} — S/${Number(item.price) || 0}</option>`}
         </select>
-        <input type="number" class="edit-qty-inp" data-idx="${idx}" min="1" max="99" value="${item.quantity||1}"
+        <input type="number" class="edit-qty-inp" data-idx="${idx}" min="1" max="99" value="${parseInt(item.quantity) || 1}"
           style="width:54px;padding:.3rem .4rem;background:var(--card);border:1px solid var(--border-l);color:var(--text);border-radius:var(--r);font-size:.82rem;text-align:center">
         <button class="edit-remove-item" data-idx="${idx}"
           style="background:none;border:none;color:#666;font-size:1.1rem;cursor:pointer;padding:0 .2rem;line-height:1"
@@ -195,7 +195,7 @@ async function openEditOrderModal(id) {
           style="padding:.45rem .75rem;cursor:pointer;border-bottom:1px solid var(--border);font-size:.8rem;color:var(--text2);transition:background .1s"
           onmouseenter="this.style.background='var(--gold-dim)';this.style.color='var(--text)'"
           onmouseleave="this.style.background='';this.style.color='var(--text2)'">
-          <strong>${sanitize(o.brand)}</strong> — ${sanitize(o.productName)} <span style="color:var(--gold)">${sanitize(o.size)}</span> <span style="float:right">S/ ${o.price}</span>
+          <strong>${sanitize(o.brand)}</strong> — ${sanitize(o.productName)} <span style="color:var(--gold)">${sanitize(o.size)}</span> <span style="float:right">S/ ${Number(o.price) || 0}</span>
         </div>`).join('');
       pickList.querySelectorAll('.pick-opt').forEach((el, ri) => {
         const item = filtered[ri];
@@ -233,16 +233,21 @@ async function openEditOrderModal(id) {
     const newTotal = editItems.reduce((s, i) => s + (parseFloat(i.price)||0) * (parseInt(i.quantity)||1), 0);
 
     try {
-      await CloudOrders.update(id, {
+      // Si el pedido ya está pagado, cambiar productos/cantidades ajusta el stock por la diferencia
+      const res = await CloudOrders.update(id, {
         customerName: name, customerPhone: phone, customerDni: dni,
         deliveryType: delivery, notes, items: editItems, total: newTotal
       });
-      showToast(`Pedido ${id} actualizado ✓`);
+      const stockNote = res.stock.length ? `\nStock ajustado: ${res.stock.join('; ')}` : '';
+      showToast(`Pedido ${id} actualizado ✓${stockNote}`, res.stock.length ? 6500 : 2800);
+      if (res.skipped.length) alert('⚠ Estos productos ya no existen en el catálogo y NO se les pudo mover el stock:\n\n' + res.skipped.join('\n'));
       closeModal();
+      _statsCache = null;
       renderOrdersSection().catch(console.error);
+      renderAdminProducts().catch(console.error);
     } catch (err) {
       console.error(err);
-      showToast('Error al guardar. Inténtalo de nuevo.');
+      alert('⚠ ' + (err.message || 'Error al guardar. Inténtalo de nuevo.'));
     } finally {
       saveBtn2.disabled    = false;
       saveBtn2.textContent = 'Guardar cambios';

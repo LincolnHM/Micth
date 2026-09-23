@@ -161,7 +161,7 @@ async function openUserOrdersModal(dni, name) {
     const STATUS_LABELS = { pendiente: 'Pendiente', pagado: 'Pagado', cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado' };
     list.innerHTML = userOrders.map(o => {
       const date  = new Date(o.date).toLocaleString('es-PE', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
-      const items = (o.items || []).map(i => `${sanitize(i.productName)} ${sanitize(i.size)} ×${i.quantity}`).join(' · ');
+      const items = (o.items || []).map(i => `${sanitize(i.productName)} ${sanitize(i.size)} ×${parseInt(i.quantity) || 1}`).join(' · ');
       const safeStatus = (o.status || '').replace(/[^a-z]/g, '');
       return `
         <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.75rem 1rem">

@@ -207,27 +207,10 @@ function escapeAttr(str) { return String(str).replace(/"/g, '&quot;').replace(/'
 // ─── Validación de stock ──────────────────────────────────────────────────────
 
 function validateCartStock() {
-  const errors = [];
+  // Se suma por perfume (el mismo perfume en dos tallas sale del mismo frasco) e
+  // incluye los perfumes dentro de cada combo del carrito.
   const products = _allProducts || Products.getAll();
-  Cart.items.forEach(item => {
-    const product = products.find(p => p.id === item.productId);
-    if (!product) return;
-    if (!product.inStock) {
-      errors.push({ name: `${item.brand} – ${item.productName} (${item.size})`, type: 'agotado' });
-    } else if (product.type === 'entero' && typeof product.stockQuantity === 'number') {
-      if (item.quantity > product.stockQuantity) {
-        errors.push({ name: `${item.brand} – ${item.productName}`, type: 'stock', available: product.stockQuantity, requested: item.quantity });
-      }
-    } else if (item.size === 'Unidad') {
-      const available = product.enteroStock || 0;
-      if (item.quantity > available) {
-        errors.push({ name: `${item.brand} – ${item.productName}`, type: 'stock', available, requested: item.quantity });
-      }
-    } else if (!bottleHasMl(product, item.size, item.quantity)) {
-      errors.push({ name: `${item.brand} – ${item.productName} (${item.size})`, type: 'agotado' });
-    }
-  });
-  return errors;
+  return stockShortages(Cart.items, new Map(products.map(p => [p.id, p])));
 }
 
 function showStockAlert(errors) {
@@ -252,7 +235,9 @@ function showStockAlert(errors) {
   document.getElementById('stockAlertList').innerHTML = errors.map(e =>
     e.type === 'agotado'
       ? `<div class="stock-alert-item"><span class="stock-alert-dot"></span>${sanitize(e.name)} — <strong>Agotado</strong></div>`
-      : `<div class="stock-alert-item"><span class="stock-alert-dot"></span>${sanitize(e.name)} — Solo quedan <strong>${e.available}</strong> unidad${e.available !== 1 ? 'es' : ''}</div>`
+      : e.type === 'ml'
+      ? `<div class="stock-alert-item"><span class="stock-alert-dot"></span>${sanitize(e.name)} — Solo quedan <strong>~${Number(e.remaining) || 0} ml</strong> (tu pedido suma ${Number(e.requested) || 0} ml)</div>`
+      : `<div class="stock-alert-item"><span class="stock-alert-dot"></span>${sanitize(e.name)} — Solo quedan <strong>${Number(e.available) || 0}</strong> unidad${e.available !== 1 ? 'es' : ''}</div>`
   ).join('');
   modal.classList.add('open');
 }

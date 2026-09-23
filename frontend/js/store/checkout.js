@@ -366,8 +366,12 @@ const Checkout = {
     // Abrir WhatsApp — función SÍNCRONA para preservar el gesto del usuario en móvil
     const message = encodeURIComponent(this.buildWhatsAppMessage());
     const url     = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
-    const opened  = window.open(url, '_blank', 'noopener,noreferrer');
-    if (!opened) window.location.href = url;
+    // OJO: sin "noopener" en la lista de opciones — con él window.open devuelve SIEMPRE
+    // null y la línea de abajo navegaba TAMBIÉN esta pestaña a WhatsApp (dos pestañas en
+    // PC; en el celular la tienda se iba al fondo mientras aún se guardaba el pedido).
+    const opened  = window.open(url, '_blank');
+    if (opened) { try { opened.opener = null; } catch (_) {} }
+    else window.location.href = url;
 
     this.close();
     Cart.clear();

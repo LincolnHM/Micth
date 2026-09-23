@@ -7,6 +7,12 @@
 // camino "de confianza": recalcula cada precio contra el catálogo real y
 // aplica un límite de frecuencia por IP antes de guardar nada.
 //
+// ⚠ HOY NO HACE FALTA DESPLEGAR ESTA FUNCIÓN: la misma validación (precios reales, total,
+// estado, límite por IP) ya la hace la base de datos con el trigger de
+// backend/supabase/sql/2026-09-23-validar-pedidos.sql, que se aplica pegando ese SQL en Supabase.
+// Esta función queda como alternativa; para usarla hay que poner USE_EDGE_CREATE_ORDER = true
+// en frontend/js/shared/supabase-config.js.
+//
 // El insert directo se mantiene en el cliente SOLO como respaldo si esta
 // función no está desplegada o no responde (ver frontend/js/shared/cloud-orders.js) —
 // para que nunca se pierda un pedido por una caída de la función. Una vez
@@ -180,11 +186,19 @@ Deno.serve(async (req) => {
 
     const quantity  = Math.min(Math.max(parseInt(raw.quantity) || 1, 1), 20);
     const size      = String(raw.size || '').trim();
-    const isEntero  = product.type === 'entero' || size === 'Unidad';
-
-    const unitPrice = isEntero
-      ? parseFloat(product.entero_price) || 0
-      : parseFloat((product.sizes || {})[size]) || 0;
+    // Mismas reglas de precio que backend/supabase/sql/2026-09-23-validar-pedidos.sql:
+    //  · un entero de verdad (type = 'entero') cuesta lo que dice su talla (sizes.Unidad, sizes.Set…)
+    //  · un frasco sellado de un perfume que también se vende en decant ("Unidad") usa entero_price
+    //    (o, si no tiene, la talla más barata con precio)
+    //  · un decant usa el precio de su talla
+    let unitPrice: number;
+    if (size === 'Unidad' && product.type !== 'entero') {
+      const enteroPrice = parseFloat(product.entero_price) || 0;
+      const sizePrices  = Object.values(product.sizes || {}).map((v: any) => parseFloat(v) || 0).filter((n: number) => n > 0);
+      unitPrice = enteroPrice > 0 ? enteroPrice : (sizePrices.length ? Math.min(...sizePrices) : 0);
+    } else {
+      unitPrice = parseFloat((product.sizes || {})[size]) || 0;
+    }
 
     if (unitPrice <= 0) {
       return json({ error: `"${product.name}" (${size || 'Unidad'}) no está disponible con ese precio.` }, 400, headers);

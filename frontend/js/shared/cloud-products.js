@@ -56,6 +56,16 @@ function productFromDB(row) {
   };
 }
 
+// Acordes: si la base todavía no los tiene para un perfume (columna vacía), se usan
+// los de catalog.js por id, así las barras de acordes se ven aunque no hayas corrido
+// el SQL 2026-09-23-acordes-de-todos-los-perfumes.sql. Los de la base, si existen, mandan.
+function _accordsOrDefault(p) {
+  if (Array.isArray(p.accords) && p.accords.length) return p.accords;
+  if (typeof DEFAULT_PRODUCTS === 'undefined') return [];
+  const d = DEFAULT_PRODUCTS.find(x => x.id === p.id);
+  return Array.isArray(d?.accords) ? d.accords.map(a => ({ ...a })) : [];
+}
+
 // ─── Control de stock por mililitros (decants) ────────────────────────────────
 // Un perfume "decant" (no entero) que tiene frasco registrado (bottleTotalMl > 0)
 // solo puede vender un tamaño si el frasco tiene suficiente ml restante.
@@ -89,6 +99,63 @@ function isDecantPurchasable(product) {
   const minSize = minDecantSizeMl(product.sizes);
   if (!minSize) return true;
   return (product.bottleRemainingMl || 0) >= minSize;
+}
+
+// ¿Alcanza el inventario para estos items (carrito o pedido)? Suma TODAS las líneas
+// del mismo perfume (dos tallas del mismo perfume comparten el mismo frasco) y
+// también los perfumes dentro de combos. Devuelve una lista de problemas:
+//   { name, type:'agotado' }
+//   { name, type:'stock', available, requested }   → unidades (enteros)
+//   { name, type:'ml',    remaining, requested }   → ml del frasco
+function stockShortages(items, lookup) {
+  const { needs } = orderStockNeeds(items, lookup);
+  const errors = [];
+  needs.forEach(n => {
+    const p = lookup.get(n.productId);
+    if (!p) return;
+    if (!p.inStock) { errors.push({ name: n.label, type: 'agotado' }); return; }
+    if (n.units && n.units > (p.stockQuantity || 0)) {
+      errors.push({ name: n.label, type: 'stock', available: p.stockQuantity || 0, requested: n.units });
+    }
+    if (n.enteroUnits && n.enteroUnits > (p.enteroStock || 0)) {
+      errors.push({ name: `${n.label} (entero)`, type: 'stock', available: p.enteroStock || 0, requested: n.enteroUnits });
+    }
+    if (n.ml && p.type !== 'entero' && p.bottleTotalMl > 0 && (p.bottleRemainingMl || 0) < n.ml) {
+      errors.push({ name: n.label, type: 'ml', remaining: Math.round(p.bottleRemainingMl || 0), requested: n.ml });
+    }
+  });
+  return errors;
+}
+
+// Cambio de inventario de UN perfume a partir de lo que consume un pedido (ver
+// orderStockNeeds en data.js). `n` = { ml, units, enteroUnits }; valores positivos
+// = consumir, negativos = devolver. Devuelve el patch a guardar o null si no hay
+// nada que cambiar.
+//  · Decant sin frasco registrado (bottleTotalMl = 0): NO se toca nada. Antes se
+//    ponía el frasco en 0 y el perfume quedaba "agotado" tras la primera venta.
+//  · Al consumir, si lo que queda no alcanza ni para la talla más chica → agotado.
+//  · Al devolver, si estaba agotado solo por falta de ml y ya alcanza → disponible.
+function stockPatch(p, n) {
+  const patch = {};
+  if (n.ml && p.type !== 'entero' && p.bottleTotalMl > 0) {
+    const before  = p.bottleRemainingMl || 0;
+    const after   = Math.max(0, Math.min(before - n.ml, Math.max(p.bottleTotalMl, before)));
+    const minSize = minDecantSizeMl(p.sizes);
+    patch.bottleRemainingMl = after;
+    if (n.ml > 0 && after < minSize) patch.inStock = false;
+    if (n.ml < 0 && !p.inStock && before < minSize && after >= minSize) patch.inStock = true;
+  }
+  if (n.units && p.type === 'entero') {
+    const after = Math.max(0, (p.stockQuantity || 0) - n.units);
+    patch.stockQuantity = after;
+    patch.inStock       = after > 0;
+  }
+  if (n.enteroUnits && p.type !== 'entero') {
+    const after = Math.max(0, (p.enteroStock || 0) - n.enteroUnits);
+    patch.enteroStock       = after;
+    patch.availableAsEntero = after > 0;
+  }
+  return Object.keys(patch).length ? patch : null;
 }
 
 function productToDB(product) {
@@ -189,6 +256,7 @@ const CloudProducts = {
           const cached = storedProducts.find(sp => sp.id === p.id);
           p.accords = cached?.accords || [];
         }
+        p.accords = _accordsOrDefault(p);
         if (!('dupe_of' in row)) {
           const cached = storedProducts.find(sp => sp.id === p.id);
           p.dupeOf = cached?.dupeOf || null;
@@ -284,6 +352,7 @@ const CloudProducts = {
       if (!('accords' in data)) {
         p.accords = Products.getById(id)?.accords || [];
       }
+      p.accords = _accordsOrDefault(p);
       if (!('dupe_of' in data)) {
         p.dupeOf = Products.getById(id)?.dupeOf || null;
       }
@@ -353,6 +422,55 @@ const CloudProducts = {
       }
     }
     return null;
+  },
+
+  // Cambia el inventario de un perfume SIN pisar cambios ajenos: lee la fila fresca
+  // de la base, calcula el patch con `computePatch(producto)` y lo guarda solo si
+  // los contadores (ml / unidades) siguen valiendo lo mismo que al leerlos. Si otro
+  // dispositivo (o el mismo pedido en otra pestaña) los cambió en medio, vuelve a
+  // leer y reintenta — así dos descuentos seguidos nunca se pisan.
+  // Devuelve { ok, patch } o { ok:false, reason, ... }. NUNCA falla en silencio:
+  // una actualización que RLS deja en 0 filas (sesión de admin vencida) es fallo.
+  async mutate(id, computePatch, retries = 5) {
+    if (!db) {
+      const local = Products.getById(id);
+      if (!local) return { ok: false, reason: 'not-found' };
+      const patch = computePatch(local);
+      if (patch) Products.update(id, patch);
+      return { ok: true, patch };
+    }
+    let lastReason = 'conflict-or-permission';
+    for (let attempt = 0; attempt < retries; attempt++) {
+      const { data: row, error: readError } = await db.from('productos').select('*').eq('id', id).maybeSingle();
+      if (readError) return { ok: false, reason: 'read-error', error: readError };
+      if (!row)      return { ok: false, reason: 'not-found' };
+
+      const patch = computePatch(productFromDB(row));
+      if (!patch) return { ok: true, patch: null };
+
+      const dbPatch = { updated_at: new Date().toISOString() };
+      const guards  = [];
+      const missing = [];
+      Object.entries(patch).forEach(([key, val]) => {
+        const col = _PRODUCT_FIELD_MAP[key];
+        if (!col) return;
+        if (!(col in row)) { missing.push(col); return; }
+        dbPatch[col] = val;
+        if (['bottle_remaining_ml', 'stock_quantity', 'entero_stock'].includes(col)) guards.push(col);
+      });
+      if (missing.length) return { ok: false, reason: 'missing-column', columns: missing };
+
+      let q = db.from('productos').update(dbPatch).eq('id', id);
+      guards.forEach(col => { q = row[col] === null ? q.is(col, null) : q.eq(col, row[col]); });
+      const { data: updated, error } = await q.select('id');
+      if (error) return { ok: false, reason: 'write-error', error };
+      if (updated && updated.length) {
+        Products.update(id, patch);   // mantener el caché local al día
+        return { ok: true, patch };
+      }
+      lastReason = 'conflict-or-permission';
+    }
+    return { ok: false, reason: lastReason };
   },
 
   async delete(id) {

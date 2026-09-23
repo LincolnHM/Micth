@@ -2,6 +2,9 @@
 
 document.addEventListener('DOMContentLoaded', async () => {
   Cart.load();
+  // Pedidos que no llegaron a la base (ej.: en el celular la página pasó al fondo al abrir
+  // WhatsApp antes de terminar el envío) se reenvían solos en la siguiente visita.
+  setTimeout(() => { try { CloudOrders.retryPending(); } catch (_) {} }, 3000);
   try {
     _allProducts = await Promise.race([
       CloudProducts.getAll(),

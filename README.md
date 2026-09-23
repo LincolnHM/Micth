@@ -71,4 +71,5 @@ y abre `http://localhost:8000`. (Hay que servir la carpeta `frontend/`, no la ra
 ## Base de datos y funciones
 
 - SQL: cada archivo de `backend/supabase/sql/` se pega en **Supabase → SQL Editor → Run**. La lista, en orden y con qué hace cada uno, está en `backend/supabase/sql/README.md`.
-- Edge Function: `cd backend` y luego `supabase functions deploy create-order` (requiere la CLI de Supabase). Hasta que esté desplegada, la tienda guarda los pedidos con inserción directa como respaldo. **No corras `2026-08-04-cerrar-insert-directo.sql` antes de desplegarla y probarla.**
+- **Pedidos:** la tienda guarda cada pedido directo en la tabla `pedidos` (una sola petición). Quien valida precios, total y estado es un *trigger* de la base de datos (`backend/supabase/sql/2026-09-23-validar-pedidos.sql`), no el navegador. La Edge Function `create-order` (`backend/supabase/functions/`) es una alternativa opcional: si algún día la despliegas (`cd backend` y `supabase functions deploy create-order`), pon `USE_EDGE_CREATE_ORDER = true` en `frontend/js/shared/supabase-config.js`.
+- **Stock:** al pasar un pedido a *Pagado* se descuentan los ml (o unidades) de cada perfume, sumando todas sus líneas y combos; al pasarlo a *Cancelado/Pendiente* se devuelven. La lógica está en `frontend/js/shared/cloud-orders.js` (`updateStatus`) y `cloud-products.js` (`mutate`, `stockPatch`).

@@ -27,10 +27,31 @@ async function updateOrderStats(allOrders = null) {
   }
 }
 
+// Lista "• Marca Perfume: 15 ml" de lo que un pedido mueve en el inventario,
+// sumada por perfume (para los diálogos de confirmar pago / devolver stock).
+async function _orderStockLines(order) {
+  let all;
+  try { all = await withTimeout(CloudProducts.getAll(), 8000, 'los productos'); }
+  catch { all = Products.getAll(); }
+  const { needs } = orderStockNeeds(order.items, new Map(all.map(p => [p.id, p])));
+  const prod = new Map(all.map(p => [p.id, p]));
+  const lines = [];
+  needs.forEach(n => {
+    const p = prod.get(n.productId);
+    const parts = [];
+    if (n.ml) parts.push(p && p.bottleTotalMl > 0 ? `${n.ml} ml` : `${n.ml} ml (sin control de ml)`);
+    if (n.units) parts.push(`${n.units} u.`);
+    if (n.enteroUnits) parts.push(`${n.enteroUnits} u. (entero)`);
+    if (parts.length) lines.push(`  • ${n.label}: ${parts.join(', ')}`);
+  });
+  const shown = lines.slice(0, 12).join('\n');
+  return lines.length > 12 ? `${shown}\n  … y ${lines.length - 12} más` : shown;
+}
+
 async function renderOrdersSection() {
   const tbody = document.getElementById('ordersTableBody');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">Cargando pedidos…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">Cargando pedidos…</td></tr>';
 
   try {
     // Una sola query a Supabase — se reutiliza para stats y tabla
@@ -50,8 +71,14 @@ async function renderOrdersSection() {
     } else {
       diagBox.style.cssText = 'background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.3);border-radius:var(--r);padding:.5rem 1rem;margin-bottom:.75rem;font-size:.78rem;color:#81c784';
       diagBox.innerHTML = `✓ Conectado a Supabase — ${CloudOrders._lastFetchCount} pedidos cargados correctamente`;
+      if (CloudOrders._divergent.length) {
+        const ids = CloudOrders._divergent.slice(0, 6).map(d => `${sanitize(d.id)} (aquí: ${sanitize(d.local)}, base: ${sanitize(d.remote)})`).join(', ');
+        diagBox.innerHTML += `<br><small style="color:#ffb74d">⚠ ${CloudOrders._divergent.length} pedido(s) tenían un estado distinto en este navegador que en Supabase; se muestra el de Supabase: ${ids}. Revisa que su stock esté bien.</small>`;
+      }
     }
-    tbody.parentElement.insertBefore(diagBox, tbody.parentElement.firstChild);
+    // Antes se insertaba DENTRO de la <table> (HTML inválido: en el celular se encimaba con el encabezado)
+    const tableWrap = tbody.closest('.orders-table-wrap') || tbody.parentElement;
+    tableWrap.parentElement.insertBefore(diagBox, tableWrap);
 
     if (orderStatusFilter !== 'all') orders = orders.filter(o => o.status === orderStatusFilter);
     if (_orderSearch) {
@@ -139,50 +166,62 @@ async function renderOrdersSection() {
     // Cambio de estado
     tbody.querySelectorAll('.order-action-select').forEach(sel => {
       sel.addEventListener('change', () => {
-        const id        = sel.dataset.id;
-        const newStatus = sel.value;
+        const id         = sel.dataset.id;
+        const newStatus  = sel.value;
         const prevStatus = sel.dataset.status;
 
         const doUpdate = async (paymentMethod = null) => {
           try {
-            await CloudOrders.updateStatus(id, newStatus, paymentMethod);
+            const res = await CloudOrders.updateStatus(id, newStatus, paymentMethod);
             sel.dataset.status = newStatus;
             _statsCache = null;
             renderOrdersSection().catch(console.error);
+            renderAdminProducts().catch(console.error);
             const _payLabels = { efectivo: '💵 Efectivo', yape: '📱 Yape', plin: '📲 Plin', transferencia: '🏦 Transferencia' };
             const payLabel = paymentMethod && _payLabels[paymentMethod] ? ` · ${_payLabels[paymentMethod]}` : '';
-            showToast(`Pedido ${id} → ${STATUS_LABELS[newStatus]}${payLabel}`);
+            const stockNote = res.stock.length ? `\nStock: ${res.stock.join('; ')}` : '';
+            showToast(`Pedido ${id} → ${STATUS_LABELS[newStatus]}${payLabel}${stockNote}`, res.stock.length ? 6500 : 2800);
+            if (res.skipped.length) alert('⚠ Estos productos ya no existen en el catálogo y NO se les pudo mover el stock:\n\n' + res.skipped.join('\n'));
           } catch (err) {
             console.error('Error al actualizar estado:', err);
             sel.value = prevStatus;
-            showToast('Error al actualizar el pedido. Inténtalo de nuevo.');
+            alert('⚠ ' + (err.message || 'No se pudo actualizar el pedido. Inténtalo de nuevo.'));
           }
         };
 
-        if (newStatus === 'pagado') {
-          sel.value = prevStatus;
-          CloudOrders.getById(id).then(order => {
-            const items   = order?.items || [];
-            const mlLines = items
-              .filter(i => parseInt(i.size) > 0)
-              .map(i => `  • ${i.productName} ${i.size} ×${i.quantity} = ${parseInt(i.size) * i.quantity} ml`)
-              .join('\n');
-            const info = mlLines ? `Stock a descontar:\n${mlLines}\n\n` : '';
+        // Al pasar a "pagado" se descuenta stock; al salir de "pagado" se devuelve.
+        // Se muestra exactamente qué se va a mover antes de confirmar.
+        sel.value = prevStatus;
+        const paying   = isPaidStatus(newStatus);
+        const reverting = isPaidStatus(prevStatus) && !paying;
+        CloudOrders.getById(id).then(async order => {
+          const lines = order ? await _orderStockLines(order) : '';
+          if (paying && !isPaidStatus(prevStatus)) {
+            const info = lines ? `Stock a descontar:\n${lines}\n\n` : '';
             showPaymentModal(
               `${info}¿Cómo pagó el pedido ${id}?`,
               (payMethod) => { sel.value = newStatus; doUpdate(payMethod); },
               () => { sel.value = prevStatus; }
             );
-          }).catch(() => {
+          } else if (reverting) {
+            const info = lines ? `Se devolverá al stock:\n${lines}\n\n` : '';
+            showConfirmModal(
+              `${info}¿Pasar el pedido ${id} de Pagado a ${STATUS_LABELS[newStatus]}?`,
+              () => { sel.value = newStatus; doUpdate(); },
+              () => { sel.value = prevStatus; }
+            );
+          } else {
+            sel.value = newStatus; doUpdate();
+          }
+        }).catch(() => {
+          if (paying && !isPaidStatus(prevStatus)) {
             showPaymentModal(
               `¿Cómo pagó el pedido ${id}?`,
               (payMethod) => { sel.value = newStatus; doUpdate(payMethod); },
               () => { sel.value = prevStatus; }
             );
-          });
-        } else {
-          doUpdate();
-        }
+          } else { sel.value = newStatus; doUpdate(); }
+        });
       });
     });
 
@@ -200,16 +239,23 @@ async function renderOrdersSection() {
     tbody.querySelectorAll('.btn-delete-order').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
+        const isPaid = isPaidStatus(btn.closest('tr')?.querySelector('.order-action-select')?.dataset.status);
+        // Eliminar solo borra el registro: NO devuelve stock. Para devolverlo, cambia el
+        // estado a Cancelado (o Pendiente) y luego elimina si quieres.
+        const warn = isPaid
+          ? '\n\n⚠ Este pedido está PAGADO y ya descontó stock. Eliminarlo NO devuelve el stock ni deja rastro en la contabilidad. Si fue un error, cámbialo primero a Cancelado.'
+          : '';
         showConfirmModal(
-          `¿Eliminar el pedido ${id}? Esta acción no se puede deshacer.`,
+          `¿Eliminar el pedido ${id}? Esta acción no se puede deshacer.${warn}`,
           async () => {
             try {
               await CloudOrders.delete(id);
+              _statsCache = null;
               renderOrdersSection().catch(console.error);
               showToast(`Pedido ${id} eliminado.`);
             } catch (err) {
               console.error(err);
-              showToast('Error al eliminar el pedido.');
+              alert('⚠ ' + (err.message || 'Error al eliminar el pedido.'));
             }
           },
           () => {}
@@ -218,7 +264,7 @@ async function renderOrdersSection() {
     });
   } catch (err) {
     console.error('[MICHT] renderOrdersSection falló:', err);
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">No se pudieron cargar los pedidos.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">No se pudieron cargar los pedidos.</td></tr>';
   }
 }
 
@@ -239,8 +285,8 @@ async function openOrderDetail(id) {
   const date = new Date(order.date).toLocaleString('es-PE');
 
   body.innerHTML = `
-    <div class="order-detail-row"><span class="lbl">ID Pedido</span><span class="val order-id">${order.id}</span></div>
-    <div class="order-detail-row"><span class="lbl">Estado</span><span class="val"><span class="status-badge status-${order.status}">${STATUS_LABELS[order.status]}</span></span></div>
+    <div class="order-detail-row"><span class="lbl">ID Pedido</span><span class="val order-id">${sanitize(order.id)}</span></div>
+    <div class="order-detail-row"><span class="lbl">Estado</span><span class="val"><span class="status-badge status-${String(order.status).replace(/[^a-z]/g, '')}">${STATUS_LABELS[order.status] ?? sanitize(order.status)}</span></span></div>
     <div class="order-detail-row">
       <span class="lbl">Método pago</span>
       <span class="val" style="display:flex;align-items:center;gap:.5rem">
@@ -271,7 +317,7 @@ async function openOrderDetail(id) {
       ${order.items.map(i => `
       <li style="display:flex;flex-direction:column;gap:.15rem;font-size:.82rem;color:var(--text2)">
         <div style="display:flex;justify-content:space-between">
-          <span>${sanitize(i.brand || '')} ${sanitize(i.productName)} <span class="decant-chip">${sanitize(i.size)}</span> ×${i.quantity}</span>
+          <span>${sanitize(i.brand || '')} ${sanitize(i.productName)} <span class="decant-chip">${sanitize(i.size)}</span> ×${parseInt(i.quantity) || 1}</span>
           <strong style="color:var(--gold)">S/ ${(i.price * i.quantity).toFixed(2)}</strong>
         </div>
         ${i.comboComposition ? `<span style="font-size:.72rem;color:var(--text3)">Incluye: ${sanitize(i.comboComposition)}</span>` : ''}
@@ -307,7 +353,7 @@ async function openOrderDetail(id) {
       <textarea id="adminNoteInput" rows="2" maxlength="400"
         style="width:100%;padding:.5rem .75rem;background:var(--bg);border:1px solid rgba(124,79,176,.3);border-radius:var(--r);color:var(--text);font-size:.82rem;resize:vertical;box-sizing:border-box;font-family:Inter,sans-serif;line-height:1.4;outline:none;transition:border-color .2s"
         onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='rgba(124,79,176,.3)'"
-        placeholder="Ej: Falta pagar el saldo, cliente frecuente, etc.">${getAdminNote(order.id)}</textarea>
+        placeholder="Ej: Falta pagar el saldo, cliente frecuente, etc.">${sanitize(getAdminNote(order.id))}</textarea>
       <button id="saveAdminNoteBtn" data-id="${escapeAttr(order.id)}"
         style="margin-top:.4rem;padding:.35rem .9rem;background:rgba(124,79,176,.12);color:var(--gold-d);border:1px solid rgba(124,79,176,.3);border-radius:var(--r);font-size:.75rem;font-weight:700;cursor:pointer;transition:background .15s"
         onmouseover="this.style.background='rgba(124,79,176,.22)'" onmouseout="this.style.background='rgba(124,79,176,.12)'">
@@ -516,8 +562,8 @@ function _setupCustomerAutocomplete() {
 
     dropdown.innerHTML = matches.map((c, i) => `
       <div class="cust-opt" data-name="${escapeAttr(c.name)}" data-phone="${escapeAttr(c.phone)}" data-dni="${escapeAttr(c.dni)}">
-        <div class="cust-opt-name">${c.name}</div>
-        <div class="cust-opt-meta">${c.phone ? '📞 ' + c.phone : ''}${c.dni ? ' · DNI ' + c.dni : ''}</div>
+        <div class="cust-opt-name">${sanitize(c.name)}</div>
+        <div class="cust-opt-meta">${c.phone ? '📞 ' + sanitize(c.phone) : ''}${c.dni ? ' · DNI ' + sanitize(c.dni) : ''}</div>
       </div>`).join('');
 
     dropdown.querySelectorAll('.cust-opt').forEach(opt => {
@@ -650,7 +696,7 @@ function addOrderItemRow() {
       `<div class="prod-opt" data-value="${escapeAttr(o.value)}" data-label="${escapeAttr(o.label)}"
             style="padding:.42rem .75rem;cursor:pointer;font-size:.82rem;color:var(--text2);border-bottom:1px solid var(--border);transition:background .12s"
             onmouseenter="this.style.background='var(--gold-dim)';this.style.color='var(--text)'"
-            onmouseleave="this.style.background='';this.style.color='var(--text2)'">${o.label}</div>`
+            onmouseleave="this.style.background='';this.style.color='var(--text2)'">${sanitize(o.label)}</div>`
     ).join('');
 
     dropdown.style.display = 'block';
@@ -717,30 +763,20 @@ async function saveManualOrder() {
   const saveBtn = document.getElementById('saveOrderBtn');
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Verificando stock...'; }
 
-  let prodLookup = {};
+  let allProds;
   try {
-    const allProds = await withTimeout(CloudProducts.getAll(), 12000, 'los productos');
-    allProds.forEach(p => { prodLookup[p.id] = p; });
+    allProds = await withTimeout(CloudProducts.getAll(), 12000, 'los productos');
   } catch (_) {
-    Products.getAll().forEach(p => { prodLookup[p.id] = p; });
+    allProds = Products.getAll();
   }
 
-  // Validar stock con datos frescos de Supabase
-  const stockErrors = [];
-  items.forEach(item => {
-    const product = prodLookup[item.productId];
-    if (!product) return;
-    if (!product.inStock) {
-      stockErrors.push(`${item.brand} – ${item.productName}: AGOTADO`);
-    } else if (product.type === 'entero' && typeof product.stockQuantity === 'number') {
-      if (item.quantity > product.stockQuantity) {
-        stockErrors.push(`${item.brand} – ${item.productName}: solo quedan ${product.stockQuantity} unidad(es)`);
-      }
-    } else if (!bottleHasMl(product, item.size, item.quantity)) {
-      const rem = Math.round(product.bottleRemainingMl || 0);
-      stockErrors.push(`${item.brand} – ${item.productName}: solo quedan ~${rem}ml (pedido: ${item.size} ×${item.quantity})`);
-    }
-  });
+  // Validar stock con datos frescos de Supabase. Se suma por perfume: el mismo
+  // perfume en dos tallas (ej. 3ml + 10ml) sale del mismo frasco.
+  const stockErrors = stockShortages(items, new Map(allProds.map(p => [p.id, p]))).map(e =>
+    e.type === 'agotado' ? `${e.name}: AGOTADO`
+    : e.type === 'ml'    ? `${e.name}: solo quedan ~${e.remaining} ml (el pedido pide ${e.requested} ml en total)`
+    :                      `${e.name}: solo quedan ${e.available} unidad(es) (el pedido pide ${e.requested})`
+  );
   if (stockErrors.length) {
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Guardar Pedido'; }
     alert('⚠ Stock insuficiente:\n\n' + stockErrors.join('\n') + '\n\nAjusta las cantidades antes de guardar.');
@@ -750,28 +786,38 @@ async function saveManualOrder() {
   const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
   if (saveBtn) saveBtn.textContent = 'Guardando...';
 
+  let orderId = null;
   try {
     // Siempre crear como 'pendiente' primero para que updateStatus pueda detectar el cambio
     // de estado y descontar el stock una sola vez (evita doble deducción)
-    const orderId = await withTimeout(
+    orderId = await withTimeout(
       CloudOrders.create({ customerName: name, customerPhone: phone, customerDni: dni, deliveryType: dtype, notes, items, total, paymentMethod: payMeth || null, status: 'pendiente' }),
       15000, 'el pedido'
     );
 
     // Si el admin registra el pedido directo como 'pagado', aplicar el descuento de stock
     // vía updateStatus (que también cambia el estado a 'pagado')
+    let stockNote = '';
     if (initStat === 'pagado') {
-      await withTimeout(CloudOrders.updateStatus(orderId, 'pagado', payMeth || null), 15000, 'el estado del pedido');
+      const res = await withTimeout(CloudOrders.updateStatus(orderId, 'pagado', payMeth || null), 20000, 'el estado del pedido');
+      if (res.stock.length) stockNote = `\nStock: ${res.stock.join('; ')}`;
     }
 
     // Cerrar modal y mostrar éxito inmediatamente — el refresh es no-bloqueante
     document.getElementById('registerOrderModal').classList.remove('open');
-    showToast('Pedido registrado correctamente ✓');
+    showToast('Pedido registrado correctamente ✓' + stockNote, stockNote ? 6500 : 2800);
+    _statsCache = null;
     renderOrdersSection().catch(console.error);
     renderAdminProducts().catch(console.error);
 
   } catch (err) {
     console.error('[MICHT] Error guardando pedido:', err);
+    if (orderId) {
+      // El pedido SÍ se creó, pero no se pudo marcar como pagado / descontar el stock
+      document.getElementById('registerOrderModal').classList.remove('open');
+      renderOrdersSection().catch(console.error);
+      alert(`⚠ El pedido ${orderId} se registró como PENDIENTE, pero no se pudo marcarlo como pagado:\n\n${err.message}\n\nMárcalo como pagado desde la lista cuando se resuelva.`);
+    } else
     // El pedido ya se guarda en localStorage antes de intentar sincronizar con Supabase
     // (ver CloudOrders.create), así que un timeout de red no significa que se perdió.
     if (/Tiempo de espera agotado/.test(err?.message || '')) {
@@ -855,7 +901,7 @@ async function openShippingLabel(orderId) {
         ${(order.items || []).map(i => `
           <div class="sl-item-row">
             <span>${sanitize(i.brand)} ${sanitize(i.productName)} ${sanitize(i.size)}</span>
-            <span>×${i.quantity}</span>
+            <span>×${parseInt(i.quantity) || 1}</span>
           </div>`).join('')}
       </div>
       <div class="sl-divider"></div>

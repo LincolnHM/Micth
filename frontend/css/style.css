@@ -1854,6 +1854,7 @@ html.pl-lock, html.pl-lock body { overflow: hidden; height: 100%; }
 .orders-table tr:hover td { background: rgba(255,255,255,.02); }
 .orders-table tr:last-child td { border-bottom: none; }
 
+.order-id, .order-customer, .order-item-name, .order-date { overflow-wrap: anywhere; }  /* textos largos sin espacios no ensanchan la tabla */
 .order-id { font-weight: 700; color: var(--gold); font-size: .82rem; }
 .order-customer { font-weight: 500; color: var(--white); }
 .order-date { color: var(--text2); font-size: .75rem; }
@@ -2653,11 +2654,31 @@ html.pl-lock, html.pl-lock body { overflow: hidden; height: 100%; }
   .order-filter-btn { white-space: nowrap; flex-shrink: 0; }
 
   /* Tabla pedidos */
-  .orders-table th.order-col-items, .orders-table td.order-col-items,
-  .orders-table th.order-col-total, .orders-table td.order-col-total { display: none; }
   .orders-table { font-size: .74rem; }
   .orders-table th { padding: .5rem .55rem; }
   .orders-table td { padding: .6rem .55rem; }
+
+  /* Pedidos en el celular: cada pedido es una TARJETA (id + estado, cliente, productos + total,
+     y abajo el selector de estado y los botones). Antes la tabla mostraba solo ID y Cliente y
+     el estado/botones quedaban fuera de pantalla, a la derecha, tras mucho scroll horizontal. */
+  /* (más abajo hay reglas con !important que pintan estas celdas de negro; por eso aquí también) */
+  #section-orders .orders-table-wrap { overflow-x: visible; border: 0; background-color: transparent !important; box-shadow: none; }
+  #section-orders .orders-table,
+  #section-orders .orders-table tbody { display: block; width: 100%; }
+  #section-orders .orders-table thead { display: none; }
+  #section-orders .orders-table tr.order-row {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .4rem .75rem; align-items: start;
+    padding: .8rem .85rem; margin-bottom: .6rem;
+    border: 1px solid var(--border-l); border-radius: var(--r-lg); background: rgba(255,255,255,.02);
+  }
+  #section-orders .orders-table tr.order-row > td { display: block; padding: 0; border: 0; min-width: 0; max-width: none; background-color: transparent !important; }
+  #section-orders .orders-table tr:hover td { background-color: transparent !important; }
+  #section-orders .order-col-id      { grid-column: 1; grid-row: 1; overflow-wrap: anywhere; }
+  #section-orders .order-col-status  { grid-column: 2; grid-row: 1; text-align: right; }
+  #section-orders .order-col-client  { grid-column: 1 / -1; grid-row: 2; }
+  #section-orders .order-col-items   { grid-column: 1; grid-row: 3; overflow-wrap: anywhere; }
+  #section-orders .order-col-total   { grid-column: 2; grid-row: 3; text-align: right; }
+  #section-orders .order-col-actions { grid-column: 1 / -1; grid-row: 4; }
 
   /* Acciones del pedido */
   .order-actions-stack { gap: .3rem; }

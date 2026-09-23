@@ -98,7 +98,7 @@ async function renderDashboard() {
               </div>
               <div style="text-align:right">
                 <div style="font-weight:700;color:var(--gold);font-size:.85rem">S/ ${o.total.toFixed(2)}</div>
-                <span style="font-size:.68rem;font-weight:600;color:${STATUS_COLORS[o.status] || 'var(--text2)'}">${STATUS_LABELS_D[o.status] || o.status}</span>
+                <span style="font-size:.68rem;font-weight:600;color:${STATUS_COLORS[o.status] || 'var(--text2)'}">${STATUS_LABELS_D[o.status] || sanitize(o.status)}</span>
               </div>
             </div>`).join('')}
         </div>

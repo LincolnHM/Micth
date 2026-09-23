@@ -260,6 +260,60 @@ function comboAvailableSizes(combo, allProducts) {
     .filter(s => s.price > 0 && s.available);
 }
 
+// ─── Pedidos → stock (funciones puras, sin red) ───────────────────────────────
+// Un pedido "descontó stock" mientras está en un estado de pago. Pasar a
+// cualquiera de estos estados descuenta; salir de ellos (a pendiente/cancelado)
+// devuelve el stock. "enviado"/"entregado" son estados viejos que ya no se
+// ofrecen en el panel pero pueden existir en pedidos antiguos.
+const PAID_STATES = ['pagado', 'enviado', 'entregado'];
+const isPaidStatus = status => PAID_STATES.includes(status);
+
+// Un item de combo no es un producto real: trae su propio desglose (comboItems)
+// con los perfumes que sí salen del frasco.
+function flattenOrderItems(items) {
+  return (Array.isArray(items) ? items : []).flatMap(item => {
+    if (!item || typeof item !== 'object') return [];
+    if (Array.isArray(item.comboItems) && item.comboItems.length) {
+      const mult = parseInt(item.quantity) || 1;
+      return item.comboItems.map(ci => ({ ...ci, quantity: (parseInt(ci.qty) || 1) * mult }));
+    }
+    return [item];
+  });
+}
+
+// Cuánto sale del inventario por cada perfume: ml del frasco (decants), unidades
+// (perfumes enteros) y unidades de entero sellado de un perfume que también se
+// vende en decant. Suma TODAS las líneas del mismo perfume — un pedido puede
+// traer el mismo perfume en dos tallas (ej. 3ml + 10ml) y ambas deben restar.
+// `lookup` es un Map (o un objeto) id → producto.
+function orderStockNeeds(items, lookup) {
+  const get = id => (lookup instanceof Map ? lookup.get(id) : lookup?.[id]);
+  const needs = new Map();
+  const skipped = [];
+  flattenOrderItems(items).forEach(item => {
+    const pid = parseInt(item.productId);
+    if (isNaN(pid) || pid < 0) return;
+    const product = get(pid);
+    if (!product) {
+      skipped.push(((item.brand || '') + ' ' + (item.productName || item.name || '#' + pid)).trim());
+      return;
+    }
+    const qty = Math.max(1, parseInt(item.quantity) || 1);
+    const n = needs.get(pid) || { productId: pid, label: `${product.brand} ${product.name}`.trim(), ml: 0, units: 0, enteroUnits: 0 };
+    if (product.type === 'entero') {
+      n.units += qty;
+    } else if (item.size === 'Unidad') {
+      n.enteroUnits += qty;
+    } else {
+      const mlEach = parseFloat(item.size);
+      if (isNaN(mlEach) || mlEach <= 0) return;
+      n.ml += mlEach * qty;
+    }
+    needs.set(pid, n);
+  });
+  return { needs, skipped };
+}
+
 // ─── API de pedidos ───────────────────────────────────────────────────────────
 
 const Orders = {
@@ -284,31 +338,13 @@ const Orders = {
     return newOrder.id;
   },
 
+  // Solo cambia el estado en el caché local. El stock NO se toca aquí: lo descuenta
+  // (o devuelve) CloudOrders.updateStatus una sola vez, contra la base de datos.
   updateStatus(id, status, paymentMethod = null) {
     const orders = this.getAll().map(o => {
       if (o.id !== id) return o;
       const updated = { ...o, status, updatedAt: new Date().toISOString() };
       if (paymentMethod) updated.paymentMethod = paymentMethod;
-
-      // Al confirmar el pago: descontar ml del inventario
-      if (status === 'pagado' && o.status !== 'pagado') {
-        // Un item de combo no es un producto real — trae su propio desglose
-        // (comboItems) con los perfumes que sí hay que descontar del frasco.
-        const flatItems = o.items.flatMap(item =>
-          Array.isArray(item.comboItems) && item.comboItems.length
-            ? item.comboItems.map(ci => ({ ...ci, quantity: (ci.qty || 1) * (item.quantity || 1) }))
-            : [item]
-        );
-        flatItems.forEach(item => {
-          const product = Products.getById(item.productId);
-          if (!product) return;
-          const mlUsed    = parseInt(item.size) * item.quantity;
-          if (isNaN(mlUsed) || mlUsed <= 0) return;
-          const newRemain = Math.max(0, product.bottleRemainingMl - mlUsed);
-          Products.update(item.productId, { bottleRemainingMl: newRemain });
-        });
-      }
-
       return updated;
     });
     this.save(orders);

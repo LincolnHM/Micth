@@ -361,13 +361,13 @@ async function openHistoryModal() {
   };
 
   content.innerHTML = orders.map(order => {
-    const status   = order.status || 'pendiente';
+    const status   = String(order.status || 'pendiente');
     const safeStatus = status.replace(/[^a-z]/g, '');
     const date     = new Date(order.created_at).toLocaleString('es-PE', {
       day: '2-digit', month: '2-digit', year: '2-digit',
       hour: '2-digit', minute: '2-digit'
     });
-    const _esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const _esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     const items = (order.items || [])
       .map(i => `${_esc(i.productName)} ${_esc(i.size)} ×${parseInt(i.quantity) || 1}`)
       .join(' · ');
@@ -376,8 +376,8 @@ async function openHistoryModal() {
     return `
       <div class="history-order-card">
         <div class="history-order-header">
-          <span class="history-order-id">${order.id}</span>
-          <span class="status-badge status-${safeStatus}">${STATUS_LABELS[status] || status}</span>
+          <span class="history-order-id">${_esc(order.id)}</span>
+          <span class="status-badge status-${safeStatus}">${STATUS_LABELS[status] || _esc(status)}</span>
           <span class="history-order-date">${date}</span>
         </div>
         <div class="history-order-items">${items || '—'}</div>

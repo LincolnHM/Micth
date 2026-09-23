@@ -138,7 +138,7 @@ function showConfirmModal(message, onOk, onCancel) {
 
 // ─── Toast de notificación ────────────────────────────────────────────────────
 
-function showToast(msg) {
+function showToast(msg, ms = 2800) {
   let t = document.getElementById('adminToast');
   if (!t) {
     t = document.createElement('div');
@@ -148,9 +148,10 @@ function showToast(msg) {
     document.body.appendChild(t);
   }
   t.textContent = msg;
+  t.style.whiteSpace = 'pre-line';
   t.style.opacity = '1'; t.style.transform = 'translateY(0)';
   clearTimeout(t._timer);
-  t._timer = setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(10px)'; }, 2800);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(10px)'; }, ms);
 }
 
 function escapeAttr(str) { return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }

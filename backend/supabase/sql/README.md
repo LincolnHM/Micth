@@ -22,6 +22,18 @@ Cada archivo se pega completo en **Supabase → SQL Editor → Run**. Van en ord
 | `2026-09-12-dupe-of.sql` | Columna `dupe_of` (tarjeta "Se parece a") y sus datos. |
 | `2026-09-22-combos.sql` | Tabla `combos` (2–3 perfumes + precio por talla + foto). **Vuelve a correrlo** si ya lo habías corrido antes: agrega las columnas `prices` e `image_url`. |
 | `2026-09-23-solo-admin-gastos-y-perfiles.sql` | Seguridad: `gastos` y `perfiles_usuarios` dejan de ser accesibles para cualquier cliente logueado; solo el admin ve todo. Léelo y córrelo cuando puedas (cierra sesión y vuelve a entrar en el panel después). |
+| `2026-09-23-validar-pedidos.sql` | **Seguridad (importante).** Un guardia dentro de la base revisa cada pedido de la web: precios reales del catálogo, total correcto, estado siempre "pendiente", sin código en los textos, máx. 8 pedidos/minuto por IP. Reemplaza la necesidad de desplegar la Edge Function. Probado en PostgreSQL real. |
+| `2026-09-23-proteger-perfiles.sql` | **Seguridad.** Un cliente ya no puede volver a activar su 10 % de primera compra ni cambiarse el DNI para leer pedidos ajenos. |
+| `2026-09-23-acordes-de-todos-los-perfumes.sql` | Carga los acordes principales (barras de colores) de los 106 perfumes: la columna existe pero estaba vacía. Solo rellena los vacíos, no pisa los que edites en el panel. |
+
+## Qué correr ahora (2026-09-23), en este orden
+
+1. `2026-09-23-validar-pedidos.sql` → luego haz **un pedido de prueba** desde la tienda y confirma que llega al panel con el total correcto. (Si algo saliera mal: `DROP TRIGGER IF EXISTS trg_validar_pedido ON pedidos;`)
+2. `2026-09-23-proteger-perfiles.sql`
+3. `2026-09-23-solo-admin-gastos-y-perfiles.sql` → después cierra sesión y vuelve a entrar en el panel.
+4. `2026-09-23-acordes-de-todos-los-perfumes.sql`
+
+Con el paso 1 **ya no necesitas** desplegar la Edge Function ni correr `2026-08-04-cerrar-insert-directo.sql`.
 
 ## Cómo saber si uno ya está aplicado
 

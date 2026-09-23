@@ -105,7 +105,14 @@ function setupCsvExport() {
         ]);
       });
 
-      const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+      // Anti "inyección de fórmulas": un cliente puede escribir en su nombre/notas algo como
+      // =HYPERLINK(...) o =cmd|'/c calc'!A0 y Excel lo EJECUTARÍA al abrir este archivo. Si una
+      // celda empieza con = + - @ (o tab / retorno), se le antepone un apóstrofo para que sea texto.
+      const safeCell = cell => {
+        const t = String(cell);
+        return /^[=+\-@\t\r]/.test(t) ? "'" + t : t;
+      };
+      const csv = rows.map(r => r.map(cell => `"${safeCell(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
       const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
