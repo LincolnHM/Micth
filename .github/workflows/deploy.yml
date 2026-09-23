@@ -27,10 +27,19 @@ jobs:
       - name: Configurar Pages
         uses: actions/configure-pages@v4
 
+      # Solo se publica lo que el sitio necesita. Todo lo demás del repositorio
+      # (supabase/, tools/, README, .github…) queda fuera del sitio público.
+      # Si agregas una carpeta o archivo público nuevo en la raíz, agrégalo aquí.
+      - name: Preparar archivos públicos
+        run: |
+          mkdir _site
+          cp index.html 404.html admin.html manifest.json robots.txt sw.js CNAME .nojekyll sitemap*.xml _site/
+          cp -r admin nosotros contacto css js imgGato "img PERFUMES" imgPerfumesEnteros images _site/
+
       - name: Subir archivos
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '_site'
 
       - name: Deploy
         id: deployment
