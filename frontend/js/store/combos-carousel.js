@@ -47,7 +47,8 @@ function updateComboCardPricing(combo, products) {
   addBtn.textContent = inCart ? '✓ En el carrito' : 'Agregar combo al carrito';
 }
 
-async function renderCombos() {
+// `preload`: pedido de combos ya en curso (init.js lo lanza junto con el catálogo)
+async function renderCombos(preload = null) {
   const section = document.getElementById('combos');
   const grid    = document.getElementById('combosGrid');
   if (!section || !grid) return;
@@ -55,7 +56,7 @@ async function renderCombos() {
   let combos = [];
   try {
     combos = await Promise.race([
-      CloudCombos.getAll(),
+      (preload || CloudCombos.getAll()).then(c => { if (!c) throw new Error('sin combos'); return c; }),
       new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))
     ]);
   } catch (_) {
@@ -77,7 +78,7 @@ async function renderCombos() {
   }).filter(d => d.items.length >= 2 && d.tiers.length);
 
   if (!cardsData.length) { section.style.display = 'none'; return; }
-  section.style.display = '';
+  const wasHidden = section.style.display === 'none';
 
   grid.innerHTML = cardsData.map(({ combo, items, tiers }) => {
     const firstSize = tiers[0].size;
@@ -126,6 +127,7 @@ async function renderCombos() {
   }).join('');
 
   cardsData.forEach(({ combo }) => updateComboCardPricing(combo, products));
+  if (wasHidden) revealKeepingPlace(() => { section.style.display = ''; });
 
   grid.querySelectorAll('.combo-size-select-btn').forEach(btn => {
     btn.addEventListener('click', () => {

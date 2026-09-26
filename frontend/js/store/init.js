@@ -5,6 +5,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Pedidos que no llegaron a la base (ej.: en el celular la página pasó al fondo al abrir
   // WhatsApp antes de terminar el envío) se reenvían solos en la siguiente visita.
   setTimeout(() => { try { CloudOrders.retryPending(); } catch (_) {} }, 3000);
+  // Los combos se piden al mismo tiempo que el catálogo (antes, recién después):
+  // si llegaban tarde aparecían encima y empujaban el catálogo hacia abajo
+  const combosRequest = (typeof CloudCombos !== 'undefined') ? CloudCombos.getAll().catch(() => null) : null;
   try {
     _allProducts = await Promise.race([
       CloudProducts.getAll(),
@@ -15,74 +18,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     _allProducts = Products.getAll();
   }
   document.dispatchEvent(new CustomEvent('catalogLoaded', { detail: _allProducts }));
-  populateOlfFamilyFilter();
-  // Sin perfumes "nicho" en la base (p. ej. antes de correr el SQL de la
-  // categoría) el filtro se oculta en vez de mostrar 0 resultados
-  const hasNicho = _allProducts.some(p => p.type === 'nicho');
-  const nichoBtn = document.querySelector('.filter-btn[data-filter="nicho"]');
-  if (nichoBtn) nichoBtn.style.display = hasNicho ? '' : 'none';
-  document.querySelector('.filter-row-1-types')?.classList.toggle('no-nicho', !hasNicho);
+  // Filtros (tipos, panel, URL): los prepara filters-ui.js al recibir 'catalogLoaded'
   renderProducts();
   renderRecentlyViewed();
-  renderCombos().catch(err => console.error('[MICHT] Error cargando combos:', err));
+  renderCombos(combosRequest).catch(err => console.error('[MICHT] Error cargando combos:', err));
   initCombosCarousel();
   Cart.render();
   updateFavFilterBadge();
-
-  // ── Filtro de tipo (Todos / Árabe / Diseñador) ─────────────────────────────
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      Filter.type = btn.dataset.filter;
-      Pagination.reset();
-      renderProducts();
-    });
-  });
-
-  // ── Toggle "solo favoritos" ────────────────────────────────────────────────
-  document.getElementById('favFilterBtn')?.addEventListener('click', function () {
-    Filter.onlyFavorites = !Filter.onlyFavorites;
-    this.classList.toggle('active', Filter.onlyFavorites);
-    this.setAttribute('aria-pressed', String(Filter.onlyFavorites));
-    Pagination.reset();
-    renderProducts();
-  });
-
-  // ── Filtros de grupo (género, ocasión) ────────────────────────────────────
-  document.querySelectorAll('.filter-group-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const group = btn.dataset.group;
-      document.querySelectorAll(`.filter-group-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      Filter[group] = btn.dataset.value;
-      Pagination.reset();
-      renderProducts();
-    });
-  });
-
-  // ── Ordenar por ───────────────────────────────────────────────────────────
-  document.getElementById('sortSelect')?.addEventListener('change', function () {
-    Sort.mode = this.value;
-    Pagination.reset();
-    renderProducts();
-  });
 
   // ── Vistos recientemente: borrar ──────────────────────────────────────────
   document.getElementById('recentClearBtn')?.addEventListener('click', () => {
     RecentlyViewed.clear();
     renderRecentlyViewed();
   });
-
-  // ── Familia olfativa ──────────────────────────────────────────────────────
-  const olfSel = document.getElementById('olfFamilyFilter');
-  if (olfSel) {
-    olfSel.addEventListener('change', () => {
-      Filter.olfFamily = olfSel.value;
-      Pagination.reset();
-      renderProducts();
-    });
-  }
 
   // ── Búsqueda con autocomplete ────────────────────────────────────────────
   const searchInput = document.getElementById('searchInput');
@@ -247,8 +195,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // ── Limpiar filtros ───────────────────────────────────────────────────────
-  document.getElementById('clearFilters')?.addEventListener('click', resetAllFilters);
 
   // ── Carrito ───────────────────────────────────────────────────────────────
   document.getElementById('cartBtn')?.addEventListener('click', Cart.showCart.bind(Cart));

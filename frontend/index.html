@@ -195,7 +195,7 @@
   <link rel="icon" type="image/png" href="imgGato/icons/icon-192.png">
   <link rel="apple-touch-icon" href="imgGato/icons/icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20260926-1338">
+  <link rel="stylesheet" href="css/style.css?v=20260926-1728">
   <!-- La pantalla de carga solo se muestra la primera vez en la sesión; en las
        siguientes visitas (volver de Nosotros, recargar) no hace esperar. -->
   <script>try { if (sessionStorage.getItem('micht_loader_seen')) document.documentElement.classList.add('pl-skip'); } catch (e) {}</script>
@@ -380,6 +380,9 @@
       </div>
 
       <div class="header-right">
+        <button class="header-search-btn" id="headerSearchBtn" type="button" aria-label="Buscar perfume">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        </button>
         <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" aria-expanded="false">
           <span></span><span></span><span></span>
         </button>
@@ -489,129 +492,106 @@
     </div>
   </section>
 
-  <!-- ── Filtros avanzados ────────────────────────────────────────────────── -->
-  <section class="filters-section" id="catalogo" aria-label="Filtros de catálogo">
+  <!-- ── Buscar y filtrar el catálogo ───────────────────────────────────────
+       Barra fija: el buscador siempre visible, los tipos como chips y el botón
+       "Filtros", que abre el panel de abajo. Lógica en js/store/filters-ui.js. -->
+  <section class="filters-section catalog-toolbar" id="catalogo" aria-label="Buscar y filtrar el catálogo">
     <div class="container">
-      <!-- Botón toggle solo visible en móvil -->
-      <button class="filters-toggle-btn" id="filtersToggleBtn" aria-expanded="false" aria-controls="filtersCollapsible">
-        <span class="ftb-left">
-          <svg class="ftb-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="16" y2="12"/><line x1="4" y1="18" x2="12" y2="18"/>
-          </svg>
+      <div class="ct-row">
+        <div class="ct-search" role="search">
+          <svg class="ct-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input type="search" id="searchInput" class="ct-search-input" placeholder="Ej: Sauvage o Khamrah"
+                 maxlength="100" autocomplete="off" enterkeyhint="search" aria-label="Buscar perfume">
+          <button class="srch-clear-btn" id="searchClearBtn" type="button" aria-label="Limpiar búsqueda" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <div id="srch-suggestions" role="listbox" aria-label="Sugerencias"></div>
+        </div>
+        <select class="olf-select ct-sort" id="sortSelect" aria-label="Ordenar por">
+          <option value="relevance">Ordenar: Recomendados</option>
+          <option value="price-asc">Menor precio</option>
+          <option value="price-desc">Mayor precio</option>
+          <option value="new">Novedades</option>
+          <option value="popular">Populares</option>
+        </select>
+        <button type="button" class="ct-filters-btn" id="filtersOpenBtn" aria-haspopup="dialog" aria-controls="filterSheet">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
           <span>Filtros</span>
-          <span class="ftb-badge" id="filtersActiveBadge" style="display:none">0</span>
-        </span>
-        <svg class="ftb-chevron" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M6 9l6 6 6-6"/></svg>
-      </button>
+          <span class="ct-badge" id="filtersActiveBadge" hidden>0</span>
+        </button>
+      </div>
 
-      <div class="filters-inner" id="filtersCollapsible">
+      <div class="ct-types" role="group" aria-label="Tipo de perfume">
+        <button type="button" class="filter-btn active" data-filter="all" aria-pressed="true">Todos</button>
+        <button type="button" class="filter-btn" data-filter="arabe" aria-pressed="false">Árabes</button>
+        <button type="button" class="filter-btn" data-filter="diseñador" aria-pressed="false">Diseñador</button>
+        <button type="button" class="filter-btn" data-filter="nicho" aria-pressed="false">Nicho</button>
+        <button type="button" class="filter-btn filter-btn-entero" data-filter="entero" aria-pressed="false">Perfumes Enteros</button>
+      </div>
 
-        <!-- Fila 1: Tipo + Búsqueda -->
-        <div class="filter-row-1">
-          <div class="filter-row-1-types">
-            <button class="filter-btn active" data-filter="all">Todos</button>
-            <button class="filter-btn" data-filter="arabe">Árabes</button>
-            <button class="filter-btn" data-filter="diseñador">Diseñador</button>
-            <button class="filter-btn" data-filter="nicho">Nicho</button>
-            <button class="filter-btn filter-btn-entero" data-filter="entero">Perfumes Enteros</button>
-            <div class="filter-divider" aria-hidden="true"></div>
-            <!-- Familia olfativa -->
-            <select class="olf-select" id="olfFamilyFilter" aria-label="Familia olfativa">
-              <option value="all">Familia olfativa</option>
-            </select>
-            <!-- Ordenar por -->
-            <select class="olf-select" id="sortSelect" aria-label="Ordenar por">
-              <option value="relevance">Ordenar por</option>
-              <option value="price-asc">Menor precio</option>
-              <option value="price-desc">Mayor precio</option>
-              <option value="new">Novedades</option>
-              <option value="popular">Populares</option>
-            </select>
-          </div>
-          <!-- Búsqueda premium -->
-          <div id="srch-poda" role="search">
-            <div class="srch-glow"></div>
-            <div class="srch-darkBg"></div>
-            <div class="srch-darkBg"></div>
-            <div class="srch-darkBg"></div>
-            <div class="srch-white"></div>
-            <div class="srch-border"></div>
-            <div id="srch-main">
-              <input placeholder="Buscar perfume…" type="search" id="searchInput"
-                     class="srch-input" maxlength="100" autocomplete="off" aria-label="Buscar perfume">
-              <button class="srch-clear-btn" id="searchClearBtn" aria-label="Limpiar búsqueda" style="display:none">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-              <div id="srch-suggestions" role="listbox" aria-label="Sugerencias"></div>
-              <div id="srch-input-mask" aria-hidden="true"></div>
-              <div id="srch-gold-mask"  aria-hidden="true"></div>
-              <div class="srch-filterBorder" aria-hidden="true"></div>
-              <div id="srch-filter-icon" aria-hidden="true">
-                <svg preserveAspectRatio="none" height="24" width="24"
-                     viewBox="4.8 4.56 14.832 15.408" fill="none">
-                  <path d="M8.16 6.65002H15.83C16.47 6.65002 16.99 7.17002 16.99 7.81002V9.09002C16.99 9.56002 16.7 10.14 16.41 10.43L13.91 12.64C13.56 12.93 13.33 13.51 13.33 13.98V16.48C13.33 16.83 13.1 17.29 12.81 17.47L12 17.98C11.24 18.45 10.2 17.92 10.2 16.99V13.91C10.2 13.5 9.97 12.98 9.73 12.69L7.52 10.36C7.23 10.08 7 9.55002 7 9.20002V7.87002C7 7.17002 7.52 6.65002 8.16 6.65002Z"
-                        stroke="#7c4fb0" stroke-width="1" stroke-miterlimit="10"
-                        stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-              <div id="srch-search-icon" aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                     viewBox="0 0 24 24" stroke-width="2" stroke-linejoin="round"
-                     stroke-linecap="round" fill="none">
-                  <circle stroke="url(#sg1)" r="8" cy="11" cx="11"/>
-                  <line  stroke="url(#sg2)" y2="16.65" y1="22" x2="16.65" x1="22"/>
-                  <defs>
-                    <linearGradient gradientTransform="rotate(50)" id="sg1">
-                      <stop stop-color="#fff4d6" offset="0%"/>
-                      <stop stop-color="#7c4fb0" offset="60%"/>
-                    </linearGradient>
-                    <linearGradient id="sg2">
-                      <stop stop-color="#7c4fb0" offset="0%"/>
-                      <stop stop-color="#5a3980" offset="60%"/>
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Fila 2: Género + Ocasión -->
-        <div class="filter-row-2">
-          <div class="filter-group" role="group" aria-label="Filtrar por género">
-            <span class="filter-group-label">Género:</span>
-            <button class="filter-group-btn active" data-group="gender" data-value="all">Todos</button>
-            <button class="filter-group-btn" data-group="gender" data-value="hombre">Hombre ♂</button>
-            <button class="filter-group-btn" data-group="gender" data-value="mujer">Mujer ♀</button>
-            <button class="filter-group-btn" data-group="gender" data-value="unisex">Unisex ⚥</button>
-          </div>
-          <div class="filter-divider" aria-hidden="true"></div>
-          <div class="filter-group" role="group" aria-label="Filtrar por ocasión">
-            <span class="filter-group-label">Ocasión:</span>
-            <button class="filter-group-btn active" data-group="occasion" data-value="all">Todas</button>
-            <button class="filter-group-btn" data-group="occasion" data-value="dia">Día ☀️</button>
-            <button class="filter-group-btn" data-group="occasion" data-value="noche">Noche 🌙</button>
-          </div>
-          <!-- Meta + Limpiar -->
-          <div style="margin-left:auto;display:flex;align-items:center;gap:.75rem">
-            <div style="display:flex;align-items:center;gap:.75rem">
-              <button class="fav-filter-btn" id="favFilterBtn" type="button" aria-pressed="false" title="Ver solo mis favoritos">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-                <span>Favoritos</span>
-                <span class="fav-filter-count" id="favFilterCount" style="display:none">0</span>
-              </button>
-              <span id="resultsCount" aria-live="polite"></span>
-            </div>
-            <button id="clearFilters" aria-label="Limpiar todos los filtros">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              Limpiar
-            </button>
-          </div>
-        </div>
-
-      </div><!-- /filters-inner / filters-collapsible -->
+      <div class="ct-status">
+        <span id="resultsCount" aria-live="polite"></span>
+        <div class="ct-active" id="activeFilters"></div>
+        <button type="button" id="clearFilters" class="ct-clear" hidden>Limpiar todo</button>
+      </div>
     </div>
   </section>
+
+  <!-- ── Panel de filtros (hoja desde abajo en el celular, lateral en PC) ── -->
+  <div class="filter-sheet" id="filterSheet" role="dialog" aria-modal="true" aria-labelledby="filterSheetTitle" hidden>
+    <div class="fs-backdrop" data-sheet-close></div>
+    <div class="fs-panel">
+      <div class="fs-head">
+        <h3 class="fs-title" id="filterSheetTitle">Filtros</h3>
+        <button type="button" class="fs-close" data-sheet-close aria-label="Cerrar filtros">×</button>
+      </div>
+      <div class="fs-body">
+        <div class="fs-group">
+          <p class="fs-label">Para</p>
+          <div class="fs-chips" role="group" aria-label="Para quién">
+            <button type="button" class="filter-group-btn active" data-group="gender" data-value="all">Todos <span class="fs-count"></span></button>
+            <button type="button" class="filter-group-btn" data-group="gender" data-value="hombre">Hombre <span class="fs-count"></span></button>
+            <button type="button" class="filter-group-btn" data-group="gender" data-value="mujer">Mujer <span class="fs-count"></span></button>
+            <button type="button" class="filter-group-btn" data-group="gender" data-value="unisex">Solo unisex <span class="fs-count"></span></button>
+          </div>
+          <p class="fs-hint">"Hombre" y "Mujer" también muestran los unisex.</p>
+        </div>
+        <div class="fs-group">
+          <p class="fs-label">Momento</p>
+          <div class="fs-chips" role="group" aria-label="Momento del día">
+            <button type="button" class="filter-group-btn active" data-group="occasion" data-value="all">Cualquiera <span class="fs-count"></span></button>
+            <button type="button" class="filter-group-btn" data-group="occasion" data-value="dia">Día ☀️ <span class="fs-count"></span></button>
+            <button type="button" class="filter-group-btn" data-group="occasion" data-value="noche">Noche 🌙 <span class="fs-count"></span></button>
+          </div>
+        </div>
+        <div class="fs-group">
+          <p class="fs-label">Aroma</p>
+          <div class="fs-chips" id="aromaChips" role="group" aria-label="Tipo de aroma"></div>
+        </div>
+        <div class="fs-group fs-sort-group">
+          <p class="fs-label">Ordenar por</p>
+          <div class="fs-chips" role="group" aria-label="Ordenar por">
+            <button type="button" class="fs-sort-btn active" data-sort="relevance">Recomendados</button>
+            <button type="button" class="fs-sort-btn" data-sort="price-asc">Menor precio</button>
+            <button type="button" class="fs-sort-btn" data-sort="price-desc">Mayor precio</button>
+            <button type="button" class="fs-sort-btn" data-sort="new">Novedades</button>
+            <button type="button" class="fs-sort-btn" data-sort="popular">Populares</button>
+          </div>
+        </div>
+        <div class="fs-group">
+          <button class="fav-filter-btn" id="favFilterBtn" type="button" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            <span>Solo mis favoritos</span>
+            <span class="fav-filter-count" id="favFilterCount" style="display:none">0</span>
+          </button>
+        </div>
+      </div>
+      <div class="fs-foot">
+        <button type="button" class="fs-clear" id="sheetClearBtn">Limpiar</button>
+        <button type="button" class="fs-apply" id="sheetApplyBtn" data-sheet-close>Ver resultados</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ── Banner de sección (Perfumes Enteros) ─────────────────────────────── -->
   <div id="catalogBanner" style="display:none">
@@ -1007,6 +987,7 @@
             <div class="form-group">
               <label for="shalomInput">Agencia Shalom *</label>
               <input type="text" id="shalomInput" maxlength="200" placeholder="Ej: Shalom – Av. España 123, Trujillo">
+              <a class="field-help-link" href="https://shalom.com.pe/agencias" target="_blank" rel="noopener noreferrer">¿No sabes cuál es tu agencia? Búscala en el mapa de Shalom →</a>
             </div>
           </form>
 
@@ -1389,33 +1370,34 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con el panel admin) — el orden importa -->
-  <script src="js/shared/data-core.js?v=20260926-1338"></script>
-  <script src="js/shared/catalog.js?v=20260926-1338"></script>
-  <script src="js/shared/data.js?v=20260926-1338"></script>
-  <script src="js/shared/supabase-config.js?v=20260926-1338"></script>
-  <script src="js/shared/cloud-orders.js?v=20260926-1338"></script>
-  <script src="js/shared/cloud-gallery.js?v=20260926-1338"></script>
-  <script src="js/shared/cloud-products.js?v=20260926-1338"></script>
-  <script src="js/shared/slugs.js?v=20260926-1338"></script>
-  <script src="js/shared/cloud-combos.js?v=20260926-1338"></script>
+  <script src="js/shared/data-core.js?v=20260926-1728"></script>
+  <script src="js/shared/catalog.js?v=20260926-1728"></script>
+  <script src="js/shared/data.js?v=20260926-1728"></script>
+  <script src="js/shared/supabase-config.js?v=20260926-1728"></script>
+  <script src="js/shared/cloud-orders.js?v=20260926-1728"></script>
+  <script src="js/shared/cloud-gallery.js?v=20260926-1728"></script>
+  <script src="js/shared/cloud-products.js?v=20260926-1728"></script>
+  <script src="js/shared/slugs.js?v=20260926-1728"></script>
+  <script src="js/shared/cloud-combos.js?v=20260926-1728"></script>
   <!-- Tienda -->
-  <script src="js/store/announcement.js?v=20260926-1338"></script>
-  <script src="js/store/seasonal-theme.js?v=20260926-1338"></script>
-  <script src="js/store/carousel.js?v=20260926-1338"></script>
-  <script src="js/store/cart.js?v=20260926-1338"></script>
-  <script src="js/store/catalog-view.js?v=20260926-1338"></script>
-  <script src="js/store/combos-carousel.js?v=20260926-1338"></script>
-  <script src="js/store/faq.js?v=20260926-1338"></script>
-  <script src="js/store/product-detail.js?v=20260926-1338"></script>
-  <script src="js/store/combo-detail.js?v=20260926-1338"></script>
-  <script src="js/store/init.js?v=20260926-1338"></script>
-  <script src="js/store/gallery.js?v=20260926-1338"></script>
-  <script src="js/store/scent-finder.js?v=20260926-1338"></script>
-  <script src="js/store/checkout.js?v=20260926-1338"></script>
-  <script src="js/store/customer-auth.js?v=20260926-1338"></script>
-  <script src="js/store/chatbot.js?v=20260926-1338"></script>
-  <script src="js/store/animations.js?v=20260926-1338"></script>
-  <script src="js/store/gsap-animations.js?v=20260926-1338"></script>
+  <script src="js/store/announcement.js?v=20260926-1728"></script>
+  <script src="js/store/seasonal-theme.js?v=20260926-1728"></script>
+  <script src="js/store/carousel.js?v=20260926-1728"></script>
+  <script src="js/store/cart.js?v=20260926-1728"></script>
+  <script src="js/store/catalog-view.js?v=20260926-1728"></script>
+  <script src="js/store/filters-ui.js?v=20260926-1728"></script>
+  <script src="js/store/combos-carousel.js?v=20260926-1728"></script>
+  <script src="js/store/faq.js?v=20260926-1728"></script>
+  <script src="js/store/product-detail.js?v=20260926-1728"></script>
+  <script src="js/store/combo-detail.js?v=20260926-1728"></script>
+  <script src="js/store/init.js?v=20260926-1728"></script>
+  <script src="js/store/gallery.js?v=20260926-1728"></script>
+  <script src="js/store/scent-finder.js?v=20260926-1728"></script>
+  <script src="js/store/checkout.js?v=20260926-1728"></script>
+  <script src="js/store/customer-auth.js?v=20260926-1728"></script>
+  <script src="js/store/chatbot.js?v=20260926-1728"></script>
+  <script src="js/store/animations.js?v=20260926-1728"></script>
+  <script src="js/store/gsap-animations.js?v=20260926-1728"></script>
   <script>
     // ── Mobile menu toggle ───────────────────────────────────
     (function () {
@@ -1471,31 +1453,6 @@
       cerrarDetallePerfume();
       window.scrollTo({ top: Math.max(0, target.offsetTop - 68), behavior: 'smooth' });
     });
-
-    // ── Toggle filtros en móvil ──────────────────────────────
-    (function () {
-      const btn = document.getElementById('filtersToggleBtn');
-      const col = document.getElementById('filtersCollapsible');
-      if (!btn || !col) return;
-      col.classList.add('filters-collapsible');
-      btn.addEventListener('click', () => {
-        const open = col.classList.toggle('open');
-        btn.classList.toggle('open', open);
-        btn.setAttribute('aria-expanded', open);
-      });
-      // Contar filtros activos
-      function updateBadge() {
-        const active = document.querySelectorAll(
-          '.filter-btn.active:not([data-filter="all"]), .filter-group-btn.active:not([data-value="all"]), .fav-filter-btn.active'
-        ).length + (document.getElementById('searchInput')?.value ? 1 : 0);
-        const badge = document.getElementById('filtersActiveBadge');
-        if (badge) { badge.textContent = active; badge.style.display = active ? 'inline' : 'none'; }
-      }
-      document.addEventListener('click', e => {
-        if (e.target.closest('.filter-btn, .filter-group-btn, #favFilterBtn, #clearFilters')) setTimeout(updateBadge, 50);
-      });
-      document.getElementById('searchInput')?.addEventListener('input', updateBadge);
-    })();
 
     // ── PDF: mostrar todos los productos al imprimir ─────────
     window.addEventListener('beforeprint', () => {
@@ -1559,10 +1516,10 @@
       e.stopPropagation();
       cerrarMenuMovil();
       cerrarDetallePerfume();
-      // Resetear filtro a "Todos" si no está activo
+      // Resetear filtro a "Todos" si no está activo y llevar al catálogo
       const btnTodos = document.querySelector('.filter-btn[data-filter="all"]');
       if (btnTodos && !btnTodos.classList.contains('active')) btnTodos.click();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (typeof scrollToCatalog === 'function') scrollToCatalog();
     }
     document.getElementById('navCatalogLink')?.addEventListener('click', activarFiltroCatalogo);
     document.getElementById('mobileCatalogLink')?.addEventListener('click', activarFiltroCatalogo);

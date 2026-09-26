@@ -38,27 +38,55 @@ function fuzzyMatch(query, text) {
 
 // ─── Estado del filtro avanzado ───────────────────────────────────────────────
 
+// ─── Aromas: familias simples para filtrar ────────────────────────────────────
+// La "familia olfativa" del catálogo tiene 35 variantes ("Aromático Acuático",
+// "Acuático Aromático"…). Para el cliente se agrupan en aromas que entiende,
+// mirando la familia y los 3 acordes principales de cada perfume.
+const AROMAS = [
+  { key: 'dulce',     label: 'Dulce',       icon: '🍯', words: ['dulce', 'vainill', 'caramel', 'cacao', 'miel', 'amielad', 'lacton', 'gourmand', 'coco'] },
+  { key: 'fresco',    label: 'Fresco',      icon: '🌊', words: ['fresco', 'acuatic', 'marin', 'ozon', 'citric', 'verde', 'mineral'] },
+  { key: 'amaderado', label: 'Amaderado',   icon: '🪵', words: ['amaderad', 'madera', 'oud', 'pachul', 'cedro', 'sandal'] },
+  { key: 'floral',    label: 'Floral',      icon: '🌸', words: ['floral', 'rosa', 'jazmin', 'iris', 'atalcad'] },
+  { key: 'especiado', label: 'Especiado',   icon: '🌶️', words: ['especiad', 'canela', 'pimienta'] },
+  { key: 'frutal',    label: 'Frutal',      icon: '🍑', words: ['frut', 'tropical', 'acerezad', 'manzana'] },
+  { key: 'oriental',  label: 'Ámbar y oriental', icon: '✨', words: ['oriental', 'ambar', 'ambarad', 'incienso'] },
+  { key: 'intenso',   label: 'Cuero y oud', icon: '🔥', words: ['cuero', 'ahumad', 'tabaco', 'oud'] }
+];
+const _aromaCache = new WeakMap();
+function productAromas(p) {
+  if (_aromaCache.has(p)) return _aromaCache.get(p);
+  const text = normalizeStr([p.olfFamily || '', ...(p.accords || []).slice(0, 3).map(a => a.name || '')].join(' '));
+  const set = new Set(AROMAS.filter(a => a.words.some(w => text.includes(w))).map(a => a.key));
+  _aromaCache.set(p, set);
+  return set;
+}
+
 const Filter = {
-  type:      'all',   // all | arabe | diseñador | entero
-  gender:    'all',   // all | hombre | mujer | unisex
-  occasion:  'all',   // all | dia | noche | ambas
-  olfFamily: 'all',   // all | <nombre>
+  type:      'all',   // all | arabe | diseñador | nicho | entero
+  gender:    'all',   // all | hombre | mujer | unisex   (hombre y mujer incluyen unisex)
+  occasion:  'all',   // all | dia | noche
+  aroma:     'all',   // all | clave de AROMAS
   search:    '',
   onlyFavorites: false,
 
-  reset() { this.type = this.gender = this.occasion = this.olfFamily = 'all'; this.search = ''; this.onlyFavorites = false; },
+  reset() { this.type = this.gender = this.occasion = this.aroma = 'all'; this.search = ''; this.onlyFavorites = false; },
 
-  apply(products) {
+  // `skip`: faceta a ignorar (para contar cuántos quedarían al elegir otra opción de ella)
+  apply(products, skip = null) {
     return products.filter(p => {
-      if (this.onlyFavorites && !Wishlist.has(p.id)) return false;
-      if (this.type === 'entero') {
-        if (p.type !== 'entero' && !((p.enteroStock || 0) > 0)) return false;
-      } else if (this.type !== 'all') {
-        if (p.type !== this.type) return false;
+      if (this.onlyFavorites && skip !== 'fav' && !Wishlist.has(p.id)) return false;
+      if (skip !== 'type') {
+        if (this.type === 'entero') {
+          if (p.type !== 'entero' && !((p.enteroStock || 0) > 0)) return false;
+        } else if (this.type !== 'all') {
+          if (p.type !== this.type) return false;
+        }
       }
-      if (this.gender    !== 'all' && p.gender    !== this.gender)    return false;
-      if (this.occasion  !== 'all' && p.occasion  !== this.occasion && p.occasion !== 'ambas') return false;
-      if (this.olfFamily !== 'all' && p.olfFamily !== this.olfFamily) return false;
+      if (skip !== 'gender' && this.gender !== 'all') {
+        if (this.gender === 'unisex' ? p.gender !== 'unisex' : (p.gender !== this.gender && p.gender !== 'unisex')) return false;
+      }
+      if (skip !== 'occasion' && this.occasion !== 'all' && p.occasion !== this.occasion && p.occasion !== 'ambas') return false;
+      if (skip !== 'aroma' && this.aroma !== 'all' && !productAromas(p).has(this.aroma)) return false;
       if (this.search) {
         // Incluye el perfume famoso al que se parece: buscar "Sauvage" trae
         // también los árabes que se le parecen
@@ -74,7 +102,12 @@ const Filter = {
 
   hasActiveFilters() {
     return this.type !== 'all' || this.gender !== 'all' ||
-           this.occasion !== 'all' || this.olfFamily !== 'all' || this.search || this.onlyFavorites;
+           this.occasion !== 'all' || this.aroma !== 'all' || !!this.search || this.onlyFavorites;
+  },
+
+  // Filtros del panel activos (para el número del botón "Filtros")
+  panelCount() {
+    return [this.gender, this.occasion, this.aroma].filter(v => v !== 'all').length + (this.onlyFavorites ? 1 : 0);
   }
 };
 
@@ -214,6 +247,25 @@ function notifyWaUrl(p) {
   return `https://wa.me/51917452643?text=${encodeURIComponent(text)}`;
 }
 
+// ─── Mostrar contenido arriba sin que la página salte ────────────────────────
+// Si algo aparece ARRIBA de donde el cliente está mirando (ej. los combos que
+// llegan después del catálogo), todo lo de abajo se corre. El navegador no lo
+// compensa siempre (en el celular falla; Safari no lo hace), así que se hace a
+// mano: se mide el catálogo antes y después y se ajusta el scroll por la
+// diferencia. Solo si el catálogo ya estaba a la vista.
+function revealKeepingPlace(show) {
+  const ref  = document.querySelector('.products-section');
+  const root = document.documentElement;
+  const before = ref ? ref.getBoundingClientRect().top : null;
+  root.style.overflowAnchor = 'none';   // que el navegador no compense también (doble salto)
+  show();
+  if (ref && before !== null && before < window.innerHeight) {
+    const delta = ref.getBoundingClientRect().top - before;
+    if (delta) window.scrollBy({ top: delta, behavior: 'instant' });
+  }
+  requestAnimationFrame(() => { root.style.overflowAnchor = ''; });
+}
+
 // ─── Orden del catálogo ───────────────────────────────────────────────────────
 
 const Sort = {
@@ -273,17 +325,16 @@ function renderProducts() {
   // Actualizar el contador de resultados
   const countEl = document.getElementById('resultsCount');
   if (countEl) {
-    const label = Filter.type === 'entero' ? 'producto' : 'fragancia';
+    const label = Filter.type === 'entero' ? 'producto' : 'perfume';
     countEl.textContent = `${allFiltered.length} ${label}${allFiltered.length !== 1 ? 's' : ''}`;
   }
+  // Chips activos, número del botón "Filtros", conteos del panel y URL
+  if (typeof syncFilterUI === 'function') syncFilterUI(allFiltered.length);
 
   // Mostrar/ocultar banner de Perfumes Enteros
   const banner = document.getElementById('catalogBanner');
   if (banner) banner.style.display = Filter.type === 'entero' ? 'block' : 'none';
 
-  // Botón limpiar filtros
-  const clearBtn = document.getElementById('clearFilters');
-  if (clearBtn) clearBtn.style.display = Filter.hasActiveFilters() ? 'flex' : 'none';
 
   if (!allFiltered.length) {
     const hasSearch = !!Filter.search;
@@ -477,16 +528,6 @@ function renderProducts() {
 
 }
 
-// ─── Poblar filtro de familias olfativas ──────────────────────────────────────
-
-function populateOlfFamilyFilter() {
-  const sel = document.getElementById('olfFamilyFilter');
-  if (!sel) return;
-  const families = [...new Set((_allProducts || Products.getAll()).map(p => p.olfFamily).filter(Boolean))].sort();
-  sel.innerHTML = '<option value="all">Todas las familias</option>' +
-    families.map(f => `<option value="${escapeAttr(f)}">${f}</option>`).join('');
-}
-
 // ─── Wishlist / Favoritos ─────────────────────────────────────────────────────
 
 const Wishlist = {
@@ -621,14 +662,7 @@ function shareProduct(id, name) {
 function resetAllFilters() {
   Filter.reset();
   Pagination.reset();
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('.filter-btn[data-filter="all"]')?.classList.add('active');
-  document.querySelectorAll('.filter-group-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.filter-group-btn[data-value="all"]').forEach(b => b.classList.add('active'));
-  const favBtn = document.getElementById('favFilterBtn');
-  if (favBtn) { favBtn.classList.remove('active'); favBtn.setAttribute('aria-pressed', 'false'); }
-  const olf = document.getElementById('olfFamilyFilter');
-  if (olf) olf.value = 'all';
+  // Los botones y chips se actualizan solos en syncFilterUI() (filters-ui.js)
   const search = document.getElementById('searchInput');
   if (search) search.value = '';
   const searchClear = document.getElementById('searchClearBtn');

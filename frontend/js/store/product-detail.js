@@ -382,7 +382,10 @@ function openPdModal(productId, { fromHistory = false } = {}) {
   if (!wasOpen) _pdReturnY = window.scrollY;
   if (!fromHistory) {
     _pdDepth = wasOpen ? _pdDepth + 1 : 1;
-    try { history.pushState({ pd: p.id, depth: _pdDepth }, '', _pdUrl(p.id)); } catch (_) {}
+    // "manual" en la entrada actual (el catálogo) justo antes de dejarla: si no,
+    // al volver el navegador repone su propia posición encima de la nuestra
+    // (replaceState, que usan los filtros, lo devuelve a "auto")
+    try { history.scrollRestoration = 'manual'; history.pushState({ pd: p.id, depth: _pdDepth }, '', _pdUrl(p.id)); } catch (_) {}
   }
   document.getElementById('cdModal')?.classList.remove('open');   // venía de un combo
 
@@ -675,7 +678,19 @@ function _pdHide(restoreScroll) {
   open.forEach(m => m.classList.remove('open'));
   document.body.classList.remove('pd-open');
   document.querySelectorAll('.pd-page-hidden').forEach(el => el.classList.remove('pd-page-hidden'));
-  if (typeof renderRecentlyViewed === 'function') renderRecentlyViewed();
+  if (typeof renderRecentlyViewed === 'function') {
+    // "Vistos recientemente" crece arriba del catálogo: se compensa lo que crezca
+    // para volver exactamente al perfume donde estaba el cliente
+    const strip = document.getElementById('recentStrip');
+    const grid  = document.getElementById('productsGrid');
+    const docTop = el => el.getBoundingClientRect().top + window.scrollY;
+    const stripTop = strip && !strip.hidden ? docTop(strip) : (grid ? docTop(grid) : Infinity);
+    const g0 = grid ? docTop(grid) : 0;
+    renderRecentlyViewed();
+    const g1 = grid ? docTop(grid) : 0;
+    // Solo si la fila queda arriba de lo que el cliente estaba mirando
+    if (stripTop < _pdReturnY + 64) _pdReturnY += g1 - g0;
+  }
   if (restoreScroll) window.scrollTo({ top: _pdReturnY, behavior: 'instant' });
   if (window.ScrollTrigger) ScrollTrigger.refresh();
 }

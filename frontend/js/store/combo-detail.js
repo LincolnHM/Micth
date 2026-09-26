@@ -143,7 +143,7 @@ function openComboModal(comboId, { fromHistory = false } = {}) {
   if (!wasOpen) _pdReturnY = window.scrollY;
   if (!fromHistory) {
     _pdDepth = wasOpen ? _pdDepth + 1 : 1;
-    try { history.pushState({ combo: combo.id, depth: _pdDepth }, '', `/?combo=${combo.id}`); } catch (_) {}
+    try { history.scrollRestoration = 'manual'; history.pushState({ combo: combo.id, depth: _pdDepth }, '', `/?combo=${combo.id}`); } catch (_) {}
   }
   document.getElementById('pdModal')?.classList.remove('open');   // venía de un perfume
 
