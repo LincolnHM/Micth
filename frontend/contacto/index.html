@@ -24,7 +24,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../imgGato/icons/icon-192.png">
   <link rel="apple-touch-icon" href="../imgGato/icons/icon-192.png">
-  <link rel="stylesheet" href="../css/style.css?v=20260926-1728">
+  <link rel="stylesheet" href="../css/style.css?v=20260926-2248">
   <style>
     /* ── Página Contacto ─────────────────────────── */
     .contact-page {
@@ -95,10 +95,14 @@
       box-shadow: 0 0 50px rgba(124,79,176,.05), inset 0 1px 0 rgba(124,79,176,.1);
       transition: border-color .3s, transform .3s cubic-bezier(.22,1,.36,1);
     }
-    .cp-card:hover {
-      border-color: rgba(124,79,176,.4);
-      transform: translateY(-6px);
+    /* Hover solo con mouse: en celular el efecto se quedaba "pegado" tras tocar */
+    @media (hover: hover) and (pointer: fine) {
+      .cp-card:hover {
+        border-color: rgba(124,79,176,.4);
+        transform: translateY(-6px);
+      }
     }
+    .cp-card:active { border-color: rgba(124,79,176,.4); }
     .cp-card-icon {
       width: 52px; height: 52px;
       background: rgba(124,79,176,.1);
@@ -132,6 +136,7 @@
       transition: color .2s, gap .2s;
     }
     .cp-card-link:hover { color: var(--gold-l); gap: .7rem; }
+    .cp-card-link { min-height: 44px; }
     .cp-card-link svg { width: 14px; height: 14px; }
 
     /* Main CTA WhatsApp */
@@ -150,12 +155,15 @@
       box-shadow: 0 6px 28px rgba(37,211,102,.3);
       margin-bottom: 3.5rem;
     }
-    .cp-wa-btn:hover {
-      transform: translateY(-5px) scale(1.04);
-      box-shadow: 0 14px 40px rgba(37,211,102,.42);
-      background: #1ebe5d;
-      color: #fff;
+    @media (hover: hover) and (pointer: fine) {
+      .cp-wa-btn:hover {
+        transform: translateY(-5px) scale(1.04);
+        box-shadow: 0 14px 40px rgba(37,211,102,.42);
+        background: #1ebe5d;
+        color: #fff;
+      }
     }
+    .cp-wa-btn:active { transform: scale(.97); background: #1ebe5d; color: #fff; }
     .cp-wa-btn svg { flex-shrink: 0; }
 
     /* Location badge (legacy — ya no se usa) */
@@ -164,27 +172,105 @@
     /* Ubicación con mapa */
     .cp-map { width: 100%; max-width: 860px; margin-bottom: 3rem; }
     .cp-map-card {
-      display: grid; grid-template-columns: 1fr 1.3fr;
+      display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
       background: rgba(20,20,20,.75);
-      border: 1px solid rgba(124,79,176,.2); border-radius: 20px;
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid rgba(124,79,176,.22); border-radius: 22px;
       overflow: hidden;
-      box-shadow: 0 0 50px rgba(124,79,176,.05), inset 0 1px 0 rgba(124,79,176,.1);
+      box-shadow: 0 18px 60px rgba(0,0,0,.35), 0 0 50px rgba(124,79,176,.06), inset 0 1px 0 rgba(124,79,176,.12);
     }
     .cp-map-info { padding: 2rem 1.75rem; display: flex; flex-direction: column; gap: .35rem; }
-    .cp-map-title { font-family: var(--font-serif); font-size: 1.3rem; color: var(--white); }
-    .cp-map-sub { font-size: .8rem; color: var(--text2); margin-bottom: .9rem; }
-    .cp-map-list { list-style: none; display: flex; flex-direction: column; gap: .6rem; margin-bottom: 1.3rem; }
-    .cp-map-list li { font-size: .8rem; color: var(--text2); line-height: 1.5; display: flex; gap: .5rem; }
-    .cp-map-btn {
-      align-self: flex-start; margin-top: auto;
-      font-size: .8rem; font-weight: 600; color: var(--gold-l); text-decoration: none;
-      padding: .55rem 1.1rem; border-radius: 50px;
-      border: 1px solid rgba(124,79,176,.4); background: rgba(124,79,176,.08);
-      transition: background .2s;
+    .cp-map-badge {
+      align-self: flex-start; display: inline-flex; align-items: center; gap: .4rem;
+      font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-l);
+      padding: .32rem .7rem; border-radius: 50px;
+      background: rgba(124,79,176,.12); border: 1px solid rgba(124,79,176,.28);
+      margin-bottom: .6rem;
     }
+    .cp-map-badge svg { width: 12px; height: 12px; }
+    .cp-map-title { font-family: var(--font-serif); font-size: 1.45rem; font-weight: 600; color: var(--white); margin: 0; line-height: 1.25; }
+    .cp-map-sub { font-size: .8rem; color: var(--text2); margin-bottom: 1rem; }
+    .cp-map-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .65rem; margin: 0 0 1.4rem; }
+    .cp-map-list li { font-size: .8rem; color: var(--text2); line-height: 1.5; display: flex; gap: .55rem; }
+    .cp-map-actions { margin-top: auto; display: flex; flex-wrap: wrap; gap: .5rem; }
+    .cp-map-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+      min-height: 42px; font: inherit;
+      font-size: .78rem; font-weight: 600; color: var(--gold-l); text-decoration: none; cursor: pointer;
+      padding: .55rem 1rem; border-radius: 50px;
+      border: 1px solid rgba(124,79,176,.4); background: rgba(124,79,176,.08);
+      transition: background .2s, border-color .2s, transform .2s;
+    }
+    .cp-map-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
     .cp-map-btn:hover { background: rgba(124,79,176,.18); color: var(--gold-l); }
-    .cp-map-frame { min-height: 300px; background: #1a1a1a; }
-    .cp-map-frame iframe { width: 100%; height: 100%; min-height: 300px; border: 0; display: block; filter: grayscale(.2) contrast(1.05); }
+    .cp-map-btn:active { transform: scale(.96); }
+    .cp-map-btn--primary { background: var(--gold); border-color: var(--gold); color: #fff; }
+    .cp-map-btn--primary:hover { background: #9b72c9; border-color: #9b72c9; color: #fff; }
+    .cp-map-btn.is-done { border-color: #25d366; color: #25d366; }
+
+    .cp-map-frame { position: relative; min-height: 360px; background: #161616; isolation: isolate; }
+    .cp-map-frame iframe {
+      position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block;
+      opacity: 0; transition: opacity .5s ease, filter .4s ease;
+    }
+    .cp-map-frame.is-loaded iframe { opacity: 1; }
+    /* Mapa en modo oscuro, a juego con la tienda (el satélite se deja con sus colores) */
+    .cp-map-frame.is-dark iframe { filter: invert(.9) hue-rotate(180deg) saturate(.85) brightness(.95) contrast(.95); }
+    /* Borde interior suave para que el mapa se funda con la tarjeta */
+    .cp-map-frame::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+      box-shadow: inset 18px 0 30px -18px rgba(0,0,0,.55);
+    }
+    .cp-map-skeleton {
+      position: absolute; inset: 0; z-index: 1;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .8rem;
+      font-size: .75rem; color: var(--text3);
+      background: linear-gradient(110deg, #161616 30%, #1f1a27 50%, #161616 70%);
+      background-size: 250% 100%;
+      animation: cpMapShimmer 1.6s linear infinite;
+      transition: opacity .4s ease;
+    }
+    .cp-map-frame.is-loaded .cp-map-skeleton { opacity: 0; pointer-events: none; }
+    .cp-map-pin {
+      width: 34px; height: 34px; color: var(--gold);
+      animation: cpPinBounce 1.4s ease-in-out infinite;
+    }
+    @keyframes cpMapShimmer { to { background-position: -250% 0; } }
+    @keyframes cpPinBounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+    .cp-map-toolbar {
+      position: absolute; top: .75rem; left: .75rem; z-index: 3;
+      display: inline-flex; padding: 3px; gap: 2px; border-radius: 50px;
+      background: rgba(12,12,12,.82); border: 1px solid rgba(124,79,176,.3);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    .cp-map-toolbar button {
+      font: inherit; font-size: .7rem; font-weight: 600; letter-spacing: .03em;
+      color: var(--text2); background: transparent; border: 0; cursor: pointer;
+      padding: .45rem .85rem; min-height: 34px; border-radius: 50px;
+      transition: background .2s, color .2s;
+    }
+    .cp-map-toolbar button[aria-pressed="true"] { background: var(--gold); color: #fff; }
+    .cp-map-expand {
+      position: absolute; right: .75rem; bottom: .75rem; z-index: 3;
+      display: inline-flex; align-items: center; gap: .35rem;
+      font-size: .7rem; font-weight: 600; color: #fff; text-decoration: none;
+      padding: .5rem .85rem; min-height: 34px; border-radius: 50px;
+      background: rgba(12,12,12,.82); border: 1px solid rgba(124,79,176,.3);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    .cp-map-expand svg { width: 13px; height: 13px; }
+    .cp-map-expand:hover { color: var(--gold-l); }
+
+    @media (min-width: 601px) and (max-width: 820px) {
+      .cp-map-card { grid-template-columns: 1fr; }
+      .cp-map-frame { order: -1; min-height: 0; aspect-ratio: 16 / 9; }
+      .cp-map-frame::after { box-shadow: inset 0 -18px 30px -18px rgba(0,0,0,.55); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .cp-map-skeleton, .cp-map-pin { animation: none; }
+    }
 
     /* Social links row */
     .cp-social-row {
@@ -239,9 +325,15 @@
       .cp-social-row { gap: .65rem; }
       .cp-social-link { font-size: .75rem; padding: .45rem .75rem; }
       .cp-map { margin-bottom: 2rem; }
-      .cp-map-card { grid-template-columns: 1fr; }
-      .cp-map-info { padding: 1.4rem 1.2rem; }
-      .cp-map-frame, .cp-map-frame iframe { min-height: 240px; }
+      .cp-map-card { grid-template-columns: 1fr; border-radius: 18px; }
+      .cp-map-info { padding: 1.4rem 1.2rem 1.5rem; }
+      .cp-map-title { font-size: 1.25rem; }
+      /* En celular el mapa va arriba y en formato casi cuadrado: se ve la zona completa */
+      .cp-map-frame { order: -1; min-height: 0; aspect-ratio: 4 / 3.2; }
+      .cp-map-frame::after { box-shadow: inset 0 -18px 30px -18px rgba(0,0,0,.55); }
+      .cp-map-actions { display: grid; grid-template-columns: 1fr 1fr; }
+      .cp-map-actions .cp-map-btn--primary { grid-column: 1 / -1; }
+      .cp-map-btn { min-height: 46px; padding: .55rem .6rem; white-space: nowrap; font-size: .76rem; }
     }
   </style>
 </head>
@@ -357,23 +449,53 @@
 
 
       <!-- Ubicación -->
-      <section class="cp-map" aria-label="Ubicación de la tienda">
+      <section class="cp-map" aria-labelledby="cpMapTitle">
         <p class="cp-eyebrow">Dónde estamos</p>
         <div class="cp-map-card">
           <div class="cp-map-info">
-            <p class="cp-map-title">Jr. Las Flores N°620</p>
+            <span class="cp-map-badge">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 1112 6.5a2.5 2.5 0 010 5z"/></svg>
+              Tienda física
+            </span>
+            <h2 class="cp-map-title" id="cpMapTitle">Jr. Las Flores N°620</h2>
             <p class="cp-map-sub">Soritor · San Martín, Perú</p>
             <ul class="cp-map-list">
               <li><span aria-hidden="true">🏪</span> Recojo en tienda: coordina la hora por WhatsApp.</li>
               <li><span aria-hidden="true">🛵</span> Delivery gratis en Soritor desde 2 decants o 1 perfume entero.</li>
               <li><span aria-hidden="true">📦</span> Envíos a todo el Perú por Shalom.</li>
             </ul>
-            <a class="cp-map-btn" href="https://maps.google.com/maps?q=-6.1374824,-77.09955" target="_blank" rel="noopener noreferrer">Abrir en Google Maps →</a>
+            <div class="cp-map-actions">
+              <a class="cp-map-btn cp-map-btn--primary" href="https://www.google.com/maps/dir/?api=1&amp;destination=-6.1374824,-77.09955" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+                Cómo llegar
+              </a>
+              <a class="cp-map-btn" href="https://waze.com/ul?ll=-6.1374824,-77.09955&amp;navigate=yes" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01M9 15c1.5 1.2 4.5 1.2 6 0"/></svg>
+                Waze
+              </a>
+              <button class="cp-map-btn" type="button" id="cpCopyAddr">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                <span>Copiar dirección</span>
+              </button>
+            </div>
           </div>
-          <div class="cp-map-frame">
-            <iframe src="https://maps.google.com/maps?q=-6.1374824,-77.09955&amp;hl=es&amp;z=17&amp;output=embed"
-                    title="Ubicación de MICHT Decants — Jr. Las Flores N°620, Soritor"
-                    loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          <div class="cp-map-frame is-dark" id="cpMapFrame">
+            <div class="cp-map-toolbar" role="group" aria-label="Tipo de mapa">
+              <button type="button" data-view="map" aria-pressed="true">Mapa</button>
+              <button type="button" data-view="sat" aria-pressed="false">Satélite</button>
+            </div>
+            <div class="cp-map-skeleton" aria-hidden="true">
+              <svg class="cp-map-pin" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 1112 6.5a2.5 2.5 0 010 5z"/></svg>
+              Cargando mapa…
+            </div>
+            <iframe id="cpMapIframe"
+                    src="https://maps.google.com/maps?q=-6.1374824,-77.09955&amp;hl=es&amp;z=17&amp;output=embed"
+                    title="Mapa: MICHT Decants — Jr. Las Flores N°620, Soritor"
+                    loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+            <a class="cp-map-expand" href="https://maps.google.com/maps?q=-6.1374824,-77.09955" target="_blank" rel="noopener noreferrer" aria-label="Abrir el mapa en Google Maps">
+              Ampliar
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+            </a>
           </div>
         </div>
       </section>
@@ -533,24 +655,91 @@
 
   <div class="overlay" id="overlay" aria-hidden="true"></div>
 
-  <script src="../js/store/cart-mini.js?v=20260926-1728"></script>
-  <script src="../js/store/seasonal-theme.js?v=20260926-1728"></script>
+  <script src="../js/store/cart-mini.js?v=20260926-2248"></script>
+  <script src="../js/store/seasonal-theme.js?v=20260926-2248"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
   <script>
+    // ── Mapa: carga suave, modo Mapa/Satélite y copiar dirección ──
+    (function () {
+      const frame  = document.getElementById('cpMapFrame');
+      const iframe = document.getElementById('cpMapIframe');
+      if (!frame || !iframe) return;
+      const BASE = 'https://maps.google.com/maps?q=-6.1374824,-77.09955&hl=es&output=embed';
+      const URLS = { map: BASE + '&z=17', sat: BASE + '&z=18&t=k' };
+
+      const markLoaded = () => frame.classList.add('is-loaded');
+      iframe.addEventListener('load', markLoaded);
+      // Por si el evento load no llega (bloqueadores, conexión lenta)
+      setTimeout(markLoaded, 6000);
+
+      frame.querySelectorAll('.cp-map-toolbar button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const view = btn.dataset.view;
+          if (btn.getAttribute('aria-pressed') === 'true') return;
+          frame.querySelectorAll('.cp-map-toolbar button').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+          frame.classList.toggle('is-dark', view === 'map');
+          frame.classList.remove('is-loaded');
+          iframe.src = URLS[view];
+        });
+      });
+
+      const copyBtn = document.getElementById('cpCopyAddr');
+      if (copyBtn) {
+        const label = copyBtn.querySelector('span');
+        const ADDRESS = 'Jr. Las Flores N°620, Soritor, San Martín, Perú';
+        copyBtn.addEventListener('click', async () => {
+          let ok = false;
+          try { await navigator.clipboard.writeText(ADDRESS); ok = true; }
+          catch (e) {
+            const ta = document.createElement('textarea');
+            ta.value = ADDRESS; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            try { ok = document.execCommand('copy'); } catch (_) {}
+            ta.remove();
+          }
+          label.textContent = ok ? '¡Copiada!' : ADDRESS;
+          copyBtn.classList.toggle('is-done', ok);
+          setTimeout(() => { label.textContent = 'Copiar dirección'; copyBtn.classList.remove('is-done'); }, 2200);
+        });
+      }
+    })();
+  </script>
+  <script>
     if (typeof gsap !== 'undefined') {
       gsap.registerPlugin(ScrollTrigger);
+      ScrollTrigger.config({ ignoreMobileResize: true });
       if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        const tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
-        tl.from('.logo',  { opacity: 0, y: -22, duration: 0.7 }, 0.05)
-          .from('.nav a', { opacity: 0, y: -16, stagger: 0.08, duration: 0.5 }, 0.2);
+        // Celular: recorridos más cortos y rápidos. Computadora: efecto amplio.
+        const mobile = window.matchMedia('(max-width: 767px)').matches;
+        const d = px => mobile ? Math.round(px * 0.5) : px;
+        const t = s  => mobile ? +(s * 0.8).toFixed(2) : s;
 
-        gsap.from('.cp-eyebrow',   { opacity: 0, y: 20, duration: 0.6, ease: 'power3.out', delay: 0.15 });
-        gsap.from('.cp-headline',  { opacity: 0, y: 30, duration: 0.75, ease: 'power3.out', delay: 0.28 });
-        gsap.from('.cp-sub',       { opacity: 0, y: 20, duration: 0.65, ease: 'power3.out', delay: 0.42 });
-        gsap.from('.cp-wa-btn',      { opacity: 0, y: 30, scale: 0.9, duration: 0.8, ease: 'expo.out', delay: 0.55 });
-        gsap.from('.cp-card',        { opacity: 0, y: 45, scale: 0.93, stagger: 0.1, duration: 0.75, ease: 'power3.out', delay: 0.7 });
-        gsap.from('.cp-social-row',  { opacity: 0, y: 20, duration: 0.6, ease: 'power3.out', delay: 1.3 });
+        // Parte de arriba (visible al abrir): entra en secuencia.
+        // El logo y el menú ya entran con CSS.
+        gsap.timeline({ defaults: { ease: 'power3.out' } })
+          .from('.cp-eyebrow:first-child', { opacity: 0, y: d(20), duration: t(0.6) }, 0.1)
+          .from('.cp-headline', { opacity: 0, y: d(30), duration: t(0.75) }, 0.2)
+          .from('.cp-sub',      { opacity: 0, y: d(20), duration: t(0.65) }, 0.32)
+          .from('.cp-wa-btn',   { opacity: 0, y: d(30), scale: 0.92, duration: t(0.8), ease: 'expo.out' }, 0.42);
+
+        // Lo de abajo aparece cuando llega a la pantalla (antes, en celular,
+        // se animaba fuera de vista y nunca se llegaba a ver)
+        const reveal = (targets, trigger, vars) => gsap.from(targets, Object.assign({
+          opacity: 0, y: d(40), duration: t(0.7), ease: 'power3.out',
+          scrollTrigger: { trigger, start: 'top 88%', once: true },
+        }, vars));
+
+        if (mobile) {
+          document.querySelectorAll('.cp-card').forEach(card => reveal(card, card, { scale: 0.97 }));
+        } else {
+          reveal('.cp-card', '.cp-cards', { scale: 0.94, stagger: 0.1 });
+        }
+        reveal('.cp-map-card', '.cp-map', { y: d(50), scale: mobile ? 0.98 : 0.96, duration: t(0.9) });
+        reveal('.cp-map-actions .cp-map-btn', '.cp-map-actions', { y: d(14), stagger: 0.07, duration: t(0.5), scrollTrigger: { trigger: '.cp-map-actions', start: 'top 95%', once: true } });
+        reveal('.cp-social-link', '.cp-social-row', { y: d(18), scale: 0.9, stagger: 0.07, duration: t(0.5), ease: 'back.out(1.6)' });
+
+        window.addEventListener('orientationchange', () => setTimeout(() => ScrollTrigger.refresh(), 250));
       }
     }
   </script>
