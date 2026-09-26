@@ -3,8 +3,8 @@
 // (#faqList) y algunas también como desplegables en la ficha de cada perfume
 // (las que tienen `enFicha`, con su título `fichaTitle`).
 //
-// Duraciones: ~10 sprays por ml y 3 a 4 atomizaciones al día (mismo cálculo que
-// los "~N sprays" de las tarjetas de tamaño en la ficha).
+// Duraciones: sprays de cada tamaño (SPRAYS_BY_SIZE en product-detail.js: 2ml 39,
+// 3ml 50, 5ml 90, 10ml 180) ÷ unas 6 atomizaciones al día.
 
 const STORE_FAQ = [
   {
@@ -21,7 +21,7 @@ const STORE_FAQ = [
     key: 'tamano',
     q: '¿Qué tamaño me conviene?',
     enFicha: true,
-    a: 'Usándolo a diario (3 a 4 atomizaciones): <strong>2 ml</strong> ≈ 5 días · <strong>3 ml</strong> ≈ 1 semana · <strong>5 ml</strong> ≈ 2 semanas · <strong>10 ml</strong> ≈ 1 mes. Si recién lo vas a probar, elige 2 o 3 ml; si ya es tu favorito, 5 o 10 ml.'
+    a: 'Con unas 6 atomizaciones al día: <strong>2 ml</strong> (39 sprays) ≈ 6 días · <strong>3 ml</strong> (50 sprays) ≈ 8 días · <strong>5 ml</strong> (90 sprays) ≈ 15 días · <strong>10 ml</strong> (180 sprays) ≈ 1 mes. Si recién lo vas a probar, elige 2 o 3 ml; si ya es tu favorito, 5 o 10 ml.'
   },
   {
     key: 'envio',
