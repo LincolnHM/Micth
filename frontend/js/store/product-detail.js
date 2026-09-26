@@ -8,6 +8,26 @@ let _pdQty      = 1;
 // Talla que se muestra con la etiqueta "MÁS VENDIDO" y que viene elegida al abrir
 const BEST_SELLER_SIZE = '5ml';
 
+// Franja de confianza (ficha de perfume y ficha de combo)
+const PD_TRUST_HTML = `
+          <div class="pd-trust">
+            <div class="pd-trust-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path stroke-linecap="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              <span>Perfumes<br>100% originales</span>
+            </div>
+            <div class="pd-trust-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path stroke-linecap="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+              <span>Envíos a<br>todo el Perú</span>
+            </div>
+            <div class="pd-trust-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+              <span>Delivery gratis<br>en Soritor</span>
+            </div>
+          </div>`;
+
+// ¿Hay una ficha abierta? (de perfume #pdModal o de combo #cdModal)
+function _anyDetailOpen() { return !!document.querySelector('.pd-modal.open'); }
+
 // ─── El detalle es una "página" más del historial ────────────────────────────
 // Cada perfume abierto agrega una entrada (?p=ID). Así el botón "atrás" del
 // celular vuelve al catálogo en vez de sacar al cliente de la tienda, y el
@@ -35,6 +55,9 @@ window.addEventListener('popstate', e => {
   if (st && Number.isInteger(st.pd)) {   // ojo: L'Immensité tiene id 0
     _pdDepth = st.depth || 1;
     openPdModal(st.pd, { fromHistory: true });
+  } else if (st && Number.isInteger(st.combo) && typeof openComboModal === 'function') {
+    _pdDepth = st.depth || 1;
+    openComboModal(st.combo, { fromHistory: true });
   } else {
     _pdHide(true);
   }
@@ -54,7 +77,7 @@ function _pdSetNotify(cartBtn, cartTxt, p) {
 }
 
 function _pdEscHandler(e) {
-  if (e.key === 'Escape' && document.getElementById('pdModal')?.classList.contains('open')) closePdModal();
+  if (e.key === 'Escape' && _anyDetailOpen()) closePdModal();
 }
 
 function _createPdModal() {
@@ -154,20 +177,7 @@ function _createPdModal() {
           </div>
 
           <!-- Confianza -->
-          <div class="pd-trust">
-            <div class="pd-trust-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path stroke-linecap="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-              <span>Perfumes<br>100% originales</span>
-            </div>
-            <div class="pd-trust-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path stroke-linecap="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-              <span>Envíos a<br>todo el Perú</span>
-            </div>
-            <div class="pd-trust-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-              <span>Delivery gratis<br>en Soritor</span>
-            </div>
-          </div>
+          ${PD_TRUST_HTML}
 
           <!-- Momento ideal de uso — Día / Noche -->
           <div id="pdOccasionSection" class="pd-occasion-section">
@@ -363,12 +373,13 @@ function openPdModal(productId, { fromHistory = false } = {}) {
   const p = _allProducts?.find(x => x.id === productId) ?? Products.getById(productId);
   if (!p) return;
 
-  const wasOpen = document.getElementById('pdModal').classList.contains('open');
+  const wasOpen = _anyDetailOpen();
   if (!wasOpen) _pdReturnY = window.scrollY;
   if (!fromHistory) {
     _pdDepth = wasOpen ? _pdDepth + 1 : 1;
     try { history.pushState({ pd: p.id, depth: _pdDepth }, '', _pdUrl(p.id)); } catch (_) {}
   }
+  document.getElementById('cdModal')?.classList.remove('open');   // venía de un combo
 
   _pdProduct  = p;
   _pdSelSize  = null;
@@ -649,14 +660,14 @@ function closePdModal({ restoreScroll = true } = {}) {
   _pdHide(restoreScroll);
   // Sacar del historial los perfumes apilados (el popstate que llega después
   // no hace nada porque el detalle ya está cerrado)
-  if (depth > 0 && Number.isInteger(history.state?.pd)) history.go(-depth);
+  if (depth > 0 && (Number.isInteger(history.state?.pd) || Number.isInteger(history.state?.combo))) history.go(-depth);
 }
 
 function _pdHide(restoreScroll) {
-  const modal = document.getElementById('pdModal');
   _pdDepth = 0;
-  if (!modal || !modal.classList.contains('open')) return;
-  modal.classList.remove('open');
+  const open = document.querySelectorAll('.pd-modal.open');   // perfume o combo
+  if (!open.length) return;
+  open.forEach(m => m.classList.remove('open'));
   document.body.classList.remove('pd-open');
   document.querySelectorAll('.pd-page-hidden').forEach(el => el.classList.remove('pd-page-hidden'));
   if (typeof renderRecentlyViewed === 'function') renderRecentlyViewed();

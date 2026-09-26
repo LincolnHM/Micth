@@ -85,7 +85,7 @@ async function renderCombos() {
     // Foto propia del combo (subida por el admin) tiene prioridad; si no hay,
     // se arma un collage automático con las fotos de los perfumes incluidos.
     const bannerHtml = combo.imageUrl
-      ? `<div class="combo-card-banner"><img src="${escapeAttr(combo.imageUrl)}" alt="${escapeAttr(combo.title)}" loading="lazy"></div>`
+      ? `<div class="combo-card-banner" data-open-combo="${combo.id}"><img src="${escapeAttr(combo.imageUrl)}" alt="${escapeAttr(combo.title)}" loading="lazy"></div>`
       : '';
     const thumbsHtml = !combo.imageUrl
       ? items.slice(0, 4)
@@ -111,8 +111,8 @@ async function renderCombos() {
         <div class="combo-card-ribbon"></div>
         <div class="combo-card-badge">Combo</div>
         ${bannerHtml}
-        ${thumbsHtml ? `<div class="combo-card-thumbs">${thumbsHtml}</div>` : ''}
-        <h3 class="combo-card-name">${sanitize(combo.title)}</h3>
+        ${thumbsHtml ? `<div class="combo-card-thumbs" data-open-combo="${combo.id}">${thumbsHtml}</div>` : ''}
+        <h3 class="combo-card-name"><button type="button" class="combo-card-name-btn" data-open-combo="${combo.id}">${sanitize(combo.title)}</button></h3>
         ${combo.description ? `<p class="combo-card-desc">${sanitize(combo.description)}</p>` : ''}
         <div class="combo-card-items">${itemsChips}</div>
         ${tiers.length > 1 ? `<div class="combo-card-sizes">${sizesHtml}</div>` : ''}
@@ -120,6 +120,7 @@ async function renderCombos() {
           <div class="combo-card-prices"></div>
           <span class="combo-card-savings"></span>
           <button class="combo-card-add-btn" data-combo-id="${combo.id}">Agregar combo al carrito</button>
+          <button type="button" class="combo-card-details-btn" data-open-combo="${combo.id}">Ver detalles del combo ›</button>
         </div>
       </article>`;
   }).join('');
@@ -132,6 +133,13 @@ async function renderCombos() {
       const combo = combos.find(c => c.id === parseInt(card.dataset.comboId));
       card.dataset.selectedSize = btn.dataset.size;
       if (combo) updateComboCardPricing(combo, products);
+    });
+  });
+
+  // Foto, nombre o "Ver detalles" → ficha del combo (combo-detail.js)
+  grid.querySelectorAll('[data-open-combo]').forEach(el => {
+    el.addEventListener('click', () => {
+      if (typeof openComboModal === 'function') openComboModal(parseInt(el.dataset.openCombo));
     });
   });
 

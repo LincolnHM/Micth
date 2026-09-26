@@ -8664,10 +8664,10 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   transition: transform .2s ease, box-shadow .2s ease;
 }
 .wa-float:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 12px 28px rgba(0,0,0,.5), 0 0 0 6px rgba(37,211,102,.18); }
-/* En la ficha del celular sube por encima de la barra fija del carrito */
+/* En las fichas del celular se oculta: taparía "Comprar ahora" (la ficha ya
+   tiene las preguntas frecuentes y el pedido igual termina en WhatsApp) */
 @media (max-width: 767px) {
-  body.pd-open .wa-float { bottom: calc(5.4rem + env(safe-area-inset-bottom, 0px)); width: 46px; height: 46px; }
-  body.pd-open .wa-float svg { width: 24px; height: 24px; }
+  body.pd-open .wa-float { display: none; }
 }
 
 
@@ -8825,3 +8825,32 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   .pd-actions .pd-cart-btn svg { display: none; }
   .pd-buy-btn { padding: .9rem .7rem; font-size: .78rem; letter-spacing: .04em; }
 }
+
+/* ── Ficha de combo (js/store/combo-detail.js) ──────────── */
+.cd-hero-img { max-height: 380px; border-radius: var(--r-lg); }
+.cd-collage { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; width: 100%; max-width: 360px; }
+.cd-collage:empty { display: none; }
+.cd-collage img {
+  width: 100%; aspect-ratio: 1; object-fit: contain;
+  background: #fff; border-radius: var(--r-lg); padding: .6rem;
+}
+.cd-item { width: 100%; text-align: left; font: inherit; color: inherit; }
+.cd-item-go { flex-shrink: 0; font-size: .74rem; font-weight: 700; color: var(--gold-l); }
+.cd-unavailable {
+  padding: .85rem 1rem; border-radius: var(--r);
+  background: rgba(224,71,76,.08); border: 1px solid rgba(224,71,76,.3);
+  font-size: .82rem; color: var(--text2);
+}
+/* Tarjeta de combo: foto y nombre llevan a la ficha */
+[data-open-combo] { cursor: pointer; }
+.combo-card-name-btn {
+  background: none; border: 0; padding: 0; margin: 0;
+  font: inherit; color: inherit; text-align: inherit; cursor: pointer;
+}
+.combo-card-name-btn:hover { color: var(--gold-l); }
+.combo-card-details-btn {
+  width: 100%; padding: .45rem; background: none; border: 0; cursor: pointer;
+  font-size: .72rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text3); transition: color var(--tr);
+}
+.combo-card-details-btn:hover { color: var(--gold-l); }
