@@ -104,7 +104,8 @@ CREATE TABLE IF NOT EXISTS perfiles_usuarios (
   dni                     TEXT NOT NULL,
   telefono                TEXT NOT NULL,
   primer_descuento_usado  BOOLEAN DEFAULT false,
-  created_at              TIMESTAMPTZ DEFAULT NOW()
+  created_at              TIMESTAMPTZ DEFAULT NOW(),
+  favoritos               INTEGER[] NOT NULL DEFAULT '{}'   -- sql/2026-09-26-favoritos-en-cuenta.sql
 );
 ALTER TABLE perfiles_usuarios ADD CONSTRAINT perfiles_usuarios_dni_key UNIQUE (dni);
 

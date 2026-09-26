@@ -492,7 +492,15 @@ const Wishlist = {
   },
 
   has(id)     { this._load(); return this._ids.has(id); },
-  toggle(id)  { this._load(); this._ids.has(id) ? this._ids.delete(id) : this._ids.add(id); this._save(); return this._ids.has(id); },
+  toggle(id)  {
+    this._load();
+    this._ids.has(id) ? this._ids.delete(id) : this._ids.add(id);
+    this._save();
+    // Con sesión iniciada, los favoritos también se guardan en la cuenta
+    if (typeof UserAuth !== 'undefined') UserAuth.queueFavoritesSave();
+    return this._ids.has(id);
+  },
+  replaceAll(ids) { this._ids = new Set(ids); this._save(); },
   getAll()    { this._load(); return [...this._ids]; },
   count()     { this._load(); return this._ids.size; }
 };

@@ -25,6 +25,8 @@ Cada archivo se pega completo en **Supabase → SQL Editor → Run**. Van en ord
 | `2026-09-23-validar-pedidos.sql` | **Seguridad (importante).** Un guardia dentro de la base revisa cada pedido de la web: precios reales del catálogo, total correcto, estado siempre "pendiente", sin código en los textos, máx. 8 pedidos/minuto por IP. Reemplaza la necesidad de desplegar la Edge Function. Probado en PostgreSQL real. |
 | `2026-09-23-proteger-perfiles.sql` | **Seguridad.** Un cliente ya no puede volver a activar su 10 % de primera compra ni cambiarse el DNI para leer pedidos ajenos. |
 | `2026-09-23-acordes-de-todos-los-perfumes.sql` | Carga los acordes principales (barras de colores) de los 106 perfumes: la columna existe pero estaba vacía. Solo rellena los vacíos, no pisa los que edites en el panel. |
+| `2026-09-26-favoritos-en-cuenta.sql` | Columna `favoritos` en `perfiles_usuarios`: los ♡ del cliente se guardan en su cuenta y aparecen en cualquier celular donde entre. Sin correrlo, los favoritos siguen solo en el navegador. |
+| `2026-09-23-validar-pedidos.sql` *(actualizado 2026-09-26)* | Ahora también acepta el tipo de entrega "delivery" (Soritor). Volver a pegarlo es **opcional**: con la versión anterior el panel igual reconoce esos pedidos. |
 
 ## Qué correr ahora (2026-09-23), en este orden
 
@@ -34,6 +36,10 @@ Cada archivo se pega completo en **Supabase → SQL Editor → Run**. Van en ord
 4. `2026-09-23-acordes-de-todos-los-perfumes.sql`
 
 Con el paso 1 **ya no necesitas** desplegar la Edge Function ni correr `2026-08-04-cerrar-insert-directo.sql`.
+
+## Nuevo (2026-09-26)
+
+5. `2026-09-26-favoritos-en-cuenta.sql` → favoritos guardados en la cuenta del cliente.
 
 ## Cómo saber si uno ya está aplicado
 

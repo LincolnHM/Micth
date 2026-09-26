@@ -21,6 +21,7 @@ const UserAuth = {
     if (session?.user) {
       this._currentUser = session.user;
       await this._loadProfile();
+      this._syncFavorites();
     }
 
     // Manejar redirección desde link de verificación de email
@@ -34,6 +35,7 @@ const UserAuth = {
       if (event === 'SIGNED_IN' && session?.user) {
         this._currentUser = session.user;
         await this._loadProfile();
+        this._syncFavorites();
 
         if (!this._currentProfile && this._pendingProfile) {
           await this._insertProfile(session.user.id);
@@ -222,6 +224,44 @@ const UserAuth = {
     if (!error) this._currentProfile.primer_descuento_usado = true;
   },
 
+  // ─── Favoritos en la cuenta ───────────────────────────────────────────────
+  // Se guardan en perfiles_usuarios.favoritos (sql/2026-09-26-favoritos-en-cuenta.sql).
+  // Al entrar se juntan los de este navegador con los de la cuenta. Si la
+  // columna aún no existe en la base, los favoritos siguen solo en el navegador.
+  _favTimer: null,
+
+  _favoritesEnabled() {
+    return !!(authClient && this._currentUser && Array.isArray(this._currentProfile?.favoritos));
+  },
+
+  async _syncFavorites() {
+    if (!this._favoritesEnabled() || typeof Wishlist === 'undefined') return;
+    const remote = this._currentProfile.favoritos.filter(Number.isInteger);
+    const local  = Wishlist.getAll();
+    const merged = [...new Set([...remote, ...local])].slice(0, 300);
+    Wishlist.replaceAll(merged);
+    if (merged.length !== remote.length) await this._saveFavorites(merged);
+    if (typeof updateFavFilterBadge === 'function') updateFavFilterBadge();
+    if (local.length !== merged.length && typeof renderProducts === 'function' && typeof _allProducts !== 'undefined' && _allProducts) renderProducts();
+  },
+
+  // Guarda con una pequeña espera: tocar varios corazones seguidos = 1 envío
+  queueFavoritesSave() {
+    if (!this._favoritesEnabled()) return;
+    clearTimeout(this._favTimer);
+    this._favTimer = setTimeout(() => this._saveFavorites(Wishlist.getAll()), 800);
+  },
+
+  async _saveFavorites(ids) {
+    if (!this._favoritesEnabled()) return;
+    const list = ids.slice(0, 300);
+    const { error } = await authClient
+      .from('perfiles_usuarios')
+      .update({ favoritos: list })
+      .eq('id', this._currentUser.id);
+    if (!error) this._currentProfile.favoritos = list;
+  },
+
   // ─── Getters ──────────────────────────────────────────────────────────────
   isLoggedIn()      { return !!this._currentUser && !!this._currentProfile; },
   getProfile()      { return this._currentProfile; },
@@ -360,7 +400,7 @@ async function openHistoryModal() {
     cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado'
   };
 
-  content.innerHTML = orders.map(order => {
+  content.innerHTML = orders.map((order, idx) => {
     const status   = String(order.status || 'pendiente');
     const safeStatus = status.replace(/[^a-z]/g, '');
     const date     = new Date(order.created_at).toLocaleString('es-PE', {
@@ -384,8 +424,55 @@ async function openHistoryModal() {
         <div class="history-order-total">
           ${delivery} &nbsp;·&nbsp; Total: <strong>S/ ${parseFloat(order.total || 0).toFixed(2)}</strong>
         </div>
+        <button type="button" class="history-reorder-btn" data-idx="${idx}">🔁 Volver a pedir</button>
       </div>`;
   }).join('');
+
+  content.querySelectorAll('.history-reorder-btn').forEach(btn => {
+    btn.addEventListener('click', () => reorderFromHistory(orders[parseInt(btn.dataset.idx)]));
+  });
+}
+
+// ─── "Volver a pedir": pone en el carrito lo de un pedido anterior ───────────
+// Usa los precios ACTUALES del catálogo y salta lo que hoy no está disponible.
+function reorderFromHistory(order) {
+  if (!order) return;
+  const products = _allProducts || Products.getAll();
+  const byId     = new Map(products.map(p => [p.id, p]));
+  let added = 0;
+  const skipped = [];
+
+  (order.items || []).forEach(it => {
+    const qty = Math.max(1, Math.min(10, parseInt(it.quantity) || 1));
+    if (it.isCombo) {
+      const combo = (typeof _allCombos !== 'undefined' && _allCombos || []).find(c => c.id === it.comboId);
+      const sizeOk = combo && comboAvailableSizes(combo, products).some(t => t.size === it.size);
+      if (!sizeOk) { skipped.push(it.productName); return; }
+      for (let i = 0; i < qty; i++) Cart.addCombo(combo, products, it.size);
+      added += qty;
+      return;
+    }
+    const p = byId.get(it.productId);
+    let price = 0;
+    if (p && p.inStock) {
+      if (p.type === 'entero') price = parseFloat(p.sizes?.[it.size]) || (p.enteroPrice > 0 ? p.enteroPrice : 0);
+      else if (it.size === 'Unidad') price = (p.enteroStock || 0) > 0 ? (p.enteroPrice || 0) : 0;
+      else if (bottleHasMl(p, it.size)) price = parseFloat(p.sizes?.[it.size]) || 0;
+    }
+    if (price <= 0) { skipped.push(`${it.productName} (${it.size})`); return; }
+    for (let i = 0; i < qty; i++) Cart.add(p, it.size, price);
+    added += qty;
+  });
+
+  closeHistoryModal();
+  if (added) {
+    Cart.showCart();
+    if (typeof renderProducts === 'function') renderProducts();
+  }
+  const msg = added
+    ? `🔁 Agregamos ${added} producto${added !== 1 ? 's' : ''} a tu carrito`
+    : '😕 Ninguno de esos productos está disponible ahora';
+  showCartToast(skipped.length ? `${msg} · No disponible: ${skipped.join(', ')}` : msg);
 }
 
 function closeHistoryModal() {
