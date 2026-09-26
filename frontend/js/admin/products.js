@@ -511,19 +511,22 @@ function openProductModal(id = null) {
 
   const sizesContainer = document.getElementById('sizesContainer');
   const sizes = product?.sizes ?? { '5ml': 0, '10ml': 0 };
+  const before = product?.precioAntes || {};
   sizesContainer.innerHTML = '';
-  Object.entries(sizes).forEach(([ml, price]) => addSizeRow(ml, price));
+  Object.entries(sizes).forEach(([ml, price]) => addSizeRow(ml, price, before[ml] || ''));
 
   modal.classList.add('open');
 }
 
-function addSizeRow(ml = '', price = '') {
+function addSizeRow(ml = '', price = '', before = '') {
   const container = document.getElementById('sizesContainer');
   const row = document.createElement('div');
   row.className = 'size-row';
   row.innerHTML = `
     <input type="text"   class="size-ml"    placeholder="Ej: 10ml" value="${escapeAttr(String(ml))}" maxlength="10">
     <input type="number" class="size-price" placeholder="Precio S/" value="${price}" min="0" max="9999" step="0.5">
+    <input type="number" class="size-price size-before" placeholder="Antes S/" value="${before}" min="0" max="9999" step="0.5"
+           title="Opcional: precio anterior. Si es mayor que el precio, la tienda lo muestra tachado (oferta).">
     <button type="button" class="remove-size-btn">×</button>
   `;
   row.querySelector('.remove-size-btn')?.addEventListener('click', () => row.remove());
@@ -601,10 +604,14 @@ function setupAdminEvents() {
     }
 
     const sizes = {};
+    const precioAntes = {};
     document.querySelectorAll('.size-row').forEach(row => {
-      const ml    = row.querySelector('.size-ml').value.trim();
-      const price = parseFloat(row.querySelector('.size-price').value);
+      const ml     = row.querySelector('.size-ml').value.trim();
+      const price  = parseFloat(row.querySelector('.size-price:not(.size-before)').value);
+      const before = parseFloat(row.querySelector('.size-before')?.value);
       if (ml && !isNaN(price) && price >= 0) sizes[ml] = price;
+      // Solo cuenta como oferta si el "antes" es mayor que el precio actual
+      if (ml && before > 0 && before > price) precioAntes[ml] = before;
     });
     if (!Object.keys(sizes).length) { alert('Agrega al menos una talla.'); return; }
 
@@ -619,7 +626,7 @@ function setupAdminEvents() {
     // al crear un perfume nuevo. Antes esto siempre reseteaba inStock a true
     // y bottleRemainingMl/bottleTotalMl a 0 en cada edición, borrando el
     // seguimiento de stock de un producto ya agotado.
-    const data = { name, brand, type, gender, occasion, olfFamily, topNotes, heartNotes, baseNotes, accords, dupeOf, description, contentDescription, imageUrl, sizes };
+    const data = { name, brand, type, gender, occasion, olfFamily, topNotes, heartNotes, baseNotes, accords, dupeOf, description, contentDescription, imageUrl, sizes, precioAntes };
     if (!id) Object.assign(data, { inStock: true, bottleRemainingMl: 0, bottleTotalMl: 0, featured: false });
 
     const saveBtn = document.getElementById('saveProductBtn');

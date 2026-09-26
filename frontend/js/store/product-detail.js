@@ -268,13 +268,14 @@ function _pdPulseSizes() {
 }
 
 // Tarjeta de un tamaño: precio, sprays aproximados y etiqueta opcional
-function _pdSizeCardHtml({ size, price, off = false, note = '', badge = '' }) {
+function _pdSizeCardHtml({ size, price, off = false, note = '', badge = '', before = 0 }) {
   const noteTxt = off ? (price > 0 ? 'Agotado' : 'Pronto') : note;
   return `
     <button type="button" class="pd-size-card ${off ? 'pd-size-off' : ''}" data-size="${escapeAttr(size)}" data-price="${price}"
             ${off ? 'disabled aria-disabled="true"' : ''}>
       ${badge ? `<span class="pd-size-badge">${badge}</span>` : ''}
       <span class="pd-size-ml">${sanitize(size)}</span>
+      ${before ? `<s class="pd-size-before">S/ ${before}</s>` : ''}
       <span class="pd-size-price">${price > 0 ? `S/ ${price}` : '—'}</span>
       ${noteTxt ? `<span class="pd-size-note">${noteTxt}</span>` : ''}
     </button>`;
@@ -464,7 +465,9 @@ function openPdModal(productId, { fromHistory = false } = {}) {
     _pdSelSize  = size;
     _pdSelPrice = price;
     sizesRow.querySelectorAll('.pd-size-card').forEach(c => c.classList.toggle('active', c.dataset.size === size));
-    if (!isEntero) priceRow.innerHTML = `<strong class="pd-price-main">S/ ${price}</strong>`;
+    const before = sizeBeforePrice(p, size, price);
+    priceRow.innerHTML = `${before ? `<s class="pd-price-before">S/ ${before}</s> ` : ''}<strong class="pd-price-main">S/ ${price}</strong>`
+      + (before ? ` <span class="pd-price-off">-${Math.round((1 - price / before) * 100)}%</span>` : '');
     _pdUpdateTotals();
   };
 
@@ -493,7 +496,7 @@ function openPdModal(productId, { fromHistory = false } = {}) {
     const entries = Object.entries(p.sizes || {});
     const avail   = ([ml, price]) => p.inStock && bottleHasMl(p, ml) && price > 0;
     sizesRow.innerHTML = entries.map(e => _pdSizeCardHtml({
-      size: e[0], price: e[1], off: !avail(e), note: _pdSpraysNote(e[0]),
+      size: e[0], price: e[1], off: !avail(e), note: _pdSpraysNote(e[0]), before: sizeBeforePrice(p, e[0], e[1]),
       badge: e[0] === BEST_SELLER_SIZE && avail(e) ? 'MÁS VENDIDO' : ''
     })).join('');
     // Viene elegida la más vendida (o la primera disponible)

@@ -26,6 +26,7 @@ Cada archivo se pega completo en **Supabase → SQL Editor → Run**. Van en ord
 | `2026-09-23-proteger-perfiles.sql` | **Seguridad.** Un cliente ya no puede volver a activar su 10 % de primera compra ni cambiarse el DNI para leer pedidos ajenos. |
 | `2026-09-23-acordes-de-todos-los-perfumes.sql` | Carga los acordes principales (barras de colores) de los 106 perfumes: la columna existe pero estaba vacía. Solo rellena los vacíos, no pisa los que edites en el panel. |
 | `2026-09-26b-categoria-nicho.sql` | Pasa Creed Aventus y Erba Pura a la nueva categoría **Nicho** (filtro propio en la tienda). También se puede hacer desde el panel: Editar perfume → Tipo → Nicho. |
+| `2026-09-26c-precio-antes.sql` | Columna `precio_antes`: en el panel cada talla tiene "Antes S/"; si es mayor que el precio, la tienda lo muestra tachado con el % de descuento. Solo visual: se cobra el precio de la talla. |
 | `2026-09-26-favoritos-en-cuenta.sql` | Columna `favoritos` en `perfiles_usuarios`: los ♡ del cliente se guardan en su cuenta y aparecen en cualquier celular donde entre. Sin correrlo, los favoritos siguen solo en el navegador. |
 | `2026-09-23-validar-pedidos.sql` *(actualizado 2026-09-26)* | Ahora también acepta el tipo de entrega "delivery" (Soritor). Volver a pegarlo es **opcional**: con la versión anterior el panel igual reconoce esos pedidos. |
 
@@ -42,6 +43,7 @@ Con el paso 1 **ya no necesitas** desplegar la Edge Function ni correr `2026-08-
 
 5. `2026-09-26-favoritos-en-cuenta.sql` → favoritos guardados en la cuenta del cliente.
 6. `2026-09-26b-categoria-nicho.sql` → Creed Aventus y Erba Pura pasan a Nicho.
+7. `2026-09-26c-precio-antes.sql` → precios tachados (ofertas) por talla.
 
 ## Cómo saber si uno ya está aplicado
 

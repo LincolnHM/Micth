@@ -141,6 +141,12 @@ function renderPagination(current, total) {
 
 // ─── Helpers de producto ──────────────────────────────────────────────────────
 
+// Precio "antes" de una talla si es una oferta real (mayor que el precio actual)
+function sizeBeforePrice(p, size, price) {
+  const before = parseFloat(p?.precioAntes?.[size]) || 0;
+  return before > price && price > 0 ? before : 0;
+}
+
 // Precio "desde" de un producto (0 si aún no tiene precio)
 function productMinPrice(p, asEntero = false) {
   if (asEntero) return p.enteroPrice > 0 ? p.enteroPrice : 0;
@@ -325,7 +331,8 @@ function renderProducts() {
           const inCart    = Cart.items.some(i => i.productId === p.id && i.size === ml);
           const noMl      = !bottleHasMl(p, ml);
           const disabledSize = !p.inStock || price === 0 || noMl;
-          const priceDisplay = price > 0 ? `S/${price}` : 'Consultar';
+          const before = sizeBeforePrice(p, ml, price);
+          const priceDisplay = price > 0 ? `${before ? `<s class="size-before">S/${before}</s> ` : ''}S/${price}` : 'Consultar';
           return `
       <button class="size-btn ${disabledSize ? 'disabled' : ''} ${inCart ? 'selected' : ''}"
               data-id="${p.id}" data-size="${escapeAttr(ml)}" data-price="${price}"
@@ -343,8 +350,11 @@ function renderProducts() {
     const waConsultUrl = isEntero && minPrice === 0
       ? `https://wa.me/51917452643?text=${encodeURIComponent(`Hola, me interesa el perfume ${p.brand} – ${p.name}. ¿Cuál es el precio?`)}`
       : '';
+    const maxOff = showAsEntero ? 0 : Math.max(0, ...Object.entries(p.sizes || {}).map(([ml, pr]) => {
+      const b = sizeBeforePrice(p, ml, pr); return b ? Math.round((1 - pr / b) * 100) : 0;
+    }));
     const priceHtml = minPrice > 0
-      ? `<p class="price-from">${isEntero ? '' : 'Desde '}<strong>S/ ${minPrice}</strong></p>`
+      ? `<p class="price-from">${isEntero ? '' : 'Desde '}<strong>S/ ${minPrice}</strong>${maxOff ? ` <span class="price-off">-${maxOff}%</span>` : ''}</p>`
       : isEntero
         ? `<a class="btn-consultar-wa" href="${waConsultUrl}" target="_blank" rel="noopener noreferrer">💬 Consultar precio</a>`
         : `<p class="price-consultar">Consultar precio</p>`;

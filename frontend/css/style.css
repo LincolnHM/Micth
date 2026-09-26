@@ -8709,6 +8709,22 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   color: #fff; background: var(--gold);
 }
 
+/* ── Precio anterior tachado (oferta) ────────────────────── */
+.size-btn .size-before, .pd-size-before, .pd-price-before {
+  color: var(--text3); font-weight: 400; text-decoration: line-through;
+}
+.size-btn .size-before { font-size: .62rem; }
+.size-btn.selected .size-before, .size-btn:hover:not([disabled]) .size-before { color: rgba(255,255,255,.7); }
+.pd-size-before { font-size: .66rem; margin-bottom: -.15rem; }
+.pd-price-before { font-size: 1.05rem; margin-right: .2rem; }
+.price-off, .pd-price-off {
+  display: inline-block; vertical-align: middle;
+  padding: .1rem .42rem; border-radius: 50px;
+  font-size: .64rem; font-weight: 800; letter-spacing: .03em;
+  color: #fff; background: #e0474c;
+}
+.pd-price-off { font-size: .72rem; margin-left: .35rem; }
+
 /* ── Preguntas desplegables (ficha y "¿Cómo comprar?") ──── */
 .pd-faq, .faq-list { border-top: 1px solid var(--border); }
 .faq-item { border-bottom: 1px solid var(--border); }

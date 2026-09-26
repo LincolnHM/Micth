@@ -24,6 +24,17 @@ const _PRODUCT_PUBLIC_COLUMNS = [
   'created_at'
 ].join(', ');
 
+// Columnas opcionales que el visitante también puede leer (tienen su GRANT en
+// el SQL que las creó). Antes NO se pedían: "Se parece a", los acordes y el
+// stock de frasco entero editados en el panel nunca llegaban a la tienda.
+// Van de la más nueva a la más vieja: si la base aún no tiene alguna (el SQL
+// no se corrió), se reintenta sin ella en vez de romper el catálogo.
+const _PRODUCT_COLUMN_SETS = [
+  `${_PRODUCT_PUBLIC_COLUMNS}, accords, dupe_of, entero_stock, precio_antes`,
+  `${_PRODUCT_PUBLIC_COLUMNS}, accords, dupe_of, entero_stock`,
+  _PRODUCT_PUBLIC_COLUMNS
+];
+
 function productFromDB(row) {
   return {
     id:                row.id,
@@ -51,6 +62,8 @@ function productFromDB(row) {
     costPrice:         parseFloat(row.cost_price)          || 0,
     accords:           Array.isArray(row.accords) ? row.accords : [],
     dupeOf:            row.dupe_of && row.dupe_of.name ? row.dupe_of : null,
+    // Precio "antes" por talla (se muestra tachado): { "5ml": 22, ... }
+    precioAntes:       row.precio_antes && typeof row.precio_antes === 'object' && !Array.isArray(row.precio_antes) ? row.precio_antes : {},
     date:              row.created_at,
     updatedAt:         row.updated_at
   };
@@ -185,7 +198,8 @@ function productToDB(product) {
     stock_quantity:      product.stockQuantity     || 0,
     cost_price:          product.costPrice         || 0,
     accords:             product.accords           || [],
-    dupe_of:             product.dupeOf            || null
+    dupe_of:             product.dupeOf            || null,
+    precio_antes:        product.precioAntes       || {}
   };
 }
 
@@ -198,7 +212,8 @@ const _PRODUCT_FIELD_MAP = {
   featured: 'featured', bottleRemainingMl: 'bottle_remaining_ml',
   bottleTotalMl: 'bottle_total_ml', availableAsEntero: 'available_as_entero',
   enteroPrice: 'entero_price', enteroStock: 'entero_stock', stockQuantity: 'stock_quantity',
-  costPrice: 'cost_price', accords: 'accords', dupeOf: 'dupe_of'
+  costPrice: 'cost_price', accords: 'accords', dupeOf: 'dupe_of',
+  precioAntes: 'precio_antes'
 };
 
 // ─── API de productos (async, usa Supabase si está configurado) ───────────────
@@ -206,7 +221,7 @@ const _PRODUCT_FIELD_MAP = {
 // Columnas de `productos` que se agregaron después: si todavía no existen en
 // Supabase (SQL sin correr), se guarda igual el resto de los campos en vez de
 // perder todo el cambio. Supabase avisa con PGRST204 (API) o 42703 (Postgres).
-const PRODUCT_OPTIONAL_COLS = ['stock_quantity', 'available_as_entero', 'entero_price', 'entero_stock', 'cost_price', 'content_description', 'accords', 'dupe_of'];
+const PRODUCT_OPTIONAL_COLS = ['stock_quantity', 'available_as_entero', 'entero_price', 'entero_stock', 'cost_price', 'content_description', 'accords', 'dupe_of', 'precio_antes'];
 const _isMissingColumnError = e => !!e && (e.code === '42703' || e.code === 'PGRST204');
 
 const CloudProducts = {
@@ -221,10 +236,11 @@ const CloudProducts = {
       // oculto a propósito) — select('*') falla con 42501 aunque las columnas
       // públicas sí sean legibles. Reintentar solo con esas.
       if (error && error.code === '42501') {
-        ({ data, error } = await db
-          .from('productos')
-          .select(_PRODUCT_PUBLIC_COLUMNS)
-          .order('id', { ascending: true }));
+        for (const cols of _PRODUCT_COLUMN_SETS) {
+          ({ data, error } = await db.from('productos').select(cols).order('id', { ascending: true }));
+          // columna que aún no existe (42703) o sin permiso de lectura (42501) → probar sin ella
+          if (!error || !(_isMissingColumnError(error) || error.code === '42501')) break;
+        }
       }
       if (error) { console.error('Supabase error:', error?.code, error?.message); return Products.getAll(); }
       if (!data || !data.length) return this._seedFromDefaults();
