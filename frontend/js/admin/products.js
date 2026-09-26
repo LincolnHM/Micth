@@ -41,8 +41,8 @@ async function renderAdminProducts() {
   container.innerHTML = paginated.map(p => {
     const pct    = p.bottleTotalMl > 0 ? Math.round(p.bottleRemainingMl / p.bottleTotalMl * 100) : 0;
     const color  = pct > 50 ? '#4caf50' : pct > 20 ? '#ff9800' : '#ef5350';
-    const typeLabel = p.type === 'arabe' ? 'Árabe' : p.type === 'entero' ? 'Entero' : 'Diseñador';
-    const typeBadge = p.type === 'arabe' ? 'badge-arabe' : p.type === 'entero' ? 'badge-entero' : 'badge-dis';
+    const typeLabel = productTypeInfo(p.type).label;
+    const typeBadge = productTypeInfo(p.type).badge;
     const gLabel    = { hombre: '♂ Hombre', mujer: '♀ Mujer', unisex: '⚥ Unisex' }[p.gender] || '';
     const isEntero  = p.type === 'entero';
     const adminImg  = _normAdminImg(p.imageUrl) || buildProductImage(p);
@@ -106,7 +106,7 @@ async function renderAdminProducts() {
                    style="width:56px;background:transparent;border:none;border-bottom:1px solid var(--border-l);color:var(--text);font-size:.82rem;font-weight:600;padding:.1rem .2rem;outline:none;text-align:right"
                    onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border-l)'">
             <button class="btn-save-entero-stock" data-id="${p.id}"
-                    style="font-size:.72rem;padding:.3rem .75rem;background:var(--gold);color:#111;border:none;border-radius:var(--r);font-weight:700;cursor:pointer;transition:background .2s"
+                    style="font-size:.72rem;padding:.3rem .75rem;background:var(--gold);color:#fff;border:none;border-radius:var(--r);font-weight:700;cursor:pointer;transition:background .2s"
                     onmouseover="this.style.background='var(--gold-l)'" onmouseout="this.style.background='var(--gold)'">
               Guardar stock
             </button>
@@ -124,7 +124,7 @@ async function renderAdminProducts() {
                    style="width:72px;background:transparent;border:none;border-bottom:1px solid var(--border-l);color:var(--text);font-size:.82rem;font-weight:600;padding:.1rem .2rem;outline:none;text-align:right"
                    onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border-l)'">
             <button class="btn-save-entero-price" data-id="${p.id}"
-                    style="font-size:.72rem;padding:.3rem .75rem;background:var(--gold);color:#111;border:none;border-radius:var(--r);font-weight:700;cursor:pointer;transition:background .2s"
+                    style="font-size:.72rem;padding:.3rem .75rem;background:var(--gold);color:#fff;border:none;border-radius:var(--r);font-weight:700;cursor:pointer;transition:background .2s"
                     onmouseover="this.style.background='var(--gold-l)'" onmouseout="this.style.background='var(--gold)'">
               Guardar precio
             </button>
@@ -136,7 +136,7 @@ async function renderAdminProducts() {
           <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
             <strong style="font-size:.78rem;color:var(--text2)">${isEntero ? 'Precio (S/)' : 'Precios por talla (S/)'}</strong>
             <button class="btn-save-prices" data-id="${p.id}"
-                    style="font-size:.72rem;padding:.3rem .75rem;background:var(--gold);color:#111;border:none;border-radius:var(--r);font-weight:700;cursor:pointer;transition:background .2s"
+                    style="font-size:.72rem;padding:.3rem .75rem;background:var(--gold);color:#fff;border:none;border-radius:var(--r);font-weight:700;cursor:pointer;transition:background .2s"
                     onmouseover="this.style.background='var(--gold-l)'" onmouseout="this.style.background='var(--gold)'">
               Guardar precios
             </button>
@@ -399,7 +399,7 @@ async function renderInventorySection() {
     <div class="admin-card" style="margin-bottom:.75rem">
       <div class="admin-card-head">
         <div>
-          <span class="admin-type-badge ${p.type === 'arabe' ? 'badge-arabe' : 'badge-dis'}">${p.type === 'arabe' ? 'Árabe' : 'Diseñador'}</span>
+          <span class="admin-type-badge ${productTypeInfo(p.type).badge}">${productTypeInfo(p.type).label}</span>
           <h3 class="admin-product-name">${sanitize(p.brand)} – ${sanitize(p.name)}</h3>
         </div>
         <span style="font-size:1.1rem;font-weight:700;color:${color}">${pct}%</span>

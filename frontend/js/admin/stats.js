@@ -441,8 +441,8 @@ async function renderStatsSection(forceRefresh = false) {
         <div class="stat-card-head">🧴 Tipo fragancia</div>
         <div class="stat-card-body">
           ${Object.entries(typeQty).sort((a,b)=>b[1]-a[1]).map(([t,v]) => {
-            const clr = { arabe:'#a78bfa', entero:'#34d399' };
-            return bar(t.charAt(0).toUpperCase()+t.slice(1), v, totalT, clr[t]||'var(--gold)');
+            const clr = { arabe:'#a78bfa', entero:'#34d399', nicho:'#fbbf24' };
+            return bar(productTypeInfo(t).label, v, totalT, clr[t]||'var(--gold)');
           }).join('')}
         </div>
       </div>

@@ -304,8 +304,9 @@ function renderProducts() {
     const minPrice     = positiveSizeValues.length ? Math.min(...positiveSizeValues) : 0;
     const genderIcon  = { hombre: '♂', mujer: '♀', unisex: '⚥' }[p.gender] || '';
     const occasionLbl = { dia: 'Día', noche: 'Noche', ambas: 'Día & Noche' }[p.occasion] || '';
-    const typeLabel   = showAsEntero ? 'Entero' : (p.type === 'arabe' ? 'Árabe' : isEntero ? 'Entero' : 'Diseñador');
-    const typeBadge   = showAsEntero ? 'badge-entero' : (p.type === 'arabe' ? 'badge-arabe' : isEntero ? 'badge-entero' : 'badge-dis');
+    const typeInfo    = productTypeInfo(showAsEntero ? 'entero' : p.type);
+    const typeLabel   = typeInfo.label;
+    const typeBadge   = typeInfo.badge;
 
 
     const sizesHtml = showAsEntero

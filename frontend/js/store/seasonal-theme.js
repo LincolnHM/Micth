@@ -292,7 +292,7 @@
     document.addEventListener('click', e => {
       const campaign = document.body.dataset.campaign;
       if (!campaign || !CAMPAIGN_ICONS[campaign]) return;
-      const btn = e.target.closest('.size-btn:not([disabled]), .pd-size-btn-new, #pdCartBtn');
+      const btn = e.target.closest('.size-btn:not([disabled]), .pd-size-card:not([disabled]), #pdCartBtn, #pdBuyBtn');
       if (btn) burstDecor(btn, campaign);
     }, true);
   }

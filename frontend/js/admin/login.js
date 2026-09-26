@@ -70,7 +70,7 @@ function showNoDbScreen() {
       No se pudo conectar con la base de datos.<br>
       Verifica tu conexión a internet y recarga la página.
     </p>
-    <button onclick="location.reload()" style="margin-top:1.5rem;padding:.6rem 1.5rem;background:var(--gold);color:#111;border:none;border-radius:6px;font-weight:700;cursor:pointer">
+    <button onclick="location.reload()" style="margin-top:1.5rem;padding:.6rem 1.5rem;background:var(--gold);color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer">
       Recargar
     </button>
   `;

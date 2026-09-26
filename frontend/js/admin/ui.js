@@ -107,7 +107,7 @@ function showConfirmModal(message, onOk, onCancel) {
   btnOk.textContent = 'Confirmar';
   btnOk.style.cssText = [
     'padding:.55rem 1.25rem;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:700',
-    'background:#7c4fb0;border:1px solid #7c4fb0;color:#111'
+    'background:#7c4fb0;border:1px solid #7c4fb0;color:#fff'
   ].join(';');
 
   footer.appendChild(btnCan);

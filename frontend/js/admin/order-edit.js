@@ -77,7 +77,7 @@ async function openEditOrderModal(id) {
 
       <div style="display:flex;gap:.6rem;justify-content:flex-end;padding:.85rem 1.25rem;border-top:1px solid var(--border)">
         <button id="editCancelBtn" style="padding:.5rem 1.1rem;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:600;background:transparent;border:1px solid #555;color:#aaa">Cancelar</button>
-        <button id="editSaveBtn" style="padding:.5rem 1.25rem;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:700;background:var(--gold);border:1px solid var(--gold);color:#111">Guardar cambios</button>
+        <button id="editSaveBtn" style="padding:.5rem 1.25rem;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:700;background:var(--gold);border:1px solid var(--gold);color:#fff">Guardar cambios</button>
       </div>
     </div>`;
 

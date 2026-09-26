@@ -16,6 +16,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   document.dispatchEvent(new CustomEvent('catalogLoaded', { detail: _allProducts }));
   populateOlfFamilyFilter();
+  // Sin perfumes "nicho" en la base (p. ej. antes de correr el SQL de la
+  // categoría) el filtro se oculta en vez de mostrar 0 resultados
+  const hasNicho = _allProducts.some(p => p.type === 'nicho');
+  const nichoBtn = document.querySelector('.filter-btn[data-filter="nicho"]');
+  if (nichoBtn) nichoBtn.style.display = hasNicho ? '' : 'none';
+  document.querySelector('.filter-row-1-types')?.classList.toggle('no-nicho', !hasNicho);
   renderProducts();
   renderRecentlyViewed();
   renderCombos().catch(err => console.error('[MICHT] Error cargando combos:', err));

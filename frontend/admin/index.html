@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../imgGato/web.png">
-  <link rel="stylesheet" href="../css/style.css?v=20260926-1204">
+  <link rel="stylesheet" href="../css/style.css?v=20260926-1241">
   <style>
     html, body {
       background: #050505 !important;
@@ -417,7 +417,7 @@
                  onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='var(--border)'">
           <div style="display:flex;gap:.4rem;flex-wrap:wrap">
             <button class="admin-type-filter active" data-type="all"
-                    style="font-size:.78rem;padding:.42rem .85rem;border-radius:50px;border:1px solid var(--border);background:var(--gold);color:#111;font-weight:700;cursor:pointer;transition:all .2s">
+                    style="font-size:.78rem;padding:.42rem .85rem;border-radius:50px;border:1px solid var(--border);background:var(--gold);color:#fff;font-weight:700;cursor:pointer;transition:all .2s">
               Todos
             </button>
             <button class="admin-type-filter" data-type="decant"
@@ -463,7 +463,7 @@
                  onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='var(--border)'">
           <div style="display:flex;gap:.35rem;flex-shrink:0">
             <button class="precios-filter-btn active" data-ptype="all"
-                    style="padding:.4rem .85rem;border-radius:var(--r);font-size:.8rem;font-weight:600;border:1px solid var(--border);background:var(--gold);color:#111;cursor:pointer;transition:all .15s">
+                    style="padding:.4rem .85rem;border-radius:var(--r);font-size:.8rem;font-weight:600;border:1px solid var(--border);background:var(--gold);color:#fff;cursor:pointer;transition:all .15s">
               Todos
             </button>
             <button class="precios-filter-btn" data-ptype="decant"
@@ -1080,6 +1080,7 @@
             <select id="editType">
               <option value="diseñador">Diseñador</option>
               <option value="arabe">Árabe</option>
+              <option value="nicho">Nicho</option>
               <option value="entero">Perfume Entero</option>
             </select>
           </div>
@@ -1412,32 +1413,32 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.min.js" integrity="sha384-fPWur1rx/DE6YtXP/x0MD6dd90RgnVsz5yX/DIg7CcVAnTBZsENWuIcpvVTM39ti" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con la tienda) — el orden importa -->
-  <script src="../js/shared/data-core.js?v=20260926-1204"></script>
-  <script src="../js/shared/catalog.js?v=20260926-1204"></script>
-  <script src="../js/shared/data.js?v=20260926-1204"></script>
-  <script src="../js/shared/supabase-config.js?v=20260926-1204"></script>
-  <script src="../js/shared/cloud-orders.js?v=20260926-1204"></script>
-  <script src="../js/shared/cloud-gallery.js?v=20260926-1204"></script>
-  <script src="../js/shared/cloud-products.js?v=20260926-1204"></script>
-  <script src="../js/shared/cloud-combos.js?v=20260926-1204"></script>
+  <script src="../js/shared/data-core.js?v=20260926-1241"></script>
+  <script src="../js/shared/catalog.js?v=20260926-1241"></script>
+  <script src="../js/shared/data.js?v=20260926-1241"></script>
+  <script src="../js/shared/supabase-config.js?v=20260926-1241"></script>
+  <script src="../js/shared/cloud-orders.js?v=20260926-1241"></script>
+  <script src="../js/shared/cloud-gallery.js?v=20260926-1241"></script>
+  <script src="../js/shared/cloud-products.js?v=20260926-1241"></script>
+  <script src="../js/shared/cloud-combos.js?v=20260926-1241"></script>
   <!-- Panel admin -->
-  <script src="../js/admin/core.js?v=20260926-1204"></script>
-  <script src="../js/admin/ui.js?v=20260926-1204"></script>
-  <script src="../js/admin/login.js?v=20260926-1204"></script>
-  <script src="../js/admin/nav.js?v=20260926-1204"></script>
-  <script src="../js/admin/dashboard.js?v=20260926-1204"></script>
-  <script src="../js/admin/products.js?v=20260926-1204"></script>
-  <script src="../js/admin/catalog-pdf.js?v=20260926-1204"></script>
-  <script src="../js/admin/orders.js?v=20260926-1204"></script>
-  <script src="../js/admin/order-edit.js?v=20260926-1204"></script>
-  <script src="../js/admin/orders-realtime.js?v=20260926-1204"></script>
-  <script src="../js/admin/combos.js?v=20260926-1204"></script>
-  <script src="../js/admin/site-content.js?v=20260926-1204"></script>
-  <script src="../js/admin/users.js?v=20260926-1204"></script>
-  <script src="../js/admin/accounting.js?v=20260926-1204"></script>
-  <script src="../js/admin/stats.js?v=20260926-1204"></script>
-  <script src="../js/admin/pricing.js?v=20260926-1204"></script>
-  <script src="../js/admin/tools.js?v=20260926-1204"></script>
-  <script src="../js/admin/cash.js?v=20260926-1204"></script>
+  <script src="../js/admin/core.js?v=20260926-1241"></script>
+  <script src="../js/admin/ui.js?v=20260926-1241"></script>
+  <script src="../js/admin/login.js?v=20260926-1241"></script>
+  <script src="../js/admin/nav.js?v=20260926-1241"></script>
+  <script src="../js/admin/dashboard.js?v=20260926-1241"></script>
+  <script src="../js/admin/products.js?v=20260926-1241"></script>
+  <script src="../js/admin/catalog-pdf.js?v=20260926-1241"></script>
+  <script src="../js/admin/orders.js?v=20260926-1241"></script>
+  <script src="../js/admin/order-edit.js?v=20260926-1241"></script>
+  <script src="../js/admin/orders-realtime.js?v=20260926-1241"></script>
+  <script src="../js/admin/combos.js?v=20260926-1241"></script>
+  <script src="../js/admin/site-content.js?v=20260926-1241"></script>
+  <script src="../js/admin/users.js?v=20260926-1241"></script>
+  <script src="../js/admin/accounting.js?v=20260926-1241"></script>
+  <script src="../js/admin/stats.js?v=20260926-1241"></script>
+  <script src="../js/admin/pricing.js?v=20260926-1241"></script>
+  <script src="../js/admin/tools.js?v=20260926-1241"></script>
+  <script src="../js/admin/cash.js?v=20260926-1241"></script>
 </body>
 </html>

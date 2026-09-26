@@ -3,6 +3,10 @@
 let _pdProduct  = null;
 let _pdSelSize  = null;
 let _pdSelPrice = 0;
+let _pdQty      = 1;
+
+// Talla que se muestra con la etiqueta "MÁS VENDIDO" y que viene elegida al abrir
+const BEST_SELLER_SIZE = '5ml';
 
 // ─── El detalle es una "página" más del historial ────────────────────────────
 // Cada perfume abierto agrega una entrada (?p=ID). Así el botón "atrás" del
@@ -38,6 +42,7 @@ window.addEventListener('popstate', e => {
 
 // Perfume agotado: el botón del carrito pasa a pedir aviso por WhatsApp
 function _pdSetNotify(cartBtn, cartTxt, p) {
+  _pdSetBuyable(false);
   cartBtn.disabled = false;
   cartBtn.classList.remove('pd-cart-pick');
   cartBtn.classList.add('pd-cart-wa');
@@ -111,72 +116,56 @@ function _createPdModal() {
           <div id="pdPriceRow" class="pd-price-row"></div>
           <button type="button" id="pdAltHint" class="pd-alt-hint" hidden></button>
 
-          <!-- Selector de tamaño -->
+          <!-- Tamaños: tarjetas con precio y sprays -->
           <div id="pdSizeSection" class="pd-size-section">
-            <div class="pd-size-header">
-              <span class="pd-size-label">SELECCIONAR TAMAÑO</span>
-              <button id="pdGuideBtn" class="pd-guide-link">Guía de decants</button>
-            </div>
-            <div id="pdSizesRow" class="pd-sizes-grid"></div>
-            <div id="pdGuideTooltip" class="pd-guide-tooltip" style="display:none">
-              <p class="pd-guide-title">¿Cuánto dura cada decant?</p>
-              <div id="pdGuideRows" class="pd-guide-rows"></div>
-              <p class="pd-guide-note">Basado en 2-3 sprays por uso diario</p>
-            </div>
+            <p class="pd-notes-section-title">ELIGE TU TAMAÑO</p>
+            <div id="pdSizesRow" class="pd-size-cards"></div>
+          </div>
 
-            <!-- Visualizador Interactivo de Frascos (Decants) -->
-            <div id="pdDecantVisualizer" class="pd-decant-visualizer" style="display:none">
-              <div class="pd-visual-bottles">
-                <!-- Botella 2ml -->
-                <div class="pd-visual-bottle-card" data-visual-size="2ml">
-                  <div class="pd-bottle-cap"></div>
-                  <div class="pd-bottle-body size-2ml">
-                    <div class="pd-bottle-liquid"></div>
-                    <span class="pd-bottle-label-ml">2ml</span>
-                  </div>
-                </div>
-                <!-- Botella 3ml -->
-                <div class="pd-visual-bottle-card" data-visual-size="3ml">
-                  <div class="pd-bottle-cap"></div>
-                  <div class="pd-bottle-body size-3ml">
-                    <div class="pd-bottle-liquid"></div>
-                    <span class="pd-bottle-label-ml">3ml</span>
-                  </div>
-                </div>
-                <!-- Botella 5ml -->
-                <div class="pd-visual-bottle-card" data-visual-size="5ml">
-                  <div class="pd-bottle-cap"></div>
-                  <div class="pd-bottle-body size-5ml">
-                    <div class="pd-bottle-liquid"></div>
-                    <span class="pd-bottle-label-ml">5ml</span>
-                  </div>
-                </div>
-                <!-- Botella 10ml -->
-                <div class="pd-visual-bottle-card" data-visual-size="10ml">
-                  <div class="pd-bottle-cap"></div>
-                  <div class="pd-bottle-body size-10ml">
-                    <div class="pd-bottle-liquid"></div>
-                    <span class="pd-bottle-label-ml">10ml</span>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Stats de duración y rendimiento -->
-              <div class="pd-visual-stats">
-                <div class="pd-stat-item">
-                  <div class="pd-stat-lbl-row">
-                    <span class="pd-stat-lbl">RENDIMIENTO APROX.</span>
-                    <span id="pdStatValSprays" class="pd-stat-val">~0 sprays</span>
-                  </div>
-                  <div class="pd-stat-bar-container">
-                    <div id="pdStatBarSprays" class="pd-stat-bar" style="width: 0%"></div>
-                  </div>
-                </div>
-                <div class="pd-stat-item pd-stat-duration-box">
-                  <span class="pd-stat-lbl">DURACIÓN ESTIMADA</span>
-                  <span id="pdStatValDuration" class="pd-stat-val-highlight">Selecciona un tamaño</span>
-                </div>
-              </div>
+          <!-- Preguntas frecuentes (textos en js/store/faq.js) -->
+          <div id="pdFaq" class="pd-faq"></div>
+
+          <!-- Combínalo: otros perfumes para sumar al mismo pedido -->
+          <div id="pdCombine" class="pd-combine" hidden>
+            <p class="pd-notes-section-title">COMBÍNALO</p>
+            <p class="pd-combine-sub">Suma otros perfumes a tu pedido con un toque.</p>
+            <div id="pdCombineList" class="pd-combine-list"></div>
+          </div>
+
+          <!-- Cantidad y total -->
+          <div id="pdQtyRow" class="pd-qty-row">
+            <div class="pd-qty" role="group" aria-label="Cantidad">
+              <button type="button" class="pd-qty-btn" data-qty="-1" aria-label="Quitar uno">−</button>
+              <span id="pdQtyVal" class="pd-qty-val" aria-live="polite">1</span>
+              <button type="button" class="pd-qty-btn" data-qty="1" aria-label="Agregar uno">+</button>
+            </div>
+            <p class="pd-total">Total <strong id="pdTotal">S/ 0</strong></p>
+          </div>
+
+          <!-- Botones de compra (en el celular quedan fijos abajo) -->
+          <div class="pd-actions">
+            <button id="pdCartBtn" class="pd-cart-btn" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0h8"/>
+              </svg>
+              <span id="pdCartBtnText">Añadir al carrito</span>
+            </button>
+            <button id="pdBuyBtn" class="pd-buy-btn" type="button">Comprar ahora</button>
+          </div>
+
+          <!-- Confianza -->
+          <div class="pd-trust">
+            <div class="pd-trust-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path stroke-linecap="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              <span>Perfumes<br>100% originales</span>
+            </div>
+            <div class="pd-trust-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path stroke-linecap="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+              <span>Envíos a<br>todo el Perú</span>
+            </div>
+            <div class="pd-trust-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+              <span>Delivery gratis<br>en Soritor</span>
             </div>
           </div>
 
@@ -198,31 +187,6 @@ function _createPdModal() {
             <div id="pdNotesList" class="pd-notes-list"></div>
           </div>
 
-          <!-- Botón carrito -->
-          <div class="pd-actions">
-            <button id="pdCartBtn" class="pd-cart-btn" disabled>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0h8"/>
-              </svg>
-              <span id="pdCartBtnText">Selecciona un tamaño</span>
-            </button>
-          </div>
-
-          <!-- Trust badges -->
-          <div class="pd-trust">
-            <div class="pd-trust-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path stroke-linecap="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-              <span>Originalidad<br>Garantizada</span>
-            </div>
-            <div class="pd-trust-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path stroke-linecap="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-              <span>Envío a<br>Todo el Perú</span>
-            </div>
-            <div class="pd-trust-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path stroke-linecap="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-              <span>Pago<br>Seguro</span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -256,37 +220,141 @@ function _createPdModal() {
   });
   document.addEventListener('keydown', _pdEscHandler);
 
-  // Guía de decants: toggle tooltip
-  document.getElementById('pdGuideBtn').addEventListener('click', e => {
-    e.stopPropagation();
-    const tt = document.getElementById('pdGuideTooltip');
-    tt.style.display = tt.style.display === 'none' ? 'block' : 'none';
-  });
+  // Preguntas frecuentes (mismos textos que la sección "¿Cómo comprar?")
+  if (typeof faqForProductHtml === 'function') document.getElementById('pdFaq').innerHTML = faqForProductHtml();
 
+  // Cantidad
+  el.querySelectorAll('.pd-qty-btn').forEach(b => b.addEventListener('click', () => {
+    _pdQty = Math.max(1, Math.min(10, _pdQty + parseInt(b.dataset.qty)));
+    _pdUpdateTotals();
+  }));
+
+  // Combínalo: cada casilla cambia el total
+  document.getElementById('pdCombineList').addEventListener('change', _pdUpdateTotals);
+
+  // Añadir al carrito (el perfume × cantidad + lo marcado en Combínalo)
   document.getElementById('pdCartBtn').addEventListener('click', () => {
-    // Si está en modo WhatsApp, el onclick del botón ya lo maneja
-    if (!_pdProduct || document.getElementById('pdCartBtn').classList.contains('pd-cart-wa')) return;
-    if (!_pdSelSize) {
-      // Sin talla elegida: llevar al selector y resaltarlo (la barra está fija
-      // abajo en el celular, lejos de los botones de talla)
-      const sec = document.getElementById('pdSizeSection');
-      sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      sec.classList.remove('pd-size-pulse');
-      void sec.offsetWidth;
-      sec.classList.add('pd-size-pulse');
-      return;
-    }
-    Cart.add(_pdProduct, _pdSelSize, _pdSelPrice);
     const btn = document.getElementById('pdCartBtn');
-    const txt = document.getElementById('pdCartBtnText');
+    // En modo WhatsApp (agotado / consultar precio), el onclick del botón ya lo maneja
+    if (!_pdProduct || btn.classList.contains('pd-cart-wa')) return;
+    if (!_pdSelSize) { _pdPulseSizes(); return; }
+    _pdAddSelectionToCart();
     btn.classList.add('added');
-    txt.textContent = '¡Agregado al carrito! ✓';
-    setTimeout(() => {
-      btn.classList.remove('added');
-      txt.textContent = `AÑADIR AL CARRITO — S/ ${_pdSelPrice}`;
-    }, 2000);
+    document.getElementById('pdCartBtnText').textContent = '¡Agregado! ✓';
+    setTimeout(() => { btn.classList.remove('added'); _pdUpdateTotals(); }, 1800);
     renderProducts();
   });
+
+  // Comprar ahora: agrega lo mismo y va directo a finalizar el pedido
+  document.getElementById('pdBuyBtn').addEventListener('click', () => {
+    if (!_pdProduct) return;
+    if (!_pdSelSize) { _pdPulseSizes(); return; }
+    _pdAddSelectionToCart();
+    renderProducts();
+    const stockErrors = validateCartStock();
+    if (stockErrors.length) { showStockAlert(stockErrors); return; }
+    Cart.hideCart();
+    Checkout.open();
+  });
+}
+
+// Sin talla elegida: llevar al selector y resaltarlo
+function _pdPulseSizes() {
+  const sec = document.getElementById('pdSizeSection');
+  sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  sec.classList.remove('pd-size-pulse');
+  void sec.offsetWidth;
+  sec.classList.add('pd-size-pulse');
+}
+
+// Tarjeta de un tamaño: precio, sprays aproximados y etiqueta opcional
+function _pdSizeCardHtml({ size, price, off = false, note = '', badge = '' }) {
+  const noteTxt = off ? (price > 0 ? 'Agotado' : 'Pronto') : note;
+  return `
+    <button type="button" class="pd-size-card ${off ? 'pd-size-off' : ''}" data-size="${escapeAttr(size)}" data-price="${price}"
+            ${off ? 'disabled aria-disabled="true"' : ''}>
+      ${badge ? `<span class="pd-size-badge">${badge}</span>` : ''}
+      <span class="pd-size-ml">${sanitize(size)}</span>
+      <span class="pd-size-price">${price > 0 ? `S/ ${price}` : '—'}</span>
+      ${noteTxt ? `<span class="pd-size-note">${noteTxt}</span>` : ''}
+    </button>`;
+}
+
+// ~10 sprays por ml (mismo cálculo que "¿Qué tamaño me conviene?" en faq.js)
+function _pdSpraysNote(size) {
+  const ml = parseFloat(size);
+  return isNaN(ml) ? '' : `~${Math.round(ml * 10)} sprays`;
+}
+
+const _pdMoney = n => (Math.round(n * 100) / 100).toString();
+
+// Perfumes marcados en "Combínalo"
+function _pdCheckedExtras() {
+  const all = _allProducts || Products.getAll();
+  return [...document.querySelectorAll('#pdCombineList .pd-combine-check:checked')].map(i => ({
+    product: all.find(x => x.id === parseInt(i.dataset.id)),
+    size:    i.dataset.size,
+    price:   parseFloat(i.dataset.price) || 0
+  })).filter(x => x.product && x.price > 0);
+}
+
+function _pdUpdateTotals() {
+  document.getElementById('pdQtyVal').textContent = _pdQty;
+  const total = (_pdSelPrice || 0) * _pdQty + _pdCheckedExtras().reduce((s, x) => s + x.price, 0);
+  document.getElementById('pdTotal').textContent = `S/ ${_pdMoney(total)}`;
+  const btn = document.getElementById('pdCartBtn');
+  if (btn.classList.contains('pd-cart-wa') || btn.classList.contains('added')) return;
+  document.getElementById('pdCartBtnText').textContent = _pdSelSize ? `Añadir · S/ ${_pdMoney(total)}` : 'Elige un tamaño';
+}
+
+function _pdAddSelectionToCart() {
+  const p = _pdProduct;
+  for (let i = 0; i < _pdQty; i++) Cart.add(p, _pdSelSize, _pdSelPrice);
+  const extras = _pdCheckedExtras();
+  extras.forEach(x => Cart.add(x.product, x.size, x.price));
+  const count = _pdQty + extras.length;
+  // Listo: desmarcar y volver a 1 para no agregar lo mismo dos veces
+  document.querySelectorAll('#pdCombineList .pd-combine-check:checked').forEach(i => { i.checked = false; });
+  _pdQty = 1;
+  _pdUpdateTotals();
+  showCartToast(count > 1 ? `🛍 Agregamos ${count} productos a tu carrito` : `${p.brand} – ${p.name} (${_pdSelSize}) agregado`);
+}
+
+// Cantidad, total, Combínalo y "Comprar ahora" solo tienen sentido si se puede comprar
+function _pdSetBuyable(on) {
+  document.getElementById('pdBuyBtn').hidden = !on;
+  document.getElementById('pdQtyRow').hidden = !on;
+  if (!on) document.getElementById('pdCombine').hidden = true;
+}
+
+// Talla chica para sugerir en "Combínalo" (para probarlo): 3ml, si no 2ml, 5ml o 10ml
+function _pdCombineSize(x) {
+  for (const s of ['3ml', '2ml', '5ml', '10ml']) {
+    if ((x.sizes?.[s] || 0) > 0 && bottleHasMl(x, s)) return s;
+  }
+  return null;
+}
+
+// Sugerencias de "Combínalo": hasta 3 perfumes disponibles, mezclando tipos
+// (en un árabe se sugiere primero un diseñador y un nicho, y viceversa), del
+// mismo público, priorizando los populares y los de otro momento del día.
+function _pdCombineSuggestions(p, all, exclude) {
+  if (p.type === 'entero') return [];
+  const genderOk = x => p.gender === 'hombre' ? x.gender !== 'mujer'
+                      : p.gender === 'mujer'  ? x.gender !== 'hombre' : true;
+  const cands = all.filter(x => x.id !== p.id && x.type !== 'entero' && !exclude.has(x.id)
+                             && isDecantPurchasable(x) && genderOk(x) && _pdCombineSize(x));
+  // pequeño desempate distinto por perfume, para que no se sugieran siempre los mismos
+  const score = x => (x.featured ? 2 : 0) + (x.occasion !== p.occasion ? 1 : 0)
+                   + (x.olfFamily !== p.olfFamily ? .5 : 0) + ((x.id * 7 + p.id * 13) % 10) / 25;
+  cands.sort((a, b) => score(b) - score(a));
+  const order = p.type === 'arabe' ? ['diseñador', 'nicho', 'arabe']
+              : p.type === 'nicho' ? ['arabe', 'diseñador', 'nicho']
+              :                      ['arabe', 'nicho', 'diseñador'];
+  const picks = [];
+  order.forEach(t => { const x = cands.find(c => c.type === t); if (x) picks.push(x); });
+  for (const x of cands) { if (picks.length >= 3) break; if (!picks.includes(x)) picks.push(x); }
+  return picks.slice(0, 3).map(x => { const size = _pdCombineSize(x); return { product: x, size, price: x.sizes[size] }; });
 }
 
 function openPdModal(productId, { fromHistory = false } = {}) {
@@ -308,7 +376,7 @@ function openPdModal(productId, { fromHistory = false } = {}) {
   const all = _allProducts || Products.getAll();
 
   const isEntero    = p.type === 'entero';
-  const typeLabel   = p.type === 'arabe' ? 'Árabe' : isEntero ? 'Perfume Entero' : 'Diseñador';
+  const typeLabel   = isEntero ? 'Perfume Entero' : productTypeInfo(p.type).label;
   const occasionLbl = { dia: 'Día', noche: 'Noche', ambas: 'Día & Noche' }[p.occasion] || '';
 
   // ── Imagen ───────────────────────────────────────────────
@@ -382,170 +450,60 @@ function openPdModal(productId, { fromHistory = false } = {}) {
     priceRow.style.display = 'flex';
   }
 
-  // ── Guía de decants (solo decants) ──────────────────────
-  const guideBtn = document.getElementById('pdGuideBtn');
-  const decantVisualizer = document.getElementById('pdDecantVisualizer');
-  document.getElementById('pdGuideTooltip').style.display = 'none';
-  guideBtn.style.display = isEntero ? 'none' : 'inline-block';
-
-  if (!isEntero) {
-    document.getElementById('pdGuideRows').innerHTML = Object.keys(p.sizes).map(ml => {
-      const n = parseFloat(ml);
-      if (isNaN(n)) return '';
-      const sprays   = Math.round(n / 0.1);
-      const weeksMin = Math.max(1, Math.round((n / 0.3) / 7));
-      const weeksMax = Math.max(1, Math.round((n / 0.2) / 7));
-      const dur = weeksMax < 2 ? `${Math.round(n/0.3)}-${Math.round(n/0.2)} días`
-                               : `${weeksMin}-${weeksMax} semanas`;
-      return `<div class="pd-guide-row">
-        <span class="pd-guide-ml">${sanitize(ml)}</span>
-        <span class="pd-guide-sprays">~${sprays} sprays</span>
-        <span class="pd-guide-dur">${dur}</span>
-      </div>`;
-    }).join('');
-
-    // Mostrar visualizador
-    if (decantVisualizer) {
-      decantVisualizer.style.display = 'block';
-      // Resetear visualizador
-      decantVisualizer.querySelectorAll('.pd-visual-bottle-card').forEach(c => c.classList.remove('active'));
-      document.getElementById('pdStatBarSprays').style.width = '0%';
-      document.getElementById('pdStatValSprays').textContent = '~0 sprays';
-      document.getElementById('pdStatValDuration').textContent = 'Selecciona un tamaño';
-    }
-  } else {
-    if (decantVisualizer) decantVisualizer.style.display = 'none';
-  }
-
-  // ── Botones de tamaño ────────────────────────────────────
+  // ── Tamaños: tarjetas con precio y sprays ────────────────
   const sizesRow = document.getElementById('pdSizesRow');
   const cartBtn  = document.getElementById('pdCartBtn');
   const cartTxt  = document.getElementById('pdCartBtnText');
-  cartBtn.classList.remove('added');
+  cartBtn.classList.remove('added', 'pd-cart-wa', 'pd-cart-pick');
+  cartBtn.onclick  = null;
+  cartBtn.disabled = false;
+  _pdQty = 1;
+  _pdSetBuyable(true);
+
+  const selectSize = (size, price) => {
+    _pdSelSize  = size;
+    _pdSelPrice = price;
+    sizesRow.querySelectorAll('.pd-size-card').forEach(c => c.classList.toggle('active', c.dataset.size === size));
+    if (!isEntero) priceRow.innerHTML = `<strong class="pd-price-main">S/ ${price}</strong>`;
+    _pdUpdateTotals();
+  };
 
   if (isEntero) {
-    const _sp  = Object.values(p.sizes || {}).filter(v => v > 0);
-    const price = p.enteroPrice > 0 ? p.enteroPrice : (_sp.length ? Math.min(..._sp) : 0);
-    cartBtn.classList.remove('pd-cart-wa', 'pd-cart-pick');
-    cartBtn.onclick = null;
-
+    // Frasco entero: una sola opción con su clave REAL ("Unidad", "Set"…), que
+    // es la que valida la base de datos (antes se mandaba siempre "Unidad" y
+    // un gift set con clave "Set" quedaba rechazado)
+    const [sizeKey, sizePrice] = Object.entries(p.sizes || {}).find(([, v]) => v > 0) || ['Unidad', 0];
+    const price = sizePrice > 0 ? sizePrice : (p.enteroPrice > 0 ? p.enteroPrice : 0);
     if (!p.inStock) {
-      // Agotado → pedir aviso por WhatsApp
-      sizesRow.innerHTML = `<button class="pd-size-btn-new pd-size-disabled" disabled>Unidad</button>`;
+      sizesRow.innerHTML = _pdSizeCardHtml({ size: sizeKey, price, off: true });
       _pdSetNotify(cartBtn, cartTxt, p);
     } else if (price > 0) {
-      // Precio configurado en admin → agregar al carrito
-      sizesRow.innerHTML = `<button class="pd-size-btn-new active" data-size="Unidad" data-price="${price}">Unidad</button>`;
-      _pdSelSize  = 'Unidad';
-      _pdSelPrice = price;
-      cartBtn.disabled = false;
-      cartTxt.textContent = `AÑADIR AL CARRITO — S/ ${price}`;
+      sizesRow.innerHTML = _pdSizeCardHtml({ size: sizeKey, price, note: 'Frasco completo' });
+      selectSize(sizeKey, price);
     } else {
-      // Sin precio en admin → botón WhatsApp
+      // Sin precio en el panel → consultar por WhatsApp
       sizesRow.innerHTML = '';
-      cartBtn.disabled = false;
+      _pdSetBuyable(false);
       cartBtn.classList.add('pd-cart-wa');
       cartTxt.textContent = '💬 Consultar por WhatsApp';
       const waText = encodeURIComponent(`Hola, me interesa el perfume ${p.brand} – ${p.name}. ¿Cuál es el precio?`);
-      cartBtn.onclick = (e) => {
-        e.preventDefault();
-        window.open(`https://wa.me/51917452643?text=${waText}`, '_blank');
-      };
+      cartBtn.onclick = e => { e.preventDefault(); window.open(`https://wa.me/51917452643?text=${waText}`, '_blank'); };
     }
   } else {
-    cartBtn.classList.remove('pd-cart-wa');
-    cartBtn.onclick = null;
-    const anySizeOn = Object.entries(p.sizes).some(([ml, price]) => p.inStock && bottleHasMl(p, ml) && price > 0);
-    // Con tallas disponibles el botón queda activo: si aún no eligió talla, lo
-    // lleva al selector (ver listener en _createPdModal)
-    cartBtn.disabled = false;
-    cartBtn.classList.toggle('pd-cart-pick', anySizeOn);
-    cartTxt.textContent = 'Elige un tamaño';
-    if (!anySizeOn) _pdSetNotify(cartBtn, cartTxt, p);
-    sizesRow.innerHTML = Object.entries(p.sizes).map(([ml, price]) => {
-      const sizeOff = !p.inStock || !bottleHasMl(p, ml) || price === 0;
-      return `
-      <button class="pd-size-btn-new ${sizeOff ? 'pd-size-disabled' : ''}"
-              data-size="${escapeAttr(ml)}" data-price="${price}"
-              ${sizeOff ? 'disabled' : ''}>
-        ${sanitize(ml)}
-      </button>`;
-    }).join('');
-
-    const selectVisualSize = (sizeStr) => {
-      if (isEntero || !decantVisualizer) return;
-      const sizeVal = parseFloat(sizeStr);
-      let pct = 0;
-      let spraysText = '~0 sprays';
-      let durText = '';
-      if (sizeVal <= 2.5) {
-        pct = 18; spraysText = '~15-20 sprays'; durText = '🧪 2 a 5 días (Ideal para probar)';
-      } else if (sizeVal <= 3.5) {
-        pct = 33; spraysText = '~30-45 sprays'; durText = '🔥 5 a 10 días (Ideal para probar)';
-      } else if (sizeVal <= 6) {
-        pct = 60; spraysText = '~50-75 sprays'; durText = '✈️ 12 a 18 días (Ideal para viajes)';
-      } else {
-        pct = 100; spraysText = '~100-150 sprays'; durText = '👑 25 a 35 días (Uso continuo)';
-      }
-
-      decantVisualizer.querySelectorAll('.pd-visual-bottle-card').forEach(c => {
-        const cSize = c.dataset.visualSize;
-        if (cSize === sizeStr || (cSize === '2ml' && sizeVal <= 2.5) || (cSize === '3ml' && sizeVal > 2.5 && sizeVal <= 3.5) || (cSize === '5ml' && sizeVal > 3.5 && sizeVal <= 6) || (cSize === '10ml' && sizeVal > 6)) {
-          c.classList.add('active');
-          if (window.gsap) {
-            window.gsap.fromTo(c, { scale: 0.95 }, { scale: 1.08, duration: 0.4, ease: "back.out(2.5)" });
-          }
-        } else {
-          c.classList.remove('active');
-        }
-      });
-      
-      if (window.gsap) {
-        window.gsap.to('#pdStatBarSprays', { width: pct + '%', duration: 0.5, ease: "power2.out" });
-      } else {
-        const bar = document.getElementById('pdStatBarSprays');
-        if (bar) bar.style.width = pct + '%';
-      }
-      const valSprays = document.getElementById('pdStatValSprays');
-      if (valSprays) valSprays.textContent = spraysText;
-      const valDuration = document.getElementById('pdStatValDuration');
-      if (valDuration) valDuration.textContent = durText;
-    };
-
-    sizesRow.querySelectorAll('.pd-size-btn-new:not([disabled])').forEach(btn => {
-      btn.addEventListener('click', () => {
-        sizesRow.querySelectorAll('.pd-size-btn-new').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        _pdSelSize  = btn.dataset.size;
-        _pdSelPrice = parseFloat(btn.dataset.price);
-        cartBtn.disabled = false;
-        cartBtn.classList.remove('pd-cart-pick');
-        cartTxt.textContent = `AÑADIR AL CARRITO — S/ ${_pdSelPrice}`;
-        cartBtn.classList.remove('added');
-        priceRow.innerHTML = _pdSelPrice > 0
-          ? `<strong class="pd-price-main">S/ ${_pdSelPrice}</strong>`
-          : `<span class="pd-price-consultar">Consultar precio</span>`;
-
-        selectVisualSize(btn.dataset.size);
-      });
-    });
-
-    // Vincular clics en las botellitas visuales hacia los botones de tamaño
-    if (decantVisualizer) {
-      decantVisualizer.querySelectorAll('.pd-visual-bottle-card').forEach(card => {
-        // Clonar para evitar listeners duplicados al reabrir modal
-        const newCard = card.cloneNode(true);
-        card.parentNode.replaceChild(newCard, card);
-        newCard.addEventListener('click', () => {
-          if (!p.inStock) return;
-          const targetSize = newCard.dataset.visualSize;
-          // Buscar botón de tamaño
-          const matchBtn = sizesRow.querySelector(`.pd-size-btn-new[data-size="${targetSize}"]`);
-          if (matchBtn) matchBtn.click();
-        });
-      });
-    }
+    const entries = Object.entries(p.sizes || {});
+    const avail   = ([ml, price]) => p.inStock && bottleHasMl(p, ml) && price > 0;
+    sizesRow.innerHTML = entries.map(e => _pdSizeCardHtml({
+      size: e[0], price: e[1], off: !avail(e), note: _pdSpraysNote(e[0]),
+      badge: e[0] === BEST_SELLER_SIZE && avail(e) ? 'MÁS VENDIDO' : ''
+    })).join('');
+    // Viene elegida la más vendida (o la primera disponible)
+    const pick = entries.find(e => e[0] === BEST_SELLER_SIZE && avail(e)) || entries.find(avail);
+    if (pick) selectSize(pick[0], pick[1]);
+    else _pdSetNotify(cartBtn, cartTxt, p);
   }
+  sizesRow.querySelectorAll('.pd-size-card:not([disabled])').forEach(card => {
+    card.addEventListener('click', () => selectSize(card.dataset.size, parseFloat(card.dataset.price)));
+  });
 
   // ── Descripción ──────────────────────────────────────────
   document.getElementById('pdDesc').textContent = p.description || '';
@@ -633,8 +591,28 @@ function openPdModal(productId, { fromHistory = false } = {}) {
     document.getElementById('pdAltScroll').innerHTML = '';
   }
 
+  // ── Combínalo ─────────────────────────────────────────────
+  const altIds  = new Set(alts.map(x => x.id));
+  const extras  = _pdSelSize ? _pdCombineSuggestions(p, all, altIds) : [];
+  const combine = document.getElementById('pdCombine');
+  document.getElementById('pdCombineList').innerHTML = extras.map(({ product: x, size, price }) => {
+    const t = productTypeInfo(x.type);
+    return `
+    <label class="pd-combine-item">
+      <input type="checkbox" class="pd-combine-check" data-id="${x.id}" data-size="${escapeAttr(size)}" data-price="${price}">
+      <span class="pd-combine-thumb">${x.imageUrl ? `<img src="${escapeAttr(x.imageUrl)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : ''}</span>
+      <span class="pd-combine-info">
+        <span class="pd-combine-name">${sanitize(x.name)}</span>
+        <span class="pd-combine-meta"><span class="pd-combine-type ${t.badge}">${t.label}</span>${sanitize(x.brand)} · ${sanitize(size)}</span>
+      </span>
+      <span class="pd-combine-price">S/ ${price}</span>
+    </label>`;
+  }).join('');
+  combine.hidden = !extras.length;
+  extras.forEach(x => altIds.add(x.product.id));   // y no repetirlos en "Descubre más"
+  _pdUpdateTotals();
+
   // ── Descubre más vibras ───────────────────────────────────
-  const altIds = new Set(alts.map(x => x.id));
   const similar = all
     .filter(x => {
       if (x.id === p.id || altIds.has(x.id) || !productIsPurchasable(x)) return false;

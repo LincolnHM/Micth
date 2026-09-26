@@ -27,7 +27,7 @@ function buildProductImage(product) {
   const seed = hashString(`${product.brand}::${product.name}`);
   const primaryHue = seed % 360;
   const accentHue = (primaryHue + 24) % 360;
-  const label = product.type === 'arabe' ? 'Colección árabe' : 'Colección diseñador';
+  const label = product.type === 'arabe' ? 'Colección árabe' : product.type === 'nicho' ? 'Colección nicho' : 'Colección diseñador';
 
   const background = product.type === 'arabe'
     ? `hsl(${primaryHue} 36% 12%)`

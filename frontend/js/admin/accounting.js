@@ -333,7 +333,7 @@ async function openExpenseModal(month, year) {
                  style="width:90px;padding:.42rem .55rem;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:var(--r);font-size:.82rem;outline:none"
                  onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='var(--border)'">
           <button id="saveExpenseBtn"
-                  style="padding:.42rem 1rem;background:var(--gold);color:#111;border:none;border-radius:var(--r);font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .2s"
+                  style="padding:.42rem 1rem;background:var(--gold);color:#fff;border:none;border-radius:var(--r);font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .2s"
                   onmouseover="this.style.background='var(--gold-l)'" onmouseout="this.style.background='var(--gold)'">Agregar</button>
         </div>
       </div>

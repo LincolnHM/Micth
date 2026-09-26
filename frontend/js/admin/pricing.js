@@ -83,8 +83,8 @@ async function renderPreciosSection() {
   const rowsHtml = products.map(p => {
     const isEntero   = p.type === 'entero';
     const costPrice  = parseFloat(p.costPrice || 0);
-    const typeLabel  = p.type === 'arabe' ? 'Árabe' : p.type === 'entero' ? 'Entero' : 'Diseñador';
-    const typeBadge  = p.type === 'arabe' ? 'badge-arabe' : p.type === 'entero' ? 'badge-entero' : 'badge-dis';
+    const typeLabel  = productTypeInfo(p.type).label;
+    const typeBadge  = productTypeInfo(p.type).badge;
     const adminImg   = _normAdminImg(p.imageUrl) || buildProductImage(p);
     const hasCost    = costPrice > 0;
 

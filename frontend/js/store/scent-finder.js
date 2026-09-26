@@ -395,8 +395,9 @@
     await new Promise(resolve => setTimeout(resolve, 1400));
 
     // Cargar productos: _allProducts → Products.getAll() → CloudProducts.getAll()
-    let allProducts = (Array.isArray(window._allProducts) && window._allProducts.length)
-      ? window._allProducts
+    // _allProducts es el catálogo ya cargado de la tienda (catalog-view.js)
+    let allProducts = (typeof _allProducts !== 'undefined' && Array.isArray(_allProducts) && _allProducts.length)
+      ? _allProducts
       : (typeof Products !== 'undefined' ? Products.getAll() : []);
 
     if (!allProducts.length && typeof CloudProducts !== 'undefined') {
@@ -477,7 +478,7 @@
     const MAX_SCORE = 35;
 
     const scored = allProducts
-      .filter(p => p && (p.type === 'decant' || p.type === 'entero'))
+      .filter(p => p && p.type)   // decants (árabe/diseñador/nicho) y enteros
       .map(p => ({ product: p, score: scoreProduct(p) }))
       .filter(x => x.score > 0);
 
@@ -525,7 +526,7 @@
         : `<div class="scent-res-img-ph">🧪</div>`;
 
       let sizesHtml = '';
-      if (p.type === 'decant' && Object.keys(p.sizes || {}).length) {
+      if (p.type !== 'entero' && Object.keys(p.sizes || {}).length) {
         const sizeEntries = Object.entries(p.sizes).filter(([, v]) => v > 0);
         const firstAvailable = sizeEntries.findIndex(([sz]) => inStock && (typeof bottleHasMl !== 'function' || bottleHasMl(p, sz)));
         sizesHtml = `

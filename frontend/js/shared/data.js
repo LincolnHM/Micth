@@ -608,6 +608,17 @@ const SiteAnnouncement = {
   }
 };
 
+// ─── Tipos de perfume ─────────────────────────────────────────────────────────
+// arabe · diseñador · nicho (casas que solo hacen perfume: Creed, Xerjoff…)
+// · entero (frasco completo). Etiqueta y estilo de la insignia de cada uno.
+const PRODUCT_TYPES = {
+  arabe:       { label: 'Árabe',     badge: 'badge-arabe'  },
+  'diseñador': { label: 'Diseñador', badge: 'badge-dis'    },
+  nicho:       { label: 'Nicho',     badge: 'badge-nicho'  },
+  entero:      { label: 'Entero',    badge: 'badge-entero' }
+};
+function productTypeInfo(type) { return PRODUCT_TYPES[type] || PRODUCT_TYPES['diseñador']; }
+
 // ─── Sanitización ─────────────────────────────────────────────────────────────
 
 function sanitize(str) {

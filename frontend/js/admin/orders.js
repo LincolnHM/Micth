@@ -297,7 +297,7 @@ async function openOrderDetail(id) {
           <option value="efectivo"      ${order.paymentMethod==='efectivo'      ?'selected':''}>💵 Efectivo</option>
           <option value="transferencia" ${order.paymentMethod==='transferencia' ?'selected':''}>🏦 Transferencia</option>
         </select>
-        <button id="savePayMethodBtn" style="font-size:.75rem;padding:.3rem .75rem;background:var(--gold);color:#111;border:none;border-radius:var(--r);font-weight:700;cursor:pointer">Guardar</button>
+        <button id="savePayMethodBtn" style="font-size:.75rem;padding:.3rem .75rem;background:var(--gold);color:#fff;border:none;border-radius:var(--r);font-weight:700;cursor:pointer">Guardar</button>
       </span>
     </div>
     <div class="order-detail-row"><span class="lbl">Fecha</span><span class="val">${date}</span></div>
@@ -341,7 +341,7 @@ async function openOrderDetail(id) {
               style="width:100%;padding:.4rem .4rem .4rem 1.8rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem;box-sizing:border-box">
           </div>
           <button id="saveOrderTotalBtn" data-id="${escapeAttr(order.id)}"
-            style="padding:.4rem .9rem;background:var(--gold);color:#111;border:none;border-radius:var(--r);font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s"
+            style="padding:.4rem .9rem;background:var(--gold);color:#fff;border:none;border-radius:var(--r);font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s"
             onmouseover="this.style.background='#e0c050'" onmouseout="this.style.background='var(--gold)'">
             Guardar
           </button>

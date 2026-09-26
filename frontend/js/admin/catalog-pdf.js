@@ -79,9 +79,10 @@ async function exportCatalogPDF() {
 
     // ── Separar secciones ─────────────────────────────────────────────────────
     const diseCards   = mergedCards.filter(p => p.type === 'diseñador');
+    const nichoCards  = mergedCards.filter(p => p.type === 'nicho');
     const arabeCards  = mergedCards.filter(p => p.type === 'arabe');
     // Productos con tipo inesperado → mostrarlos igualmente en "Otros"
-    const otrosCards  = mergedCards.filter(p => p.type !== 'diseñador' && p.type !== 'arabe');
+    const otrosCards  = mergedCards.filter(p => !['diseñador', 'nicho', 'arabe'].includes(p.type));
     const enteroCards = standaloneEnteros;
 
     // ── Render de tarjeta ─────────────────────────────────────────────────────
@@ -204,7 +205,7 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 
 /* Barra acción */
 .pbar{position:sticky;top:0;z-index:200;background:#1a1005;padding:9px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.pbar-btn{background:#7c4fb0;color:#111;border:none;border-radius:6px;padding:7px 20px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px}
+.pbar-btn{background:#7c4fb0;color:#fff;border:none;border-radius:6px;padding:7px 20px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px}
 .pbar-btn:hover{background:#a87fd0}
 .pbar-hint{color:#aaa;font-size:10px;font-family:sans-serif}
 
@@ -292,6 +293,7 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
     </div>
   </div>
 
+  ${nichoCards.length ? renderSection('Nicho', '👑', nichoCards, true) : ''}
   ${renderSection('Diseñador', '💧', diseCards, true)}
   ${renderSection('Árabes', '🌙', arabeCards)}
   ${otrosCards.length ? renderSection('Otros', '✦', otrosCards) : ''}

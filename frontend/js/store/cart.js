@@ -234,10 +234,10 @@ function showStockAlert(errors) {
   }
   document.getElementById('stockAlertList').innerHTML = errors.map(e =>
     e.type === 'agotado'
-      ? `<div class="stock-alert-item"><span class="stock-alert-dot"></span>${sanitize(e.name)} — <strong>Agotado</strong></div>`
+      ? `<div class="stock-alert-item"><span class="stock-alert-dot"></span><span>${sanitize(e.name)} — <strong>Agotado</strong></span></div>`
       : e.type === 'ml'
-      ? `<div class="stock-alert-item"><span class="stock-alert-dot"></span>${sanitize(e.name)} — Solo quedan <strong>~${Number(e.remaining) || 0} ml</strong> (tu pedido suma ${Number(e.requested) || 0} ml)</div>`
-      : `<div class="stock-alert-item"><span class="stock-alert-dot"></span>${sanitize(e.name)} — Solo quedan <strong>${Number(e.available) || 0}</strong> unidad${e.available !== 1 ? 'es' : ''}</div>`
+      ? `<div class="stock-alert-item"><span class="stock-alert-dot"></span><span>${sanitize(e.name)} — Solo quedan <strong>~${Number(e.remaining) || 0} ml</strong> (tu pedido suma ${Number(e.requested) || 0} ml)</span></div>`
+      : `<div class="stock-alert-item"><span class="stock-alert-dot"></span><span>${sanitize(e.name)} — Solo quedan <strong>${Number(e.available) || 0}</strong> unidad${e.available !== 1 ? 'es' : ''}</span></div>`
   ).join('');
   modal.classList.add('open');
 }
