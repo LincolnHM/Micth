@@ -35,6 +35,18 @@ window.addEventListener('popstate', e => {
   }
 });
 
+// Perfume agotado: el botón del carrito pasa a pedir aviso por WhatsApp
+function _pdSetNotify(cartBtn, cartTxt, p) {
+  cartBtn.disabled = false;
+  cartBtn.classList.remove('pd-cart-pick');
+  cartBtn.classList.add('pd-cart-wa');
+  cartTxt.textContent = '🔔 Avísame cuando vuelva';
+  cartBtn.onclick = e => {
+    e.preventDefault();
+    window.open(notifyWaUrl(p), '_blank');
+  };
+}
+
 function _pdEscHandler(e) {
   if (e.key === 'Escape' && document.getElementById('pdModal')?.classList.contains('open')) closePdModal();
 }
@@ -96,6 +108,7 @@ function _createPdModal() {
 
           <!-- Precio — solo decants -->
           <div id="pdPriceRow" class="pd-price-row"></div>
+          <button type="button" id="pdAltHint" class="pd-alt-hint" hidden></button>
 
           <!-- Selector de tamaño -->
           <div id="pdSizeSection" class="pd-size-section">
@@ -214,6 +227,14 @@ function _createPdModal() {
 
       <!-- Descubre más vibras -->
       <div class="pd-discover-wrap">
+        <!-- Alternativas árabes: perfumes del catálogo que se parecen a este -->
+        <section class="pd-discover pd-alternatives" id="pdAltSection" hidden>
+          <div class="pd-discover-header">
+            <h3 class="pd-discover-title">ALTERNATIVAS QUE SE PARECEN</h3>
+          </div>
+          <p class="pd-alt-sub" id="pdAltSub"></p>
+          <div id="pdAltScroll" class="pd-discover-scroll"></div>
+        </section>
         <section class="pd-discover">
           <div class="pd-discover-header">
             <h3 class="pd-discover-title">DESCUBRE MÁS VIBRAS</h3>
@@ -229,6 +250,9 @@ function _createPdModal() {
   else document.body.appendChild(el);
 
   el.querySelector('.pd-close').addEventListener('click', () => closePdModal());
+  document.getElementById('pdAltHint').addEventListener('click', () => {
+    document.getElementById('pdAltSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   document.addEventListener('keydown', _pdEscHandler);
 
   // Guía de decants: toggle tooltip
@@ -279,6 +303,8 @@ function openPdModal(productId, { fromHistory = false } = {}) {
   _pdProduct  = p;
   _pdSelSize  = null;
   _pdSelPrice = 0;
+  if (typeof RecentlyViewed !== 'undefined') RecentlyViewed.add(p.id);
+  const all = _allProducts || Products.getAll();
 
   const isEntero    = p.type === 'entero';
   const typeLabel   = p.type === 'arabe' ? 'Árabe' : isEntero ? 'Perfume Entero' : 'Diseñador';
@@ -313,8 +339,13 @@ function openPdModal(productId, { fromHistory = false } = {}) {
       dupeImg.style.display = 'none';
     }
     dupeCard.style.display = 'flex';
+    const original = originalFor(p, all);
+    dupeCard.classList.toggle('pd-dupe-link', !!original);
+    dupeCard.onclick = original ? () => openPdModal(original.id) : null;
+    dupeCard.title = original ? `Ver ${original.name}` : '';
   } else {
     dupeCard.style.display = 'none';
+    dupeCard.onclick = null;
   }
 
   // ── Breadcrumb + Nombre ──────────────────────────────────
@@ -398,10 +429,9 @@ function openPdModal(productId, { fromHistory = false } = {}) {
     cartBtn.onclick = null;
 
     if (!p.inStock) {
-      // Agotado
+      // Agotado → pedir aviso por WhatsApp
       sizesRow.innerHTML = `<button class="pd-size-btn-new pd-size-disabled" disabled>Unidad</button>`;
-      cartBtn.disabled = true;
-      cartTxt.textContent = 'Agotado';
+      _pdSetNotify(cartBtn, cartTxt, p);
     } else if (price > 0) {
       // Precio configurado en admin → agregar al carrito
       sizesRow.innerHTML = `<button class="pd-size-btn-new active" data-size="Unidad" data-price="${price}">Unidad</button>`;
@@ -427,9 +457,10 @@ function openPdModal(productId, { fromHistory = false } = {}) {
     const anySizeOn = Object.entries(p.sizes).some(([ml, price]) => p.inStock && bottleHasMl(p, ml) && price > 0);
     // Con tallas disponibles el botón queda activo: si aún no eligió talla, lo
     // lleva al selector (ver listener en _createPdModal)
-    cartBtn.disabled = !anySizeOn;
+    cartBtn.disabled = false;
     cartBtn.classList.toggle('pd-cart-pick', anySizeOn);
-    cartTxt.textContent = anySizeOn ? 'Elige un tamaño' : 'Agotado';
+    cartTxt.textContent = 'Elige un tamaño';
+    if (!anySizeOn) _pdSetNotify(cartBtn, cartTxt, p);
     sizesRow.innerHTML = Object.entries(p.sizes).map(([ml, price]) => {
       const sizeOff = !p.inStock || !bottleHasMl(p, ml) || price === 0;
       return `
@@ -583,12 +614,29 @@ function openPdModal(productId, { fromHistory = false } = {}) {
     notesAcc.style.display = 'none';
   }
 
+  // ── Alternativas que se parecen (ej. árabes parecidos a Dior Sauvage) ──
+  const alts = alternativesFor(p, all).filter(productIsPurchasable)
+    .sort((a, b) => (productMinPrice(a) || Infinity) - (productMinPrice(b) || Infinity));
+  const altSection = document.getElementById('pdAltSection');
+  const altHint    = document.getElementById('pdAltHint');
+  altSection.hidden = !alts.length;
+  altHint.hidden    = !alts.length;
+  if (alts.length) {
+    const cheapest = alts.map(x => productMinPrice(x)).filter(v => v > 0);
+    const from = cheapest.length ? Math.min(...cheapest) : 0;
+    altHint.innerHTML = `💡 ${alts.length === 1 ? 'Hay 1 alternativa que se parece' : `Hay ${alts.length} alternativas que se parecen`}${from > 0 ? `, desde <strong>S/ ${from}</strong>` : ''} ↓`;
+    document.getElementById('pdAltSub').textContent = `Perfumes árabes con un aroma parecido a ${p.name}, a un precio más accesible.`;
+    document.getElementById('pdAltScroll').innerHTML = alts.map(productMiniCardHtml).join('');
+    bindMiniCards(document.getElementById('pdAltScroll'));
+  } else {
+    document.getElementById('pdAltScroll').innerHTML = '';
+  }
+
   // ── Descubre más vibras ───────────────────────────────────
-  const all = _allProducts || Products.getAll();
+  const altIds = new Set(alts.map(x => x.id));
   const similar = all
     .filter(x => {
-      const xPurchasable = x.type === 'entero' ? x.inStock !== false : isDecantPurchasable(x);
-      if (x.id === p.id || !xPurchasable) return false;
+      if (x.id === p.id || altIds.has(x.id) || !productIsPurchasable(x)) return false;
       if (p.gender === 'hombre') return x.gender === 'hombre' || x.gender === 'unisex';
       if (p.gender === 'mujer')  return x.gender === 'mujer'  || x.gender === 'unisex';
       return true;
@@ -600,31 +648,12 @@ function openPdModal(productId, { fromHistory = false } = {}) {
     })
     .slice(0, 6);
 
-  document.getElementById('pdDiscoverScroll').innerHTML = similar.map(sp => {
-    const _spPrices = Object.values(sp.sizes || {}).filter(v => v > 0);
-    const spMin = sp.type === 'entero'
-      ? (sp.enteroPrice > 0 ? sp.enteroPrice : (_spPrices.length ? Math.min(..._spPrices) : 0))
-      : (_spPrices.length ? Math.min(..._spPrices) : 0);
-    const spImg = sp.imageUrl
-      ? `<img src="${escapeAttr(sp.imageUrl)}" alt="${escapeAttr(sp.name)}" class="pd-mini-img" loading="lazy" onerror="this.style.display='none'">`
-      : '';
-    return `
-      <button class="pd-mini-card" data-id="${sp.id}" aria-label="Ver ${sanitize(sp.name)}">
-        <div class="pd-mini-img-wrap">${spImg}</div>
-        <div class="pd-mini-info">
-          <p class="pd-mini-brand">${sanitize(sp.brand)}</p>
-          <p class="pd-mini-name">${sanitize(sp.name)}</p>
-          ${spMin > 0 ? `<p class="pd-mini-price">${sp.type === 'entero' ? '' : 'Desde '}S/ ${spMin}</p>` : ''}
-        </div>
-      </button>`;
-  }).join('');
-
-  document.getElementById('pdDiscoverScroll').querySelectorAll('.pd-mini-card').forEach(btn => {
-    btn.addEventListener('click', () => openPdModal(parseInt(btn.dataset.id)));
-  });
+  document.getElementById('pdDiscoverScroll').innerHTML = similar.map(productMiniCardHtml).join('');
+  bindMiniCards(document.getElementById('pdDiscoverScroll'));
 
   // Ocultar secciones del catálogo
   document.querySelectorAll(_PD_HIDE_SELECTOR).forEach(el => el.classList.add('pd-page-hidden'));
+  document.body.classList.add('pd-open');
 
   const modal = document.getElementById('pdModal');
   modal.classList.add('open');
@@ -646,7 +675,9 @@ function _pdHide(restoreScroll) {
   _pdDepth = 0;
   if (!modal || !modal.classList.contains('open')) return;
   modal.classList.remove('open');
+  document.body.classList.remove('pd-open');
   document.querySelectorAll('.pd-page-hidden').forEach(el => el.classList.remove('pd-page-hidden'));
+  if (typeof renderRecentlyViewed === 'function') renderRecentlyViewed();
   if (restoreScroll) window.scrollTo({ top: _pdReturnY, behavior: 'instant' });
   if (window.ScrollTrigger) ScrollTrigger.refresh();
 }

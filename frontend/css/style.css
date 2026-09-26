@@ -8717,3 +8717,117 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   .announce-title { font-size: 1.15rem; }
 }
 
+
+
+/* ════════════════════════════════════════════════════════
+   MEJORAS DE COMPRA (2026-09-26)
+   ════════════════════════════════════════════════════════ */
+
+/* Filtros en celular: "Familia" y "Ordenar" lado a lado */
+@media(max-width:640px) {
+  .filter-row-1-types .olf-select { grid-column: auto; }
+}
+
+/* ── Tarjeta: "Se parece a …" ─────────────────────────── */
+.product-dupe {
+  font-size: .7rem; color: var(--text3); line-height: 1.35;
+  margin: -.1rem 0 .35rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.product-dupe strong { color: var(--gold-l); font-weight: 600; }
+
+/* ── Agotados: se atenúa el contenido pero no el botón de aviso ─── */
+.product-card.out-of-stock { opacity: 1; }
+.product-card.out-of-stock :is(.product-img, .product-img-placeholder, .product-meta-row, .product-name,
+  .product-dupe, .product-content-desc, .product-tags, .product-desc, .price-from, .sizes-row) { opacity: .45; }
+.product-card.out-of-stock .pd-open-btn { pointer-events: auto; }
+.btn-notify-wa {
+  display: flex; align-items: center; justify-content: center; gap: .35rem;
+  width: 100%; margin-top: .55rem; padding: .5rem .6rem;
+  border-radius: var(--r);
+  font-size: .74rem; font-weight: 700; line-height: 1.2; text-align: center;
+  color: #25d366; background: rgba(37,211,102,.08); border: 1px solid rgba(37,211,102,.35);
+  transition: background var(--tr);
+}
+.btn-notify-wa:hover { background: rgba(37,211,102,.16); }
+
+/* ── Mini tarjeta agotada (vistos recientemente) ───────── */
+.pd-mini-img-wrap { position: relative; }
+.pd-mini-soldout .pd-mini-img { opacity: .45; }
+.pd-mini-out {
+  position: absolute; left: 50%; bottom: .45rem; transform: translateX(-50%);
+  padding: .12rem .5rem; border-radius: 50px;
+  font-size: .55rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: #fff; background: rgba(0,0,0,.72);
+}
+
+/* ── Ficha: "Se parece a" lleva al original si lo vendemos ─── */
+.pd-dupe-card.pd-dupe-link { cursor: pointer; transition: border-color var(--tr), background var(--tr); }
+.pd-dupe-card.pd-dupe-link:hover { border-color: rgba(124,79,176,.55); background: rgba(124,79,176,.08); }
+.pd-dupe-card.pd-dupe-link .pd-dupe-name::after { content: ' →'; color: var(--gold-l); }
+
+/* ── Ficha: alternativas que se parecen ─────────────────── */
+.pd-alt-hint {
+  align-self: flex-start;
+  margin-top: -.6rem;
+  padding: .45rem .8rem; border-radius: 50px;
+  font-size: .76rem; color: var(--text); text-align: left;
+  background: rgba(124,79,176,.1); border: 1px solid rgba(124,79,176,.35);
+  cursor: pointer; transition: background var(--tr);
+}
+.pd-alt-hint:hover { background: rgba(124,79,176,.2); }
+.pd-alt-hint strong { color: var(--gold-l); }
+.pd-alternatives { margin-bottom: 2.25rem; scroll-margin-top: 130px; }   /* header + barra "Catálogo" fijos */
+.pd-alt-sub { font-size: .8rem; color: var(--text2); margin: -.35rem 0 1rem; line-height: 1.5; }
+
+/* ── Vistos recientemente ───────────────────────────────── */
+.recent-strip { margin: 0 0 1.75rem; }
+.recent-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
+.recent-title {
+  font-size: .68rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--text2);
+}
+.recent-clear { font-size: .72rem; color: var(--text3); background: none; border: 0; cursor: pointer; }
+.recent-clear:hover { color: var(--gold-l); }
+.recent-scroll {
+  display: flex; gap: .75rem;
+  overflow-x: auto; scroll-snap-type: x mandatory;
+  padding-bottom: .4rem;
+  scrollbar-width: thin;
+}
+.recent-scroll .pd-mini-card { flex: 0 0 118px; scroll-snap-align: start; }
+.recent-scroll .pd-mini-card:hover { transform: translateY(-3px); }
+
+/* ── Sugerencias del buscador con foto y precio ─────────── */
+.srch-sug-product { padding: .5rem .75rem; gap: .65rem; }
+.srch-sug-thumb {
+  width: 38px; height: 38px; flex-shrink: 0;
+  border-radius: 8px; background: #fff; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.srch-sug-thumb img { width: 88%; height: 88%; object-fit: contain; }
+.srch-sug-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.srch-sug-text .srch-sug-name { color: var(--text); font-weight: 600; }
+.srch-sug-sub { font-size: .7rem; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.srch-sug-out {
+  flex-shrink: 0; font-size: .58rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--text3); border: 1px solid var(--border); border-radius: 50px; padding: .1rem .45rem;
+}
+.srch-sug-all { justify-content: center; font-size: .75rem; font-weight: 600; color: var(--gold-l); }
+
+/* ── Botón flotante de WhatsApp ─────────────────────────── */
+.wa-float {
+  position: fixed; right: 1rem; bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  z-index: 240;   /* debajo del overlay del carrito/checkout (250) */
+  width: 54px; height: 54px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; background: #25d366;
+  box-shadow: 0 8px 24px rgba(0,0,0,.45), 0 0 0 4px rgba(37,211,102,.15);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.wa-float:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 12px 28px rgba(0,0,0,.5), 0 0 0 6px rgba(37,211,102,.18); }
+/* En la ficha del celular sube por encima de la barra fija del carrito */
+@media (max-width: 767px) {
+  body.pd-open .wa-float { bottom: calc(5.4rem + env(safe-area-inset-bottom, 0px)); width: 46px; height: 46px; }
+  body.pd-open .wa-float svg { width: 24px; height: 24px; }
+}

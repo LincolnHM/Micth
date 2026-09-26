@@ -60,7 +60,10 @@ const Filter = {
       if (this.occasion  !== 'all' && p.occasion  !== this.occasion && p.occasion !== 'ambas') return false;
       if (this.olfFamily !== 'all' && p.olfFamily !== this.olfFamily) return false;
       if (this.search) {
-        const fields = [p.name, p.brand, p.description || '', p.olfFamily || '', p.contentDescription || ''];
+        // Incluye el perfume famoso al que se parece: buscar "Sauvage" trae
+        // también los árabes que se le parecen
+        const fields = [p.name, p.brand, p.description || '', p.olfFamily || '', p.contentDescription || '',
+                        p.dupeOf?.name || '', p.dupeOf?.brand || ''];
         const qLow   = this.search.toLowerCase();
         if (fields.some(f => f.toLowerCase().includes(qLow))) return true;
         return fields.some(f => fuzzyMatch(this.search, f));
@@ -136,6 +139,81 @@ function renderPagination(current, total) {
   });
 }
 
+// ─── Helpers de producto ──────────────────────────────────────────────────────
+
+// Precio "desde" de un producto (0 si aún no tiene precio)
+function productMinPrice(p, asEntero = false) {
+  if (asEntero) return p.enteroPrice > 0 ? p.enteroPrice : 0;
+  const prices = Object.values(p.sizes || {}).filter(v => v > 0);
+  if (p.type === 'entero' && p.enteroPrice > 0) return p.enteroPrice;
+  return prices.length ? Math.min(...prices) : 0;
+}
+
+function productIsPurchasable(p) {
+  return p.type === 'entero' ? p.inStock !== false : isDecantPurchasable(p);
+}
+
+// Nombre comparable para emparejar un perfume con el "Se parece a" de otro:
+// sin tildes ni símbolos, sin lo que va entre paréntesis y sin la marca al
+// inicio ("Creed Aventus" ≈ "Aventus", "The Most Wanted (Parfum)" ≈ "The Most Wanted").
+// Se exige nombre y marca iguales: "Le Beau" NO es "Le Beau Le Parfum".
+function _dupeKey(name, brand) {
+  let n = normalizeStr(String(name || '').replace(/\([^)]*\)/g, ' ')).replace(/\s+/g, ' ');
+  const b = normalizeStr(brand || '').replace(/\s+/g, ' ');
+  if (b && n.startsWith(b + ' ')) n = n.slice(b.length + 1);
+  return n && b ? `${b}|${n}` : '';
+}
+
+// Perfumes del catálogo que se parecen a `p` (ej. los árabes parecidos a Dior Sauvage)
+function alternativesFor(p, all) {
+  const key = _dupeKey(p.name, p.brand);
+  if (!key) return [];
+  return all.filter(x => x.id !== p.id && x.dupeOf?.name && _dupeKey(x.dupeOf.name, x.dupeOf.brand) === key);
+}
+
+// El perfume original del catálogo al que se parece `p` (si lo vendemos)
+function originalFor(p, all) {
+  if (!p.dupeOf?.name) return null;
+  const key = _dupeKey(p.dupeOf.name, p.dupeOf.brand);
+  return all.find(x => x.id !== p.id && _dupeKey(x.name, x.brand) === key) || null;
+}
+
+// Tarjeta pequeña (Descubre más, alternativas, vistos recientemente)
+function productMiniCardHtml(p) {
+  const min = productMinPrice(p);
+  const img = p.imageUrl
+    ? `<img src="${escapeAttr(p.imageUrl)}" alt="${escapeAttr(p.name)}" class="pd-mini-img" loading="lazy" onerror="this.style.display='none'">`
+    : '';
+  const soldOut = !productIsPurchasable(p);
+  return `
+    <button class="pd-mini-card ${soldOut ? 'pd-mini-soldout' : ''}" data-id="${p.id}" aria-label="Ver ${escapeAttr(p.name)}">
+      <div class="pd-mini-img-wrap">${img}${soldOut ? '<span class="pd-mini-out">Agotado</span>' : ''}</div>
+      <div class="pd-mini-info">
+        <p class="pd-mini-brand">${sanitize(p.brand)}</p>
+        <p class="pd-mini-name">${sanitize(p.name)}</p>
+        ${min > 0 ? `<p class="pd-mini-price">${p.type === 'entero' ? '' : 'Desde '}S/ ${min}</p>` : ''}
+      </div>
+    </button>`;
+}
+
+function bindMiniCards(container) {
+  container.querySelectorAll('.pd-mini-card').forEach(btn => {
+    btn.addEventListener('click', () => openPdModal(parseInt(btn.dataset.id)));
+  });
+}
+
+// Mensaje de WhatsApp para pedir aviso de un perfume agotado
+function notifyWaUrl(p) {
+  const text = `Hola, me interesa ${p.brand} – ${p.name}. ¿Me avisas cuando vuelva a estar disponible?`;
+  return `https://wa.me/51917452643?text=${encodeURIComponent(text)}`;
+}
+
+// ─── Orden del catálogo ───────────────────────────────────────────────────────
+
+const Sort = {
+  mode: 'relevance',   // relevance | price-asc | price-desc | new | popular
+};
+
 // ─── Render del catálogo ──────────────────────────────────────────────────────
 
 let _allProducts = null;
@@ -144,33 +222,41 @@ function renderProducts() {
   const grid        = document.getElementById('productsGrid');
   const allFiltered = Filter.apply(_allProducts || Products.getAll());
 
-  // Ordenar: si hay búsqueda, priorizar por relevancia; siempre agotados al fondo
-  if (Filter.search) {
+  // Ordenar: siempre agotados al fondo; luego según "Ordenar por" (o, si hay
+  // búsqueda y no eligió orden, por relevancia)
+  const purch = p => isDecantPurchasable(p) && (p.type !== 'entero' || p.inStock);
+  const asEntero = p => Filter.type === 'entero' && (p.enteroStock || 0) > 0 && p.type !== 'entero';
+  let secondary = () => 0;
+  if (Sort.mode === 'price-asc' || Sort.mode === 'price-desc') {
+    const dir = Sort.mode === 'price-asc' ? 1 : -1;
+    const price = p => productMinPrice(p, asEntero(p)) || (dir > 0 ? Infinity : 0);  // sin precio → al final
+    secondary = (a, b) => (price(a) - price(b)) * dir;
+  } else if (Sort.mode === 'new') {
+    const t = p => new Date(p.date || 0).getTime() || 0;
+    secondary = (a, b) => (t(b) - t(a)) || (b.id - a.id);
+  } else if (Sort.mode === 'popular') {
+    secondary = (a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
+  } else if (Filter.search) {
     const q = Filter.search.toLowerCase();
     const score = p => {
       const name  = (p.name  || '').toLowerCase();
       const brand = (p.brand || '').toLowerCase();
+      const dupe  = (p.dupeOf?.name || '').toLowerCase();
       if (name === q)                  return 6;
       if (name.startsWith(q))          return 5;
       if (brand === q)                 return 4;
       if (name.includes(q))            return 3;
+      if (dupe.includes(q))            return 2.5;  // se parece al perfume buscado
       if (brand.includes(q))           return 2;
       return 1; // fuzzy match
     };
-    allFiltered.sort((a, b) => {
-      const aPurch = isDecantPurchasable(a) && (a.type !== 'entero' || a.inStock);
-      const bPurch = isDecantPurchasable(b) && (b.type !== 'entero' || b.inStock);
-      if (aPurch !== bPurch) return aPurch ? -1 : 1;
-      return score(b) - score(a);
-    });
-  } else {
-    // Sin búsqueda: agotados al fondo, resto en orden original
-    allFiltered.sort((a, b) => {
-      const aPurch = isDecantPurchasable(a) && (a.type !== 'entero' || a.inStock);
-      const bPurch = isDecantPurchasable(b) && (b.type !== 'entero' || b.inStock);
-      return aPurch === bPurch ? 0 : aPurch ? -1 : 1;
-    });
+    secondary = (a, b) => score(b) - score(a);
   }
+  allFiltered.sort((a, b) => {
+    const aPurch = purch(a), bPurch = purch(b);
+    if (aPurch !== bPurch) return aPurch ? -1 : 1;
+    return secondary(a, b);
+  });
   const totalPages  = Pagination.totalPages(allFiltered.length);
 
   // Corregir página si excede el total
@@ -200,7 +286,7 @@ function renderProducts() {
       <div class="no-results">
         <div style="font-size:2.5rem;margin-bottom:.75rem">${hasSearch ? '🔍' : onlyFavEmpty ? '🤍' : '✨'}</div>
         <p>${hasSearch
-          ? `No encontramos ningún perfume para <strong style="color:var(--gold)">"${Filter.search}"</strong>.`
+          ? `No encontramos ningún perfume para <strong style="color:var(--gold)">"${sanitize(Filter.search)}"</strong>.`
           : onlyFavEmpty
             ? 'Aún no guardaste ningún favorito. Toca el corazón ♡ en un perfume para guardarlo aquí.'
             : 'No se encontraron fragancias con esos filtros.'}</p>
@@ -311,6 +397,7 @@ function renderProducts() {
           </div>
 
           <h3 class="product-name"><button type="button" class="product-name-btn" data-id="${p.id}">${sanitize(p.name)}</button></h3>
+          ${p.dupeOf?.name ? `<p class="product-dupe" title="Se parece a ${escapeAttr(p.dupeOf.name)}">Se parece a <strong>${sanitize(p.dupeOf.name)}</strong></p>` : ''}
 
           ${p.contentDescription ? `<p class="product-content-desc">${sanitize(p.contentDescription)}</p>` : ''}
 
@@ -323,6 +410,7 @@ function renderProducts() {
           <div class="product-footer">
             ${priceHtml}
             <div class="sizes-row">${sizesHtml}</div>
+            ${!purchasable && !waConsultUrl ? `<a class="btn-notify-wa" href="${notifyWaUrl(p)}" target="_blank" rel="noopener noreferrer">🔔 Avísame cuando vuelva</a>` : ''}
             <button class="btn-ver-detalle" data-id="${p.id}">
               Ver detalles
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true"><path stroke-linecap="round" d="M9 5l7 7-7 7"/></svg>
@@ -418,6 +506,37 @@ function updateFavFilterBadge() {
   badge.style.display = n > 0 ? 'inline-block' : 'none';
 }
 
+// ─── Vistos recientemente ─────────────────────────────────────────────────────
+
+const RecentlyViewed = {
+  _key: 'micht_recent',
+  MAX: 10,
+  get() {
+    try {
+      const ids = JSON.parse(localStorage.getItem(this._key) || '[]');
+      return Array.isArray(ids) ? ids.filter(Number.isInteger) : [];
+    } catch { return []; }
+  },
+  add(id) {
+    const ids = [id, ...this.get().filter(x => x !== id)].slice(0, this.MAX);
+    try { localStorage.setItem(this._key, JSON.stringify(ids)); } catch {}
+  },
+  clear() { try { localStorage.removeItem(this._key); } catch {} }
+};
+
+// Fila de "Vistos recientemente" sobre el catálogo (desde 2 perfumes vistos)
+function renderRecentlyViewed() {
+  const wrap   = document.getElementById('recentStrip');
+  const scroll = document.getElementById('recentScroll');
+  if (!wrap || !scroll) return;
+  const byId  = new Map((_allProducts || Products.getAll()).map(p => [p.id, p]));
+  const items = RecentlyViewed.get().map(id => byId.get(id)).filter(Boolean);
+  wrap.hidden = items.length < 2;
+  if (wrap.hidden) { scroll.innerHTML = ''; return; }
+  scroll.innerHTML = items.map(productMiniCardHtml).join('');
+  bindMiniCards(scroll);
+}
+
 // ─── Compartir perfume ────────────────────────────────────────────────────────
 
 function shareProduct(id, name) {
@@ -472,6 +591,8 @@ function resetAllFilters() {
   if (olf) olf.value = 'all';
   const search = document.getElementById('searchInput');
   if (search) search.value = '';
+  const searchClear = document.getElementById('searchClearBtn');
+  if (searchClear) searchClear.style.display = 'none';
   const box = document.getElementById('srch-suggestions');
   if (box) { box.innerHTML = ''; box.classList.remove('open'); }
   renderProducts();

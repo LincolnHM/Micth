@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.dispatchEvent(new CustomEvent('catalogLoaded', { detail: _allProducts }));
   populateOlfFamilyFilter();
   renderProducts();
+  renderRecentlyViewed();
   renderCombos().catch(err => console.error('[MICHT] Error cargando combos:', err));
   initCombosCarousel();
   Cart.render();
@@ -54,6 +55,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  // ── Ordenar por ───────────────────────────────────────────────────────────
+  document.getElementById('sortSelect')?.addEventListener('change', function () {
+    Sort.mode = this.value;
+    Pagination.reset();
+    renderProducts();
+  });
+
+  // ── Vistos recientemente: borrar ──────────────────────────────────────────
+  document.getElementById('recentClearBtn')?.addEventListener('click', () => {
+    RecentlyViewed.clear();
+    renderRecentlyViewed();
+  });
+
   // ── Familia olfativa ──────────────────────────────────────────────────────
   const olfSel = document.getElementById('olfFamilyFilter');
   if (olfSel) {
@@ -68,12 +82,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   const searchInput = document.getElementById('searchInput');
   let searchTimer;
 
+  // Escapa HTML sin recortar espacios (sanitize() hace trim y pegaría
+  // "Sauvage" + " Elixir" al resaltar)
+  const _esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
   function _srchHighlight(text, query) {
     const idx = text.toLowerCase().indexOf(query.toLowerCase());
-    if (idx === -1) return text;
-    return text.slice(0, idx) +
-      `<mark class="srch-sug-hl">${text.slice(idx, idx + query.length)}</mark>` +
-      text.slice(idx + query.length);
+    if (idx === -1) return _esc(text);
+    return _esc(text.slice(0, idx)) +
+      `<mark class="srch-sug-hl">${_esc(text.slice(idx, idx + query.length))}</mark>` +
+      _esc(text.slice(idx + query.length));
+  }
+
+  function _closeSuggestions() {
+    const box = document.getElementById('srch-suggestions');
+    if (box) { box.innerHTML = ''; box.classList.remove('open'); }
   }
 
   function _positionSugBox() {
@@ -93,11 +116,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const all = _allProducts || Products.getAll();
     const qLow = query.toLowerCase();
-    const matches = all.filter(p => {
+    // Coincide por nombre/marca o por el perfume famoso al que se parece
+    // ("sauvage" → Dior Sauvage y también los árabes que se le parecen)
+    const rank = p => {
       const n = (p.name || '').toLowerCase();
       const b = (p.brand || '').toLowerCase();
-      return n.includes(qLow) || b.includes(qLow) || fuzzyMatch(query, p.name);
-    }).slice(0, 7);
+      const d = (p.dupeOf?.name || '').toLowerCase();
+      if (n.startsWith(qLow)) return 5;
+      if (n.includes(qLow))   return 4;
+      if (b.includes(qLow))   return 3;
+      if (d.includes(qLow))   return 2;
+      if (fuzzyMatch(query, p.name) || (p.dupeOf?.name && fuzzyMatch(query, p.dupeOf.name))) return 1;
+      return 0;
+    };
+    const matches = all.map(p => ({ p, r: rank(p) })).filter(m => m.r > 0)
+      .sort((a, b) => (productIsPurchasable(b.p) - productIsPurchasable(a.p)) || (b.r - a.r))
+      .slice(0, 6).map(m => m.p);
 
     if (!matches.length) {
       box.innerHTML = `<div class="srch-sug-item no-results" role="option">
@@ -105,21 +139,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         Perfume no encontrado
       </div>`;
     } else {
-      box.innerHTML = matches.map(p => `
-        <div class="srch-sug-item" role="option" data-name="${p.name.replace(/"/g, '&quot;')}">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.45;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <span class="srch-sug-name">${_srchHighlight(p.name, query)}</span>
-          <span class="srch-sug-brand">${p.brand}</span>
-        </div>`).join('');
-      box.querySelectorAll('.srch-sug-item[data-name]').forEach(item => {
+      box.innerHTML = matches.map(p => {
+        const min  = productMinPrice(p);
+        const viaDupe = !(p.name || '').toLowerCase().includes(qLow) && !(p.brand || '').toLowerCase().includes(qLow) && p.dupeOf?.name;
+        const sub  = viaDupe
+          ? `Se parece a ${_srchHighlight(p.dupeOf.name, query)}`
+          : `${sanitize(p.brand)}${min > 0 ? ` · ${p.type === 'entero' ? '' : 'desde '}S/ ${min}` : ''}`;
+        const img  = p.imageUrl ? `<img src="${escapeAttr(p.imageUrl)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : '';
+        return `
+        <div class="srch-sug-item srch-sug-product" role="option" data-id="${p.id}">
+          <span class="srch-sug-thumb">${img}</span>
+          <span class="srch-sug-text">
+            <span class="srch-sug-name">${_srchHighlight(p.name, query)}</span>
+            <span class="srch-sug-sub">${sub}</span>
+          </span>
+          ${productIsPurchasable(p) ? '' : '<span class="srch-sug-out">Agotado</span>'}
+        </div>`;
+      }).join('') + `
+        <div class="srch-sug-item srch-sug-all" role="option" data-all="1">Ver todos los resultados →</div>`;
+
+      box.querySelectorAll('.srch-sug-item[data-id]').forEach(item => {
         item.addEventListener('mousedown', e => {
           e.preventDefault();
-          searchInput.value = item.dataset.name;
-          Filter.search = item.dataset.name;
-          Pagination.reset();
-          renderProducts();
-          box.innerHTML = ''; box.classList.remove('open');
+          _closeSuggestions();
+          searchInput.blur();
+          openPdModal(parseInt(item.dataset.id));
         });
+      });
+      box.querySelector('.srch-sug-all')?.addEventListener('mousedown', e => {
+        e.preventDefault();
+        clearTimeout(searchTimer);
+        Filter.search = searchInput.value.trim().slice(0, 100);
+        Pagination.reset();
+        renderProducts();
+        _closeSuggestions();
+        searchInput.blur();
+        const grid = document.getElementById('productsGrid');
+        const filtersH = document.getElementById('catalogo')?.offsetHeight || 0;
+        if (grid) window.scrollTo({ top: Math.max(0, grid.offsetTop - 64 - filtersH), behavior: 'smooth' });
       });
     }
     _positionSugBox();
@@ -165,7 +222,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   searchInput?.addEventListener('keydown', e => {
     const box = document.getElementById('srch-suggestions');
     if (!box || !box.classList.contains('open')) return;
-    const items = [...box.querySelectorAll('.srch-sug-item[data-name]')];
+    const items = [...box.querySelectorAll('.srch-sug-item[data-id], .srch-sug-item[data-all]')];
     const cur = box.querySelector('.srch-sug-item.focused');
     const idx = cur ? items.indexOf(cur) : -1;
     if (e.key === 'ArrowDown') {
