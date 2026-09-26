@@ -192,7 +192,7 @@
   <link rel="icon" type="image/png" href="imgGato/icons/icon-192.png">
   <link rel="apple-touch-icon" href="imgGato/icons/icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20260926-1139">
+  <link rel="stylesheet" href="css/style.css?v=20260926-1142">
   <!-- La pantalla de carga solo se muestra la primera vez en la sesión; en las
        siguientes visitas (volver de Nosotros, recargar) no hace esperar. -->
   <script>try { if (sessionStorage.getItem('micht_loader_seen')) document.documentElement.classList.add('pl-skip'); } catch (e) {}</script>
@@ -412,6 +412,7 @@
     <nav class="mobile-nav">
       <a href="#catalogo" class="mobile-nav-link" id="mobileCatalogLink">Catálogo</a>
       <a href="#combos" class="mobile-nav-link" id="mobileCombosLink">Combos</a>
+      <a href="#como-comprar" class="mobile-nav-link">Cómo comprar</a>
       <a href="#catalogo" class="mobile-nav-link" id="mobileNavEnteroLink" style="color:var(--gold)">✦ Perfumes Enteros</a>
       <a href="nosotros/" class="mobile-nav-link">Nosotros</a>
       <a href="contacto/" class="mobile-nav-link">Contacto</a>
@@ -664,6 +665,38 @@
     </div>
   </main>
 
+  <!-- ── ¿Cómo comprar? ───────────────────────────────────────────────────── -->
+  <section id="como-comprar" class="howto-section" aria-labelledby="howtoTitle">
+    <div class="container">
+      <p class="howto-eyebrow">Fácil y seguro</p>
+      <h2 class="howto-title" id="howtoTitle">¿Cómo comprar?</h2>
+      <p class="howto-sub">Un <strong>decant</strong> es una porción de un perfume original en un frasco pequeño (2, 3, 5 o 10 ml): pruebas o usas perfumes de lujo pagando solo por lo que necesitas.</p>
+      <ol class="howto-steps">
+        <li class="howto-step">
+          <span class="howto-num" aria-hidden="true">1</span>
+          <div>
+            <h3>Elige tu decant</h3>
+            <p>Escoge el perfume y el tamaño. ¿No sabes cuál? Usa el Scent Finder o escríbenos.</p>
+          </div>
+        </li>
+        <li class="howto-step">
+          <span class="howto-num" aria-hidden="true">2</span>
+          <div>
+            <h3>Paga con Yape</h3>
+            <p>Al finalizar tu pedido te mostramos el QR y el número. Envíanos la captura del pago por WhatsApp.</p>
+          </div>
+        </li>
+        <li class="howto-step">
+          <span class="howto-num" aria-hidden="true">3</span>
+          <div>
+            <h3>Recibe tu pedido</h3>
+            <p>Recógelo en Soritor, pide delivery gratis en Soritor (desde 2 decants o 1 perfume entero) o te lo enviamos por Shalom a todo el Perú.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
   <!-- ── Marquee strip ────────────────────────────────────────────────────── -->
   <div class="marquee-strip" aria-hidden="true">
     <div class="marquee-track">
@@ -773,6 +806,7 @@
           <nav class="footer-nav" aria-label="Footer">
             <a href="#catalogo">Catálogo completo</a>
             <a href="#catalogo" id="footerEnteroLink">Perfumes Enteros</a>
+            <a href="#como-comprar">Cómo comprar</a>
             <a href="nosotros/">Nosotros</a>
             <a href="contacto/">Contacto</a>
           </nav>
@@ -1345,30 +1379,30 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con el panel admin) — el orden importa -->
-  <script src="js/shared/data-core.js?v=20260926-1139"></script>
-  <script src="js/shared/catalog.js?v=20260926-1139"></script>
-  <script src="js/shared/data.js?v=20260926-1139"></script>
-  <script src="js/shared/supabase-config.js?v=20260926-1139"></script>
-  <script src="js/shared/cloud-orders.js?v=20260926-1139"></script>
-  <script src="js/shared/cloud-gallery.js?v=20260926-1139"></script>
-  <script src="js/shared/cloud-products.js?v=20260926-1139"></script>
-  <script src="js/shared/cloud-combos.js?v=20260926-1139"></script>
+  <script src="js/shared/data-core.js?v=20260926-1142"></script>
+  <script src="js/shared/catalog.js?v=20260926-1142"></script>
+  <script src="js/shared/data.js?v=20260926-1142"></script>
+  <script src="js/shared/supabase-config.js?v=20260926-1142"></script>
+  <script src="js/shared/cloud-orders.js?v=20260926-1142"></script>
+  <script src="js/shared/cloud-gallery.js?v=20260926-1142"></script>
+  <script src="js/shared/cloud-products.js?v=20260926-1142"></script>
+  <script src="js/shared/cloud-combos.js?v=20260926-1142"></script>
   <!-- Tienda -->
-  <script src="js/store/announcement.js?v=20260926-1139"></script>
-  <script src="js/store/seasonal-theme.js?v=20260926-1139"></script>
-  <script src="js/store/carousel.js?v=20260926-1139"></script>
-  <script src="js/store/cart.js?v=20260926-1139"></script>
-  <script src="js/store/catalog-view.js?v=20260926-1139"></script>
-  <script src="js/store/combos-carousel.js?v=20260926-1139"></script>
-  <script src="js/store/product-detail.js?v=20260926-1139"></script>
-  <script src="js/store/init.js?v=20260926-1139"></script>
-  <script src="js/store/gallery.js?v=20260926-1139"></script>
-  <script src="js/store/scent-finder.js?v=20260926-1139"></script>
-  <script src="js/store/checkout.js?v=20260926-1139"></script>
-  <script src="js/store/customer-auth.js?v=20260926-1139"></script>
-  <script src="js/store/chatbot.js?v=20260926-1139"></script>
-  <script src="js/store/animations.js?v=20260926-1139"></script>
-  <script src="js/store/gsap-animations.js?v=20260926-1139"></script>
+  <script src="js/store/announcement.js?v=20260926-1142"></script>
+  <script src="js/store/seasonal-theme.js?v=20260926-1142"></script>
+  <script src="js/store/carousel.js?v=20260926-1142"></script>
+  <script src="js/store/cart.js?v=20260926-1142"></script>
+  <script src="js/store/catalog-view.js?v=20260926-1142"></script>
+  <script src="js/store/combos-carousel.js?v=20260926-1142"></script>
+  <script src="js/store/product-detail.js?v=20260926-1142"></script>
+  <script src="js/store/init.js?v=20260926-1142"></script>
+  <script src="js/store/gallery.js?v=20260926-1142"></script>
+  <script src="js/store/scent-finder.js?v=20260926-1142"></script>
+  <script src="js/store/checkout.js?v=20260926-1142"></script>
+  <script src="js/store/customer-auth.js?v=20260926-1142"></script>
+  <script src="js/store/chatbot.js?v=20260926-1142"></script>
+  <script src="js/store/animations.js?v=20260926-1142"></script>
+  <script src="js/store/gsap-animations.js?v=20260926-1142"></script>
   <script>
     // ── Mobile menu toggle ───────────────────────────────────
     (function () {

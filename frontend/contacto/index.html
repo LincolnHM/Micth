@@ -24,7 +24,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../imgGato/icons/icon-192.png">
   <link rel="apple-touch-icon" href="../imgGato/icons/icon-192.png">
-  <link rel="stylesheet" href="../css/style.css?v=20260926-1139">
+  <link rel="stylesheet" href="../css/style.css?v=20260926-1142">
   <style>
     /* ── Página Contacto ─────────────────────────── */
     .contact-page {
@@ -161,6 +161,31 @@
     /* Location badge (legacy — ya no se usa) */
     .cp-location { display: none; }
 
+    /* Ubicación con mapa */
+    .cp-map { width: 100%; max-width: 860px; margin-bottom: 3rem; }
+    .cp-map-card {
+      display: grid; grid-template-columns: 1fr 1.3fr;
+      background: rgba(20,20,20,.75);
+      border: 1px solid rgba(124,79,176,.2); border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 0 50px rgba(124,79,176,.05), inset 0 1px 0 rgba(124,79,176,.1);
+    }
+    .cp-map-info { padding: 2rem 1.75rem; display: flex; flex-direction: column; gap: .35rem; }
+    .cp-map-title { font-family: var(--font-serif); font-size: 1.3rem; color: var(--white); }
+    .cp-map-sub { font-size: .8rem; color: var(--text2); margin-bottom: .9rem; }
+    .cp-map-list { list-style: none; display: flex; flex-direction: column; gap: .6rem; margin-bottom: 1.3rem; }
+    .cp-map-list li { font-size: .8rem; color: var(--text2); line-height: 1.5; display: flex; gap: .5rem; }
+    .cp-map-btn {
+      align-self: flex-start; margin-top: auto;
+      font-size: .8rem; font-weight: 600; color: var(--gold-l); text-decoration: none;
+      padding: .55rem 1.1rem; border-radius: 50px;
+      border: 1px solid rgba(124,79,176,.4); background: rgba(124,79,176,.08);
+      transition: background .2s;
+    }
+    .cp-map-btn:hover { background: rgba(124,79,176,.18); color: var(--gold-l); }
+    .cp-map-frame { min-height: 300px; background: #1a1a1a; }
+    .cp-map-frame iframe { width: 100%; height: 100%; min-height: 300px; border: 0; display: block; filter: grayscale(.2) contrast(1.05); }
+
     /* Social links row */
     .cp-social-row {
       display: flex;
@@ -213,6 +238,10 @@
       .cp-card { padding: 1.4rem 1.1rem; }
       .cp-social-row { gap: .65rem; }
       .cp-social-link { font-size: .75rem; padding: .45rem .75rem; }
+      .cp-map { margin-bottom: 2rem; }
+      .cp-map-card { grid-template-columns: 1fr; }
+      .cp-map-info { padding: 1.4rem 1.2rem; }
+      .cp-map-frame, .cp-map-frame iframe { min-height: 240px; }
     }
   </style>
 </head>
@@ -306,7 +335,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="22" height="22" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13 21H5a2 2 0 01-2-2V9l7-6 7 6v3m0 9v-5a2 2 0 00-2-2h-2a2 2 0 00-2 2v5m6 0h2a2 2 0 002-2v-5"/></svg>
           </div>
           <p class="cp-card-title">Recojo en Tienda</p>
-          <p class="cp-card-text">Coordina tu hora de recojo directamente por WhatsApp.</p>
+          <p class="cp-card-text">Jr. Las Flores N°620, Soritor. Coordina tu hora de recojo directamente por WhatsApp.</p>
           <a href="https://wa.me/51917452643?text=Hola,%20quiero%20coordinar%20mi%20recojo%20en%20tienda" target="_blank" rel="noopener noreferrer" class="cp-card-link">
             Coordinar recojo
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -318,7 +347,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="22" height="22" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zM16 21H8m4-4v4M12 3v4"/></svg>
           </div>
           <p class="cp-card-title">Envíos Shalom</p>
-          <p class="cp-card-text">Enviamos a todo el Perú vía Shalom. Seguro, rápido y con seguimiento.</p>
+          <p class="cp-card-text">Enviamos a todo el Perú vía Shalom. El flete lo pagas al recoger en tu agencia.</p>
           <a href="https://wa.me/51917452643?text=Hola,%20quiero%20información%20sobre%20el%20envío%20a%20mi%20ciudad" target="_blank" rel="noopener noreferrer" class="cp-card-link">
             Consultar envío
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -326,6 +355,28 @@
         </div>
       </div>
 
+
+      <!-- Ubicación -->
+      <section class="cp-map" aria-label="Ubicación de la tienda">
+        <p class="cp-eyebrow">Dónde estamos</p>
+        <div class="cp-map-card">
+          <div class="cp-map-info">
+            <p class="cp-map-title">Jr. Las Flores N°620</p>
+            <p class="cp-map-sub">Soritor · San Martín, Perú</p>
+            <ul class="cp-map-list">
+              <li><span aria-hidden="true">🏪</span> Recojo en tienda: coordina la hora por WhatsApp.</li>
+              <li><span aria-hidden="true">🛵</span> Delivery gratis en Soritor desde 2 decants o 1 perfume entero.</li>
+              <li><span aria-hidden="true">📦</span> Envíos a todo el Perú por Shalom.</li>
+            </ul>
+            <a class="cp-map-btn" href="https://maps.google.com/maps?q=-6.1374824,-77.09955" target="_blank" rel="noopener noreferrer">Abrir en Google Maps →</a>
+          </div>
+          <div class="cp-map-frame">
+            <iframe src="https://maps.google.com/maps?q=-6.1374824,-77.09955&amp;hl=es&amp;z=17&amp;output=embed"
+                    title="Ubicación de MICHT Decants — Jr. Las Flores N°620, Soritor"
+                    loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          </div>
+        </div>
+      </section>
 
       <!-- Social -->
       <div class="cp-social-row">
@@ -482,8 +533,8 @@
 
   <div class="overlay" id="overlay" aria-hidden="true"></div>
 
-  <script src="../js/store/cart-mini.js?v=20260926-1139"></script>
-  <script src="../js/store/seasonal-theme.js?v=20260926-1139"></script>
+  <script src="../js/store/cart-mini.js?v=20260926-1142"></script>
+  <script src="../js/store/seasonal-theme.js?v=20260926-1142"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
   <script>
