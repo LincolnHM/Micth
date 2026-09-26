@@ -4,7 +4,40 @@ let _pdProduct  = null;
 let _pdSelSize  = null;
 let _pdSelPrice = 0;
 
-function _pdEscHandler(e) { if (e.key === 'Escape') closePdModal(); }
+// ─── El detalle es una "página" más del historial ────────────────────────────
+// Cada perfume abierto agrega una entrada (?p=ID). Así el botón "atrás" del
+// celular vuelve al catálogo en vez de sacar al cliente de la tienda, y el
+// catálogo reaparece en el mismo lugar donde lo dejó.
+let _pdReturnY = 0;   // posición del catálogo al abrir el primer perfume
+let _pdDepth   = 0;   // perfumes apilados en el historial desde el catálogo
+
+try { history.scrollRestoration = 'manual'; } catch (_) {}
+
+function _pdUrl(id) {
+  const params = new URLSearchParams(location.search);
+  if (id) params.set('p', id); else params.delete('p');
+  const qs = params.toString();
+  return location.pathname + (qs ? '?' + qs : '');
+}
+
+// Todo lo que va entre el header y el footer es "catálogo" y se oculta mientras
+// se ve un perfume (antes era una lista fija y la sección Combos quedaba visible
+// encima del detalle).
+const _PD_HIDE_SELECTOR = 'body > section, body > main, body > .marquee-strip, body > .parallax-divider, body > #catalogBanner';
+
+window.addEventListener('popstate', e => {
+  const st = e.state;
+  if (st && st.pd) {
+    _pdDepth = st.depth || 1;
+    openPdModal(st.pd, { fromHistory: true });
+  } else {
+    _pdHide(true);
+  }
+});
+
+function _pdEscHandler(e) {
+  if (e.key === 'Escape' && document.getElementById('pdModal')?.classList.contains('open')) closePdModal();
+}
 
 function _createPdModal() {
   if (document.getElementById('pdModal')) return;
@@ -195,7 +228,7 @@ function _createPdModal() {
   if (footer) footer.parentNode.insertBefore(el, footer);
   else document.body.appendChild(el);
 
-  el.querySelector('.pd-close').addEventListener('click', closePdModal);
+  el.querySelector('.pd-close').addEventListener('click', () => closePdModal());
   document.addEventListener('keydown', _pdEscHandler);
 
   // Guía de decants: toggle tooltip
@@ -207,7 +240,17 @@ function _createPdModal() {
 
   document.getElementById('pdCartBtn').addEventListener('click', () => {
     // Si está en modo WhatsApp, el onclick del botón ya lo maneja
-    if (!_pdProduct || !_pdSelSize) return;
+    if (!_pdProduct || document.getElementById('pdCartBtn').classList.contains('pd-cart-wa')) return;
+    if (!_pdSelSize) {
+      // Sin talla elegida: llevar al selector y resaltarlo (la barra está fija
+      // abajo en el celular, lejos de los botones de talla)
+      const sec = document.getElementById('pdSizeSection');
+      sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      sec.classList.remove('pd-size-pulse');
+      void sec.offsetWidth;
+      sec.classList.add('pd-size-pulse');
+      return;
+    }
     Cart.add(_pdProduct, _pdSelSize, _pdSelPrice);
     const btn = document.getElementById('pdCartBtn');
     const txt = document.getElementById('pdCartBtnText');
@@ -221,10 +264,18 @@ function _createPdModal() {
   });
 }
 
-function openPdModal(productId) {
+function openPdModal(productId, { fromHistory = false } = {}) {
   _createPdModal();
   const p = _allProducts?.find(x => x.id === productId) ?? Products.getById(productId);
   if (!p) return;
+
+  const wasOpen = document.getElementById('pdModal').classList.contains('open');
+  if (!wasOpen) _pdReturnY = window.scrollY;
+  if (!fromHistory) {
+    _pdDepth = wasOpen ? _pdDepth + 1 : 1;
+    try { history.pushState({ pd: p.id, depth: _pdDepth }, '', _pdUrl(p.id)); } catch (_) {}
+  }
+
   _pdProduct  = p;
   _pdSelSize  = null;
   _pdSelPrice = 0;
@@ -343,7 +394,7 @@ function openPdModal(productId) {
   if (isEntero) {
     const _sp  = Object.values(p.sizes || {}).filter(v => v > 0);
     const price = p.enteroPrice > 0 ? p.enteroPrice : (_sp.length ? Math.min(..._sp) : 0);
-    cartBtn.classList.remove('pd-cart-wa');
+    cartBtn.classList.remove('pd-cart-wa', 'pd-cart-pick');
     cartBtn.onclick = null;
 
     if (!p.inStock) {
@@ -371,8 +422,14 @@ function openPdModal(productId) {
       };
     }
   } else {
-    cartBtn.disabled = true;
-    cartTxt.textContent = 'Selecciona un tamaño';
+    cartBtn.classList.remove('pd-cart-wa');
+    cartBtn.onclick = null;
+    const anySizeOn = Object.entries(p.sizes).some(([ml, price]) => p.inStock && bottleHasMl(p, ml) && price > 0);
+    // Con tallas disponibles el botón queda activo: si aún no eligió talla, lo
+    // lleva al selector (ver listener en _createPdModal)
+    cartBtn.disabled = !anySizeOn;
+    cartBtn.classList.toggle('pd-cart-pick', anySizeOn);
+    cartTxt.textContent = anySizeOn ? 'Elige un tamaño' : 'Agotado';
     sizesRow.innerHTML = Object.entries(p.sizes).map(([ml, price]) => {
       const sizeOff = !p.inStock || !bottleHasMl(p, ml) || price === 0;
       return `
@@ -430,6 +487,7 @@ function openPdModal(productId) {
         _pdSelSize  = btn.dataset.size;
         _pdSelPrice = parseFloat(btn.dataset.price);
         cartBtn.disabled = false;
+        cartBtn.classList.remove('pd-cart-pick');
         cartTxt.textContent = `AÑADIR AL CARRITO — S/ ${_pdSelPrice}`;
         cartBtn.classList.remove('added');
         priceRow.innerHTML = _pdSelPrice > 0
@@ -566,19 +624,29 @@ function openPdModal(productId) {
   });
 
   // Ocultar secciones del catálogo
-  ['#carouselWrapper', '.filters-section', '#catalogBanner', '.products-section',
-   '.marquee-strip', '.parallax-divider', '#contacto'].forEach(sel => {
-    document.querySelector(sel)?.classList.add('pd-page-hidden');
-  });
+  document.querySelectorAll(_PD_HIDE_SELECTOR).forEach(el => el.classList.add('pd-page-hidden'));
 
   const modal = document.getElementById('pdModal');
   modal.classList.add('open');
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
-function closePdModal() {
-  document.getElementById('pdModal')?.classList.remove('open');
-  // Restaurar secciones del catálogo
+// Cierra el detalle y vuelve al catálogo. `restoreScroll: false` cuando quien
+// llama va a hacer su propio scroll (ej. un link del menú).
+function closePdModal({ restoreScroll = true } = {}) {
+  const depth = _pdDepth;
+  _pdHide(restoreScroll);
+  // Sacar del historial los perfumes apilados (el popstate que llega después
+  // no hace nada porque el detalle ya está cerrado)
+  if (depth > 0 && history.state && history.state.pd) history.go(-depth);
+}
+
+function _pdHide(restoreScroll) {
+  const modal = document.getElementById('pdModal');
+  _pdDepth = 0;
+  if (!modal || !modal.classList.contains('open')) return;
+  modal.classList.remove('open');
   document.querySelectorAll('.pd-page-hidden').forEach(el => el.classList.remove('pd-page-hidden'));
-  window.scrollTo({ top: 0, behavior: 'instant' });
+  if (restoreScroll) window.scrollTo({ top: _pdReturnY, behavior: 'instant' });
+  if (window.ScrollTrigger) ScrollTrigger.refresh();
 }

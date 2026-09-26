@@ -192,7 +192,10 @@
   <link rel="icon" type="image/png" href="imgGato/icons/icon-192.png">
   <link rel="apple-touch-icon" href="imgGato/icons/icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20260923-1505">
+  <link rel="stylesheet" href="css/style.css?v=20260926-1127">
+  <!-- La pantalla de carga solo se muestra la primera vez en la sesión; en las
+       siguientes visitas (volver de Nosotros, recargar) no hace esperar. -->
+  <script>try { if (sessionStorage.getItem('micht_loader_seen')) document.documentElement.classList.add('pl-skip'); } catch (e) {}</script>
   <style>
     /* ── Perfumes Enteros — estilos adicionales ─────────── */
     .filter-btn-entero { border-color: rgba(124,79,176,.35) !important; }
@@ -261,10 +264,12 @@
     (function () {
       var loader = document.getElementById('pageLoader');
       if (!loader) return;
+      if (document.documentElement.classList.contains('pl-skip')) { loader.remove(); return; }
       var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       document.documentElement.classList.add('pl-lock');
 
       function hide() {
+        try { sessionStorage.setItem('micht_loader_seen', '1'); } catch (e) {}
         document.documentElement.classList.remove('pl-lock');
         loader.classList.add('pl-hide');
         setTimeout(function () { loader.remove(); }, reduced ? 0 : 500);
@@ -853,15 +858,28 @@
             <h4>¿Cómo recibes tu pedido?</h4>
             <label class="option-card">
               <input type="radio" name="deliveryType" value="pickup" checked>
-              <div class="option-content"><span class="option-icon">🏪</span><span>Recojo en Tienda</span></div>
+              <div class="option-content"><span class="option-icon">🏪</span><span>Recojo en tienda <small class="option-sub">Soritor</small></span></div>
             </label>
+            <label class="option-card" id="deliveryOptionCard">
+              <input type="radio" name="deliveryType" value="delivery">
+              <div class="option-content"><span class="option-icon">🛵</span><span>Delivery en Soritor <small class="option-sub option-sub-free">Gratis</small></span></div>
+            </label>
+            <p class="delivery-hint" id="deliveryHint" hidden></p>
             <label class="option-card">
               <input type="radio" name="deliveryType" value="shipping">
-              <div class="option-content"><span class="option-icon">📦</span><span>Envío a Provincia (Shalom)</span></div>
+              <div class="option-content"><span class="option-icon">📦</span><span>Envío por Shalom <small class="option-sub">Todo el Perú</small></span></div>
             </label>
           </div>
 
           <div id="pickupForm" class="pickup-form-section">
+            <div class="checkout-info-box">
+              <span class="cib-icon" aria-hidden="true">📍</span>
+              <div>
+                <p class="cib-title">Jr. Las Flores N°620, Soritor — San Martín</p>
+                <p class="cib-text">Coordinamos contigo la hora de recojo por WhatsApp.</p>
+                <a class="cib-link" href="https://maps.google.com/maps?q=-6.1374824,-77.09955" target="_blank" rel="noopener noreferrer">Ver en Google Maps →</a>
+              </div>
+            </div>
             <h4>Datos del recojo</h4>
             <div class="form-group">
               <label for="pickupNameInput">Tu nombre completo *</label>
@@ -869,7 +887,41 @@
             </div>
           </div>
 
+          <form class="shipping-form hidden" id="deliveryForm" novalidate>
+            <div class="checkout-info-box">
+              <span class="cib-icon" aria-hidden="true">🛵</span>
+              <div>
+                <p class="cib-title">Delivery gratis dentro de Soritor</p>
+                <p class="cib-text">Te llevamos tu pedido a casa. Coordinamos la hora por WhatsApp.</p>
+              </div>
+            </div>
+            <h4>¿A dónde lo llevamos?</h4>
+            <div class="form-group">
+              <label for="delivNameInput">Nombre completo *</label>
+              <input type="text" id="delivNameInput" maxlength="100" placeholder="Nombre y apellido" autocomplete="name">
+            </div>
+            <div class="form-group">
+              <label for="delivPhoneInput">Celular *</label>
+              <input type="tel" id="delivPhoneInput" inputmode="numeric" maxlength="9" placeholder="987654321" autocomplete="tel">
+            </div>
+            <div class="form-group">
+              <label for="delivAddressInput">Dirección *</label>
+              <input type="text" id="delivAddressInput" maxlength="150" placeholder="Ej: Jr. Los Olivos 123" autocomplete="street-address">
+            </div>
+            <div class="form-group">
+              <label for="delivRefInput">Referencia <span class="form-optional">(opcional)</span></label>
+              <input type="text" id="delivRefInput" maxlength="120" placeholder="Ej: frente a la plaza, casa de 2 pisos">
+            </div>
+          </form>
+
           <form class="shipping-form hidden" id="shippingForm" novalidate>
+            <div class="checkout-info-box">
+              <span class="cib-icon" aria-hidden="true">📦</span>
+              <div>
+                <p class="cib-title">El flete lo pagas al recoger en tu agencia Shalom</p>
+                <p class="cib-text">El costo y el tiempo de llegada dependen de Shalom según tu ciudad.</p>
+              </div>
+            </div>
             <h4>Datos del Destinatario</h4>
             <div class="form-group">
               <label for="dniInput">DNI *</label>
@@ -1276,30 +1328,30 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con el panel admin) — el orden importa -->
-  <script src="js/shared/data-core.js?v=20260923-1505"></script>
-  <script src="js/shared/catalog.js?v=20260923-1505"></script>
-  <script src="js/shared/data.js?v=20260923-1505"></script>
-  <script src="js/shared/supabase-config.js?v=20260923-1505"></script>
-  <script src="js/shared/cloud-orders.js?v=20260923-1505"></script>
-  <script src="js/shared/cloud-gallery.js?v=20260923-1505"></script>
-  <script src="js/shared/cloud-products.js?v=20260923-1505"></script>
-  <script src="js/shared/cloud-combos.js?v=20260923-1505"></script>
+  <script src="js/shared/data-core.js?v=20260926-1127"></script>
+  <script src="js/shared/catalog.js?v=20260926-1127"></script>
+  <script src="js/shared/data.js?v=20260926-1127"></script>
+  <script src="js/shared/supabase-config.js?v=20260926-1127"></script>
+  <script src="js/shared/cloud-orders.js?v=20260926-1127"></script>
+  <script src="js/shared/cloud-gallery.js?v=20260926-1127"></script>
+  <script src="js/shared/cloud-products.js?v=20260926-1127"></script>
+  <script src="js/shared/cloud-combos.js?v=20260926-1127"></script>
   <!-- Tienda -->
-  <script src="js/store/announcement.js?v=20260923-1505"></script>
-  <script src="js/store/seasonal-theme.js?v=20260923-1505"></script>
-  <script src="js/store/carousel.js?v=20260923-1505"></script>
-  <script src="js/store/cart.js?v=20260923-1505"></script>
-  <script src="js/store/catalog-view.js?v=20260923-1505"></script>
-  <script src="js/store/combos-carousel.js?v=20260923-1505"></script>
-  <script src="js/store/product-detail.js?v=20260923-1505"></script>
-  <script src="js/store/init.js?v=20260923-1505"></script>
-  <script src="js/store/gallery.js?v=20260923-1505"></script>
-  <script src="js/store/scent-finder.js?v=20260923-1505"></script>
-  <script src="js/store/checkout.js?v=20260923-1505"></script>
-  <script src="js/store/customer-auth.js?v=20260923-1505"></script>
-  <script src="js/store/chatbot.js?v=20260923-1505"></script>
-  <script src="js/store/animations.js?v=20260923-1505"></script>
-  <script src="js/store/gsap-animations.js?v=20260923-1505"></script>
+  <script src="js/store/announcement.js?v=20260926-1127"></script>
+  <script src="js/store/seasonal-theme.js?v=20260926-1127"></script>
+  <script src="js/store/carousel.js?v=20260926-1127"></script>
+  <script src="js/store/cart.js?v=20260926-1127"></script>
+  <script src="js/store/catalog-view.js?v=20260926-1127"></script>
+  <script src="js/store/combos-carousel.js?v=20260926-1127"></script>
+  <script src="js/store/product-detail.js?v=20260926-1127"></script>
+  <script src="js/store/init.js?v=20260926-1127"></script>
+  <script src="js/store/gallery.js?v=20260926-1127"></script>
+  <script src="js/store/scent-finder.js?v=20260926-1127"></script>
+  <script src="js/store/checkout.js?v=20260926-1127"></script>
+  <script src="js/store/customer-auth.js?v=20260926-1127"></script>
+  <script src="js/store/chatbot.js?v=20260926-1127"></script>
+  <script src="js/store/animations.js?v=20260926-1127"></script>
+  <script src="js/store/gsap-animations.js?v=20260926-1127"></script>
   <script>
     // ── Mobile menu toggle ───────────────────────────────────
     (function () {
@@ -1352,6 +1404,7 @@
       const target = document.querySelector(href);
       if (!target) return;
       e.preventDefault();
+      cerrarDetallePerfume();
       window.scrollTo({ top: Math.max(0, target.offsetTop - 68), behavior: 'smooth' });
     });
 
@@ -1415,6 +1468,15 @@
       }, 800);
     }
 
+    // ── Cerrar el detalle de un perfume si está abierto (helper) ──────────────
+    // Los links del menú llevan a secciones del catálogo, que están ocultas
+    // mientras se ve un perfume.
+    function cerrarDetallePerfume() {
+      if (typeof closePdModal === 'function' && document.getElementById('pdModal')?.classList.contains('open')) {
+        closePdModal({ restoreScroll: false });
+      }
+    }
+
     // ── Cerrar menú móvil (helper) ────────────────────────────────────────────
     function cerrarMenuMovil() {
       const menu = document.getElementById('mobileMenu');
@@ -1432,6 +1494,7 @@
       e.preventDefault();
       e.stopPropagation();
       cerrarMenuMovil();
+      cerrarDetallePerfume();
       // Resetear filtro a "Todos" si no está activo
       const btnTodos = document.querySelector('.filter-btn[data-filter="all"]');
       if (btnTodos && !btnTodos.classList.contains('active')) btnTodos.click();
@@ -1445,6 +1508,7 @@
       e.preventDefault();
       e.stopPropagation();
       cerrarMenuMovil();
+      cerrarDetallePerfume();
       const btn = document.querySelector('.filter-btn[data-filter="entero"]');
       if (btn) {
         btn.click();

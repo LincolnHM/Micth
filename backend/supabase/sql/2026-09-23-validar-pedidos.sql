@@ -34,6 +34,11 @@
 --
 -- Prueba al terminar: haz un pedido de prueba desde la tienda y confirma que
 -- aparece en el panel con el total correcto.
+--
+-- ACTUALIZADO 2026-09-26: acepta el tipo de entrega 'delivery' (Soritor). Si ya
+-- habías pegado la versión anterior, volver a pegarlo es opcional: con la
+-- anterior esos pedidos se guardan como 'recojo', pero el panel igual los muestra
+-- como Delivery gracias a la nota "DELIVERY SORITOR" que pone la tienda.
 
 CREATE OR REPLACE FUNCTION public.validar_pedido()
 RETURNS trigger
@@ -84,7 +89,8 @@ BEGIN
 
   NEW.status         := 'pendiente';
   NEW.payment_method := CASE WHEN NEW.payment_method = 'yape' THEN 'yape' ELSE NULL END;
-  NEW.delivery_type  := CASE WHEN NEW.delivery_type = 'envio' THEN 'envio' ELSE 'recojo' END;
+  -- 'delivery' = delivery a domicilio dentro de Soritor (agregado 2026-09-26)
+  NEW.delivery_type  := CASE WHEN NEW.delivery_type IN ('envio', 'delivery') THEN NEW.delivery_type ELSE 'recojo' END;
   NEW.customer_name  := left(translate(btrim(coalesce(NEW.customer_name,  '')), '<>', ''), 120);
   NEW.customer_phone := left(translate(btrim(coalesce(NEW.customer_phone, '')), '<>', ''), 20);
   NEW.customer_dni   := left(translate(btrim(coalesce(NEW.customer_dni,   '')), '<>', ''), 12);

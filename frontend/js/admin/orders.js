@@ -102,8 +102,8 @@ async function renderOrdersSection() {
     tbody.innerHTML = orders.map(o => {
     const date       = new Date(o.date).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: '2-digit' });
     const time       = new Date(o.date).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
-    const delivIcon  = o.deliveryType === 'recojo' ? '🏪' : '📦';
-    const delivText  = o.deliveryType === 'recojo' ? 'Recojo' : 'Shalom';
+    const delivIcon  = deliveryInfo(o.deliveryType).icon;
+    const delivText  = deliveryInfo(o.deliveryType).short;
     const safeStatus = o.status.replace(/[^a-z]/g, '');
     const selectVal  = SELECT_OPTIONS.includes(o.status) ? o.status : 'pendiente';
 
@@ -306,7 +306,10 @@ async function openOrderDetail(id) {
     <div class="order-detail-row"><span class="lbl">DNI</span><span class="val">${sanitize(order.customerDni || '—')}</span></div>
     <div class="order-detail-row"><span class="lbl">Teléfono</span><span class="val">${sanitize(order.customerPhone || '—')}</span></div>
     <hr style="border-color:var(--border)">
-    <div class="order-detail-row"><span class="lbl">Entrega</span><span class="val">${order.deliveryType === 'recojo' ? '🏪 Recojo en tienda' : '📦 Envío Shalom'}</span></div>
+    <div class="order-detail-row"><span class="lbl">Entrega</span><span class="val">${deliveryInfo(order.deliveryType).icon} ${deliveryInfo(order.deliveryType).long}</span></div>
+    ${order.deliveryType === 'delivery' ? `
+    <div class="order-detail-row"><span class="lbl">Dirección</span><span class="val">${sanitize(order.shalomOffice || '—')}</span></div>
+    ` : ''}
     ${order.deliveryType === 'envio' ? `
     <div class="order-detail-row"><span class="lbl">Dpto / Prov</span><span class="val">${sanitize(order.department || '')} / ${sanitize(order.province || '')}</span></div>
     <div class="order-detail-row"><span class="lbl">Agencia Shalom</span><span class="val">${sanitize(order.shalomOffice || '—')}</span></div>

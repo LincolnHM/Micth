@@ -310,7 +310,7 @@ function renderProducts() {
             <span class="product-gender" title="Género: ${sanitize(p.gender)}">${genderIcon}</span>
           </div>
 
-          <h3 class="product-name">${sanitize(p.name)}</h3>
+          <h3 class="product-name"><button type="button" class="product-name-btn" data-id="${p.id}">${sanitize(p.name)}</button></h3>
 
           ${p.contentDescription ? `<p class="product-content-desc">${sanitize(p.contentDescription)}</p>` : ''}
 
@@ -318,19 +318,13 @@ function renderProducts() {
             ${occasionLbl ? `<span class="tag-occasion">${occasionLbl}</span>` : ''}
           </div>
 
-          <button class="desc-toggle" data-id="${p.id}" aria-expanded="false">
-            <span>Ver descripción</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chevron" aria-hidden="true">
-              <path stroke-linecap="round" d="M6 9l6 6 6-6"/>
-            </svg>
-          </button>
-          <p class="product-desc" id="desc-${p.id}">${sanitize(p.description)}</p>
+          <p class="product-desc">${sanitize(p.description)}</p>
 
           <div class="product-footer">
             ${priceHtml}
             <div class="sizes-row">${sizesHtml}</div>
             <button class="btn-ver-detalle" data-id="${p.id}">
-              Ver perfil completo
+              Ver detalles
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true"><path stroke-linecap="round" d="M9 5l7 7-7 7"/></svg>
             </button>
           </div>
@@ -339,20 +333,8 @@ function renderProducts() {
     `;
   }).join('');
 
-  // Eventos: descripción toggle (solo móvil)
-  grid.querySelectorAll('.desc-toggle').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const panel = document.getElementById(`desc-${btn.dataset.id}`);
-      const open  = btn.getAttribute('aria-expanded') === 'true';
-      btn.setAttribute('aria-expanded', String(!open));
-      btn.querySelector('span').textContent = open ? 'Ver descripción' : 'Ocultar descripción';
-      btn.querySelector('.chevron').style.transform = open ? '' : 'rotate(180deg)';
-      panel.classList.toggle('desc-open', !open);
-    });
-  });
-
-  // Eventos: abrir modal de detalle
-  grid.querySelectorAll('.pd-open-btn, .btn-ver-detalle').forEach(btn => {
+  // Eventos: abrir la ficha (foto, nombre o "Ver detalles")
+  grid.querySelectorAll('.pd-open-btn, .btn-ver-detalle, .product-name-btn').forEach(btn => {
     btn.addEventListener('click', e => { e.stopPropagation(); openPdModal(parseInt(btn.dataset.id)); });
   });
 
@@ -463,11 +445,15 @@ function shareProduct(id, name) {
   if (!pid || isNaN(pid)) return;
   // Esperar a que los productos carguen
   const tryOpen = setInterval(() => {
-    if (typeof openPdModal === 'function' && (_allProducts || Products.getAll()).length > 0) {
+    if (typeof openPdModal === 'function' && _allProducts && _allProducts.length > 0) {
       clearInterval(tryOpen);
+      // La entrada actual pasa a ser el catálogo y el perfume se abre encima:
+      // así "atrás" deja al cliente en la tienda en vez de sacarlo.
+      const params = new URLSearchParams(location.search);
+      params.delete('p');
+      const qs = params.toString();
+      history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
       openPdModal(pid);
-      // Limpiar el parámetro de la URL sin recargar
-      history.replaceState(null, '', location.pathname + location.search.replace(/[?&]p=\d+/, '').replace(/^&/, '?'));
     }
   }, 200);
   setTimeout(() => clearInterval(tryOpen), 6000);

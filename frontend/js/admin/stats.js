@@ -249,9 +249,9 @@ async function renderStatsSection(forceRefresh = false) {
   const maxSize   = topSizes[0]?.[1] || 1;
 
   // ── Entrega ───────────────────────────────────────────────────────────────
-  let cRecojo = 0, cEnvio = 0;
-  orders.forEach(o => { o.deliveryType === 'envio' ? cEnvio++ : cRecojo++; });
-  const totalDel = Math.max(cRecojo + cEnvio, 1);
+  let cRecojo = 0, cEnvio = 0, cDelivery = 0;
+  orders.forEach(o => { o.deliveryType === 'envio' ? cEnvio++ : o.deliveryType === 'delivery' ? cDelivery++ : cRecojo++; });
+  const totalDel = Math.max(cRecojo + cEnvio + cDelivery, 1);
 
   // ── Top departamentos ─────────────────────────────────────────────────────
   const deptMap = {};
@@ -460,6 +460,7 @@ async function renderStatsSection(forceRefresh = false) {
         <div class="stat-card-head">🚚 Método de entrega</div>
         <div class="stat-card-body">
           ${bar('🏪 Recojo en tienda', cRecojo, totalDel, 'var(--gold)')}
+          ${bar('🛵 Delivery Soritor', cDelivery, totalDel, '#34d399')}
           ${bar('📦 Envío Shalom', cEnvio, totalDel, '#60a5fa')}
         </div>
       </div>

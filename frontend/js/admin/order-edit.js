@@ -46,8 +46,9 @@ async function openEditOrderModal(id) {
             <label style="font-size:.74rem;color:var(--text2);display:block;margin-bottom:.25rem">Entrega</label>
             <select id="editDelivery"
               style="width:100%;padding:.42rem .65rem;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:var(--r);font-size:.83rem;box-sizing:border-box">
-              <option value="recojo" ${order.deliveryType==='recojo'?'selected':''}>🏪 Recojo</option>
-              <option value="envio"  ${order.deliveryType==='envio' ?'selected':''}>📦 Shalom</option>
+              <option value="recojo"   ${order.deliveryType==='recojo'  ?'selected':''}>🏪 Recojo</option>
+              <option value="delivery" ${order.deliveryType==='delivery'?'selected':''}>🛵 Delivery Soritor</option>
+              <option value="envio"    ${order.deliveryType==='envio'   ?'selected':''}>📦 Shalom</option>
             </select>
           </div>
         </div>

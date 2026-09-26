@@ -49,13 +49,30 @@ function _cleanOrderItems(items) {
     });
 }
 
+// ─── Tipo de entrega ──────────────────────────────────────────────────────────
+// recojo (tienda en Soritor) · delivery (a domicilio dentro de Soritor) · envio (Shalom)
+const DELIVERY_TYPES = {
+  recojo:   { icon: '🏪', short: 'Recojo',   long: 'Recojo en tienda' },
+  delivery: { icon: '🛵', short: 'Delivery', long: 'Delivery en Soritor' },
+  envio:    { icon: '📦', short: 'Shalom',   long: 'Envío Shalom' }
+};
+function deliveryInfo(type) { return DELIVERY_TYPES[type] || DELIVERY_TYPES.recojo; }
+
+// 'delivery' es nuevo (2026-09-26). Si la base aún tiene el trigger de
+// validar-pedidos anterior, lo guarda como 'recojo'; la nota "DELIVERY SORITOR"
+// que pone la tienda permite reconocerlo igual.
+function _deliveryTypeFromRow(row) {
+  if (row.delivery_type === 'envio' || row.delivery_type === 'delivery') return row.delivery_type;
+  return /^DELIVERY SORITOR/.test(row.notes || '') ? 'delivery' : 'recojo';
+}
+
 function orderFromDB(row) {
   return {
     id:            _str(row.id, 80),
     customerName:  _str(row.customer_name, 200),
     customerPhone: _str(row.customer_phone, 40),
     customerDni:   _str(row.customer_dni, 20),
-    deliveryType:  row.delivery_type === 'envio' ? 'envio' : 'recojo',
+    deliveryType:  _deliveryTypeFromRow(row),
     department:    _str(row.department, 80),
     province:      _str(row.province, 80),
     shalomOffice:  _str(row.shalom_office, 300),
@@ -204,7 +221,9 @@ const CloudOrders = {
   async create(order) {
     const newOrder = {
       ...order,
-      id:     generateOrderId(),
+      // La tienda genera el id antes (para mostrarlo en el WhatsApp y en la
+      // pantalla de "pedido enviado"); el admin no lo pasa y se genera aquí.
+      id:     /^ORD-[A-Za-z0-9-]{6,40}$/.test(order.id || '') ? order.id : generateOrderId(),
       date:   new Date().toISOString(),
       status: order.status || 'pendiente',
       _pendingSync: !!db

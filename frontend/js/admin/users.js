@@ -172,7 +172,7 @@ async function openUserOrdersModal(dni, name) {
           </div>
           <div style="font-size:.78rem;color:var(--text2);margin-bottom:.35rem">${items || '—'}</div>
           <div style="display:flex;justify-content:space-between;font-size:.8rem">
-            <span style="color:var(--text3)">${o.deliveryType === 'envio' ? '📦 Shalom' : '🏪 Recojo'}</span>
+            <span style="color:var(--text3)">${deliveryInfo(o.deliveryType).icon} ${deliveryInfo(o.deliveryType).short}</span>
             <strong style="color:var(--gold)">S/ ${o.total.toFixed(2)}</strong>
           </div>
         </div>`;

@@ -95,7 +95,7 @@ function setupCsvExport() {
         rows.push([
           o.id, fecha,
           o.customerName || '', o.customerPhone || '', o.customerDni || '',
-          o.deliveryType === 'recojo' ? 'Recojo' : 'Shalom',
+          deliveryInfo(o.deliveryType).short,
           o.department || '',
           items,
           o.total.toFixed(2),

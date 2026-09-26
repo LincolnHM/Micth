@@ -68,8 +68,37 @@ const _rules = {
     v = v.trim();
     if (v.length < 5) return 'Indica la agencia Shalom con dirección (ej: Shalom – Av. España 123, Trujillo).';
     return null;
+  },
+  address(v) {
+    if (v.trim().length < 6) return 'Escribe tu dirección (calle y número).';
+    return null;
   }
 };
+
+// ─── Delivery en Soritor ──────────────────────────────────────────────────────
+// Gratis desde 2 decants o 1 perfume entero. Un combo cuenta por los perfumes
+// que trae; un entero es lo que no se vende por ml (Unidad, Set…).
+
+const STORE_ADDRESS        = 'Jr. Las Flores N°620, Soritor — San Martín';
+const DELIVERY_MIN_DECANTS = 2;
+
+function deliveryEligibility(items) {
+  const products = (typeof _allProducts !== 'undefined' && _allProducts) || Products.getAll();
+  const byId = new Map(products.map(p => [p.id, p]));
+  let decants = 0, enteros = 0;
+  items.forEach(i => {
+    const q = parseInt(i.quantity) || 1;
+    if (i.isCombo) {
+      decants += (i.comboItems || []).reduce((n, ci) => n + (parseInt(ci.qty) || 1), 0) * q;
+    } else if (byId.get(i.productId)?.type === 'entero' || !/ml\s*$/i.test(i.size || '')) {
+      enteros += q;
+    } else {
+      decants += q;
+    }
+  });
+  const ok = enteros > 0 || decants >= DELIVERY_MIN_DECANTS;
+  return { ok, missing: ok ? 0 : DELIVERY_MIN_DECANTS - decants };
+}
 
 // ─── Helpers de feedback visual ───────────────────────────────────────────────
 
@@ -128,6 +157,7 @@ const Checkout = {
     this._showStep(1);
     this.renderSummary();
     this.populateDepartments();
+    this._updateDeliveryAvailability();
 
     // Restablecer el botón de enviar por si quedó deshabilitado/con texto de carga
     // de un pedido anterior en la misma sesión
@@ -149,7 +179,51 @@ const Checkout = {
         if (phoneInput && !phoneInput.value && profile.telefono)        phoneInput.value = profile.telefono;
         const pickupInput = document.getElementById('pickupNameInput');
         if (pickupInput && !pickupInput.value && profile.nombre_completo) pickupInput.value = profile.nombre_completo;
+        const delivName  = document.getElementById('delivNameInput');
+        const delivPhone = document.getElementById('delivPhoneInput');
+        if (delivName  && !delivName.value  && profile.nombre_completo) delivName.value  = profile.nombre_completo;
+        if (delivPhone && !delivPhone.value && profile.telefono)        delivPhone.value = profile.telefono;
       }
+    }
+  },
+
+  // Muestra u oculta los datos de cada forma de entrega
+  applyDeliveryType(value) {
+    this.deliveryType = value;
+    document.getElementById('pickupForm').classList.toggle('hidden', value !== 'pickup');
+    const forms = { delivery: 'deliveryForm', shipping: 'shippingForm' };
+    Object.entries(forms).forEach(([type, id]) => {
+      const form = document.getElementById(id);
+      const wasHidden = form.classList.contains('hidden');
+      form.classList.toggle('hidden', value !== type);
+      if (value === type && wasHidden) {
+        // Llevar el formulario arriba del modal, sin que lo tape su encabezado fijo
+        setTimeout(() => {
+          const mc = document.querySelector('#checkoutModal .modal-content');
+          const headerH = mc?.querySelector('.modal-header')?.offsetHeight || 0;
+          if (mc) mc.scrollBy({ top: form.getBoundingClientRect().top - mc.getBoundingClientRect().top - headerH - 12, behavior: 'smooth' });
+        }, 60);
+      }
+    });
+  },
+
+  // El delivery solo se habilita si el carrito cumple el mínimo
+  _updateDeliveryAvailability() {
+    const card  = document.getElementById('deliveryOptionCard');
+    const radio = card?.querySelector('input');
+    const hint  = document.getElementById('deliveryHint');
+    if (!card || !radio) return;
+    const { ok, missing } = deliveryEligibility(Cart.items);
+    radio.disabled = !ok;
+    card.classList.toggle('option-disabled', !ok);
+    if (hint) {
+      hint.hidden = ok;
+      hint.textContent = ok ? '' :
+        `Delivery gratis en Soritor desde ${DELIVERY_MIN_DECANTS} decants o 1 perfume entero. Agrega ${missing} decant${missing !== 1 ? 's' : ''} más para usarlo.`;
+    }
+    if (!ok && this.deliveryType === 'delivery') {
+      document.querySelector('input[name="deliveryType"][value="pickup"]').checked = true;
+      this.applyDeliveryType('pickup');
     }
   },
 
@@ -177,6 +251,7 @@ const Checkout = {
   goToPayment() {
     if (Cart.items.length === 0) { alert('Tu carrito está vacío.'); return; }
     if (this.deliveryType === 'pickup'   && !this.validatePickupForm())   return;
+    if (this.deliveryType === 'delivery' && !this.validateDeliveryForm()) return;
     if (this.deliveryType === 'shipping' && !this.validateShippingForm()) return;
     this._showStep(2);
   },
@@ -237,8 +312,10 @@ const Checkout = {
       provinces.map(p => `<option value="${escapeAttr(p)}">${p}</option>`).join('');
   },
 
-  buildWhatsAppMessage() {
-    const lines      = ['🛍️ *NUEVO PEDIDO – MICHT Perfumes*\n'];
+  buildWhatsAppMessage(orderId) {
+    const lines      = ['🛍️ *NUEVO PEDIDO – MICHT Perfumes*'];
+    if (orderId) lines.push(`*N° de pedido:* ${orderId}`);
+    lines.push('');
     const base       = Cart.total();
     const hasDisc    = typeof UserAuth !== 'undefined' && UserAuth.hasFirstDiscount();
     const effective  = this._effectiveTotal();
@@ -265,8 +342,15 @@ const Checkout = {
 
     if (this.deliveryType === 'pickup') {
       const pickupName = document.getElementById('pickupNameInput').value.trim();
-      lines.push('\n📍 *Tipo de entrega:* Recojo en Tienda');
+      lines.push(`\n📍 *Tipo de entrega:* Recojo en tienda (${STORE_ADDRESS})`);
       if (pickupName) lines.push(`*Nombre:* ${pickupName}`);
+    } else if (this.deliveryType === 'delivery') {
+      const val = id => document.getElementById(id).value.trim();
+      lines.push('\n🛵 *Tipo de entrega:* Delivery en Soritor (gratis)');
+      lines.push(`  • Nombre: ${val('delivNameInput')}`);
+      lines.push(`  • Celular: ${val('delivPhoneInput')}`);
+      lines.push(`  • Dirección: ${val('delivAddressInput')}`);
+      if (val('delivRefInput')) lines.push(`  • Referencia: ${val('delivRefInput')}`);
     } else {
       const dni        = document.getElementById('dniInput').value.trim();
       const name       = document.getElementById('nameInput').value.trim();
@@ -283,9 +367,10 @@ const Checkout = {
       lines.push(`  • Departamento: ${department}`);
       lines.push(`  • Provincia: ${province}`);
       lines.push(`  • Agencia Shalom: ${shalom}`);
+      lines.push('_(El flete lo pago al recoger en la agencia Shalom)_');
     }
 
-    lines.push('\n_Mensaje enviado desde michtdecants.com');
+    lines.push('\n_Mensaje enviado desde michtdecants.com_');
     return lines.join('\n');
   },
 
@@ -301,6 +386,21 @@ const Checkout = {
     let ok = true;
     checks.forEach(([id, rule, get]) => {
       const err = rule(get());
+      if (err) { _showErr(id, err); ok = false; }
+      else     { _clearErr(id); }
+    });
+    return ok;
+  },
+
+  validateDeliveryForm() {
+    const checks = [
+      ['delivNameInput',    _rules.name],
+      ['delivPhoneInput',   _rules.phone],
+      ['delivAddressInput', _rules.address],
+    ];
+    let ok = true;
+    checks.forEach(([id, rule]) => {
+      const err = rule(document.getElementById(id).value);
       if (err) { _showErr(id, err); ok = false; }
       else     { _clearErr(id); }
     });
@@ -327,7 +427,8 @@ const Checkout = {
     }
 
     // Capturar datos del pedido ANTES de limpiar el carrito
-    const isShipping    = this.deliveryType === 'shipping';
+    const orderId       = generateOrderId();
+    const type          = this.deliveryType;
     const hasDiscount   = typeof UserAuth !== 'undefined' && UserAuth.hasFirstDiscount();
     const orderItems    = Cart.items.map(i => ({
       productId:   i.productId,
@@ -340,15 +441,40 @@ const Checkout = {
     }));
     const orderTotal    = this._effectiveTotal();
     const profile       = (typeof UserAuth !== 'undefined') ? UserAuth.getProfile() : null;
+    const val           = id => document.getElementById(id).value.trim();
+    const customer = type === 'shipping' ? {
+      customerName:  val('nameInput'),
+      customerPhone: val('phoneInput'),
+      customerDni:   val('dniInput'),
+      deliveryType:  'envio',
+      department:    val('departmentSelect'),
+      province:      val('provinceSelect'),
+      shalomOffice:  val('shalomInput')
+    } : type === 'delivery' ? {
+      customerName:  val('delivNameInput'),
+      customerPhone: val('delivPhoneInput'),
+      customerDni:   profile?.dni || '',
+      deliveryType:  'delivery',
+      department:    '',
+      province:      '',
+      // La dirección de entrega va en el mismo campo que la agencia Shalom
+      shalomOffice:  [val('delivAddressInput'), val('delivRefInput') && `Ref: ${val('delivRefInput')}`].filter(Boolean).join(' · ')
+    } : {
+      customerName:  val('pickupNameInput'),
+      customerPhone: profile?.telefono || '',
+      customerDni:   profile?.dni || '',
+      deliveryType:  'recojo',
+      department:    '',
+      province:      '',
+      shalomOffice:  ''
+    };
     const orderData = {
-      customerName:  isShipping ? document.getElementById('nameInput').value.trim()   : document.getElementById('pickupNameInput').value.trim(),
-      customerPhone: isShipping ? document.getElementById('phoneInput').value.trim()  : (profile?.telefono || ''),
-      customerDni:   isShipping ? document.getElementById('dniInput').value.trim()    : (profile?.dni || ''),
-      deliveryType:  isShipping ? 'envio' : 'recojo',
-      department:    isShipping ? document.getElementById('departmentSelect').value   : '',
-      province:      isShipping ? document.getElementById('provinceSelect').value     : '',
-      shalomOffice:  isShipping ? document.getElementById('shalomInput').value.trim() : '',
-      notes:         hasDiscount ? 'DESCUENTO 10% PRIMERA COMPRA aplicado' : '',
+      id:            orderId,
+      ...customer,
+      // "DELIVERY SORITOR" al inicio: así el panel lo reconoce aunque la base
+      // todavía tenga el trigger que solo acepta recojo/envio
+      notes:         [type === 'delivery' ? 'DELIVERY SORITOR' : '',
+                      hasDiscount ? 'DESCUENTO 10% PRIMERA COMPRA aplicado' : ''].filter(Boolean).join(' · '),
       items:         orderItems,
       total:         orderTotal,
       paymentMethod: 'yape'
@@ -364,7 +490,7 @@ const Checkout = {
     CloudOrders.create(orderData).catch(err => console.error('Error al registrar pedido:', err));
 
     // Abrir WhatsApp — función SÍNCRONA para preservar el gesto del usuario en móvil
-    const message = encodeURIComponent(this.buildWhatsAppMessage());
+    const message = encodeURIComponent(this.buildWhatsAppMessage(orderId));
     const url     = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
     // OJO: sin "noopener" en la lista de opciones — con él window.open devuelve SIEMPRE
     // null y la línea de abajo navegaba TAMBIÉN esta pestaña a WhatsApp (dos pestañas en
@@ -392,6 +518,7 @@ function _showOrderSuccessModal(order) {
       <div class="os-box">
         <div class="os-icon">✅</div>
         <h3 class="os-title">¡Pedido enviado!</h3>
+        <p class="os-order-id">N° de pedido <strong id="osOrderId"></strong></p>
         <p class="os-sub">Tu pedido fue enviado por WhatsApp. Te confirmaremos en breve.</p>
         <div id="osSummary" class="os-summary"></div>
         <div class="os-actions">
@@ -406,6 +533,7 @@ function _showOrderSuccessModal(order) {
     modal.querySelector('.os-backdrop').addEventListener('click', () => modal.classList.remove('open'));
     document.getElementById('osCloseBtn').addEventListener('click', () => modal.classList.remove('open'));
   }
+  document.getElementById('osOrderId').textContent = order.id || '';
   document.getElementById('osSummary').innerHTML = `
     <ul class="os-items">
       ${order.items.map(i => `<li><span>${sanitize(i.brand)} – ${sanitize(i.productName)} (${sanitize(i.size)}) × ${i.quantity}</span><span>S/ ${(i.price * i.quantity).toFixed(2)}</span></li>`).join('')}
@@ -448,28 +576,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  function _applyDeliveryType(value) {
-    Checkout.deliveryType = value;
-    document.getElementById('pickupForm').classList.toggle('hidden', value !== 'pickup');
-    const form = document.getElementById('shippingForm');
-    const wasHidden = form.classList.contains('hidden');
-    form.classList.toggle('hidden', value !== 'shipping');
-    if (value === 'shipping' && wasHidden) {
-      setTimeout(() => {
-        const mc = document.querySelector('.modal-content');
-        if (mc) mc.scrollTo({ top: mc.scrollHeight, behavior: 'smooth' });
-      }, 60);
-    }
-  }
-
   document.querySelectorAll('input[name="deliveryType"]').forEach(radio => {
-    radio.addEventListener('change', () => _applyDeliveryType(radio.value));
+    radio.addEventListener('change', () => Checkout.applyDeliveryType(radio.value));
   });
 
   document.querySelectorAll('.option-card').forEach(card => {
     card.addEventListener('click', () => {
       const radio = card.querySelector('input[type="radio"]');
-      if (radio) { radio.checked = true; _applyDeliveryType(radio.value); }
+      if (!radio) return;
+      if (radio.disabled) {
+        // Delivery aún no disponible: resaltar el aviso de cuánto falta
+        const hint = document.getElementById('deliveryHint');
+        if (!hint) return;
+        hint.classList.remove('delivery-hint-pulse');
+        void hint.offsetWidth;
+        hint.classList.add('delivery-hint-pulse');
+        return;
+      }
+      radio.checked = true;
+      Checkout.applyDeliveryType(radio.value);
     });
   });
 
@@ -481,8 +606,10 @@ document.addEventListener('DOMContentLoaded', () => {
     this.value = this.value.replace(/\D/g, '').slice(0, 8);
   });
 
-  document.getElementById('phoneInput').addEventListener('input', function () {
-    this.value = this.value.replace(/\D/g, '').slice(0, 9);
+  ['phoneInput', 'delivPhoneInput'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', function () {
+      this.value = this.value.replace(/\D/g, '').slice(0, 9);
+    });
   });
 
   // ── Validación en tiempo real ─────────────────────────────────────────────
@@ -492,6 +619,9 @@ document.addEventListener('DOMContentLoaded', () => {
     nameInput:       'name',
     phoneInput:      'phone',
     shalomInput:     'shalom',
+    delivNameInput:    'name',
+    delivPhoneInput:   'phone',
+    delivAddressInput: 'address',
   };
 
   Object.entries(_fieldRuleMap).forEach(([id, ruleKey]) => {
