@@ -4,6 +4,10 @@ on:
   push:
     branches: [master]
   workflow_dispatch:
+  # Una vez al día (5 a. m. hora de Perú): regenera las páginas de cada perfume
+  # para que precios, stock y perfumes nuevos del panel se reflejen solos.
+  schedule:
+    - cron: '0 10 * * *'
 
 permissions:
   contents: read
@@ -26,6 +30,16 @@ jobs:
 
       - name: Configurar Pages
         uses: actions/configure-pages@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Una página por perfume (frontend/perfume/<nombre>/) con su foto y datos
+      # para WhatsApp y Google. Si Supabase no responde, se publica igual sin ellas.
+      - name: Generar páginas de perfumes
+        run: node tools/build-product-pages.mjs
 
       # Solo se publica la carpeta frontend/. Lo demás del repositorio (backend/ con el
       # SQL y las Edge Functions, tools/, README, .github…) NUNCA sale al sitio público.

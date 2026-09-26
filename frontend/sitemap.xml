@@ -7,6 +7,11 @@
     <lastmod>2026-05-25</lastmod>
   </sitemap>
 
+  <!-- Una página por perfume (la genera tools/build-product-pages.mjs al publicar) -->
+  <sitemap>
+    <loc>https://michtdecants.com/sitemap-perfumes.xml</loc>
+  </sitemap>
+
   <!-- Sitemap de imágenes de productos -->
   <sitemap>
     <loc>https://michtdecants.com/sitemap-images.xml</loc>

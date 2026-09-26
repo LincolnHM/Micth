@@ -545,10 +545,24 @@ function renderRecentlyViewed() {
   bindMiniCards(scroll);
 }
 
+// ─── Dirección propia de cada perfume: /perfume/<slug>/ (js/shared/slugs.js) ──
+
+let _slugMaps = null;
+function _productSlugMaps() {
+  if (!_slugMaps && _allProducts && typeof MichtSlugs !== 'undefined') _slugMaps = MichtSlugs.buildProductSlugs(_allProducts);
+  return _slugMaps;
+}
+function productSlug(id)       { return _productSlugMaps()?.byId.get(id) || ''; }
+function productIdFromSlug(sl) { return _productSlugMaps()?.bySlug.get(sl) ?? null; }
+function productUrl(id) {
+  const slug = productSlug(id);
+  return slug ? `${location.origin}/perfume/${slug}/` : `${location.origin}/?p=${id}`;
+}
+
 // ─── Compartir perfume ────────────────────────────────────────────────────────
 
 function shareProduct(id, name) {
-  const url = `${location.origin}${location.pathname}?p=${id}`;
+  const url = productUrl(id);
   if (navigator.share) {
     navigator.share({ title: name, text: `Mira este perfume en MICHT Decants: ${name}`, url })
       .catch(() => {});
@@ -565,22 +579,29 @@ function shareProduct(id, name) {
   }
 }
 
-// Manejar link de compartir al cargar la página (?p=ID)
+// Abrir un perfume al cargar la página. Llega de tres formas:
+//   · /perfume/<slug>/        página propia del perfume (window.__MICHT_PRODUCT_ID)
+//   · /?perfume=<slug>        404.html, si el perfume es más nuevo que su página
+//   · /?p=ID                  links compartidos antes de las páginas propias
 (function handleShareLink() {
   const params = new URLSearchParams(location.search);
-  const pid    = parseInt(params.get('p'));
-  if (!pid || isNaN(pid)) return;
+  const slug   = params.get('perfume');
+  // Ojo: hay un perfume con id 0 (L'Immensité), así que nada de "if (pid)"
+  let   pid    = Number.isInteger(window.__MICHT_PRODUCT_ID) ? window.__MICHT_PRODUCT_ID
+               : params.has('p') ? parseInt(params.get('p')) : NaN;
+  if (!slug && !Number.isInteger(pid)) return;
   // Esperar a que los productos carguen
   const tryOpen = setInterval(() => {
     if (typeof openPdModal === 'function' && _allProducts && _allProducts.length > 0) {
       clearInterval(tryOpen);
-      // La entrada actual pasa a ser el catálogo y el perfume se abre encima:
-      // así "atrás" deja al cliente en la tienda en vez de sacarlo.
-      const params = new URLSearchParams(location.search);
+      if (slug) pid = productIdFromSlug(slug);
+      // La entrada actual pasa a ser el catálogo (la raíz) y el perfume se abre
+      // encima: así "atrás" deja al cliente en la tienda en vez de sacarlo.
       params.delete('p');
+      params.delete('perfume');
       const qs = params.toString();
-      history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
-      openPdModal(pid);
+      history.replaceState(null, '', '/' + (qs ? '?' + qs : ''));
+      if (Number.isInteger(pid)) openPdModal(pid);
     }
   }, 200);
   setTimeout(() => clearInterval(tryOpen), 6000);

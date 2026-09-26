@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Página no encontrada · Micht Decants</title>
+  <script>
+    // Un perfume agregado después de la última publicación todavía no tiene su
+    // página /perfume/<nombre>/: se abre desde la tienda (js/store/catalog-view.js).
+    (function () {
+      var m = location.pathname.match(/^\/perfume\/([a-z0-9-]+)\/?$/);
+      if (m) location.replace('/?perfume=' + m[1]);
+    })();
+  </script>
   <meta name="robots" content="noindex, nofollow">
   <link rel="canonical" href="https://michtdecants.com/">
   <meta name="theme-color" content="#7c4fb0">

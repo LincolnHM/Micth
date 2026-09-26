@@ -14,10 +14,11 @@ let _pdDepth   = 0;   // perfumes apilados en el historial desde el catálogo
 try { history.scrollRestoration = 'manual'; } catch (_) {}
 
 function _pdUrl(id) {
+  const slug = typeof productSlug === 'function' ? productSlug(id) : '';
+  if (slug) return `/perfume/${slug}/`;
   const params = new URLSearchParams(location.search);
-  if (id) params.set('p', id); else params.delete('p');
-  const qs = params.toString();
-  return location.pathname + (qs ? '?' + qs : '');
+  params.set('p', id);
+  return location.pathname + '?' + params.toString();
 }
 
 // Todo lo que va entre el header y el footer es "catálogo" y se oculta mientras
@@ -27,7 +28,7 @@ const _PD_HIDE_SELECTOR = 'body > section, body > main, body > .marquee-strip, b
 
 window.addEventListener('popstate', e => {
   const st = e.state;
-  if (st && st.pd) {
+  if (st && Number.isInteger(st.pd)) {   // ojo: L'Immensité tiene id 0
     _pdDepth = st.depth || 1;
     openPdModal(st.pd, { fromHistory: true });
   } else {
@@ -667,7 +668,7 @@ function closePdModal({ restoreScroll = true } = {}) {
   _pdHide(restoreScroll);
   // Sacar del historial los perfumes apilados (el popstate que llega después
   // no hace nada porque el detalle ya está cerrado)
-  if (depth > 0 && history.state && history.state.pd) history.go(-depth);
+  if (depth > 0 && Number.isInteger(history.state?.pd)) history.go(-depth);
 }
 
 function _pdHide(restoreScroll) {

@@ -37,3 +37,4 @@ Allow: /images/
 Sitemap: https://michtdecants.com/sitemap.xml
 Sitemap: https://michtdecants.com/sitemap-pages.xml
 Sitemap: https://michtdecants.com/sitemap-images.xml
+Sitemap: https://michtdecants.com/sitemap-perfumes.xml
