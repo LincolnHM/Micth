@@ -2780,8 +2780,11 @@ html.pl-skip .page-loader { display: none; }
 
 /* ── Parallax — tilt de tarjetas ──────────────────────── */
 .product-card {
-  will-change: transform;
   transition: transform .15s ease, box-shadow .15s ease;
+}
+/* will-change solo donde hay tilt con mouse: en celular gastaba memoria en cada tarjeta */
+@media (hover: hover) and (pointer: fine) {
+  .product-card { will-change: transform; }
 }
 .product-card.tilted {
   transition: transform .06s ease;
@@ -2849,9 +2852,11 @@ html.pl-skip .page-loader { display: none; }
   .parallax-deco { display: none; }
 }
 
-/* Desactivar tilt en dispositivos táctiles */
+/* Desactivar tilt en dispositivos táctiles; al tocar, un leve "hundido" como respuesta */
 @media (hover: none) {
   .product-card { transition: transform .25s ease, box-shadow .25s ease; }
+  .product-card:active { transform: scale(.985); }
+  .parallax-particle { will-change: auto; }
 }
 
 /* ── Scroll progress line (barra dorada superior) ──────── */
@@ -2859,10 +2864,16 @@ html.pl-skip .page-loader { display: none; }
   position: fixed;
   top: 0; left: 0;
   height: 2px;
-  width: 0%;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
   background: linear-gradient(90deg, var(--gold-d), var(--gold), var(--gold-l));
   z-index: 9999;
   pointer-events: none;
+  will-change: transform;
+}
+@media (max-width: 767px) {
+  .scroll-progress-line { height: 3px; }
 }
 
 /* ── Nav underline animado ─────────────────────────────── */
@@ -3211,6 +3222,12 @@ html.pl-skip .page-loader { display: none; }
   66%      { transform: translate(-18px,22px) scale(.96); }
 }
 @media (prefers-reduced-motion: reduce) { .blob { animation: none !important; } }
+/* Celulares y tablets: los blobs ya son degradados suaves, el blur(80px) solo
+   costaba batería y hacía saltar el scroll. Sin blur y más lentos se ven igual. */
+@media (max-width: 1024px), (hover: none) {
+  .blob { filter: none; animation-duration: 32s; }
+  .bg-blobs { will-change: auto !important; }
+}
 
 /* ─── Hamburger menu button ─────────────────────────────── */
 .menu-btn {

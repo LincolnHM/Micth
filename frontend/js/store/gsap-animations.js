@@ -11,13 +11,22 @@
 
   gsap.registerPlugin(ScrollTrigger);
 
-  // ── 1. Header entrance — timeline coordinada ──────────────────────────────
+  // En celular los recorridos son más cortos y rápidos: se sienten ágiles y no
+  // “saltan” en pantallas pequeñas. En computadora se mantiene el efecto amplio.
+  const mobile = () => window.matchMedia('(max-width: 767px)').matches;
+  const dist   = px => (mobile() ? Math.round(px * 0.5) : px);
+  const dur    = s  => (mobile() ? +(s * 0.8).toFixed(2) : s);
+
+  // Evita saltos cuando la barra del navegador del celular aparece/desaparece
+  ScrollTrigger.config({ ignoreMobileResize: true });
+
+  // ── 1. Header entrance ────────────────────────────────────────────────────
+  // El logo y los links del menú ya entran con CSS (logoSlideIn / navFadeIn);
+  // animarlos también aquí hacía que ambas animaciones se pelearan.
   document.addEventListener('DOMContentLoaded', () => {
-    gsap.timeline({ defaults: { ease: 'power4.out' } })
-      .from('.logo',     { opacity: 0, y: -26, duration: 0.75 },         0.05)
-      .from('.nav a',    { opacity: 0, y: -18, stagger: 0.08, duration: 0.55 }, 0.22)
-      .from('.cart-btn', { opacity: 0, scale: 0.65, duration: 0.45 },     0.42)
-      .from('.menu-btn', { opacity: 0, scale: 0.65, duration: 0.45 },     0.48);
+    gsap.from('.header-right > .cart-btn, .header-right > .menu-btn', {
+      opacity: 0, scale: 0.65, duration: 0.45, ease: 'power4.out', stagger: 0.06, delay: 0.4,
+    });
   });
 
   // ── 2. Parallax scrub en mascota — ligada al scroll ───────────────────────
@@ -34,7 +43,9 @@
     });
   }
 
-  // ── 3. Product cards: batch reveal con MutationObserver ──────────────────
+  // ── 3. Product cards: aparecen al entrar en pantalla ─────────────────────
+  // Antes se animaban todas a la vez al cargar; en celular las de más abajo
+  // terminaban su animación antes de verse. Ahora cada fila aparece al llegar.
   (function initProductCards() {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
@@ -44,20 +55,29 @@
       if (!cards.length) return;
       cards.forEach(el => el.setAttribute('data-gsap', '1'));
 
-      gsap.fromTo(
-        cards,
-        { opacity: 0, y: 48, scale: 0.93 },
-        {
+      // Limpiar triggers de tarjetas que ya no existen (filtros, paginación)
+      ScrollTrigger.getAll().forEach(t => {
+        if (t.vars && t.vars.id === 'card-batch' && t.trigger && !t.trigger.isConnected) t.kill();
+      });
+
+      gsap.set(cards, { opacity: 0, y: dist(48), scale: 0.95 });
+
+      ScrollTrigger.batch(cards, {
+        id: 'card-batch',
+        start: 'top 94%',
+        once: true,
+        onEnter: batch => gsap.to(batch, {
           opacity: 1,
           y: 0,
           scale: 1,
-          duration: 0.68,
+          duration: dur(0.62),
           ease: 'power3.out',
-          stagger: { each: 0.07, from: 'start' },
+          stagger: { each: mobile() ? 0.05 : 0.07, from: 'start' },
+          overwrite: true,
           // Limpia inline styles para que el hover CSS funcione correctamente
-          onComplete() { gsap.set(cards, { clearProps: 'transform,opacity,scale' }); },
-        }
-      );
+          onComplete() { gsap.set(batch, { clearProps: 'transform,opacity,scale' }); },
+        }),
+      });
 
       ScrollTrigger.refresh();
     }
@@ -92,9 +112,9 @@
       toggleActions: 'play none none none',
     },
     opacity: 0,
-    y: 90,
-    scale: 0.87,
-    duration: 1.15,
+    y: dist(90),
+    scale: mobile() ? 0.95 : 0.87,
+    duration: dur(1.15),
     ease: 'expo.out',
   });
 
@@ -105,8 +125,8 @@
       toggleActions: 'play none none none',
     },
     opacity: 0,
-    y: 24,
-    duration: 0.65,
+    y: dist(24),
+    duration: dur(0.65),
     ease: 'power3.out',
     stagger: 0.1,
   });
@@ -119,8 +139,8 @@
       toggleActions: 'play none none none',
     },
     opacity: 0,
-    y: 30,
-    duration: 0.65,
+    y: dist(30),
+    duration: dur(0.65),
     ease: 'power3.out',
     stagger: 0.12,
   });
@@ -139,6 +159,9 @@
     ease: 'back.out(1.8)',
     stagger: 0.1,
   });
+
+  // Al girar el celular, recalcular dónde empiezan las animaciones
+  window.addEventListener('orientationchange', () => setTimeout(() => ScrollTrigger.refresh(), 250));
 
   // ── 9. Scroll progress line — color dorado pulsante ──────────────────────
   // (el ancho ya lo maneja animations.js via JS; aquí solo la apariencia)
