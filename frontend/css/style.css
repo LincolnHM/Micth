@@ -1168,6 +1168,57 @@ html.pl-skip .page-loader { display: none; }
 .combo-card-add-btn.added { background: var(--green); color: #fff; }
 .combos-empty { text-align: center; padding: 2.5rem 1rem; color: var(--text2); font-size: .85rem; }
 
+/* ─── Próximamente (js/store/coming-soon.js) ──────────────── */
+.soon-section { padding: 2.25rem 0 1.5rem; }
+.soon-track {
+  display: flex; gap: 1rem;
+  overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-left: 1rem;
+  padding: .4rem 1rem 1rem;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.soon-track::-webkit-scrollbar { display: none; }
+/* centradas si son pocas; con margin auto (y no justify-content) no se corta el inicio al deslizar */
+.soon-card:first-child { margin-left: auto; }
+.soon-card:last-child { margin-right: auto; }
+.soon-card {
+  scroll-snap-align: start;
+  flex: 0 0 min(62vw, 230px);
+  display: flex; flex-direction: column;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+}
+.soon-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,.4), 0 0 0 1px rgba(124,79,176,.3); border-color: rgba(124,79,176,.4); }
+.soon-img-wrap {
+  position: relative; aspect-ratio: 4 / 5;
+  background: linear-gradient(150deg, #ffffff 0%, #f4f4f4 100%);
+}
+.soon-img-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.soon-badge {
+  position: absolute; top: .6rem; left: .6rem;
+  background: var(--gold); color: #fff;
+  font-size: .62rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  padding: .28rem .65rem; border-radius: 50px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.3);
+}
+.soon-info { flex: 1; display: flex; flex-direction: column; gap: .3rem; padding: .9rem 1rem 1rem; }
+.soon-brand { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text3); }
+.soon-name { font-family: var(--font-serif); font-size: 1.05rem; font-weight: 600; color: var(--white); line-height: 1.25; }
+.soon-dupe { font-size: .74rem; color: var(--text2); }
+.soon-dupe strong { color: var(--gold-l); font-weight: 600; }
+.soon-tags { font-size: .72rem; color: var(--text3); }
+.soon-notes {
+  font-size: .76rem; color: var(--text2); line-height: 1.45; margin-bottom: .4rem;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.soon-notify {
+  margin-top: auto; padding: .6rem .7rem; text-align: center;
+  font-size: .78rem; font-weight: 700; color: var(--gold-l);
+  border: 1px solid rgba(124,79,176,.45); border-radius: var(--r);
+  transition: background var(--tr), color var(--tr), border-color var(--tr);
+}
+.soon-notify:hover { background: var(--gold); border-color: var(--gold); color: #fff; }
+
 /* ─── Carrito lateral ──────────────────────────────────── */
 .cart-sidebar {
   position: fixed; top: 0; right: 0; bottom: 0; width: min(390px, 100vw);
@@ -7953,13 +8004,16 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 /* ─── Anuncio de bienvenida (modal al entrar a la tienda) ────────────────── */
 
 .announce-modal {
+  --ann-pad: clamp(.9rem, 3vmin, 2.25rem);
   position: fixed;
   inset: 0;
   z-index: 10000;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.25rem;
+  padding: var(--ann-pad);
+  /* en un celular bajito, si el anuncio no entra, se desliza (el box se
+     centra con margin:auto, que a diferencia de align-items no corta arriba) */
+  overflow-y: auto;
+  overscroll-behavior: contain;
   opacity: 0;
   pointer-events: none;
   transition: opacity .25s ease;
@@ -7967,7 +8021,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 .announce-modal.open { opacity: 1; pointer-events: auto; }
 
 .announce-backdrop {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: rgba(0,0,0,.72);
   backdrop-filter: blur(6px);
@@ -7975,6 +8029,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 
 .announce-box {
   position: relative;
+  margin: auto;
   width: 100%;
   max-width: 380px;
   background: var(--card);
@@ -8003,18 +8058,30 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 }
 .announce-close:hover { background: rgba(124,79,176,.15); color: var(--gold); }
 
-/* Variante con foto: la imagen llena el modal, la X flota encima */
-.announce-box-img {
+/* Variante con foto: la foto se ve COMPLETA (nunca recortada) y tan grande
+   como entre en la pantalla — en PC crece, en celular ocupa el ancho. El box
+   toma el ancho de la foto; announcement.js pone --ann-ratio (ancho/alto de
+   la foto) y --ann-body-h (alto del texto de abajo) para que todo entre.
+   Selectores dobles para que las reglas por tamaño de pantalla de
+   .announce-box no le devuelvan el padding. */
+.announce-box.announce-box-img {
+  width: auto;
+  max-width: 100%;
   padding: 0;
   overflow: hidden;
-  max-width: 420px;
 }
-.announce-img-wrap { width: 100%; line-height: 0; }
+.announce-img-wrap { line-height: 0; min-width: 0; }
 .announce-img {
-  width: 100%;
-  max-height: 66vh;
-  object-fit: cover;
+  --ann-max-h: calc(100vh - 2 * var(--ann-pad) - 2px);
   display: block;
+  /* lo más alta que entre (hasta 1000px de ancho), sin bajar de 280px de
+     ancho: en un celular bajito se desliza en vez de quedar diminuta */
+  width: max(280px, min(1000px, (var(--ann-max-h) - var(--ann-body-h, 0px)) * var(--ann-ratio, .5625)));
+  max-width: 100%;
+  height: auto;
+}
+@supports (height: 100dvh) {
+  .announce-img { --ann-max-h: calc(100dvh - 2 * var(--ann-pad) - 2px); }
 }
 .announce-close-overlay {
   background: rgba(0,0,0,.55);
@@ -8024,8 +8091,12 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 }
 .announce-close-overlay:hover { background: rgba(0,0,0,.75); color: #fff; }
 .announce-box-img .announce-body {
-  padding: 1.4rem 1.6rem 1.7rem;
+  width: 0;
+  min-width: 100%; /* el texto se acomoda al ancho de la foto, no lo agranda */
+  box-sizing: border-box;
+  padding: 1.1rem 1.4rem 1.3rem;
 }
+.announce-box-img .announce-body > :last-child { margin-bottom: 0; }
 .announce-box-img .announce-emoji { display: none; }
 
 .announce-emoji {
@@ -8071,6 +8142,34 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   .announce-box { padding: 1.8rem 1.35rem 1.6rem; }
   .announce-emoji { font-size: 2.2rem; }
   .announce-title { font-size: 1.15rem; }
+}
+
+/* PC / pantallas grandes: todo un poco más grande */
+@media (min-width: 900px) {
+  .announce-box { max-width: 470px; padding: 2.6rem 2.3rem 2.3rem; }
+  .announce-close { width: 38px; height: 38px; font-size: .95rem; top: .9rem; right: .9rem; }
+  .announce-emoji { font-size: 3rem; }
+  .announce-title { font-size: 1.55rem; }
+  .announce-message { font-size: 1rem; }
+  .announce-cta { font-size: .95rem; padding: .85rem 1.2rem; }
+  .announce-box-img .announce-body { padding: 1.3rem 1.8rem 1.5rem; }
+}
+
+/* PC con afiche vertical y texto: foto a la izquierda con todo el alto de la
+   pantalla, texto a la derecha (en vez de debajo, donde le quitaría alto) */
+@media (min-width: 900px) and (orientation: landscape) {
+  .announce-box.announce-box-side { display: flex; text-align: left; }
+  .announce-box-side .announce-img-wrap { flex: 0 1 auto; }
+  .announce-box-side .announce-img { width: calc(var(--ann-max-h) * var(--ann-ratio, .5625)); }
+  .announce-box-side .announce-body {
+    flex: none;
+    width: clamp(280px, 24vw, 360px);
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 3.5rem 2rem 2rem;
+  }
 }
 
 

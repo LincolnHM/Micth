@@ -17,9 +17,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Red lenta o caída — mostrar el catálogo local para que la tienda siga siendo usable
     _allProducts = Products.getAll();
   }
+  // Los que aún no llegan van solo a "Próximamente" (coming-soon.js): fuera del
+  // catálogo, la búsqueda, el Scent Finder y las páginas de cada perfume
+  _comingSoonProducts = _allProducts.filter(isComingSoon);
+  _allProducts = _allProducts.filter(p => !isComingSoon(p));
   document.dispatchEvent(new CustomEvent('catalogLoaded', { detail: _allProducts }));
   // Filtros (tipos, panel, URL): los prepara filters-ui.js al recibir 'catalogLoaded'
   renderProducts();
+  renderComingSoon();
   renderRecentlyViewed();
   renderCombos(combosRequest).catch(err => console.error('[MICHT] Error cargando combos:', err));
   initCombosCarousel();

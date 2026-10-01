@@ -14,7 +14,8 @@ async function exportCatalogPDF() {
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Generando catálogo…</title><style>body{background:#0a0a0a;color:#7c4fb0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-size:1.1rem;letter-spacing:.1em}</style></head><body>Generando catálogo…</body></html>');
 
   try {
-    const all  = await withTimeout(CloudProducts.getAll(), 15000, 'el catálogo');
+    // Los de "Próximamente" aún no se venden: fuera del PDF
+    const all  = (await withTimeout(CloudProducts.getAll(), 15000, 'el catálogo')).filter(p => !isComingSoon(p));
 
     // Re-aplicar imágenes: PRODUCT_IMAGE_MAP > DEFAULT_PRODUCTS > lo que venga de Supabase
     const imgMap = typeof PRODUCT_IMAGE_MAP !== 'undefined' ? PRODUCT_IMAGE_MAP : {};

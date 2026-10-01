@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../imgGato/web.png">
-  <link rel="stylesheet" href="../css/style.css?v=20260926-1728">
+  <link rel="stylesheet" href="../css/style.css?v=20261001-1215">
   <style>
     html, body {
       background: #050505 !important;
@@ -983,7 +983,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
                 <span>Haz clic o arrastra una foto</span>
-                <small>JPG · PNG · WebP · máx 5 MB — como el afiche de una promoción</small>
+                <small>JPG · PNG · WebP · máx 5 MB — como el afiche de una promoción. Se ve completa, sin recortes, en celular y en PC</small>
               </div>
               <input type="file" id="annImgFileInput" accept="image/jpeg,image/png,image/webp" style="display:none" aria-hidden="true" tabindex="-1">
             </div>
@@ -994,7 +994,7 @@
             <input type="hidden" id="annImageUrl">
           </div>
 
-          <p style="font-size:.76rem;color:var(--text3);margin-bottom:.6rem">Opcional — si no subes foto, se muestra solo con emoji + texto. Si subes foto, el texto aparece como leyenda debajo.</p>
+          <p style="font-size:.76rem;color:var(--text3);margin-bottom:.6rem">Opcional — si no subes foto, se muestra solo con emoji + texto. Si subes foto, el texto aparece debajo (en PC, al costado si el afiche es vertical).</p>
 
           <div style="display:grid;grid-template-columns:90px 1fr;gap:.9rem;margin-bottom:.9rem">
             <div class="pass-field" style="margin:0">
@@ -1414,32 +1414,32 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.min.js" integrity="sha384-fPWur1rx/DE6YtXP/x0MD6dd90RgnVsz5yX/DIg7CcVAnTBZsENWuIcpvVTM39ti" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con la tienda) — el orden importa -->
-  <script src="../js/shared/data-core.js?v=20260926-1728"></script>
-  <script src="../js/shared/catalog.js?v=20260926-1728"></script>
-  <script src="../js/shared/data.js?v=20260926-1728"></script>
-  <script src="../js/shared/supabase-config.js?v=20260926-1728"></script>
-  <script src="../js/shared/cloud-orders.js?v=20260926-1728"></script>
-  <script src="../js/shared/cloud-gallery.js?v=20260926-1728"></script>
-  <script src="../js/shared/cloud-products.js?v=20260926-1728"></script>
-  <script src="../js/shared/cloud-combos.js?v=20260926-1728"></script>
+  <script src="../js/shared/data-core.js?v=20261001-1215"></script>
+  <script src="../js/shared/catalog.js?v=20261001-1215"></script>
+  <script src="../js/shared/data.js?v=20261001-1215"></script>
+  <script src="../js/shared/supabase-config.js?v=20261001-1215"></script>
+  <script src="../js/shared/cloud-orders.js?v=20261001-1215"></script>
+  <script src="../js/shared/cloud-gallery.js?v=20261001-1215"></script>
+  <script src="../js/shared/cloud-products.js?v=20261001-1215"></script>
+  <script src="../js/shared/cloud-combos.js?v=20261001-1215"></script>
   <!-- Panel admin -->
-  <script src="../js/admin/core.js?v=20260926-1728"></script>
-  <script src="../js/admin/ui.js?v=20260926-1728"></script>
-  <script src="../js/admin/login.js?v=20260926-1728"></script>
-  <script src="../js/admin/nav.js?v=20260926-1728"></script>
-  <script src="../js/admin/dashboard.js?v=20260926-1728"></script>
-  <script src="../js/admin/products.js?v=20260926-1728"></script>
-  <script src="../js/admin/catalog-pdf.js?v=20260926-1728"></script>
-  <script src="../js/admin/orders.js?v=20260926-1728"></script>
-  <script src="../js/admin/order-edit.js?v=20260926-1728"></script>
-  <script src="../js/admin/orders-realtime.js?v=20260926-1728"></script>
-  <script src="../js/admin/combos.js?v=20260926-1728"></script>
-  <script src="../js/admin/site-content.js?v=20260926-1728"></script>
-  <script src="../js/admin/users.js?v=20260926-1728"></script>
-  <script src="../js/admin/accounting.js?v=20260926-1728"></script>
-  <script src="../js/admin/stats.js?v=20260926-1728"></script>
-  <script src="../js/admin/pricing.js?v=20260926-1728"></script>
-  <script src="../js/admin/tools.js?v=20260926-1728"></script>
-  <script src="../js/admin/cash.js?v=20260926-1728"></script>
+  <script src="../js/admin/core.js?v=20261001-1215"></script>
+  <script src="../js/admin/ui.js?v=20261001-1215"></script>
+  <script src="../js/admin/login.js?v=20261001-1215"></script>
+  <script src="../js/admin/nav.js?v=20261001-1215"></script>
+  <script src="../js/admin/dashboard.js?v=20261001-1215"></script>
+  <script src="../js/admin/products.js?v=20261001-1215"></script>
+  <script src="../js/admin/catalog-pdf.js?v=20261001-1215"></script>
+  <script src="../js/admin/orders.js?v=20261001-1215"></script>
+  <script src="../js/admin/order-edit.js?v=20261001-1215"></script>
+  <script src="../js/admin/orders-realtime.js?v=20261001-1215"></script>
+  <script src="../js/admin/combos.js?v=20261001-1215"></script>
+  <script src="../js/admin/site-content.js?v=20261001-1215"></script>
+  <script src="../js/admin/users.js?v=20261001-1215"></script>
+  <script src="../js/admin/accounting.js?v=20261001-1215"></script>
+  <script src="../js/admin/stats.js?v=20261001-1215"></script>
+  <script src="../js/admin/pricing.js?v=20261001-1215"></script>
+  <script src="../js/admin/tools.js?v=20261001-1215"></script>
+  <script src="../js/admin/cash.js?v=20261001-1215"></script>
 </body>
 </html>

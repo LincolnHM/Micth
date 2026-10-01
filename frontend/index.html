@@ -195,7 +195,7 @@
   <link rel="icon" type="image/png" href="imgGato/icons/icon-192.png">
   <link rel="apple-touch-icon" href="imgGato/icons/icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20260926-1728">
+  <link rel="stylesheet" href="css/style.css?v=20261001-1215">
   <!-- La pantalla de carga solo se muestra la primera vez en la sesión; en las
        siguientes visitas (volver de Nosotros, recargar) no hace esperar. -->
   <script>try { if (sessionStorage.getItem('micht_loader_seen')) document.documentElement.classList.add('pl-skip'); } catch (e) {}</script>
@@ -488,6 +488,24 @@
           </div>
           <button class="combos-arrow combos-arrow-next" id="combosNext" aria-label="Siguiente combo" type="button">›</button>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Próximamente ─────────────────────────────────────────────────────────
+       Perfumes que aún no llegan (comingSoon en catalog.js, sin ml en el
+       panel). Se oculta sola si no hay ninguno. Lógica en js/store/coming-soon.js -->
+  <section class="soon-section" id="proximamente" aria-labelledby="soonTitle" hidden>
+    <div class="container">
+      <div class="combos-heading">
+        <span class="combos-eyebrow">🚚 En camino</span>
+        <h2 class="combos-title" id="soonTitle">Próximamente en <em>MICHT</em></h2>
+        <p class="combos-subtitle">Lo nuevo que está por llegar. Pide que te avisemos por WhatsApp y sé de los primeros en probarlo.</p>
+      </div>
+      <div class="combos-carousel">
+        <button class="combos-arrow combos-arrow-prev" id="soonPrev" aria-label="Anteriores" type="button">‹</button>
+        <div class="soon-track" id="soonTrack" role="list"></div>
+        <button class="combos-arrow combos-arrow-next" id="soonNext" aria-label="Siguientes" type="button">›</button>
       </div>
     </div>
   </section>
@@ -1370,34 +1388,35 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con el panel admin) — el orden importa -->
-  <script src="js/shared/data-core.js?v=20260926-1728"></script>
-  <script src="js/shared/catalog.js?v=20260926-1728"></script>
-  <script src="js/shared/data.js?v=20260926-1728"></script>
-  <script src="js/shared/supabase-config.js?v=20260926-1728"></script>
-  <script src="js/shared/cloud-orders.js?v=20260926-1728"></script>
-  <script src="js/shared/cloud-gallery.js?v=20260926-1728"></script>
-  <script src="js/shared/cloud-products.js?v=20260926-1728"></script>
-  <script src="js/shared/slugs.js?v=20260926-1728"></script>
-  <script src="js/shared/cloud-combos.js?v=20260926-1728"></script>
+  <script src="js/shared/data-core.js?v=20261001-1215"></script>
+  <script src="js/shared/catalog.js?v=20261001-1215"></script>
+  <script src="js/shared/data.js?v=20261001-1215"></script>
+  <script src="js/shared/supabase-config.js?v=20261001-1215"></script>
+  <script src="js/shared/cloud-orders.js?v=20261001-1215"></script>
+  <script src="js/shared/cloud-gallery.js?v=20261001-1215"></script>
+  <script src="js/shared/cloud-products.js?v=20261001-1215"></script>
+  <script src="js/shared/slugs.js?v=20261001-1215"></script>
+  <script src="js/shared/cloud-combos.js?v=20261001-1215"></script>
   <!-- Tienda -->
-  <script src="js/store/announcement.js?v=20260926-1728"></script>
-  <script src="js/store/seasonal-theme.js?v=20260926-1728"></script>
-  <script src="js/store/carousel.js?v=20260926-1728"></script>
-  <script src="js/store/cart.js?v=20260926-1728"></script>
-  <script src="js/store/catalog-view.js?v=20260926-1728"></script>
-  <script src="js/store/filters-ui.js?v=20260926-1728"></script>
-  <script src="js/store/combos-carousel.js?v=20260926-1728"></script>
-  <script src="js/store/faq.js?v=20260926-1728"></script>
-  <script src="js/store/product-detail.js?v=20260926-1728"></script>
-  <script src="js/store/combo-detail.js?v=20260926-1728"></script>
-  <script src="js/store/init.js?v=20260926-1728"></script>
-  <script src="js/store/gallery.js?v=20260926-1728"></script>
-  <script src="js/store/scent-finder.js?v=20260926-1728"></script>
-  <script src="js/store/checkout.js?v=20260926-1728"></script>
-  <script src="js/store/customer-auth.js?v=20260926-1728"></script>
-  <script src="js/store/chatbot.js?v=20260926-1728"></script>
-  <script src="js/store/animations.js?v=20260926-1728"></script>
-  <script src="js/store/gsap-animations.js?v=20260926-1728"></script>
+  <script src="js/store/announcement.js?v=20261001-1215"></script>
+  <script src="js/store/seasonal-theme.js?v=20261001-1215"></script>
+  <script src="js/store/carousel.js?v=20261001-1215"></script>
+  <script src="js/store/cart.js?v=20261001-1215"></script>
+  <script src="js/store/catalog-view.js?v=20261001-1215"></script>
+  <script src="js/store/coming-soon.js?v=20261001-1215"></script>
+  <script src="js/store/filters-ui.js?v=20261001-1215"></script>
+  <script src="js/store/combos-carousel.js?v=20261001-1215"></script>
+  <script src="js/store/faq.js?v=20261001-1215"></script>
+  <script src="js/store/product-detail.js?v=20261001-1215"></script>
+  <script src="js/store/combo-detail.js?v=20261001-1215"></script>
+  <script src="js/store/init.js?v=20261001-1215"></script>
+  <script src="js/store/gallery.js?v=20261001-1215"></script>
+  <script src="js/store/scent-finder.js?v=20261001-1215"></script>
+  <script src="js/store/checkout.js?v=20261001-1215"></script>
+  <script src="js/store/customer-auth.js?v=20261001-1215"></script>
+  <script src="js/store/chatbot.js?v=20261001-1215"></script>
+  <script src="js/store/animations.js?v=20261001-1215"></script>
+  <script src="js/store/gsap-animations.js?v=20261001-1215"></script>
   <script>
     // ── Mobile menu toggle ───────────────────────────────────
     (function () {

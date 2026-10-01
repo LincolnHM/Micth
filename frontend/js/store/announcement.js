@@ -42,7 +42,30 @@ function buildAnnouncementModal(settings) {
   `;
   document.body.appendChild(overlay);
 
+  // La foto se ve completa y tan grande como entre en la pantalla (el cálculo
+  // está en .announce-img, style.css). Aquí solo se le pasa su proporción y
+  // cuánto ocupa el texto de abajo. Dos pasadas: el alto del texto depende
+  // del ancho de la foto, y este del alto que queda libre. Un afiche vertical
+  // con texto se marca "side": en PC el texto va al costado.
+  const box = overlay.querySelector('.announce-box');
+  const img = overlay.querySelector('.announce-img');
+  const body = overlay.querySelector('.announce-body');
+  function fitImage() {
+    if (img.naturalWidth) {
+      const ratio = img.naturalWidth / img.naturalHeight;
+      box.style.setProperty('--ann-ratio', ratio);
+      box.classList.toggle('announce-box-side', !!body && ratio < 1);
+    }
+    for (let i = 0; i < 2; i++) box.style.setProperty('--ann-body-h', `${body ? body.offsetHeight : 0}px`);
+  }
+  if (img) {
+    fitImage();
+    img.addEventListener('load', fitImage, { once: true });
+    window.addEventListener('resize', fitImage);
+  }
+
   function close() {
+    if (img) window.removeEventListener('resize', fitImage);
     overlay.classList.remove('open');
     setTimeout(() => overlay.remove(), 250);
     try { sessionStorage.setItem(ANNOUNCEMENT_SEEN_KEY, '1'); } catch {}
