@@ -50,7 +50,7 @@ function renderComingSoon() {
       </article>`;
   }).join('');
 
-  // Aparece encima del catálogo cuando este ya cargó: sin que la página salte
+  // Aparece cuando el catálogo ya cargó: sin que la página salte
   revealKeepingPlace(() => { section.hidden = false; });
   _soonSyncArrows();
 }

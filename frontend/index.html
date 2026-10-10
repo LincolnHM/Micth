@@ -5,6 +5,15 @@
   <!-- Rutas relativas siempre desde la raíz: la ficha de un perfume cambia la
        dirección a /perfume/<nombre>/ y sin esto fallarían imágenes como el QR de Yape -->
   <base href="/">
+  <!-- Pestaña inicial (Inicio o Catálogo) antes de pintar, para que no parpadee.
+       Misma regla que storeViewFromUrl() en js/store/store-view.js -->
+  <script>
+    (function () {
+      var cat = location.hash === '#catalogo' || location.pathname.indexOf('/perfume/') === 0 ||
+                /[?&](tipo|para|momento|aroma|orden|q|fav|p|perfume|export)=/.test(location.search);
+      document.documentElement.setAttribute('data-view', cat ? 'catalogo' : 'inicio');
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -146,7 +155,7 @@
       "@type": "SearchAction",
       "target": {
         "@type": "EntryPoint",
-        "urlTemplate": "https://michtdecants.com/#catalogo?q={search_term_string}"
+        "urlTemplate": "https://michtdecants.com/?q={search_term_string}#catalogo"
       },
       "query-input": "required name=search_term_string"
     }
@@ -195,7 +204,7 @@
   <link rel="icon" type="image/png" href="imgGato/icons/icon-192.png">
   <link rel="apple-touch-icon" href="imgGato/icons/icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261001-1215">
+  <link rel="stylesheet" href="css/style.css?v=20261010-1130">
   <!-- La pantalla de carga solo se muestra la primera vez en la sesión; en las
        siguientes visitas (volver de Nosotros, recargar) no hace esperar. -->
   <script>try { if (sessionStorage.getItem('micht_loader_seen')) document.documentElement.classList.add('pl-skip'); } catch (e) {}</script>
@@ -307,16 +316,17 @@
   <div id="parallax-particles" class="parallax-particles-layer" aria-hidden="true"></div>
 
   <!-- ── Header ──────────────────────────────────────────────────────────── -->
-  <header class="header">
+  <header class="header header-store">
     <div class="header-inner container">
-      <a href="#" class="logo" aria-label="Micht Decants — inicio">
+      <a href="/" class="logo" data-go="inicio" aria-label="Micht Decants — inicio">
         <div>
           <h1 class="logo-text">Micht<span> Decants</span></h1>
           <p class="logo-sub">Perfumería Árabe & Diseñador</p>
         </div>
       </a>
       <nav class="nav" aria-label="Principal">
-        <a href="#catalogo" id="navCatalogLink">Catálogo</a>
+        <a href="/" data-go="inicio" data-nav-view="inicio">Inicio</a>
+        <a href="#catalogo" id="navCatalogLink" data-nav-view="catalogo">Catálogo</a>
         <a href="#combos" id="navCombosLink">Combos</a>
         <a href="#catalogo" id="navEnteroLink" style="color:var(--gold) !important;font-weight:600">Perfumes Enteros</a>
         <a href="nosotros/">Nosotros</a>
@@ -416,7 +426,8 @@
   <div class="mobile-menu" id="mobileMenu" aria-hidden="true" role="dialog" aria-label="Menú principal">
     <span class="mobile-menu-brand">MICHT DECANTS</span>
     <nav class="mobile-nav">
-      <a href="#catalogo" class="mobile-nav-link" id="mobileCatalogLink">Catálogo</a>
+      <a href="/" class="mobile-nav-link" data-go="inicio" data-nav-view="inicio">Inicio</a>
+      <a href="#catalogo" class="mobile-nav-link" id="mobileCatalogLink" data-nav-view="catalogo">Catálogo</a>
       <a href="#combos" class="mobile-nav-link" id="mobileCombosLink">Combos</a>
       <a href="#como-comprar" class="mobile-nav-link">Cómo comprar</a>
       <a href="#catalogo" class="mobile-nav-link" id="mobileNavEnteroLink" style="color:var(--gold)">✦ Perfumes Enteros</a>
@@ -452,7 +463,7 @@
   </div>
 
   <!-- ── Hero Carousel ───────────────────────────────────────────────────── -->
-  <section id="carouselWrapper" aria-label="Promociones">
+  <section id="carouselWrapper" class="view-inicio" aria-label="Promociones">
     <div class="carousel-track" role="list">
       <!-- Slides renderizados por carousel.js -->
     </div>
@@ -473,7 +484,7 @@
   </section>
 
   <!-- ── Combos de Decants ───────────────────────────────────────────────── -->
-  <section class="combos-section" id="combos" aria-label="Combos de decants" style="display:none">
+  <section class="combos-section view-inicio" id="combos" aria-label="Combos de decants" style="display:none">
     <div class="combos-spotlight">
       <div class="container">
         <div class="combos-heading">
@@ -495,7 +506,7 @@
   <!-- ── Próximamente ─────────────────────────────────────────────────────────
        Perfumes que aún no llegan (comingSoon en catalog.js, sin ml en el
        panel). Se oculta sola si no hay ninguno. Lógica en js/store/coming-soon.js -->
-  <section class="soon-section" id="proximamente" aria-labelledby="soonTitle" hidden>
+  <section class="soon-section view-inicio" id="proximamente" aria-labelledby="soonTitle" hidden>
     <div class="container">
       <div class="combos-heading">
         <span class="combos-eyebrow">🚚 En camino</span>
@@ -510,10 +521,45 @@
     </div>
   </section>
 
+  <!-- ── Accesos al catálogo (pestaña Inicio) ─────────────────────────────────
+       El catálogo completo vive en su pestaña (/#catalogo, js/store/store-view.js).
+       Aquí una tarjeta por tipo; los números y las fotos se ponen al cargar. -->
+  <section class="cat-entry view-inicio" id="catalogEntry" aria-labelledby="catEntryTitle">
+    <div class="container">
+      <div class="combos-heading">
+        <span class="combos-eyebrow">🛍️ Tienda</span>
+        <h2 class="combos-title" id="catEntryTitle">Explora el <em>catálogo</em></h2>
+        <p class="combos-subtitle"><span id="catEntryTotal">Más de 100</span> perfumes originales en decants de 2, 3, 5 y 10 ml, y frascos completos.</p>
+      </div>
+      <div class="cat-entry-grid">
+        <a href="#catalogo" class="cat-entry-card" data-catalog-type="arabe">
+          <span class="cat-entry-img" aria-hidden="true"></span>
+          <span class="cat-entry-info"><span class="cat-entry-name">Árabes</span><span class="cat-entry-count"></span></span>
+        </a>
+        <a href="#catalogo" class="cat-entry-card" data-catalog-type="diseñador">
+          <span class="cat-entry-img" aria-hidden="true"></span>
+          <span class="cat-entry-info"><span class="cat-entry-name">Diseñador</span><span class="cat-entry-count"></span></span>
+        </a>
+        <a href="#catalogo" class="cat-entry-card" data-catalog-type="nicho">
+          <span class="cat-entry-img" aria-hidden="true"></span>
+          <span class="cat-entry-info"><span class="cat-entry-name">Nicho</span><span class="cat-entry-count"></span></span>
+        </a>
+        <a href="#catalogo" class="cat-entry-card" data-catalog-type="entero">
+          <span class="cat-entry-img" aria-hidden="true"></span>
+          <span class="cat-entry-info"><span class="cat-entry-name">Perfumes enteros</span><span class="cat-entry-count"></span></span>
+        </a>
+      </div>
+      <div class="cat-entry-actions">
+        <a href="#catalogo" class="cat-entry-all" data-catalog-type="all">Ver todo el catálogo →</a>
+        <button type="button" class="cat-entry-finder" id="catEntryFinderBtn">🔮 ¿No sabes cuál elegir? Haz el test</button>
+      </div>
+    </div>
+  </section>
+
   <!-- ── Buscar y filtrar el catálogo ───────────────────────────────────────
        Barra fija: el buscador siempre visible, los tipos como chips y el botón
        "Filtros", que abre el panel de abajo. Lógica en js/store/filters-ui.js. -->
-  <section class="filters-section catalog-toolbar" id="catalogo" aria-label="Buscar y filtrar el catálogo">
+  <section class="filters-section catalog-toolbar view-catalogo" id="catalogToolbar" aria-label="Buscar y filtrar el catálogo">
     <div class="container">
       <div class="ct-row">
         <div class="ct-search" role="search">
@@ -612,7 +658,7 @@
   </div>
 
   <!-- ── Banner de sección (Perfumes Enteros) ─────────────────────────────── -->
-  <div id="catalogBanner" style="display:none">
+  <div id="catalogBanner" class="view-catalogo" style="display:none">
     <div class="container">
       <div class="catalog-banner-entero">
         <div class="cbe-left">
@@ -631,7 +677,7 @@
   </div>
 
   <!-- ── Catálogo ──────────────────────────────────────────────────────────── -->
-  <main class="products-section">
+  <main class="products-section view-catalogo">
     <div class="container">
       <!-- Banner Scent Finder -->
       <div class="scent-finder-banner" id="scentFinderBanner">
@@ -668,7 +714,7 @@
   </main>
 
   <!-- ── ¿Cómo comprar? ───────────────────────────────────────────────────── -->
-  <section id="como-comprar" class="howto-section" aria-labelledby="howtoTitle">
+  <section id="como-comprar" class="howto-section view-inicio" aria-labelledby="howtoTitle">
     <div class="container">
       <p class="howto-eyebrow">Fácil y seguro</p>
       <h2 class="howto-title" id="howtoTitle">¿Cómo comprar?</h2>
@@ -706,7 +752,7 @@
   </section>
 
   <!-- ── Marquee strip ────────────────────────────────────────────────────── -->
-  <div class="marquee-strip" aria-hidden="true">
+  <div class="marquee-strip view-inicio" aria-hidden="true">
     <div class="marquee-track">
       <span>Decants Auténticos</span><span class="marquee-dot">·</span>
       <span>Perfumería Árabe</span><span class="marquee-dot">·</span>
@@ -729,7 +775,7 @@
   </div>
 
   <!-- ── Separador parallax decorativo ─────────────────────────────────── -->
-  <div class="parallax-divider" aria-hidden="true">
+  <div class="parallax-divider view-inicio" aria-hidden="true">
     <div class="parallax-deco parallax-deco--left"></div>
     <div class="parallax-deco parallax-deco--right"></div>
     <div class="parallax-divider-line"></div>
@@ -738,7 +784,7 @@
   </div>
 
   <!-- ── Envíos y Clientes ────────────────────────────────────────────────── -->
-  <section id="galeria" class="gallery-section" aria-label="Envíos y clientes" hidden>
+  <section id="galeria" class="gallery-section view-inicio" aria-label="Envíos y clientes" hidden>
     <div class="container">
       <div class="gallery-block" id="galleryBlockEnvios" hidden>
         <p class="gallery-label">Nuestro trabajo</p>
@@ -761,7 +807,7 @@
   </div>
 
   <!-- ── Contacto ──────────────────────────────────────────────────────────── -->
-  <section id="contacto" class="contact-section">
+  <section id="contacto" class="contact-section view-inicio">
     <div class="container">
       <div class="contact-card">
         <p class="contact-label">Contáctanos</p>
@@ -1388,35 +1434,36 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con el panel admin) — el orden importa -->
-  <script src="js/shared/data-core.js?v=20261001-1215"></script>
-  <script src="js/shared/catalog.js?v=20261001-1215"></script>
-  <script src="js/shared/data.js?v=20261001-1215"></script>
-  <script src="js/shared/supabase-config.js?v=20261001-1215"></script>
-  <script src="js/shared/cloud-orders.js?v=20261001-1215"></script>
-  <script src="js/shared/cloud-gallery.js?v=20261001-1215"></script>
-  <script src="js/shared/cloud-products.js?v=20261001-1215"></script>
-  <script src="js/shared/slugs.js?v=20261001-1215"></script>
-  <script src="js/shared/cloud-combos.js?v=20261001-1215"></script>
+  <script src="js/shared/data-core.js?v=20261010-1130"></script>
+  <script src="js/shared/catalog.js?v=20261010-1130"></script>
+  <script src="js/shared/data.js?v=20261010-1130"></script>
+  <script src="js/shared/supabase-config.js?v=20261010-1130"></script>
+  <script src="js/shared/cloud-orders.js?v=20261010-1130"></script>
+  <script src="js/shared/cloud-gallery.js?v=20261010-1130"></script>
+  <script src="js/shared/cloud-products.js?v=20261010-1130"></script>
+  <script src="js/shared/slugs.js?v=20261010-1130"></script>
+  <script src="js/shared/cloud-combos.js?v=20261010-1130"></script>
   <!-- Tienda -->
-  <script src="js/store/announcement.js?v=20261001-1215"></script>
-  <script src="js/store/seasonal-theme.js?v=20261001-1215"></script>
-  <script src="js/store/carousel.js?v=20261001-1215"></script>
-  <script src="js/store/cart.js?v=20261001-1215"></script>
-  <script src="js/store/catalog-view.js?v=20261001-1215"></script>
-  <script src="js/store/coming-soon.js?v=20261001-1215"></script>
-  <script src="js/store/filters-ui.js?v=20261001-1215"></script>
-  <script src="js/store/combos-carousel.js?v=20261001-1215"></script>
-  <script src="js/store/faq.js?v=20261001-1215"></script>
-  <script src="js/store/product-detail.js?v=20261001-1215"></script>
-  <script src="js/store/combo-detail.js?v=20261001-1215"></script>
-  <script src="js/store/init.js?v=20261001-1215"></script>
-  <script src="js/store/gallery.js?v=20261001-1215"></script>
-  <script src="js/store/scent-finder.js?v=20261001-1215"></script>
-  <script src="js/store/checkout.js?v=20261001-1215"></script>
-  <script src="js/store/customer-auth.js?v=20261001-1215"></script>
-  <script src="js/store/chatbot.js?v=20261001-1215"></script>
-  <script src="js/store/animations.js?v=20261001-1215"></script>
-  <script src="js/store/gsap-animations.js?v=20261001-1215"></script>
+  <script src="js/store/announcement.js?v=20261010-1130"></script>
+  <script src="js/store/seasonal-theme.js?v=20261010-1130"></script>
+  <script src="js/store/carousel.js?v=20261010-1130"></script>
+  <script src="js/store/cart.js?v=20261010-1130"></script>
+  <script src="js/store/catalog-view.js?v=20261010-1130"></script>
+  <script src="js/store/coming-soon.js?v=20261010-1130"></script>
+  <script src="js/store/filters-ui.js?v=20261010-1130"></script>
+  <script src="js/store/combos-carousel.js?v=20261010-1130"></script>
+  <script src="js/store/faq.js?v=20261010-1130"></script>
+  <script src="js/store/product-detail.js?v=20261010-1130"></script>
+  <script src="js/store/combo-detail.js?v=20261010-1130"></script>
+  <script src="js/store/store-view.js?v=20261010-1130"></script>
+  <script src="js/store/init.js?v=20261010-1130"></script>
+  <script src="js/store/gallery.js?v=20261010-1130"></script>
+  <script src="js/store/scent-finder.js?v=20261010-1130"></script>
+  <script src="js/store/checkout.js?v=20261010-1130"></script>
+  <script src="js/store/customer-auth.js?v=20261010-1130"></script>
+  <script src="js/store/chatbot.js?v=20261010-1130"></script>
+  <script src="js/store/animations.js?v=20261010-1130"></script>
+  <script src="js/store/gsap-animations.js?v=20261010-1130"></script>
   <script>
     // ── Mobile menu toggle ───────────────────────────────────
     (function () {
@@ -1463,12 +1510,17 @@
 
     document.addEventListener('click', function (e) {
       const a = e.target.closest('a[href^="#"]');
-      if (!a || a.dataset.filter !== undefined) return;
+      // data-filter (carrusel), data-go y data-catalog-type (store-view.js) tienen su propio manejo
+      if (!a || a.dataset.filter !== undefined || a.dataset.go || a.dataset.catalogType) return;
       const href = a.getAttribute('href');
       if (!href || href === '#') return;
+      // #catalogo es la pestaña Catálogo (js/store/store-view.js)
+      if (href === '#catalogo') { e.preventDefault(); goStoreView('catalogo'); return; }
       const target = document.querySelector(href);
       if (!target) return;
       e.preventDefault();
+      // Combos, cómo comprar, contacto…: secciones de la pestaña Inicio
+      if (target.closest('.view-inicio')) { goStoreView('inicio', { section: target.id }); return; }
       cerrarDetallePerfume();
       window.scrollTo({ top: Math.max(0, target.offsetTop - 68), behavior: 'smooth' });
     });
@@ -1529,40 +1581,27 @@
       }
     }
 
-    // ── Link "Catálogo" → ir al inicio de la página ───────────────────────────
+    // ── Link "Catálogo" → pestaña Catálogo (js/store/store-view.js) ───────────
     function activarFiltroCatalogo(e) {
       e.preventDefault();
       e.stopPropagation();
       cerrarMenuMovil();
-      cerrarDetallePerfume();
       // Resetear filtro a "Todos" si no está activo y llevar al catálogo
       const btnTodos = document.querySelector('.filter-btn[data-filter="all"]');
       if (btnTodos && !btnTodos.classList.contains('active')) btnTodos.click();
-      if (typeof scrollToCatalog === 'function') scrollToCatalog();
+      goStoreView('catalogo');
     }
     document.getElementById('navCatalogLink')?.addEventListener('click', activarFiltroCatalogo);
     document.getElementById('mobileCatalogLink')?.addEventListener('click', activarFiltroCatalogo);
 
-    // ── Links "Perfumes Enteros" → mostrar banner correctamente ──────────────
+    // ── Links "Perfumes Enteros" → pestaña Catálogo con ese tipo ─────────────
+    // (el banner de Perfumes Enteros queda arriba, justo debajo de los filtros)
     function activarFiltroEntero(e) {
       e.preventDefault();
       e.stopPropagation();
       cerrarMenuMovil();
-      cerrarDetallePerfume();
-      const btn = document.querySelector('.filter-btn[data-filter="entero"]');
-      if (btn) {
-        btn.click();
-        // Scroll para mostrar el banner justo debajo de los filtros sticky
-        setTimeout(() => {
-          const banner    = document.getElementById('catalogBanner');
-          const filtersEl = document.getElementById('catalogo');
-          if (!banner) return;
-          const headerH  = 64;
-          const filtersH = filtersEl ? filtersEl.offsetHeight : 0;
-          const targetY  = banner.offsetTop - headerH - filtersH;
-          window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
-        }, 100);
-      }
+      document.querySelector('.filter-btn[data-filter="entero"]')?.click();
+      goStoreView('catalogo');
     }
     document.getElementById('navEnteroLink')?.addEventListener('click', activarFiltroEntero);
     document.getElementById('mobileNavEnteroLink')?.addEventListener('click', activarFiltroEntero);

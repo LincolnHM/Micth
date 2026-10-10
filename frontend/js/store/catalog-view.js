@@ -157,7 +157,7 @@ function renderPagination(current, total) {
       // Esperar que GSAP procese las nuevas tarjetas antes de hacer scroll
       // (el MutationObserver de GSAP tiene 65ms de debounce)
       setTimeout(() => {
-        const filtersEl  = document.getElementById('catalogo');
+        const filtersEl  = document.getElementById('catalogToolbar');
         const bannerEl   = document.getElementById('catalogBanner');
         const productsEl = document.getElementById('productsGrid');
         // Scroll al primer elemento visible debajo de los filtros sticky
@@ -247,20 +247,26 @@ function notifyWaUrl(p) {
   return `https://wa.me/51917452643?text=${encodeURIComponent(text)}`;
 }
 
-// ─── Mostrar contenido arriba sin que la página salte ────────────────────────
-// Si algo aparece ARRIBA de donde el cliente está mirando (ej. los combos que
-// llegan después del catálogo), todo lo de abajo se corre. El navegador no lo
+// ─── Mostrar contenido sin que la página salte ───────────────────────────────
+// Si algo aparece ARRIBA de donde el cliente está mirando (ej. los combos, que
+// llegan después que el resto), todo lo de abajo se corre. El navegador no lo
 // compensa siempre (en el celular falla; Safari no lo hace), así que se hace a
-// mano: se mide el catálogo antes y después y se ajusta el scroll por la
-// diferencia. Solo si el catálogo ya estaba a la vista.
+// mano: se deja quieta la sección que el cliente está leyendo (la que cruza una
+// línea a 1/4 de lo visible). Si esa sección está arriba de lo que aparece (ej.
+// el carrusel al entrar al Inicio) no se mueve nada; antes se usaba el catálogo
+// como referencia y, con el Inicio nuevo, el carrusel se iba de la pantalla.
 function revealKeepingPlace(show) {
-  const ref  = document.querySelector('.products-section');
   const root = document.documentElement;
-  const before = ref ? ref.getBoundingClientRect().top : null;
+  const headerH = document.querySelector('.header')?.offsetHeight || 64;
+  const line = headerH + (window.innerHeight - headerH) / 4;
+  const sections = [...document.querySelectorAll('.view-inicio, .view-catalogo')]
+    .map(s => ({ s, r: s.getBoundingClientRect() })).filter(x => x.r.height > 0);
+  const anchor = (sections.find(x => x.r.top <= line && x.r.bottom > line) || sections.find(x => x.r.top > line))?.s;
+  const before = anchor ? anchor.getBoundingClientRect().top : 0;
   root.style.overflowAnchor = 'none';   // que el navegador no compense también (doble salto)
   show();
-  if (ref && before !== null && before < window.innerHeight) {
-    const delta = ref.getBoundingClientRect().top - before;
+  if (anchor) {
+    const delta = anchor.getBoundingClientRect().top - before;
     if (delta) window.scrollBy({ top: delta, behavior: 'instant' });
   }
   requestAnimationFrame(() => { root.style.overflowAnchor = ''; });
@@ -647,12 +653,13 @@ function shareProduct(id, name) {
     if (typeof openPdModal === 'function' && _allProducts && _allProducts.length > 0) {
       clearInterval(tryOpen);
       if (slug) pid = productIdFromSlug(slug);
-      // La entrada actual pasa a ser el catálogo (la raíz) y el perfume se abre
+      // La entrada actual pasa a ser la pestaña Catálogo y el perfume se abre
       // encima: así "atrás" deja al cliente en la tienda en vez de sacarlo.
       params.delete('p');
       params.delete('perfume');
       const qs = params.toString();
-      history.replaceState(null, '', '/' + (qs ? '?' + qs : ''));
+      history.replaceState({ view: 'catalogo' }, '', '/' + (qs ? '?' + qs : '') + '#catalogo');
+      applyStoreView('catalogo');
       if (Number.isInteger(pid)) openPdModal(pid);
     }
   }, 200);

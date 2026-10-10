@@ -86,8 +86,7 @@ const Carousel = {
         e.preventDefault();
         const btn = document.querySelector(`.filter-btn[data-filter="${a.dataset.filter}"]`);
         if (btn) btn.click();
-        if (typeof scrollToSection === 'function') scrollToSection('catalogo');
-        else document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
+        goStoreView('catalogo');
       });
     });
 

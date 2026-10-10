@@ -640,6 +640,22 @@ html.pl-skip .page-loader { display: none; }
   .nav { gap: 1.5rem; }
   .nav a { font-size: .78rem; letter-spacing: .1em; }
 }
+/* La tienda (.header-store) tiene 6 opciones más los botones de cuenta: el menú
+   completo recién entra sin aplastar el logo desde 1160px. Hasta ahí se usa el
+   de hamburguesa (Nosotros y Contacto, con menos opciones, siguen en 768px). */
+@media (min-width: 768px) and (max-width: 1159px) {
+  .header-store .nav, .header-store .header-auth { display: none; }
+  .header-store .menu-btn { display: flex !important; }
+  .header-store ~ .mobile-menu { display: flex !important; }
+}
+@media (min-width: 1160px) {
+  .header-store .nav { gap: 1rem; }
+  .header-store .nav a { font-size: .75rem; letter-spacing: .08em; }
+}
+@media (min-width: 1200px) {
+  .header-store .nav { gap: 1.25rem; }
+  .header-store .nav a { font-size: .78rem; letter-spacing: .1em; }
+}
 
 .header-right { display: flex; align-items: center; gap: .5rem; flex-shrink: 0; }
 @media (max-width: 420px) { .logo-sub { display: none; } }
@@ -1218,6 +1234,56 @@ html.pl-skip .page-loader { display: none; }
   transition: background var(--tr), color var(--tr), border-color var(--tr);
 }
 .soon-notify:hover { background: var(--gold); border-color: var(--gold); color: #fff; }
+
+/* ─── Pestañas Inicio / Catálogo (js/store/store-view.js) ─────
+   data-view lo pone un script del <head> antes de pintar */
+html[data-view="catalogo"] .view-inicio,
+html:not([data-view="catalogo"]) .view-catalogo { display: none !important; }
+/* Al cambiar de pestaña (o al cerrar una ficha) lo que aparece entra suave */
+@keyframes viewIn { from { opacity: 0; } to { opacity: 1; } }
+.view-inicio, .view-catalogo { animation: viewIn .3s ease; }
+@media (prefers-reduced-motion: reduce) { .view-inicio, .view-catalogo { animation: none; } }
+
+/* Pestaña actual en el menú */
+.nav a[aria-current="page"] { color: var(--gold-l); }
+@media (min-width: 768px) { .nav a[aria-current="page"]::after { width: 100%; } }
+.mobile-nav-link[aria-current="page"] { color: var(--gold-l); }
+
+/* ─── Inicio: accesos al catálogo ─────────────────────────── */
+.cat-entry { padding: 2.25rem 0 2.5rem; }
+.cat-entry-grid {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem;
+  max-width: 980px; margin: 0 auto;
+}
+@media (min-width: 768px) { .cat-entry-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.1rem; } }
+.cat-entry-card {
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--r-lg);
+  text-decoration: none;
+  transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+}
+.cat-entry-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,.4), 0 0 0 1px rgba(124,79,176,.3); border-color: rgba(124,79,176,.4); }
+.cat-entry-card:focus-visible { outline: 2px solid var(--gold-l); outline-offset: 2px; }
+/* la foto va en posición absoluta: si no, una foto alta estira su tarjeta y quedan desparejas */
+.cat-entry-img { display: block; position: relative; aspect-ratio: 1; background: linear-gradient(150deg, #ffffff 0%, #f4f4f4 100%); }
+.cat-entry-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: .8rem; box-sizing: border-box; }
+.cat-entry-info { display: flex; flex-direction: column; gap: .15rem; padding: .8rem .95rem .9rem; }
+.cat-entry-name { font-family: var(--font-serif); font-size: 1.08rem; font-weight: 600; color: var(--white); line-height: 1.2; }
+.cat-entry-count { font-size: .74rem; color: var(--text3); min-height: 1.1em; }
+.cat-entry-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .75rem; margin-top: 1.6rem; }
+.cat-entry-all {
+  display: inline-flex; align-items: center; gap: .4rem;
+  background: var(--gold); color: #fff; font-weight: 700; font-size: .9rem;
+  padding: .8rem 1.6rem; border-radius: 999px; text-decoration: none;
+  box-shadow: 0 8px 22px rgba(124,79,176,.3); transition: background var(--tr), transform var(--tr);
+}
+.cat-entry-all:hover { background: var(--gold-l); transform: translateY(-2px); }
+.cat-entry-finder {
+  background: transparent; color: var(--gold-l); font-weight: 600; font-size: .86rem;
+  padding: .75rem 1.25rem; border: 1px solid rgba(124,79,176,.45); border-radius: 999px; cursor: pointer;
+  transition: background var(--tr), color var(--tr);
+}
+.cat-entry-finder:hover { background: rgba(124,79,176,.15); color: #fff; }
 
 /* ─── Carrito lateral ──────────────────────────────────── */
 .cart-sidebar {
@@ -3303,13 +3369,18 @@ html.pl-skip .page-loader { display: none; }
   z-index: 210;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  gap: 3rem;
+  /* Espacios y letra según el alto de la pantalla: las 7 opciones entran
+     también en un celular bajito (y si aun así no entra, se desliza) */
+  gap: clamp(1.25rem, 4vh, 3rem);
+  overflow-y: auto;
   opacity: 0;
   pointer-events: none;
   transition: opacity .4s cubic-bezier(.22,1,.36,1);
 }
+/* centrado con margin:auto, que a diferencia de justify-content no corta arriba */
+.mobile-menu > :first-child { margin-top: auto; }
+.mobile-menu > :last-child { margin-bottom: auto; }
 .mobile-menu.open { opacity: 1; pointer-events: auto; }
 @media(min-width:768px) { .mobile-menu { display: none !important; } }
 
@@ -3327,11 +3398,12 @@ html.pl-skip .page-loader { display: none; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2.25rem;
+  gap: clamp(.9rem, 3.4vh, 2.25rem);
 }
 .mobile-nav-link {
   font-family: var(--font-serif);
-  font-size: clamp(1.9rem, 9vw, 2.6rem);
+  font-size: clamp(1.5rem, min(9vw, 4.6vh), 2.6rem);
+  line-height: 1.25;
   font-weight: 600;
   color: var(--white);
   text-decoration: none;

@@ -390,7 +390,7 @@ async function openHistoryModal() {
       </div>`;
     document.getElementById('historyGoShopBtn')?.addEventListener('click', () => {
       closeHistoryModal();
-      document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
+      goStoreView('catalogo');
     });
     return;
   }
@@ -855,7 +855,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('promoBannerCta')?.addEventListener('click', () => {
     const action = document.getElementById('promoBannerCta')?.dataset.action;
     if (action === 'register') AuthModals.openRegister();
-    else document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
+    else goStoreView('catalogo');
   });
   document.getElementById('promoBannerClose')?.addEventListener('click', () => {
     sessionStorage.setItem('promoBannerDismissed', '1');

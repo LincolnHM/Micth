@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         _closeSuggestions();
         searchInput.blur();
         const grid = document.getElementById('productsGrid');
-        const filtersH = document.getElementById('catalogo')?.offsetHeight || 0;
+        const filtersH = document.getElementById('catalogToolbar')?.offsetHeight || 0;
         if (grid) window.scrollTo({ top: Math.max(0, grid.offsetTop - 64 - filtersH), behavior: 'smooth' });
       });
     }

@@ -378,7 +378,7 @@ function openPdModal(productId, { fromHistory = false } = {}) {
   const p = _allProducts?.find(x => x.id === productId) ?? Products.getById(productId);
   if (!p) return;
   // Aún no llegó (link viejo ?p=ID): no tiene ficha de compra, va a "Próximamente"
-  if (isComingSoon(p)) { document.getElementById('proximamente')?.scrollIntoView({ behavior: 'smooth' }); return; }
+  if (isComingSoon(p)) { goStoreView('inicio', { section: 'proximamente' }); return; }
 
   const wasOpen = _anyDetailOpen();
   if (!wasOpen) _pdReturnY = window.scrollY;

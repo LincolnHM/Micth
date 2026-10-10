@@ -81,7 +81,7 @@ function buildAnnouncementModal(settings) {
     if (settings.ctaAction === 'whatsapp') {
       window.open('https://wa.me/51917452643', '_blank', 'noopener,noreferrer');
     } else if (settings.ctaAction === 'catalog') {
-      document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
+      goStoreView('catalogo');
     }
     close();
   });

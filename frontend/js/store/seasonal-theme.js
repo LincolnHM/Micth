@@ -97,10 +97,10 @@
     if (!hero) {
       hero = document.createElement('section');
       hero.id = 'seasonalHeroBanner';
-      hero.className = 'seasonal-hero-banner';
-      const filters = document.getElementById('catalogo');
-      if (filters && filters.parentNode) {
-        filters.parentNode.insertBefore(hero, filters);
+      hero.className = 'seasonal-hero-banner view-inicio';   // solo en la pestaña Inicio
+      const anchor = document.getElementById('catalogEntry') || document.getElementById('catalogToolbar');
+      if (anchor && anchor.parentNode) {
+        anchor.parentNode.insertBefore(hero, anchor);
       } else {
         const firstMain = document.querySelector('main');
         if (firstMain && firstMain.parentNode) firstMain.parentNode.insertBefore(hero, firstMain);
