@@ -368,7 +368,10 @@ const Orders = {
 
 // ─── Configuracion de campanas visuales ─────────────────────────────────────
 
-const VALID_CAMPAIGNS = new Set(['default', 'dia-madre', 'dia-padre', 'san-juan', 'navidad']);
+// Deben estar TODAS las del panel (admin/index.html) y de seasonal-theme.js: las
+// cuatro últimas faltaban y al activarlas se guardaba "Diseño normal"
+const VALID_CAMPAIGNS = new Set(['default', 'dia-madre', 'dia-padre', 'san-juan', 'navidad',
+                                 'fiestas-patrias', 'san-valentin', 'halloween', 'anio-nuevo']);
 
 function getNthWeekdayOfMonth(year, monthIndex, weekday, nth) {
   const first = new Date(year, monthIndex, 1);

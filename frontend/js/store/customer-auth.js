@@ -279,17 +279,15 @@ const UserAuth = {
       ? (this._currentProfile?.nombre_completo || '').split(' ')[0]
       : '';
 
-    // Desktop
+    // Desktop: sin sesión, un solo ícono de cuenta (abre "Ingresar", que ofrece crear la cuenta)
     const el = {
       loginBtn:    document.getElementById('headerLoginBtn'),
-      regBtn:      document.getElementById('headerRegisterBtn'),
       userDisplay: document.getElementById('headerUserDisplay'),
       userName:    document.getElementById('headerUserName')
     };
 
     if (el.loginBtn) {
       el.loginBtn.style.display    = loggedIn ? 'none' : '';
-      el.regBtn.style.display      = loggedIn ? 'none' : '';
       el.userDisplay.style.display = loggedIn ? 'flex' : 'none';
       if (el.userName && firstName) el.userName.textContent = firstName;
     }
@@ -712,9 +710,8 @@ const AuthModals = {
 document.addEventListener('DOMContentLoaded', async () => {
   await UserAuth.init();
 
-  // ── Botones login/registro header desktop ────────────────────────────────
+  // ── Ícono de cuenta del header desktop ───────────────────────────────────
   document.getElementById('headerLoginBtn')?.addEventListener('click', () => AuthModals.openLogin());
-  document.getElementById('headerRegisterBtn')?.addEventListener('click', () => AuthModals.openRegister());
 
   // ── Dropdown del usuario (desktop) ───────────────────────────────────────
   const hudTrigger  = document.getElementById('headerUserTrigger');

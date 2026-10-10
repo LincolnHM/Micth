@@ -94,11 +94,13 @@ window.addEventListener('popstate', e => {
 });
 
 // ─── Accesos al catálogo desde el Inicio ─────────────────────────────────────
-// Cada tarjeta abre el catálogo con ese tipo y sin filtros anteriores
-function openCatalogType(type) {
+// Abre el catálogo solo con estos filtros, sin los anteriores (tarjetas por
+// tipo del Inicio; "fragancias de noche" de la campaña de Halloween)
+function openCatalogWith({ type = 'all', occasion = 'all' } = {}) {
   resetAllFilters();
-  if (type !== 'all') {
+  if (type !== 'all' || occasion !== 'all') {
     Filter.type = type;
+    Filter.occasion = occasion;
     Pagination.reset();
     renderProducts();
   }
@@ -135,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Links con su propio destino (el script del menú en index.html los deja pasar)
   document.addEventListener('click', e => {
     const card = e.target.closest('[data-catalog-type]');
-    if (card) { e.preventDefault(); openCatalogType(card.dataset.catalogType); return; }
+    if (card) { e.preventDefault(); openCatalogWith({ type: card.dataset.catalogType }); return; }
     const go = e.target.closest('[data-go]');
     if (go) { e.preventDefault(); goStoreView(go.dataset.go, { section: go.dataset.section || null }); }
   });

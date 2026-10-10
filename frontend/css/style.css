@@ -632,29 +632,28 @@ html.pl-skip .page-loader { display: none; }
 
 .nav { display: none; }
 @media(min-width:768px) {
-  .nav { display: flex; gap: 1rem; }
-  .nav a { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text2); white-space: nowrap; }
-  .nav a:hover { color: var(--gold); }
+  .nav { display: flex; gap: 1.5rem; }
+  /* Sin mayúsculas ni letras separadas: con 6 opciones así se veía recargado */
+  .nav a { font-size: .88rem; font-weight: 500; letter-spacing: .01em; color: var(--text2); white-space: nowrap; transition: color .2s ease; }
+  .nav a:hover { color: var(--white); }
 }
-@media(min-width:1024px) {
-  .nav { gap: 1.5rem; }
-  .nav a { font-size: .78rem; letter-spacing: .1em; }
-}
-/* La tienda (.header-store) tiene 6 opciones más los botones de cuenta: el menú
-   completo recién entra sin aplastar el logo desde 1160px. Hasta ahí se usa el
-   de hamburguesa (Nosotros y Contacto, con menos opciones, siguen en 768px). */
+.nav a.nav-accent { color: var(--gold-l); }   /* Perfumes enteros: solo el color lo destaca */
+/* La tienda (.header-store) tiene 6 opciones: el menú completo entra sin
+   aplastar el logo desde 1160px (con sesión iniciada el nombre ocupa más).
+   Hasta ahí se usa el de hamburguesa (Nosotros y Contacto, con menos opciones,
+   siguen en 768px). */
 @media (min-width: 768px) and (max-width: 1159px) {
   .header-store .nav, .header-store .header-auth { display: none; }
   .header-store .menu-btn { display: flex !important; }
   .header-store ~ .mobile-menu { display: flex !important; }
 }
+/* Tres zonas: logo a la izquierda, menú centrado y los íconos a la derecha.
+   "1fr auto 1fr" (y no minmax(0,1fr)): si el nombre del cliente ocupa más, su
+   columna crece en vez de montarse sobre el menú. */
 @media (min-width: 1160px) {
-  .header-store .nav { gap: 1rem; }
-  .header-store .nav a { font-size: .75rem; letter-spacing: .08em; }
-}
-@media (min-width: 1200px) {
-  .header-store .nav { gap: 1.25rem; }
-  .header-store .nav a { font-size: .78rem; letter-spacing: .1em; }
+  .header-store .header-inner { display: grid; grid-template-columns: 1fr auto 1fr; gap: 1.5rem; }
+  .header-store .header-right { justify-self: end; }
+  .header-store .nav { gap: 1.9rem; }
 }
 
 .header-right { display: flex; align-items: center; gap: .5rem; flex-shrink: 0; }
@@ -1244,9 +1243,9 @@ html:not([data-view="catalogo"]) .view-catalogo { display: none !important; }
 .view-inicio, .view-catalogo { animation: viewIn .3s ease; }
 @media (prefers-reduced-motion: reduce) { .view-inicio, .view-catalogo { animation: none; } }
 
-/* Pestaña actual en el menú */
-.nav a[aria-current="page"] { color: var(--gold-l); }
-@media (min-width: 768px) { .nav a[aria-current="page"]::after { width: 100%; } }
+/* Pestaña actual en el menú: texto blanco y la línea morada debajo */
+.nav a[aria-current="page"] { color: var(--white); }
+@media (min-width: 768px) { .nav a[aria-current="page"]::after { width: 100%; height: 2px; bottom: -6px; border-radius: 2px; } }
 .mobile-nav-link[aria-current="page"] { color: var(--gold-l); }
 
 /* ─── Inicio: accesos al catálogo ─────────────────────────── */
@@ -5117,46 +5116,11 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
    SISTEMA DE USUARIOS — Auth Modales & Header
    ════════════════════════════════════════════════════════ */
 
-/* ─── Botones de auth en header desktop ──────────────────────────────────── */
+/* ─── Cuenta en el header desktop (ícono sin sesión, nombre con sesión) ──── */
 .header-auth {
   display: flex;
   align-items: center;
   gap: .5rem;
-}
-
-.header-auth-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  font-family: var(--font-sans);
-  font-size: .78rem;
-  font-weight: 500;
-  padding: .42rem .9rem;
-  border-radius: 50px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: all var(--tr);
-  white-space: nowrap;
-}
-
-.header-auth-login {
-  background: transparent;
-  border-color: rgba(124,79,176,.35);
-  color: var(--text);
-}
-.header-auth-login:hover {
-  border-color: var(--gold);
-  color: var(--gold);
-}
-
-.header-auth-register {
-  background: var(--gold);
-  color: #fff;
-  font-weight: 600;
-}
-.header-auth-register:hover {
-  background: var(--gold-l);
-  transform: translateY(-1px);
 }
 
 /* ─── Display de usuario logueado en header ──────────────────────────────── */
@@ -8748,14 +8712,19 @@ body.sheet-open { overflow: hidden; }
 }
 
 /* ── Lupa del encabezado: lleva al buscador del catálogo ── */
-.header-search-btn {
+/* Íconos del header (lupa, cuenta, carrito): mismo tamaño, color y hover */
+.header-icon-btn {
   width: 40px; height: 40px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   border-radius: 50%; background: none; border: 0; color: var(--text); cursor: pointer;
   transition: color .2s ease, background .2s ease;
 }
-.header-search-btn svg { width: 21px; height: 21px; }
-.header-search-btn:hover { color: var(--gold-l); background: rgba(124,79,176,.1); }
+.header-icon-btn svg { width: 21px; height: 21px; }
+.header-icon-btn:hover { color: var(--gold-l); background: rgba(124,79,176,.1); }
+.header-store .cart-btn { width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text); transition: color .2s ease, background .2s ease; }
+.header-store .cart-btn svg { width: 22px; height: 22px; }
+.header-store .cart-btn:hover { color: var(--gold-l); background: rgba(124,79,176,.1); }
+.header-store .cart-count { top: 1px; right: 0; }
 
 /* ── Scent Finder: más compacto (no empuja tanto el catálogo) ── */
 .scent-finder-banner { padding: 1.1rem 1.5rem; margin-bottom: 1.4rem; }
@@ -8779,3 +8748,206 @@ body.sheet-open { overflow: hidden; }
 /* ── Ayuda debajo de un campo del checkout (agencias Shalom) ── */
 .field-help-link { display: inline-block; margin-top: .35rem; font-size: .74rem; font-weight: 600; color: var(--gold-l); }
 .field-help-link:hover { text-decoration: underline; }
+
+
+/* ════════════════════════════════════════════════════════
+   CAMPAÑAS: franja con enlace y selección de perfumes
+   (js/store/seasonal-theme.js — `picks` de una campaña)
+   ════════════════════════════════════════════════════════ */
+.seasonal-ribbon { flex-wrap: wrap; row-gap: .1rem; text-align: center; }
+.seasonal-ribbon-link {
+  margin-left: .4rem; padding: 0; background: none; border: 0; cursor: pointer;
+  font: inherit; font-weight: 700; letter-spacing: .02em; text-transform: none;
+  color: var(--white); text-decoration: underline; text-underline-offset: 3px;
+}
+.seasonal-ribbon-link:hover { color: var(--gold-l); }
+@media (max-width: 640px) { .seasonal-ribbon.has-link .seasonal-ribbon-text { display: none; } }
+
+.seasonal-picks { padding: 2.25rem 0 1.25rem; }
+.seasonal-picks-track {
+  display: flex; gap: .9rem;
+  overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-left: 1rem;
+  padding: .4rem 1rem 1rem;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.seasonal-picks-track::-webkit-scrollbar { display: none; }
+.seasonal-picks-track .pd-mini-card { flex: 0 0 min(42vw, 160px); scroll-snap-align: start; }
+/* En PC entran todos: grilla centrada en vez de fila deslizable */
+@media (min-width: 900px) {
+  .seasonal-picks-track {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 180px));
+    justify-content: center; gap: 1.1rem; overflow: visible; padding: .4rem 0 1rem;
+  }
+}
+.seasonal-picks-actions { text-align: center; margin-top: .5rem; }
+.seasonal-picks-all {
+  background: transparent; color: var(--gold-l); font-weight: 700; font-size: .86rem;
+  padding: .7rem 1.4rem; border: 1px solid rgba(124,79,176,.45); border-radius: 999px; cursor: pointer;
+  transition: background var(--tr), color var(--tr), border-color var(--tr);
+}
+.seasonal-picks-all:hover { background: var(--gold); border-color: var(--gold); color: #fff; }
+
+/* ════════════════════════════════════════════════════════
+   CAMPAÑA DE HALLOWEEN — body[data-campaign="halloween"]
+   Se activa en el panel (Ajustes → Campañas). El morado de la marca se
+   queda; se suma el naranja calabaza como acento. La decoración (telarañas,
+   araña, murciélagos, calabaza) la pone CAMPAIGN_DECOR en seasonal-theme.js.
+   ════════════════════════════════════════════════════════ */
+body[data-campaign="halloween"] { --hw: #ff7a18; --hw-l: #ffa94d; --hw-d: #c2500a; }
+
+/* ── Franja ── */
+body[data-campaign="halloween"] .seasonal-ribbon {
+  color: var(--hw-l);
+  border-bottom-color: rgba(255,122,24,.35);
+  background: linear-gradient(90deg, rgba(124,79,176,.24), rgba(255,122,24,.16) 50%, rgba(124,79,176,.24));
+}
+body[data-campaign="halloween"] .seasonal-ribbon-link:hover { color: var(--hw-l); }
+
+/* ── Carrusel: fondo de noche con resplandor naranja del lado de la luna ── */
+body[data-campaign="halloween"] #carouselWrapper { background: #07040b; }
+body[data-campaign="halloween"] .carousel-slide {
+  background:
+    radial-gradient(ellipse 50% 70% at 78% 44%, rgba(255,122,24,.20) 0%, transparent 64%),
+    radial-gradient(ellipse 60% 80% at 10% 72%, rgba(124,79,176,.22) 0%, transparent 60%),
+    linear-gradient(160deg, #0b0612 0%, #050308 55%, #0d0704 100%);
+}
+body[data-campaign="halloween"] .slide-campaign .carousel-tag { color: var(--hw-l); border-left-color: var(--hw); }
+body[data-campaign="halloween"] .slide-campaign .carousel-title .c-gold {
+  background: linear-gradient(90deg, var(--hw-l), var(--hw));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  padding-right: .12em;   /* la cursiva se recorta sin esto */
+}
+body[data-campaign="halloween"] .slide-campaign .carousel-title::after { background: linear-gradient(90deg, var(--hw), transparent); }
+body[data-campaign="halloween"] .slide-campaign .carousel-cta {
+  background: linear-gradient(90deg, var(--hw-d), var(--hw));
+  box-shadow: 0 10px 30px rgba(255,122,24,.32);
+}
+body[data-campaign="halloween"] .slide-campaign .carousel-cta:hover { background: linear-gradient(90deg, var(--hw), var(--hw-l)); }
+body[data-campaign="halloween"] .deco-ring { border-color: rgba(255,122,24,.2); }
+body[data-campaign="halloween"] .carousel-progress-bar { background: linear-gradient(90deg, var(--gold), var(--hw)); }
+
+/* ── La luna: el halo de la mascota pasa a ser una luna llena naranja ── */
+body[data-campaign="halloween"] .hero-mascot::before {
+  inset: auto; left: 50%; top: 50%;
+  width: 116%; height: auto; aspect-ratio: 1; border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(194,80,10,.26) 0 5%, transparent 6%),
+    radial-gradient(circle at 66% 24%, rgba(194,80,10,.20) 0 3.5%, transparent 4.5%),
+    radial-gradient(circle at 74% 62%, rgba(194,80,10,.22) 0 6%, transparent 7%),
+    radial-gradient(circle at 26% 68%, rgba(194,80,10,.18) 0 4%, transparent 5%),
+    radial-gradient(circle at 44% 40%, #ffe6b0 0%, #ffc56c 42%, #f39030 100%);
+  box-shadow: 0 0 60px 12px rgba(255,140,40,.38), 0 0 150px 50px rgba(255,122,24,.16);
+  transform: translate(-50%, -50%);
+  animation: hwMoon 5s ease-in-out infinite;
+}
+@keyframes hwMoon {
+  0%, 100% { transform: translate(-50%, -50%) scale(1);     opacity: .92; }
+  50%      { transform: translate(-50%, -50%) scale(1.025); opacity: 1; }
+}
+body[data-campaign="halloween"] .hero-mascot::after {
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(255,122,24,.5) 50deg, transparent 100deg, transparent 200deg, rgba(124,79,176,.45) 250deg, transparent 300deg, transparent 360deg);
+}
+body[data-campaign="halloween"] .hero-mascot .mascot-img {
+  filter: drop-shadow(0 24px 44px rgba(0,0,0,.8)) drop-shadow(0 0 22px rgba(60,20,0,.55));
+}
+
+/* ── Adornos junto a la mascota: murciélagos delante de la luna y la calabaza ── */
+.hw-mascot-deco { position: absolute; inset: 0; pointer-events: none; }
+.hw-bat { position: absolute; width: var(--s, 13%); color: #170b14; z-index: 1; animation: hwHover 6s ease-in-out infinite alternate; }
+.hw-bat svg, .hw-fly svg { display: block; width: 100%; height: auto; transform-origin: 50% 40%; animation: hwFlap .32s ease-in-out infinite alternate; }
+.hw-bat-1 { left: -2%;  top: 4%;   --s: 17%; }
+.hw-bat-2 { left: 80%;  top: -3%;  --s: 13%; animation-delay: -2s; }
+.hw-bat-3 { left: -9%;  top: 40%;  --s: 11%; animation-delay: -3.5s; }
+.hw-bat-4 { left: 93%;  top: 34%;  --s: 15%; animation-delay: -1s; }
+@keyframes hwHover { from { transform: translate(0, 0) rotate(-6deg); } to { transform: translate(8%, -22%) rotate(7deg); } }
+@keyframes hwFlap  { from { transform: scaleX(1); } to { transform: scaleX(.56) scaleY(1.08); } }
+.hw-pumpkin {
+  position: absolute; left: -15%; bottom: -3%; width: 36%; z-index: 3;
+  filter: drop-shadow(0 10px 16px rgba(0,0,0,.65)) drop-shadow(0 0 20px rgba(255,122,24,.45));
+}
+.hw-pumpkin svg { display: block; width: 100%; height: auto; }
+.hw-pumpkin-face { animation: hwFlicker 2.8s ease-in-out infinite; }
+@keyframes hwFlicker { 0%, 100% { opacity: 1; } 42% { opacity: .78; } 48% { opacity: 1; } 56% { opacity: .7; } 64% { opacity: 1; } }
+
+/* ── Capa del carrusel: telarañas, araña y niebla (detrás del texto) ── */
+.hw-hero-deco { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; color: rgba(255,255,255,.17); }
+.hw-web { position: absolute; top: 0; width: clamp(120px, 17vw, 250px); }
+.hw-web svg { display: block; width: 100%; height: auto; }
+.hw-web-l { left: 0; }
+.hw-web-r { right: 0; width: clamp(80px, 11vw, 160px); transform: scaleX(-1); opacity: .75; }
+/* El hilo sale por arriba de la pantalla y todo el conjunto sube y baja */
+.hw-spider { position: absolute; top: -120px; left: 53%; width: 24px; color: #a892c9; animation: hwSpider 9s ease-in-out infinite alternate; }
+.hw-spider i { display: block; width: 1px; height: 210px; margin: 0 auto -3px; background: linear-gradient(rgba(255,255,255,.06), rgba(255,255,255,.4)); }
+.hw-spider svg { display: block; width: 100%; height: auto; filter: drop-shadow(0 0 5px rgba(124,79,176,.7)); }
+@keyframes hwSpider { from { transform: translateY(-80px); } to { transform: translateY(18px); } }
+.hw-fog {
+  position: absolute; left: -15%; right: -15%; bottom: -34px; height: 170px;
+  background:
+    radial-gradient(ellipse 32% 62% at 18% 100%, rgba(170,140,210,.20), transparent 70%),
+    radial-gradient(ellipse 36% 70% at 54% 100%, rgba(255,150,70,.12), transparent 70%),
+    radial-gradient(ellipse 30% 56% at 86% 100%, rgba(170,140,210,.17), transparent 70%);
+  filter: blur(8px);
+  animation: hwFog 16s ease-in-out infinite alternate;
+}
+@keyframes hwFog { from { transform: translateX(-4%); } to { transform: translateX(4%); } }
+/* Luna del celular (ahí la mascota no se muestra): asoma por la esquina de arriba */
+.hw-moon { display: none; }
+@media (max-width: 720px) {
+  .hw-moon {
+    display: block; position: absolute; right: -52px; top: -40px; width: 190px; aspect-ratio: 1; border-radius: 50%;
+    background:
+      radial-gradient(circle at 34% 60%, rgba(194,80,10,.24) 0 6%, transparent 7%),
+      radial-gradient(circle at 56% 74%, rgba(194,80,10,.2) 0 4%, transparent 5%),
+      radial-gradient(circle at 44% 46%, #ffe6b0 0%, #ffc56c 42%, #f39030 100%);
+    box-shadow: 0 0 50px 10px rgba(255,140,40,.34), 0 0 120px 40px rgba(255,122,24,.14);
+    opacity: .9;
+  }
+  .hw-bat-m1 { left: 4%;  top: 58%; --s: 26%; }
+  .hw-bat-m2 { left: 40%; top: 80%; --s: 19%; animation-delay: -2.5s; }
+  .hw-web-r { display: none; }
+  .hw-spider { left: 46%; }
+}
+
+/* ── Murciélagos que cruzan la página de vez en cuando ── */
+#hwBatLayer { position: fixed; inset: 0; z-index: 150; overflow: hidden; pointer-events: none; }
+.hw-fly {
+  position: absolute; left: 0; width: var(--hw-size, 36px); color: #1b1024;
+  filter: drop-shadow(0 0 2px rgba(255,150,60,.95)) drop-shadow(0 0 7px rgba(255,122,24,.5));
+  animation: hwFly 11s linear forwards;
+}
+.hw-fly-back { animation-name: hwFlyBack; }
+@keyframes hwFly {
+  0%   { transform: translate(-12vw, 0); }
+  25%  { transform: translate(20vw, -5vh); }
+  50%  { transform: translate(52vw, 3vh); }
+  75%  { transform: translate(82vw, -6vh); }
+  100% { transform: translate(112vw, -1vh); }
+}
+@keyframes hwFlyBack {
+  0%   { transform: translate(112vw, 0); }
+  25%  { transform: translate(80vw, 4vh); }
+  50%  { transform: translate(48vw, -4vh); }
+  75%  { transform: translate(18vw, 5vh); }
+  100% { transform: translate(-12vw, -2vh); }
+}
+
+/* ── Selección de Halloween ── */
+body[data-campaign="halloween"] .seasonal-picks {
+  background:
+    radial-gradient(ellipse 50% 100% at 88% 0%, rgba(255,122,24,.13) 0%, transparent 62%),
+    radial-gradient(ellipse 55% 100% at 10% 100%, rgba(124,79,176,.16) 0%, transparent 62%);
+  border-bottom: 1px solid rgba(255,122,24,.16);
+}
+body[data-campaign="halloween"] .seasonal-picks .combos-eyebrow { color: var(--hw-l); background: rgba(255,122,24,.13); border-color: rgba(255,122,24,.4); }
+body[data-campaign="halloween"] .seasonal-picks .combos-title em { color: var(--hw-l); }
+body[data-campaign="halloween"] .seasonal-picks .pd-mini-card:hover { border-color: rgba(255,122,24,.55); box-shadow: 0 12px 28px rgba(0,0,0,.5), 0 0 22px rgba(255,122,24,.14); }
+body[data-campaign="halloween"] .seasonal-picks-all { color: var(--hw-l); border-color: rgba(255,122,24,.5); }
+body[data-campaign="halloween"] .seasonal-picks-all:hover { background: var(--hw); border-color: var(--hw); color: #1a0b00; }
+
+/* ── Detalles en el resto de la página ── */
+body[data-campaign="halloween"] .scroll-progress-line { background: linear-gradient(90deg, var(--gold-d), var(--gold), var(--hw)); }
+body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0b00; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hw-bat, .hw-bat svg, .hw-spider, .hw-fog, .hw-pumpkin-face, body[data-campaign="halloween"] .hero-mascot::before { animation: none; }
+}

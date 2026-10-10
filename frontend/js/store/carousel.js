@@ -36,11 +36,37 @@ const Carousel = {
     const wrapper = document.getElementById('carouselWrapper');
     if (!wrapper) return;
 
+    this.baseSlides = this.slides.slice();
+    // La campaña puede haberse aplicado antes de este init (viene del caché)
+    if (this.campaignSlide) this.slides = [this.campaignSlide, ...this.baseSlides];
     this.total = this.slides.length;
     this.render(wrapper);
+    // Flechas y pausa al pasar el mouse: una sola vez (render() se repite cuando
+    // una campaña agrega o quita su slide)
+    wrapper.querySelector('.carousel-prev').addEventListener('click', () => this.prev());
+    wrapper.querySelector('.carousel-next').addEventListener('click', () => this.next());
+    wrapper.addEventListener('mouseenter', () => this.stopTimer());
+    wrapper.addEventListener('mouseleave', () => this.startTimer());
     this.startTimer();
     this.initSwipe(wrapper);
     this.initMouseParallax(wrapper);
+  },
+
+  // Slide de la campaña activa (ej. Halloween): va primero. `null` lo quita.
+  // Lo llama seasonal-theme.js.
+  setCampaignSlide(slide) {
+    this.campaignSlide = slide || null;
+    const wrapper = document.getElementById('carouselWrapper');
+    if (!wrapper || !this.baseSlides) return;   // init() todavía no corrió: lo toma él
+    const next = slide ? [slide, ...this.baseSlides] : this.baseSlides.slice();
+    if (next.length === this.slides.length && next[0] === this.slides[0]) return;
+    this.slides  = next;
+    this.total   = next.length;
+    this.current = 0;
+    this.render(wrapper);
+    const counterEl = document.getElementById('slideCurrentNum');
+    if (counterEl) counterEl.textContent = '01';
+    if (this.timer) this.startTimer();
   },
 
   render(wrapper) {
@@ -51,7 +77,7 @@ const Carousel = {
           <span class="carousel-tag">${s.tag}</span>
           <h2 class="carousel-title">${s.titleHtml || s.title.replace(/\n/g, '<br>')}</h2>
           <p class="carousel-sub">${s.subtitle}</p>
-          <a href="${s.cta.href}" class="carousel-cta" ${s.cta.filter ? `data-filter="${s.cta.filter}"` : ''}>
+          <a href="${s.cta.href}" class="carousel-cta" ${s.cta.filter ? `data-filter="${s.cta.filter}"` : ''} ${s.cta.occasion ? `data-occasion="${s.cta.occasion}"` : ''}>
             ${s.cta.text}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
@@ -73,9 +99,7 @@ const Carousel = {
       <button class="dot ${i === 0 ? 'active' : ''}" data-index="${i}" aria-label="Slide ${i + 1}"></button>
     `).join('');
 
-    // Eventos de navegación
-    wrapper.querySelector('.carousel-prev').addEventListener('click', () => this.prev());
-    wrapper.querySelector('.carousel-next').addEventListener('click', () => this.next());
+    // Puntos de navegación
     dots.querySelectorAll('.dot').forEach(dot => {
       dot.addEventListener('click', () => this.goTo(parseInt(dot.dataset.index)));
     });
@@ -89,13 +113,17 @@ const Carousel = {
         goStoreView('catalogo');
       });
     });
+    // CTA por momento del día (ej. "Ver fragancias de noche" en Halloween)
+    track.querySelectorAll('.carousel-cta[data-occasion]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        openCatalogWith({ occasion: a.dataset.occasion });
+      });
+    });
 
     const totalEl = document.getElementById('slideTotalNum');
     if (totalEl) totalEl.textContent = String(this.total).padStart(2, '0');
-
-    // Pausa en hover
-    wrapper.addEventListener('mouseenter', () => this.stopTimer());
-    wrapper.addEventListener('mouseleave', () => this.startTimer());
   },
 
   // ─── Parallax de ratón en la mascota ──────────────────────────────────────
