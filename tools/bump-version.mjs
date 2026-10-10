@@ -18,7 +18,8 @@ const pad = n => String(n).padStart(2, '0');
 const now = new Date();
 const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
 
-// Páginas HTML: las de frontend/ y las de sus carpetas de primer nivel (admin/, nosotros/, contacto/)
+// Páginas HTML: las de frontend/, las de sus carpetas de primer nivel (admin/,
+// nosotros/, contacto/) y el catálogo para imprimir (admin/catalogo/)
 const pages = [];
 for (const entry of fs.readdirSync(site, { withFileTypes: true })) {
   if (entry.isFile() && entry.name.endsWith('.html')) pages.push(path.join(site, entry.name));
@@ -27,6 +28,8 @@ for (const entry of fs.readdirSync(site, { withFileTypes: true })) {
     if (fs.existsSync(idx)) pages.push(idx);
   }
 }
+const printCatalog = path.join(site, 'admin', 'catalogo', 'index.html');
+if (fs.existsSync(printCatalog)) pages.push(printCatalog);
 
 // src="js/..." | src="../js/..." | href="css/..." | href="../css/..."  (solo archivos locales .js/.css)
 const LOCAL_ASSET = /((?:src|href)=")((?:\.\.\/)*(?:js|css)\/[^"?#]+\.(?:js|css))(?:\?v=[^"]*)?(")/g;

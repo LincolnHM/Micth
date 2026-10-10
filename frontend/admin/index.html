@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../imgGato/web.png">
-  <link rel="stylesheet" href="../css/style.css?v=20261010-1211">
+  <link rel="stylesheet" href="../css/style.css?v=20261010-1346">
   <style>
     html, body {
       background: #050505 !important;
@@ -399,7 +399,15 @@
       <div class="admin-section active" id="section-products">
         <div class="admin-section-header">
           <h2>Gestión de Perfumes</h2>
-          <div style="display:flex;gap:.6rem;align-items:center">
+          <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+            <!-- Catálogo de decants por casa, listo para imprimir (admin/catalogo/) -->
+            <a href="catalogo/" target="_blank" rel="noopener"
+               style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;padding:.45rem .9rem;border:1px solid var(--gold-d);border-radius:var(--r);background:var(--gold-dim);color:var(--gold-l);font-weight:600;text-decoration:none;transition:all .2s"
+               onmouseover="this.style.background='var(--gold)';this.style.color='#fff'"
+               onmouseout="this.style.background='var(--gold-dim)';this.style.color='var(--gold-l)'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14" aria-hidden="true"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Catálogo para imprimir
+            </a>
             <button onclick="exportCatalogPDF()" id="exportPdfBtn"
                style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;padding:.45rem .9rem;border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);color:var(--text2);transition:all .2s;cursor:pointer"
                onmouseover="this.style.borderColor='var(--gold-d)';this.style.color='var(--gold)'"
@@ -1414,32 +1422,32 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.min.js" integrity="sha384-fPWur1rx/DE6YtXP/x0MD6dd90RgnVsz5yX/DIg7CcVAnTBZsENWuIcpvVTM39ti" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con la tienda) — el orden importa -->
-  <script src="../js/shared/data-core.js?v=20261010-1211"></script>
-  <script src="../js/shared/catalog.js?v=20261010-1211"></script>
-  <script src="../js/shared/data.js?v=20261010-1211"></script>
-  <script src="../js/shared/supabase-config.js?v=20261010-1211"></script>
-  <script src="../js/shared/cloud-orders.js?v=20261010-1211"></script>
-  <script src="../js/shared/cloud-gallery.js?v=20261010-1211"></script>
-  <script src="../js/shared/cloud-products.js?v=20261010-1211"></script>
-  <script src="../js/shared/cloud-combos.js?v=20261010-1211"></script>
+  <script src="../js/shared/data-core.js?v=20261010-1346"></script>
+  <script src="../js/shared/catalog.js?v=20261010-1346"></script>
+  <script src="../js/shared/data.js?v=20261010-1346"></script>
+  <script src="../js/shared/supabase-config.js?v=20261010-1346"></script>
+  <script src="../js/shared/cloud-orders.js?v=20261010-1346"></script>
+  <script src="../js/shared/cloud-gallery.js?v=20261010-1346"></script>
+  <script src="../js/shared/cloud-products.js?v=20261010-1346"></script>
+  <script src="../js/shared/cloud-combos.js?v=20261010-1346"></script>
   <!-- Panel admin -->
-  <script src="../js/admin/core.js?v=20261010-1211"></script>
-  <script src="../js/admin/ui.js?v=20261010-1211"></script>
-  <script src="../js/admin/login.js?v=20261010-1211"></script>
-  <script src="../js/admin/nav.js?v=20261010-1211"></script>
-  <script src="../js/admin/dashboard.js?v=20261010-1211"></script>
-  <script src="../js/admin/products.js?v=20261010-1211"></script>
-  <script src="../js/admin/catalog-pdf.js?v=20261010-1211"></script>
-  <script src="../js/admin/orders.js?v=20261010-1211"></script>
-  <script src="../js/admin/order-edit.js?v=20261010-1211"></script>
-  <script src="../js/admin/orders-realtime.js?v=20261010-1211"></script>
-  <script src="../js/admin/combos.js?v=20261010-1211"></script>
-  <script src="../js/admin/site-content.js?v=20261010-1211"></script>
-  <script src="../js/admin/users.js?v=20261010-1211"></script>
-  <script src="../js/admin/accounting.js?v=20261010-1211"></script>
-  <script src="../js/admin/stats.js?v=20261010-1211"></script>
-  <script src="../js/admin/pricing.js?v=20261010-1211"></script>
-  <script src="../js/admin/tools.js?v=20261010-1211"></script>
-  <script src="../js/admin/cash.js?v=20261010-1211"></script>
+  <script src="../js/admin/core.js?v=20261010-1346"></script>
+  <script src="../js/admin/ui.js?v=20261010-1346"></script>
+  <script src="../js/admin/login.js?v=20261010-1346"></script>
+  <script src="../js/admin/nav.js?v=20261010-1346"></script>
+  <script src="../js/admin/dashboard.js?v=20261010-1346"></script>
+  <script src="../js/admin/products.js?v=20261010-1346"></script>
+  <script src="../js/admin/catalog-pdf.js?v=20261010-1346"></script>
+  <script src="../js/admin/orders.js?v=20261010-1346"></script>
+  <script src="../js/admin/order-edit.js?v=20261010-1346"></script>
+  <script src="../js/admin/orders-realtime.js?v=20261010-1346"></script>
+  <script src="../js/admin/combos.js?v=20261010-1346"></script>
+  <script src="../js/admin/site-content.js?v=20261010-1346"></script>
+  <script src="../js/admin/users.js?v=20261010-1346"></script>
+  <script src="../js/admin/accounting.js?v=20261010-1346"></script>
+  <script src="../js/admin/stats.js?v=20261010-1346"></script>
+  <script src="../js/admin/pricing.js?v=20261010-1346"></script>
+  <script src="../js/admin/tools.js?v=20261010-1346"></script>
+  <script src="../js/admin/cash.js?v=20261010-1346"></script>
 </body>
 </html>

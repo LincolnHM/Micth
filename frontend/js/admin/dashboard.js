@@ -138,6 +138,9 @@ async function renderDashboard() {
       <button class="dash-action-btn" onclick="document.querySelector('[data-section=products]').click();setTimeout(()=>document.getElementById('addProductBtn')?.click(),300)">
         <span>✦</span> Agregar perfume
       </button>
+      <button class="dash-action-btn" onclick="window.open('catalogo/', '_blank', 'noopener')">
+        <span>🖨</span> Catálogo para imprimir
+      </button>
       <button class="dash-action-btn" onclick="exportCatalogPDF()">
         <span>📄</span> Exportar catálogo PDF
       </button>
