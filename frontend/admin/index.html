@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../imgGato/web.png">
-  <link rel="stylesheet" href="../css/style.css?v=20261010-1346">
+  <link rel="stylesheet" href="../css/style.css?v=20261019-2241">
   <style>
     html, body {
       background: #050505 !important;
@@ -517,7 +517,9 @@
         <div class="order-filters">
           <button class="order-filter-btn active" data-status="all">Todos</button>
           <button class="order-filter-btn" data-status="pendiente">Pendiente</button>
+          <button class="order-filter-btn" data-status="separado">Separado</button>
           <button class="order-filter-btn" data-status="pagado">Pagado</button>
+          <button class="order-filter-btn" data-status="saldo">💰 Con saldo por cobrar</button>
           <button class="order-filter-btn" data-status="enviado">Enviado</button>
           <button class="order-filter-btn" data-status="cancelado">Cancelado</button>
         </div>
@@ -528,6 +530,7 @@
             <thead>
               <tr>
                 <th class="order-col-id">ID · Fecha</th>
+                <th class="order-col-delivery">Entrega</th>
                 <th class="order-col-client">Cliente</th>
                 <th class="order-col-items">Productos</th>
                 <th class="order-col-total">Total</th>
@@ -537,7 +540,7 @@
             </thead>
             <tbody id="ordersTableBody">
               <tr>
-                <td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">
+                <td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">
                   Cargando pedidos…
                 </td>
               </tr>
@@ -856,6 +859,7 @@
                 <select id="csvStatusFilter" style="width:100%;padding:.52rem .8rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem">
                   <option value="all">Todos los estados</option>
                   <option value="pagado">Solo pagados</option>
+                  <option value="separado">Solo separados (con adelanto)</option>
                   <option value="pendiente">Solo pendientes</option>
                   <option value="cancelado">Solo cancelados</option>
                 </select>
@@ -1326,24 +1330,12 @@
           </div>
         </div>
 
-        <div class="field-grid-2">
-          <div class="field">
-            <label for="regPaymentMethod">Método de pago</label>
-            <select id="regPaymentMethod">
-              <option value="yape">Yape</option>
-              <option value="plin">Plin</option>
-              <option value="efectivo">Efectivo</option>
-              <option value="transferencia">Transferencia</option>
-              <option value="">Otro / Sin especificar</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="regOrderStatus">Estado inicial</label>
-            <select id="regOrderStatus">
-              <option value="pendiente">Pendiente</option>
-              <option value="pagado">Pagado</option>
-            </select>
-          </div>
+        <div class="field">
+          <label for="regPayNow">¿Ya pagó?</label>
+          <select id="regPayNow">
+            <option value="no">⏳ Todavía no (queda Pendiente)</option>
+            <option value="si">💰 Sí: pagó todo o dejó un adelanto (lo anotas al guardar)</option>
+          </select>
         </div>
 
         <div class="field">
@@ -1422,32 +1414,32 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.min.js" integrity="sha384-fPWur1rx/DE6YtXP/x0MD6dd90RgnVsz5yX/DIg7CcVAnTBZsENWuIcpvVTM39ti" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con la tienda) — el orden importa -->
-  <script src="../js/shared/data-core.js?v=20261010-1346"></script>
-  <script src="../js/shared/catalog.js?v=20261010-1346"></script>
-  <script src="../js/shared/data.js?v=20261010-1346"></script>
-  <script src="../js/shared/supabase-config.js?v=20261010-1346"></script>
-  <script src="../js/shared/cloud-orders.js?v=20261010-1346"></script>
-  <script src="../js/shared/cloud-gallery.js?v=20261010-1346"></script>
-  <script src="../js/shared/cloud-products.js?v=20261010-1346"></script>
-  <script src="../js/shared/cloud-combos.js?v=20261010-1346"></script>
+  <script src="../js/shared/data-core.js?v=20261019-2241"></script>
+  <script src="../js/shared/catalog.js?v=20261019-2241"></script>
+  <script src="../js/shared/data.js?v=20261019-2241"></script>
+  <script src="../js/shared/supabase-config.js?v=20261019-2241"></script>
+  <script src="../js/shared/cloud-orders.js?v=20261019-2241"></script>
+  <script src="../js/shared/cloud-gallery.js?v=20261019-2241"></script>
+  <script src="../js/shared/cloud-products.js?v=20261019-2241"></script>
+  <script src="../js/shared/cloud-combos.js?v=20261019-2241"></script>
   <!-- Panel admin -->
-  <script src="../js/admin/core.js?v=20261010-1346"></script>
-  <script src="../js/admin/ui.js?v=20261010-1346"></script>
-  <script src="../js/admin/login.js?v=20261010-1346"></script>
-  <script src="../js/admin/nav.js?v=20261010-1346"></script>
-  <script src="../js/admin/dashboard.js?v=20261010-1346"></script>
-  <script src="../js/admin/products.js?v=20261010-1346"></script>
-  <script src="../js/admin/catalog-pdf.js?v=20261010-1346"></script>
-  <script src="../js/admin/orders.js?v=20261010-1346"></script>
-  <script src="../js/admin/order-edit.js?v=20261010-1346"></script>
-  <script src="../js/admin/orders-realtime.js?v=20261010-1346"></script>
-  <script src="../js/admin/combos.js?v=20261010-1346"></script>
-  <script src="../js/admin/site-content.js?v=20261010-1346"></script>
-  <script src="../js/admin/users.js?v=20261010-1346"></script>
-  <script src="../js/admin/accounting.js?v=20261010-1346"></script>
-  <script src="../js/admin/stats.js?v=20261010-1346"></script>
-  <script src="../js/admin/pricing.js?v=20261010-1346"></script>
-  <script src="../js/admin/tools.js?v=20261010-1346"></script>
-  <script src="../js/admin/cash.js?v=20261010-1346"></script>
+  <script src="../js/admin/core.js?v=20261019-2241"></script>
+  <script src="../js/admin/ui.js?v=20261019-2241"></script>
+  <script src="../js/admin/login.js?v=20261019-2241"></script>
+  <script src="../js/admin/nav.js?v=20261019-2241"></script>
+  <script src="../js/admin/dashboard.js?v=20261019-2241"></script>
+  <script src="../js/admin/products.js?v=20261019-2241"></script>
+  <script src="../js/admin/catalog-pdf.js?v=20261019-2241"></script>
+  <script src="../js/admin/orders.js?v=20261019-2241"></script>
+  <script src="../js/admin/order-edit.js?v=20261019-2241"></script>
+  <script src="../js/admin/orders-realtime.js?v=20261019-2241"></script>
+  <script src="../js/admin/combos.js?v=20261019-2241"></script>
+  <script src="../js/admin/site-content.js?v=20261019-2241"></script>
+  <script src="../js/admin/users.js?v=20261019-2241"></script>
+  <script src="../js/admin/accounting.js?v=20261019-2241"></script>
+  <script src="../js/admin/stats.js?v=20261019-2241"></script>
+  <script src="../js/admin/pricing.js?v=20261019-2241"></script>
+  <script src="../js/admin/tools.js?v=20261019-2241"></script>
+  <script src="../js/admin/cash.js?v=20261019-2241"></script>
 </body>
 </html>

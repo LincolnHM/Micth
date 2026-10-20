@@ -196,9 +196,12 @@ async function renderStatsSection(forceRefresh = false) {
   products.forEach(p => { prodLookup[p.id] = p; });
 
   // ── KPIs ────────────────────────────────────────────────────────────────
+  // Cobrado = todo el dinero recibido, pago por pago (adelantos incluidos)
   const paidOrders    = orders.filter(o => o.status === 'pagado');
-  const totalRevenue  = paidOrders.reduce((s, o) => s + (o.total || 0), 0);
-  const avgTicket     = paidOrders.length ? totalRevenue / paidOrders.length : 0;
+  const income        = incomePayments(orders);
+  const totalRevenue  = income.reduce((s, p) => s + p.amount, 0);
+  const payingOrders  = new Set(income.map(p => p.order.id)).size;
+  const avgTicket     = payingOrders ? totalRevenue / payingOrders : 0;
   const discountCount = orders.filter(o => (o.notes || '').includes('DESCUENTO')).length;
 
   // ── Top perfumes (decants) ───────────────────────────────────────────────
@@ -273,22 +276,22 @@ async function renderStatsSection(forceRefresh = false) {
   });
   const topClients = Object.values(clientMap).sort((a, b) => b.total - a.total).slice(0, 10);
 
-  // ── Método de pago ─────────────────────────────────────────────────────────
-  const pmEfectivo = paidOrders.filter(o => o.paymentMethod === 'efectivo');
-  const pmYape     = paidOrders.filter(o => o.paymentMethod === 'yape');
-  const pmSinDato  = paidOrders.filter(o => !o.paymentMethod);
-  const revEfect   = pmEfectivo.reduce((s, o) => s + o.total, 0);
-  const revYape    = pmYape.reduce((s, o) => s + o.total, 0);
+  // ── Método de pago (pago por pago: mitad Yape + mitad efectivo suma en los dos) ──
+  const pmEfectivo = income.filter(p => p.method === 'efectivo');
+  const pmYape     = income.filter(p => p.method === 'yape');
+  const pmSinDato  = income.filter(p => !p.method);
+  const revEfect   = pmEfectivo.reduce((s, p) => s + p.amount, 0);
+  const revYape    = pmYape.reduce((s, p) => s + p.amount, 0);
 
-  // ── Tendencia últimos 6 meses ──────────────────────────────────────────────
+  // ── Tendencia últimos 6 meses (dinero cobrado cada mes) ────────────────────
   const now6 = new Date();
   const trend6 = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(now6.getFullYear(), now6.getMonth() - 5 + i, 1);
-    const mo = paidOrders.filter(o => {
-      const od = new Date(o.date);
-      return od.getFullYear() === d.getFullYear() && od.getMonth() === d.getMonth();
+    const mo = income.filter(p => {
+      const pd = new Date(p.date);
+      return pd.getFullYear() === d.getFullYear() && pd.getMonth() === d.getMonth();
     });
-    return { label: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][d.getMonth()], rev: mo.reduce((s,o) => s + o.total, 0) };
+    return { label: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][d.getMonth()], rev: mo.reduce((s, p) => s + p.amount, 0) };
   });
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -350,11 +353,11 @@ async function renderStatsSection(forceRefresh = false) {
       <div class="kpi-box">
         <div class="kpi-v">${orders.length}</div>
         <div class="kpi-l">Total pedidos</div>
-        <div class="kpi-sub">${paidOrders.length} pagados · ${orders.filter(o=>o.status==='pendiente').length} pendientes</div>
+        <div class="kpi-sub">${paidOrders.length} pagados · ${orders.filter(o=>o.status==='separado').length} separados · ${orders.filter(o=>o.status==='pendiente').length} pendientes</div>
       </div>
       <div class="kpi-box">
         <div class="kpi-v" style="color:#4caf50">S/ ${totalRevenue.toFixed(0)}</div>
-        <div class="kpi-l">Facturado (pagados)</div>
+        <div class="kpi-l">Cobrado (con adelantos)</div>
         <div class="kpi-sub">Ticket prom. S/ ${avgTicket.toFixed(1)}</div>
       </div>
       <div class="kpi-box">
@@ -369,17 +372,17 @@ async function renderStatsSection(forceRefresh = false) {
       <div class="kpi-box" style="border-color:rgba(76,175,80,.3)">
         <div class="kpi-v" style="color:#4caf50">S/ ${revEfect.toFixed(0)}</div>
         <div class="kpi-l">💵 Efectivo</div>
-        <div class="kpi-sub">${pmEfectivo.length} pedido${pmEfectivo.length!==1?'s':''}</div>
+        <div class="kpi-sub">${pmEfectivo.length} pago${pmEfectivo.length!==1?'s':''}</div>
       </div>
       <div class="kpi-box" style="border-color:rgba(124,58,237,.3)">
         <div class="kpi-v" style="color:#a78bfa">S/ ${revYape.toFixed(0)}</div>
         <div class="kpi-l">📱 Yape</div>
-        <div class="kpi-sub">${pmYape.length} pedido${pmYape.length!==1?'s':''}</div>
+        <div class="kpi-sub">${pmYape.length} pago${pmYape.length!==1?'s':''}</div>
       </div>
       <div class="kpi-box">
-        <div class="kpi-v" style="color:var(--text2)">S/ ${pmSinDato.reduce((s,o)=>s+o.total,0).toFixed(0)}</div>
+        <div class="kpi-v" style="color:var(--text2)">S/ ${pmSinDato.reduce((s,p)=>s+p.amount,0).toFixed(0)}</div>
         <div class="kpi-l">⏳ Sin dato de pago</div>
-        <div class="kpi-sub">${pmSinDato.length} pedido${pmSinDato.length!==1?'s':''}</div>
+        <div class="kpi-sub">${pmSinDato.length} pago${pmSinDato.length!==1?'s':''}</div>
       </div>
     </div>
 
@@ -390,7 +393,7 @@ async function renderStatsSection(forceRefresh = false) {
         <div style="padding:.75rem"><canvas id="statsTrendChart" style="display:block;width:100%;height:130px"></canvas></div>
       </div>
       <div class="stat-card-inner">
-        <div class="stat-card-head">💳 Método de pago <span class="stat-card-sub">pedidos pagados</span></div>
+        <div class="stat-card-head">💳 Método de pago <span class="stat-card-sub">cantidad de pagos</span></div>
         <div style="display:flex;align-items:center;justify-content:center;gap:1rem;padding:.75rem;flex-wrap:wrap">
           <canvas id="statsPayChart" style="flex-shrink:0"></canvas>
           <div class="chart-legend" style="flex-direction:column;padding:0;gap:.5rem">
@@ -475,7 +478,7 @@ async function renderStatsSection(forceRefresh = false) {
   // ── Dibujar gráficos después del render ──────────────────────────────────
   setTimeout(() => {
     _drawTrendChart('statsTrendChart', trend6);
-    _drawPayDonut('statsPayChart', pmEfectivo.length, pmYape.length, pmSinDato.length, paidOrders.length);
+    _drawPayDonut('statsPayChart', pmEfectivo.length, pmYape.length, pmSinDato.length, pmEfectivo.length + pmYape.length + pmSinDato.length);
     _drawTopHBar('statsTopChart', topPerf.slice(0, 8));
   }, 60);
 }

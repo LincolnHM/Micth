@@ -90,7 +90,9 @@ const CajaManager = {
     return sesion;
   },
 
-  // Calcular las ventas realizadas en un rango de fecha
+  // Dinero que entró en un rango de fecha, por método. Cuenta cada pago el día que
+  // se recibió: un adelanto entra hoy y el saldo el día que lo cobras; un pedido
+  // pagado mitad Yape y mitad efectivo suma en las dos columnas.
   async calcularVentas(fechaInicio, fechaFin = null) {
     const orders = await CloudOrders.getAll().catch(() => []);
     const inicio = new Date(fechaInicio).getTime();
@@ -104,23 +106,13 @@ const CajaManager = {
       total: 0
     };
 
-    orders.forEach(o => {
-      if (o.status !== 'pagado') return;
-      const orderTime = new Date(o.date).getTime();
-      if (orderTime >= inicio && orderTime <= fin) {
-        const pm = (o.paymentMethod || '').toLowerCase();
-        if (pm === 'efectivo') {
-          ventas.efectivo += o.total;
-        } else if (pm === 'yape') {
-          ventas.yape += o.total;
-        } else if (pm === 'plin') {
-          ventas.plin += o.total;
-        } else if (pm === 'transferencia' || pm === 'banco') {
-          ventas.transferencia += o.total;
-        }
-        ventas.total += o.total;
-      }
+    incomePayments(orders).forEach(p => {
+      const t = new Date(p.date).getTime();
+      if (t < inicio || t > fin) return;
+      if (p.method && p.method in ventas) ventas[p.method] += p.amount;
+      ventas.total += p.amount;
     });
+    Object.keys(ventas).forEach(k => { ventas[k] = roundMoney(ventas[k]); });
 
     return ventas;
   },

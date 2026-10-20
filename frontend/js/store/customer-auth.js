@@ -394,7 +394,7 @@ async function openHistoryModal() {
   }
 
   const STATUS_LABELS = {
-    pendiente: 'Pendiente', pagado: 'Pagado',
+    pendiente: 'Pendiente', separado: 'Separado', pagado: 'Pagado',
     cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado'
   };
 
@@ -409,7 +409,8 @@ async function openHistoryModal() {
     const items = (order.items || [])
       .map(i => `${_esc(i.productName)} ${_esc(i.size)} ×${parseInt(i.quantity) || 1}`)
       .join(' · ');
-    const delivery = order.delivery_type === 'envio' ? '📦 Envío' : '🏪 Recojo';
+    const delivery = order.delivery_type === 'envio' ? '📦 Envío'
+                   : order.delivery_type === 'delivery' ? '🛵 Delivery' : '🏪 Recojo';
 
     return `
       <div class="history-order-card">

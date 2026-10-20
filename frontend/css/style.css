@@ -1986,6 +1986,7 @@ html:not([data-view="catalogo"]) .view-catalogo { display: none !important; }
 
 .status-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .22rem .65rem; border-radius: 50px; font-size: .7rem; font-weight: 600; }
 .status-pendiente { background: rgba(255,152,0,.12); color: var(--orange); border: 1px solid rgba(255,152,0,.25); }
+.status-separado  { background: rgba(255,202,40,.12); color: #ffca28; border: 1px solid rgba(255,202,40,.32); }
 .status-pagado    { background: rgba(76,175,80,.12); color: var(--green); border: 1px solid rgba(76,175,80,.25); }
 .status-enviado   { background: rgba(33,150,243,.12); color: #64b5f6; border: 1px solid rgba(33,150,243,.25); }
 .status-entregado { background: rgba(124,79,176,.12); color: var(--gold); border: 1px solid rgba(124,79,176,.25); }
@@ -1993,6 +1994,7 @@ html:not([data-view="catalogo"]) .view-catalogo { display: none !important; }
 
 /* Columnas tabla pedidos */
 .order-col-id      { min-width: 118px; vertical-align: top; }
+.order-col-delivery { min-width: 132px; vertical-align: top; }
 .order-col-client  { min-width: 120px; vertical-align: top; }
 .order-col-items   { min-width: 180px; max-width: 270px; vertical-align: top; }
 .order-col-total   { min-width: 80px;  vertical-align: top; text-align: right; white-space: nowrap; }
@@ -2016,11 +2018,100 @@ html:not([data-view="catalogo"]) .view-catalogo { display: none !important; }
 }
 
 /* Badges de método de pago */
-.pay-badge { display: inline-flex; align-items: center; gap: .25rem; padding: .14rem .48rem; border-radius: 50px; font-size: .67rem; font-weight: 600; }
+.pay-badge { display: inline-flex; align-items: center; gap: .25rem; padding: .14rem .48rem; border-radius: 50px; font-size: .67rem; font-weight: 600; white-space: nowrap; }
 .pay-efectivo      { background: rgba(76,175,80,.12);  color: #81c784; border: 1px solid rgba(76,175,80,.25); }
 .pay-yape          { background: rgba(124,58,237,.12); color: #a78bfa; border: 1px solid rgba(124,58,237,.25); }
 .pay-plin          { background: rgba(41,182,246,.12); color: #4fc3f7; border: 1px solid rgba(41,182,246,.25); }
 .pay-transferencia { background: rgba(102,187,106,.12);color: #a5d6a7; border: 1px solid rgba(102,187,106,.25); }
+.pay-none          { background: rgba(255,255,255,.05); color: var(--text2); border: 1px solid var(--border-l); }
+.pay-chips { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .35rem; }
+
+/* Entrega: etiqueta grande para ver de un vistazo si es envío, recojo o delivery */
+.delivery-badge { display: inline-flex; align-items: center; gap: .5rem; padding: .4rem .7rem .4rem .55rem; border-radius: 10px; border: 1px solid; line-height: 1.15; max-width: 100%; }
+.delivery-badge-icon { font-size: 1.35rem; line-height: 1; flex-shrink: 0; }
+.delivery-badge-text { display: flex; flex-direction: column; min-width: 0; font-size: .9rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.delivery-badge-text small { margin-top: .1rem; font-size: .66rem; font-weight: 600; letter-spacing: .02em; text-transform: none; opacity: .85; overflow-wrap: anywhere; }
+.delivery-envio    { background: rgba(33,150,243,.14); border-color: rgba(66,165,245,.5);  color: #64b5f6; }
+.delivery-recojo   { background: rgba(124,79,176,.16); border-color: rgba(155,114,201,.55); color: #c4a3ea; }
+.delivery-delivery { background: rgba(0,150,136,.14);  border-color: rgba(38,166,154,.5);  color: #4db6ac; }
+/* Franja de color a la izquierda de cada pedido, según la entrega */
+.orders-table tr.deliv-envio    > td:first-child { box-shadow: inset 4px 0 0 #42a5f5; }
+.orders-table tr.deliv-recojo   > td:first-child { box-shadow: inset 4px 0 0 #9b72c9; }
+.orders-table tr.deliv-delivery > td:first-child { box-shadow: inset 4px 0 0 #26a69a; }
+
+/* Pagado / falta (pedidos separados con adelanto) */
+.order-pay-progress { width: 100%; max-width: 110px; height: 5px; margin: .45rem 0 .3rem auto; background: rgba(255,255,255,.08); border-radius: 3px; overflow: hidden; }
+.order-pay-progress span { display: block; height: 100%; background: linear-gradient(90deg, #ffb300, #ffca28); border-radius: 3px; }
+.order-pay-line { font-size: .7rem; color: var(--text2); }
+.order-pay-due  { font-size: .76rem; font-weight: 700; color: #ffb74d; }
+.btn-order-collect { width: 100%; padding: .32rem .6rem; font-size: .74rem; font-weight: 700; white-space: nowrap; border-radius: var(--r); cursor: pointer; background: rgba(255,179,0,.12); color: #ffca28; border: 1px solid rgba(255,179,0,.4); transition: background .15s; }
+.btn-order-collect:hover { background: rgba(255,179,0,.22); }
+
+/* Pagos en el detalle del pedido */
+.order-detail-top { display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; padding-bottom: .55rem; border-bottom: 1px solid var(--border); }
+.order-pay-section { display: flex; flex-direction: column; gap: .45rem; padding: .7rem .8rem; background: rgba(255,255,255,.02); border: 1px solid var(--border-l); border-radius: var(--r); }
+.order-pay-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; font-size: .74rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text2); }
+.order-pay-head .btn-order-collect { width: auto; letter-spacing: 0; text-transform: none; }
+.pay-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto 26px; align-items: center; gap: .45rem; padding: .35rem 0; border-bottom: 1px dashed var(--border); font-size: .8rem; }
+.pay-row-date { font-size: .74rem; color: var(--text2); }
+.pay-row-method { padding: .22rem .4rem; background: var(--bg2); border: 1px solid var(--border-l); border-radius: var(--r); color: var(--text); font-size: .76rem; }
+.pay-row-amount { color: var(--text); white-space: nowrap; }
+.pay-row-del { width: 26px; height: 26px; padding: 0; background: none; border: 1px solid rgba(239,83,80,.35); border-radius: var(--r); color: #ef5350; font-size: .8rem; line-height: 1; cursor: pointer; }
+.pay-row-del:hover { background: #ef5350; color: #fff; }
+.pay-row-note { grid-column: 1 / -1; font-size: .72rem; font-style: italic; color: var(--text3); }
+.order-pay-totals { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; padding-top: .2rem; font-size: .8rem; color: var(--text2); }
+.order-pay-totals strong { color: var(--text); }
+.order-pay-ok    { font-weight: 700; color: var(--green); }
+.order-pay-empty { margin: 0; font-size: .8rem; color: var(--text3); }
+.order-pay-note  { margin: 0; font-size: .72rem; color: #ef9a9a; }
+.order-ship-warn { margin: .25rem 0 0; padding: .5rem .7rem; border-radius: var(--r); background: rgba(255,179,0,.1); border: 1px solid rgba(255,179,0,.35); color: #ffca28; font-size: .8rem; font-weight: 600; }
+@media (max-width: 480px) {
+  .pay-row { grid-template-columns: minmax(0, 1fr) auto 26px; }
+  .pay-row-date { grid-column: 1 / -1; }
+}
+
+/* Ventana "Registrar pago" (adelanto, saldo o pago completo; uno o varios métodos) */
+.paydlg-overlay { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgba(0,0,0,.75); opacity: 0; transition: opacity .2s ease; }
+.paydlg-overlay.open { opacity: 1; }
+.paydlg { display: flex; flex-direction: column; width: 100%; max-width: 440px; max-height: 92vh; background: #161616; border: 1px solid var(--gold-d); border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.6); }
+.paydlg-head { display: flex; align-items: center; justify-content: space-between; padding: .9rem 1.1rem; border-bottom: 1px solid var(--border); }
+.paydlg-head h3 { margin: 0; font-family: var(--font-serif); font-size: 1.05rem; color: var(--gold-l); }
+.paydlg-close { padding: .2rem; background: none; border: none; color: #888; font-size: 1.2rem; line-height: 1; cursor: pointer; }
+.paydlg-body { display: flex; flex-direction: column; gap: .8rem; padding: 1rem 1.1rem; overflow-y: auto; }
+.paydlg-order { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .6rem; }
+.paydlg-customer { margin-top: .15rem; font-size: .85rem; color: var(--text); }
+.paydlg-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; }
+.paydlg-summary > div { display: flex; flex-direction: column; gap: .1rem; padding: .45rem .55rem; background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: var(--r); }
+.paydlg-summary span { font-size: .66rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text2); }
+.paydlg-summary strong { font-size: .92rem; color: var(--text); white-space: nowrap; }
+.paydlg-summary .paydlg-due { background: rgba(255,179,0,.08); border-color: rgba(255,179,0,.4); }
+.paydlg-summary .paydlg-due strong { color: #ffca28; }
+.paydlg-question { display: flex; flex-direction: column; gap: .15rem; margin: 0; font-size: .86rem; font-weight: 700; color: var(--text); }
+.paydlg-question small { font-size: .72rem; font-weight: 400; color: var(--text2); }
+.paydlg-methods, .paydlg-more { display: flex; flex-direction: column; gap: .45rem; }
+.paydlg-more[hidden] { display: none; }
+.paydlg-row { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; align-items: center; gap: .5rem; }
+.paydlg-method { font-size: .85rem; font-weight: 600; color: var(--text); }
+.paydlg-input { position: relative; display: flex; align-items: center; }
+.paydlg-input span { position: absolute; left: .65rem; font-size: .82rem; color: var(--text2); pointer-events: none; }
+.paydlg-input input { width: 100%; padding: .55rem .6rem .55rem 2rem; background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: var(--r); color: var(--text); font-size: 1rem; font-weight: 600; }
+.paydlg-input input:focus { outline: none; border-color: var(--gold-d); }
+.paydlg-fill { padding: .5rem .7rem; font-size: .74rem; font-weight: 700; border-radius: var(--r); cursor: pointer; background: var(--gold-dim); color: var(--gold-l); border: 1px solid rgba(124,79,176,.35); }
+.paydlg-fill:hover { background: rgba(124,79,176,.25); }
+.paydlg-more-btn { align-self: flex-start; padding: .1rem 0; background: none; border: none; color: var(--text2); font-size: .76rem; text-decoration: underline; cursor: pointer; }
+.paydlg-result { padding: .6rem .75rem; border: 1px solid var(--border); border-radius: var(--r); font-size: .84rem; }
+.paydlg-result.muted { color: var(--text2); }
+.paydlg-result.ok    { color: #81c784; background: rgba(76,175,80,.08);  border-color: rgba(76,175,80,.35); }
+.paydlg-result.warn  { color: #ffca28; background: rgba(255,179,0,.08);  border-color: rgba(255,179,0,.35); }
+.paydlg-result.error { color: #ef9a9a; background: rgba(239,83,80,.08);  border-color: rgba(239,83,80,.35); }
+.paydlg-stock { font-size: .74rem; line-height: 1.5; white-space: pre-line; color: var(--text2); }
+.paydlg-foot { display: flex; justify-content: flex-end; gap: .6rem; padding: .85rem 1.1rem; border-top: 1px solid var(--border); }
+.paydlg-save:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 420px) {
+  .paydlg-body { padding: .9rem; }
+  .paydlg-row { grid-template-columns: 92px minmax(0, 1fr) auto; gap: .4rem; }
+  .paydlg-summary strong { font-size: .82rem; }
+}
 
 /* Columna acciones */
 .order-actions-stack { display: flex; flex-direction: column; gap: .38rem; }
@@ -2796,12 +2887,20 @@ html:not([data-view="catalogo"]) .view-catalogo { display: none !important; }
   }
   #section-orders .orders-table tr.order-row > td { display: block; padding: 0; border: 0; min-width: 0; max-width: none; background-color: transparent !important; }
   #section-orders .orders-table tr:hover td { background-color: transparent !important; }
-  #section-orders .order-col-id      { grid-column: 1; grid-row: 1; overflow-wrap: anywhere; }
-  #section-orders .order-col-status  { grid-column: 2; grid-row: 1; text-align: right; }
-  #section-orders .order-col-client  { grid-column: 1 / -1; grid-row: 2; }
-  #section-orders .order-col-items   { grid-column: 1; grid-row: 3; overflow-wrap: anywhere; }
-  #section-orders .order-col-total   { grid-column: 2; grid-row: 3; text-align: right; }
-  #section-orders .order-col-actions { grid-column: 1 / -1; grid-row: 4; }
+  /* Arriba: la entrega (bien grande) y el estado; luego id, cliente, productos + total, acciones */
+  #section-orders .order-col-delivery { grid-column: 1; grid-row: 1; }
+  #section-orders .order-col-status   { grid-column: 2; grid-row: 1; text-align: right; }
+  #section-orders .order-col-id       { grid-column: 1 / -1; grid-row: 2; overflow-wrap: anywhere; }
+  #section-orders .order-col-client   { grid-column: 1 / -1; grid-row: 3; }
+  #section-orders .order-col-items    { grid-column: 1; grid-row: 4; overflow-wrap: anywhere; }
+  #section-orders .order-col-total    { grid-column: 2; grid-row: 4; text-align: right; }
+  #section-orders .order-col-actions  { grid-column: 1 / -1; grid-row: 5; }
+  #section-orders .pay-chips { justify-content: flex-end; }
+  /* La franja de color de la entrega va en el borde izquierdo de la tarjeta */
+  #section-orders .orders-table tr.order-row > td:first-child { box-shadow: none; }
+  #section-orders .orders-table tr.deliv-envio    { border-left: 4px solid #42a5f5; }
+  #section-orders .orders-table tr.deliv-recojo   { border-left: 4px solid #9b72c9; }
+  #section-orders .orders-table tr.deliv-delivery { border-left: 4px solid #26a69a; }
 
   /* Acciones del pedido */
   .order-actions-stack { gap: .3rem; }
