@@ -115,6 +115,17 @@ function isComingSoon(product) {
   return !!def?.comingSoon;
 }
 
+// ─── Recién llegados ──────────────────────────────────────────────────────────
+// "Nuevo" = entró a la base (created_at) en los últimos 30 días. Lo recién
+// agregado a catalog.js aún no está en la base (se sube al abrir el panel) y
+// no trae fecha: la tienda le pone la de hoy al cargar (init.js).
+const NEW_ARRIVAL_DAYS = 30;
+function isNewArrival(product) {
+  if (!product?.date) return false;
+  const t = new Date(product.date).getTime();
+  return !isNaN(t) && Date.now() - t < NEW_ARRIVAL_DAYS * 24 * 3600 * 1000;
+}
+
 // ¿Queda algún tamaño vendible? Si el frasco está por debajo del tamaño mínimo,
 // el producto se considera agotado aunque inStock siga en true.
 function isDecantPurchasable(product) {

@@ -94,9 +94,11 @@ window.addEventListener('popstate', e => {
 });
 
 // ─── Accesos al catálogo desde el Inicio ─────────────────────────────────────
-// Abre el catálogo solo con estos filtros, sin los anteriores (tarjetas por
-// tipo del Inicio; "fragancias de noche" de la campaña de Halloween)
-function openCatalogWith({ type = 'all', occasion = 'all' } = {}) {
+// Abre el catálogo solo con estos filtros y este orden, sin los anteriores
+// (tarjetas por tipo del Inicio; "fragancias de noche" de la campaña de
+// Halloween; "Ver todo lo nuevo" de Recién llegados, con sort 'new')
+function openCatalogWith({ type = 'all', occasion = 'all', sort = 'relevance' } = {}) {
+  Sort.mode = sort;
   resetAllFilters();
   if (type !== 'all' || occasion !== 'all') {
     Filter.type = type;

@@ -235,6 +235,22 @@ function productMiniCardHtml(p) {
     </button>`;
 }
 
+// Cómo huele, de un vistazo: una barra con los colores de sus acordes
+// principales (mismos colores que la ficha) y los nombres de los primeros.
+function accordStripHtml(p, { bars = 5, names = 3 } = {}) {
+  const top = (Array.isArray(p.accords) ? p.accords : [])
+    .filter(a => a && a.name && a.pct > 0).slice(0, bars);
+  if (!top.length) return '';
+  const strip = top.map(a => `<span style="flex:${a.pct};background:${accordColor(a.name)}"></span>`).join('');
+  const legend = top.slice(0, names).map(a =>
+    `<span class="accord-legend-item"><i style="background:${accordColor(a.name)}"></i>${sanitize(a.name)}</span>`).join('');
+  return `
+    <div class="card-accords" title="Acordes: ${escapeAttr(top.map(a => a.name).join(', '))}">
+      <div class="accord-strip" aria-hidden="true">${strip}</div>
+      <div class="accord-legend">${legend}</div>
+    </div>`;
+}
+
 function bindMiniCards(container) {
   container.querySelectorAll('.pd-mini-card').forEach(btn => {
     btn.addEventListener('click', () => openPdModal(parseInt(btn.dataset.id)));
@@ -417,7 +433,7 @@ function renderProducts() {
         : `<p class="price-consultar">Consultar precio</p>`;
 
     // Badge NUEVO: si fue agregado en los últimos 30 días
-    const isNew = p.date && (Date.now() - new Date(p.date).getTime()) < 30 * 24 * 3600 * 1000;
+    const isNew = isNewArrival(p);
     // Calcular estado real de disponibilidad (considera ml restante)
     const purchasable = isEntero ? p.inStock : isDecantPurchasable(p);
     // Stock restante: mostrar si queda poco (solo si todavía hay algo disponible)
@@ -472,6 +488,8 @@ function renderProducts() {
           <div class="product-tags">
             ${occasionLbl ? `<span class="tag-occasion">${occasionLbl}</span>` : ''}
           </div>
+
+          ${accordStripHtml(p)}
 
           <p class="product-desc">${sanitize(p.description)}</p>
 
