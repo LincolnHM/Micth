@@ -17,9 +17,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Red lenta o caída — mostrar el catálogo local para que la tienda siga siendo usable
     _allProducts = Products.getAll();
   }
+  // Recién agregados a catalog.js que la base todavía no tiene: sin fecha de
+  // alta, cuentan como nuevos desde hoy (isNewArrival). Solo si la base
+  // respondió (si no, ningún perfume trae fecha y todos parecerían nuevos).
+  if (_allProducts.some(p => p.date)) {
+    const today = new Date().toISOString();
+    _allProducts.forEach(p => { if (!p.date) p.date = today; });
+  }
+  // Los que aún no llegan van solo a "Próximamente" (coming-soon.js): fuera del
+  // catálogo, la búsqueda, el Scent Finder y las páginas de cada perfume
+  _comingSoonProducts = _allProducts.filter(isComingSoon);
+  _allProducts = _allProducts.filter(p => !isComingSoon(p));
   document.dispatchEvent(new CustomEvent('catalogLoaded', { detail: _allProducts }));
   // Filtros (tipos, panel, URL): los prepara filters-ui.js al recibir 'catalogLoaded'
   renderProducts();
+  renderNewArrivals();
+  renderComingSoon();
   renderRecentlyViewed();
   renderCombos(combosRequest).catch(err => console.error('[MICHT] Error cargando combos:', err));
   initCombosCarousel();
@@ -129,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         _closeSuggestions();
         searchInput.blur();
         const grid = document.getElementById('productsGrid');
-        const filtersH = document.getElementById('catalogo')?.offsetHeight || 0;
+        const filtersH = document.getElementById('catalogToolbar')?.offsetHeight || 0;
         if (grid) window.scrollTo({ top: Math.max(0, grid.offsetTop - 64 - filtersH), behavior: 'smooth' });
       });
     }

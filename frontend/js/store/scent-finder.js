@@ -408,6 +408,7 @@
         console.error('[ScentFinder] Error cargando productos:', e);
       }
     }
+    allProducts = allProducts.filter(p => !isComingSoon(p));   // aún no llegan: no se recomiendan
 
     if (!allProducts.length) {
       resultsContainer.innerHTML = `

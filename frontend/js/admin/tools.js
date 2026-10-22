@@ -86,12 +86,15 @@ function setupCsvExport() {
       if (statusFilter !== 'all') orders = orders.filter(o => o.status === statusFilter);
 
       const rows = [
-        ['ID', 'Fecha', 'Cliente', 'Teléfono', 'DNI', 'Entrega', 'Departamento', 'Productos', 'Total', 'Estado', 'Método Pago', 'Notas']
+        ['ID', 'Fecha', 'Cliente', 'Teléfono', 'DNI', 'Entrega', 'Departamento', 'Productos', 'Total', 'Estado', 'Pagado', 'Falta', 'Pagos', 'Notas']
       ];
 
       orders.forEach(o => {
         const items = (o.items || []).map(i => `${i.brand} ${i.productName} ${i.size} x${i.quantity}`).join(' | ');
         const fecha = new Date(o.date).toLocaleDateString('es-PE');
+        const pagos = orderPayments(o)
+          .map(p => `${PAYMENT_METHODS[p.method]?.label || 'Sin método'} ${p.amount.toFixed(2)}${p.legacy ? '' : ` (${new Date(p.date).toLocaleDateString('es-PE')})`}`)
+          .join(' | ');
         rows.push([
           o.id, fecha,
           o.customerName || '', o.customerPhone || '', o.customerDni || '',
@@ -100,7 +103,9 @@ function setupCsvExport() {
           items,
           o.total.toFixed(2),
           o.status,
-          o.paymentMethod || '',
+          orderPaidAmount(o).toFixed(2),
+          (o.status === 'cancelado' ? 0 : orderBalance(o)).toFixed(2),
+          pagos,
           o.notes || ''
         ]);
       });

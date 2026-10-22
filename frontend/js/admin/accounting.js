@@ -56,14 +56,18 @@ function saveExpenses(year, expenses) {
   localStorage.setItem(`micht_expenses_${year}`, JSON.stringify(expenses));
 }
 
+// Ingresos = dinero que entró, contado el día de cada pago (un adelanto en
+// septiembre y el saldo en octubre suman en su mes). Los pedidos pagados antes de
+// los abonos cuentan en la fecha del pedido, como siempre.
 async function getMonthlyStats(orders, year) {
   const filtered = orders.filter(o => new Date(o.date).getFullYear() === year);
+  const income   = incomePayments(orders).filter(p => new Date(p.date).getFullYear() === year);
   const expenses = await getExpenses(year);
   return Array.from({ length: 12 }, (_, m) => {
     const monthOrders = filtered.filter(o => new Date(o.date).getMonth() === m);
     const paid        = monthOrders.filter(o => o.status === 'pagado');
     const cancelled   = monthOrders.filter(o => o.status === 'cancelado');
-    const revenue     = paid.reduce((s, o) => s + o.total, 0);
+    const revenue     = roundMoney(income.filter(p => new Date(p.date).getMonth() === m).reduce((s, p) => s + p.amount, 0));
     const monthExp    = expenses.filter(e => e.month === m).reduce((s, e) => s + e.amount, 0);
     return { month: m, name: MONTH_NAMES[m], orders: monthOrders.length, paid: paid.length, cancelled: cancelled.length, revenue, expenses: monthExp, net: revenue - monthExp };
   });
@@ -106,11 +110,12 @@ async function renderAccountingSection() {
   const paidTotal     = stats.reduce((s, m) => s + m.paid, 0);
   const activeMonths  = stats.filter(m => m.revenue > 0).length || 1;
 
-  // Desglose por método de pago
-  const paidOrders = allOrders.filter(o => o.status === 'pagado' && new Date(o.date).getFullYear() === year);
-  const revEfectivo = paidOrders.filter(o => o.paymentMethod === 'efectivo').reduce((s,o) => s + o.total, 0);
-  const revYape     = paidOrders.filter(o => o.paymentMethod === 'yape').reduce((s,o) => s + o.total, 0);
-  const revSinMet   = paidOrders.filter(o => !o.paymentMethod).reduce((s,o) => s + o.total, 0);
+  // Desglose por método de pago (pago por pago: un pedido mitad Yape y mitad efectivo suma en los dos)
+  const yearIncome  = incomePayments(allOrders).filter(p => new Date(p.date).getFullYear() === year);
+  const byMethod    = method => yearIncome.filter(p => p.method === method);
+  const sumOf       = list => list.reduce((s, p) => s + p.amount, 0);
+  const revEfectivo = sumOf(byMethod('efectivo'));
+  const revYape     = sumOf(byMethod('yape'));
 
   // ── Tarjetas de resumen ──────────────────────────────────────────────────────
   const summary = document.getElementById('accountingSummary');
@@ -118,8 +123,8 @@ async function renderAccountingSection() {
     { label: `Total ${year}`, val: `S/ ${totalRevenue.toFixed(0)}`, sub: `${paidTotal} pedidos pagados`, color: 'var(--gold)' },
     { label: 'Mejor Mes',    val: bestMonth.revenue > 0 ? bestMonth.name : '—', sub: bestMonth.revenue > 0 ? `S/ ${bestMonth.revenue.toFixed(0)}` : 'Sin ventas aún', color: 'var(--green)' },
     { label: year === thisYear ? 'Mes Actual' : `Dic ${year}`, val: `S/ ${(year === thisYear ? currentMonth : stats[11]).revenue.toFixed(0)}`, sub: `${(year === thisYear ? currentMonth : stats[11]).paid} pagados`, color: 'var(--gold-d)' },
-    { label: '💵 Efectivo',  val: `S/ ${revEfectivo.toFixed(0)}`, sub: `${paidOrders.filter(o=>o.paymentMethod==='efectivo').length} pedidos`, color: '#4caf50' },
-    { label: '📱 Yape',      val: `S/ ${revYape.toFixed(0)}`,     sub: `${paidOrders.filter(o=>o.paymentMethod==='yape').length} pedidos`,     color: '#7c3aed' },
+    { label: '💵 Efectivo',  val: `S/ ${revEfectivo.toFixed(0)}`, sub: `${byMethod('efectivo').length} pagos`, color: '#4caf50' },
+    { label: '📱 Yape',      val: `S/ ${revYape.toFixed(0)}`,     sub: `${byMethod('yape').length} pagos`,     color: '#7c3aed' },
     { label: 'Gastos Totales', val: `S/ ${totalExpenses.toFixed(0)}`, sub: 'registrados manualmente', color: '#ef5350' },
     { label: 'Neto (Ingr.−Gastos)', val: `S/ ${totalNet.toFixed(0)}`, sub: `Prom/mes: S/ ${(totalRevenue / activeMonths).toFixed(0)}`, color: totalNet >= 0 ? 'var(--green)' : '#ef5350' }
   ].map(c => `
@@ -398,16 +403,15 @@ function setupAccountingEvents() {
 
 function getDailyStats(orders, year, month) {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const filtered    = orders.filter(o => {
-    const d = new Date(o.date);
-    return d.getFullYear() === year && d.getMonth() === month;
-  });
+  const inMonth     = d => d.getFullYear() === year && d.getMonth() === month;
+  const filtered    = orders.filter(o => inMonth(new Date(o.date)));
+  const income      = incomePayments(orders).filter(p => inMonth(new Date(p.date)));
   return Array.from({ length: daysInMonth }, (_, i) => {
     const day       = i + 1;
     const dayOrders = filtered.filter(o => new Date(o.date).getDate() === day);
     const paid      = dayOrders.filter(o => o.status === 'pagado');
     const cancelled = dayOrders.filter(o => o.status === 'cancelado');
-    const revenue   = paid.reduce((s, o) => s + o.total, 0);
+    const revenue   = roundMoney(income.filter(p => new Date(p.date).getDate() === day).reduce((s, p) => s + p.amount, 0));
     return { day, orders: dayOrders.length, paid: paid.length, cancelled: cancelled.length, revenue };
   });
 }
@@ -450,7 +454,7 @@ function renderDailyView(allOrders, year, month) {
   // Tabla
   const tbody    = document.getElementById('dailyTableBody');
   const bestRev  = Math.max(...dailyStats.map(d => d.revenue));
-  const activeDaysList = dailyStats.filter(d => d.orders > 0);
+  const activeDaysList = dailyStats.filter(d => d.orders > 0 || d.revenue > 0);
 
   if (activeDaysList.length === 0) {
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text2);padding:2rem">Sin ventas registradas en este mes</td></tr>';

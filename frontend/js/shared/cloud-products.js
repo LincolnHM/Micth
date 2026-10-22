@@ -102,11 +102,36 @@ function bottleHasMl(product, sizeKey, qty = 1) {
   return (product.bottleRemainingMl || 0) >= sizeMl * (qty || 1);
 }
 
+// ─── Próximamente ─────────────────────────────────────────────────────────────
+// Perfume marcado `comingSoon: true` en catalog.js que todavía no llegó: la
+// tienda lo muestra solo en la sección "Próximamente" (sin precio ni compra).
+// "Llegó" = el admin le puso los ml del frasco en el panel; desde ahí es un
+// perfume normal, sin tocar código. Se mira por id y no por nombre: si el
+// admin le corrige el nombre, no debe aparecer en venta sin ml.
+function isComingSoon(product) {
+  if (!product || product.type === 'entero') return false;
+  if ((product.bottleTotalMl || 0) > 0) return false;
+  const def = typeof DEFAULT_PRODUCTS !== 'undefined' && DEFAULT_PRODUCTS.find(d => d.id === product.id);
+  return !!def?.comingSoon;
+}
+
+// ─── Recién llegados ──────────────────────────────────────────────────────────
+// "Nuevo" = entró a la base (created_at) en los últimos 30 días. Lo recién
+// agregado a catalog.js aún no está en la base (se sube al abrir el panel) y
+// no trae fecha: la tienda le pone la de hoy al cargar (init.js).
+const NEW_ARRIVAL_DAYS = 30;
+function isNewArrival(product) {
+  if (!product?.date) return false;
+  const t = new Date(product.date).getTime();
+  return !isNaN(t) && Date.now() - t < NEW_ARRIVAL_DAYS * 24 * 3600 * 1000;
+}
+
 // ¿Queda algún tamaño vendible? Si el frasco está por debajo del tamaño mínimo,
 // el producto se considera agotado aunque inStock siga en true.
 function isDecantPurchasable(product) {
   if (!product) return false;
   if (!product.inStock) return false;
+  if (isComingSoon(product)) return false;
   if (product.type === 'entero') return true;
   if (!product.bottleTotalMl || product.bottleTotalMl <= 0) return true;
   const minSize = minDecantSizeMl(product.sizes);

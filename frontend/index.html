@@ -5,6 +5,15 @@
   <!-- Rutas relativas siempre desde la raíz: la ficha de un perfume cambia la
        dirección a /perfume/<nombre>/ y sin esto fallarían imágenes como el QR de Yape -->
   <base href="/">
+  <!-- Pestaña inicial (Inicio o Catálogo) antes de pintar, para que no parpadee.
+       Misma regla que storeViewFromUrl() en js/store/store-view.js -->
+  <script>
+    (function () {
+      var cat = location.hash === '#catalogo' || location.pathname.indexOf('/perfume/') === 0 ||
+                /[?&](tipo|para|momento|aroma|orden|q|fav|p|perfume|export)=/.test(location.search);
+      document.documentElement.setAttribute('data-view', cat ? 'catalogo' : 'inicio');
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -99,7 +108,8 @@
     },
     "sameAs": [
       "https://wa.me/51917452643",
-      "https://www.instagram.com/michtdecants/"
+      "https://www.instagram.com/michtdecants/",
+      "https://www.tiktok.com/@micht.decants"
     ],
     "hasOfferCatalog": {
       "@type": "OfferCatalog",
@@ -146,7 +156,7 @@
       "@type": "SearchAction",
       "target": {
         "@type": "EntryPoint",
-        "urlTemplate": "https://michtdecants.com/#catalogo?q={search_term_string}"
+        "urlTemplate": "https://michtdecants.com/?q={search_term_string}#catalogo"
       },
       "query-input": "required name=search_term_string"
     }
@@ -179,7 +189,8 @@
     "sameAs": [
       "https://wa.me/51917452643",
       "https://michtdecants.com",
-      "https://www.instagram.com/michtdecants/"
+      "https://www.instagram.com/michtdecants/",
+      "https://www.tiktok.com/@micht.decants"
     ],
     "foundingDate": "2024",
     "areaServed": {
@@ -195,7 +206,7 @@
   <link rel="icon" type="image/png" href="imgGato/icons/icon-192.png">
   <link rel="apple-touch-icon" href="imgGato/icons/icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20260926-2248">
+  <link rel="stylesheet" href="css/style.css?v=20261022-0303">
   <!-- La pantalla de carga solo se muestra la primera vez en la sesión; en las
        siguientes visitas (volver de Nosotros, recargar) no hace esperar. -->
   <script>try { if (sessionStorage.getItem('micht_loader_seen')) document.documentElement.classList.add('pl-skip'); } catch (e) {}</script>
@@ -307,82 +318,80 @@
   <div id="parallax-particles" class="parallax-particles-layer" aria-hidden="true"></div>
 
   <!-- ── Header ──────────────────────────────────────────────────────────── -->
-  <header class="header">
+  <header class="header header-store">
     <div class="header-inner container">
-      <a href="#" class="logo" aria-label="Micht Decants — inicio">
+      <a href="/" class="logo" data-go="inicio" aria-label="Micht Decants — inicio">
         <div>
           <h1 class="logo-text">Micht<span> Decants</span></h1>
           <p class="logo-sub">Perfumería Árabe & Diseñador</p>
         </div>
       </a>
       <nav class="nav" aria-label="Principal">
-        <a href="#catalogo" id="navCatalogLink">Catálogo</a>
+        <a href="/" data-go="inicio" data-nav-view="inicio">Inicio</a>
+        <a href="#catalogo" id="navCatalogLink" data-nav-view="catalogo">Catálogo</a>
         <a href="#combos" id="navCombosLink">Combos</a>
-        <a href="#catalogo" id="navEnteroLink" style="color:var(--gold) !important;font-weight:600">Perfumes Enteros</a>
+        <a href="#catalogo" id="navEnteroLink" class="nav-accent">Perfumes enteros</a>
         <a href="nosotros/">Nosotros</a>
         <a href="contacto/">Contacto</a>
       </nav>
-      <!-- ── Auth buttons ──────────────────────────────────── -->
-      <div class="header-auth" id="headerAuth">
-        <!-- No logueado -->
-        <button class="header-auth-btn header-auth-login" id="headerLoginBtn" aria-label="Iniciar sesión">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Ingresar
+      <div class="header-right">
+        <button class="header-icon-btn header-search-btn" id="headerSearchBtn" type="button" aria-label="Buscar perfume">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
         </button>
-        <button class="header-auth-btn header-auth-register" id="headerRegisterBtn" aria-label="Crear cuenta">
-          Crear cuenta
-        </button>
+        <!-- ── Cuenta ────────────────────────────────────────── -->
+        <div class="header-auth" id="headerAuth">
+          <!-- Sin sesión: un solo ícono. Abre "Ingresar", que ofrece crear la cuenta
+               (el banner de 10% OFF de abajo ya invita a registrarse) -->
+          <button class="header-icon-btn" id="headerLoginBtn" type="button" aria-label="Ingresar o crear cuenta" title="Ingresar o crear cuenta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </button>
 
-        <!-- Logueado -->
-        <div class="header-user-display" id="headerUserDisplay" style="display:none">
-          <span class="header-discount-badge" id="headerDiscountBadge" title="10% OFF en tu primera compra" style="display:none">10% OFF</span>
-          <div class="hud-wrapper">
-            <button class="hud-trigger" id="headerUserTrigger" aria-expanded="false" aria-haspopup="true">
-              <div class="hud-avatar" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <!-- Logueado -->
+          <div class="header-user-display" id="headerUserDisplay" style="display:none">
+            <span class="header-discount-badge" id="headerDiscountBadge" title="10% OFF en tu primera compra" style="display:none">10% OFF</span>
+            <div class="hud-wrapper">
+              <button class="hud-trigger" id="headerUserTrigger" aria-expanded="false" aria-haspopup="true">
+                <div class="hud-avatar" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <span class="hud-name" id="headerUserName">Hola</span>
+                <svg class="hud-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+
+              <div class="hud-dropdown" id="headerUserDropdown" aria-hidden="true">
+                <!-- Mis compras -->
+                <button class="hud-item" id="headerHistoryBtn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                  Mis compras
+                </button>
+
+                <!-- Cambiar contraseña -->
+                <button class="hud-item hud-pass-toggle" id="headerChangePassBtn" aria-expanded="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                  Cambiar contraseña
+                  <svg class="hud-item-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="hud-pass-panel" id="headerPassPanel">
+                  <label for="hudNewPass" class="sr-only">Nueva contraseña</label>
+                  <input type="password" id="hudNewPass" placeholder="Nueva contraseña (mín. 8 car.)" maxlength="100" autocomplete="new-password" aria-label="Nueva contraseña, mínimo 8 caracteres">
+                  <label for="hudNewPass2" class="sr-only">Confirmar contraseña</label>
+                  <input type="password" id="hudNewPass2" placeholder="Confirmar contraseña" maxlength="100" autocomplete="new-password" aria-label="Confirmar contraseña">
+                  <p class="hud-pass-err" id="hudPassErr" aria-live="polite" role="alert"></p>
+                  <button class="hud-save-btn" id="hudSavePassBtn">Guardar contraseña</button>
+                </div>
+
+                <div class="hud-divider"></div>
+
+                <!-- Cerrar sesión -->
+                <button class="hud-item hud-item-logout" id="headerLogoutBtn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15" aria-hidden="true"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                  Cerrar sesión
+                </button>
               </div>
-              <span class="hud-name" id="headerUserName">Hola</span>
-              <svg class="hud-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-
-            <div class="hud-dropdown" id="headerUserDropdown" aria-hidden="true">
-              <!-- Mis compras -->
-              <button class="hud-item" id="headerHistoryBtn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-                Mis compras
-              </button>
-
-              <!-- Cambiar contraseña -->
-              <button class="hud-item hud-pass-toggle" id="headerChangePassBtn" aria-expanded="false">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                Cambiar contraseña
-                <svg class="hud-item-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-              <div class="hud-pass-panel" id="headerPassPanel">
-                <label for="hudNewPass" class="sr-only">Nueva contraseña</label>
-                <input type="password" id="hudNewPass" placeholder="Nueva contraseña (mín. 8 car.)" maxlength="100" autocomplete="new-password" aria-label="Nueva contraseña, mínimo 8 caracteres">
-                <label for="hudNewPass2" class="sr-only">Confirmar contraseña</label>
-                <input type="password" id="hudNewPass2" placeholder="Confirmar contraseña" maxlength="100" autocomplete="new-password" aria-label="Confirmar contraseña">
-                <p class="hud-pass-err" id="hudPassErr" aria-live="polite" role="alert"></p>
-                <button class="hud-save-btn" id="hudSavePassBtn">Guardar contraseña</button>
-              </div>
-
-              <div class="hud-divider"></div>
-
-              <!-- Cerrar sesión -->
-              <button class="hud-item hud-item-logout" id="headerLogoutBtn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15" aria-hidden="true"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                Cerrar sesión
-              </button>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="header-right">
-        <button class="header-search-btn" id="headerSearchBtn" type="button" aria-label="Buscar perfume">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
-        </button>
         <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" aria-expanded="false">
           <span></span><span></span><span></span>
         </button>
@@ -416,7 +425,8 @@
   <div class="mobile-menu" id="mobileMenu" aria-hidden="true" role="dialog" aria-label="Menú principal">
     <span class="mobile-menu-brand">MICHT DECANTS</span>
     <nav class="mobile-nav">
-      <a href="#catalogo" class="mobile-nav-link" id="mobileCatalogLink">Catálogo</a>
+      <a href="/" class="mobile-nav-link" data-go="inicio" data-nav-view="inicio">Inicio</a>
+      <a href="#catalogo" class="mobile-nav-link" id="mobileCatalogLink" data-nav-view="catalogo">Catálogo</a>
       <a href="#combos" class="mobile-nav-link" id="mobileCombosLink">Combos</a>
       <a href="#como-comprar" class="mobile-nav-link">Cómo comprar</a>
       <a href="#catalogo" class="mobile-nav-link" id="mobileNavEnteroLink" style="color:var(--gold)">✦ Perfumes Enteros</a>
@@ -452,7 +462,7 @@
   </div>
 
   <!-- ── Hero Carousel ───────────────────────────────────────────────────── -->
-  <section id="carouselWrapper" aria-label="Promociones">
+  <section id="carouselWrapper" class="view-inicio" aria-label="Promociones">
     <div class="carousel-track" role="list">
       <!-- Slides renderizados por carousel.js -->
     </div>
@@ -472,8 +482,29 @@
     </div>
   </section>
 
+  <!-- ── Recién llegados ──────────────────────────────────────────────────────
+       Perfumes de los últimos 30 días. Se oculta sola si no hay ninguno.
+       Lógica en js/store/new-arrivals.js -->
+  <section class="soon-section new-section view-inicio" id="nuevos" aria-labelledby="newTitle" hidden>
+    <div class="container">
+      <div class="combos-heading">
+        <span class="combos-eyebrow">✨ Recién llegados</span>
+        <h2 class="combos-title" id="newTitle">Lo <em>nuevo</em> en MICHT</h2>
+        <p class="combos-subtitle">Las fragancias que acaban de llegar. Pruébalas en decant antes de comprar el frasco.</p>
+      </div>
+      <div class="combos-carousel">
+        <button class="combos-arrow combos-arrow-prev" id="newPrev" aria-label="Anteriores" type="button">‹</button>
+        <div class="soon-track" id="newTrack" role="list"></div>
+        <button class="combos-arrow combos-arrow-next" id="newNext" aria-label="Siguientes" type="button">›</button>
+      </div>
+      <div class="new-actions">
+        <button type="button" class="new-all" id="newAllBtn">Ver todo lo nuevo en el catálogo →</button>
+      </div>
+    </div>
+  </section>
+
   <!-- ── Combos de Decants ───────────────────────────────────────────────── -->
-  <section class="combos-section" id="combos" aria-label="Combos de decants" style="display:none">
+  <section class="combos-section view-inicio" id="combos" aria-label="Combos de decants" style="display:none">
     <div class="combos-spotlight">
       <div class="container">
         <div class="combos-heading">
@@ -492,10 +523,63 @@
     </div>
   </section>
 
+  <!-- ── Próximamente ─────────────────────────────────────────────────────────
+       Perfumes que aún no llegan (comingSoon en catalog.js, sin ml en el
+       panel). Se oculta sola si no hay ninguno. Lógica en js/store/coming-soon.js -->
+  <section class="soon-section view-inicio" id="proximamente" aria-labelledby="soonTitle" hidden>
+    <div class="container">
+      <div class="combos-heading">
+        <span class="combos-eyebrow">🚚 En camino</span>
+        <h2 class="combos-title" id="soonTitle">Próximamente en <em>MICHT</em></h2>
+        <p class="combos-subtitle">Lo nuevo que está por llegar. Pide que te avisemos por WhatsApp y sé de los primeros en probarlo.</p>
+      </div>
+      <div class="combos-carousel">
+        <button class="combos-arrow combos-arrow-prev" id="soonPrev" aria-label="Anteriores" type="button">‹</button>
+        <div class="soon-track" id="soonTrack" role="list"></div>
+        <button class="combos-arrow combos-arrow-next" id="soonNext" aria-label="Siguientes" type="button">›</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Accesos al catálogo (pestaña Inicio) ─────────────────────────────────
+       El catálogo completo vive en su pestaña (/#catalogo, js/store/store-view.js).
+       Aquí una tarjeta por tipo; los números y las fotos se ponen al cargar. -->
+  <section class="cat-entry view-inicio" id="catalogEntry" aria-labelledby="catEntryTitle">
+    <div class="container">
+      <div class="combos-heading">
+        <span class="combos-eyebrow">🛍️ Tienda</span>
+        <h2 class="combos-title" id="catEntryTitle">Explora el <em>catálogo</em></h2>
+        <p class="combos-subtitle"><span id="catEntryTotal">Más de 100</span> perfumes originales en decants de 2, 3, 5 y 10 ml, y frascos completos.</p>
+      </div>
+      <div class="cat-entry-grid">
+        <a href="#catalogo" class="cat-entry-card" data-catalog-type="arabe">
+          <span class="cat-entry-img" aria-hidden="true"></span>
+          <span class="cat-entry-info"><span class="cat-entry-name">Árabes</span><span class="cat-entry-count"></span></span>
+        </a>
+        <a href="#catalogo" class="cat-entry-card" data-catalog-type="diseñador">
+          <span class="cat-entry-img" aria-hidden="true"></span>
+          <span class="cat-entry-info"><span class="cat-entry-name">Diseñador</span><span class="cat-entry-count"></span></span>
+        </a>
+        <a href="#catalogo" class="cat-entry-card" data-catalog-type="nicho">
+          <span class="cat-entry-img" aria-hidden="true"></span>
+          <span class="cat-entry-info"><span class="cat-entry-name">Nicho</span><span class="cat-entry-count"></span></span>
+        </a>
+        <a href="#catalogo" class="cat-entry-card" data-catalog-type="entero">
+          <span class="cat-entry-img" aria-hidden="true"></span>
+          <span class="cat-entry-info"><span class="cat-entry-name">Perfumes enteros</span><span class="cat-entry-count"></span></span>
+        </a>
+      </div>
+      <div class="cat-entry-actions">
+        <a href="#catalogo" class="cat-entry-all" data-catalog-type="all">Ver todo el catálogo →</a>
+        <button type="button" class="cat-entry-finder" id="catEntryFinderBtn">🔮 ¿No sabes cuál elegir? Haz el test</button>
+      </div>
+    </div>
+  </section>
+
   <!-- ── Buscar y filtrar el catálogo ───────────────────────────────────────
        Barra fija: el buscador siempre visible, los tipos como chips y el botón
        "Filtros", que abre el panel de abajo. Lógica en js/store/filters-ui.js. -->
-  <section class="filters-section catalog-toolbar" id="catalogo" aria-label="Buscar y filtrar el catálogo">
+  <section class="filters-section catalog-toolbar view-catalogo" id="catalogToolbar" aria-label="Buscar y filtrar el catálogo">
     <div class="container">
       <div class="ct-row">
         <div class="ct-search" role="search">
@@ -594,7 +678,7 @@
   </div>
 
   <!-- ── Banner de sección (Perfumes Enteros) ─────────────────────────────── -->
-  <div id="catalogBanner" style="display:none">
+  <div id="catalogBanner" class="view-catalogo" style="display:none">
     <div class="container">
       <div class="catalog-banner-entero">
         <div class="cbe-left">
@@ -613,7 +697,7 @@
   </div>
 
   <!-- ── Catálogo ──────────────────────────────────────────────────────────── -->
-  <main class="products-section">
+  <main class="products-section view-catalogo">
     <div class="container">
       <!-- Banner Scent Finder -->
       <div class="scent-finder-banner" id="scentFinderBanner">
@@ -650,7 +734,7 @@
   </main>
 
   <!-- ── ¿Cómo comprar? ───────────────────────────────────────────────────── -->
-  <section id="como-comprar" class="howto-section" aria-labelledby="howtoTitle">
+  <section id="como-comprar" class="howto-section view-inicio" aria-labelledby="howtoTitle">
     <div class="container">
       <p class="howto-eyebrow">Fácil y seguro</p>
       <h2 class="howto-title" id="howtoTitle">¿Cómo comprar?</h2>
@@ -688,7 +772,7 @@
   </section>
 
   <!-- ── Marquee strip ────────────────────────────────────────────────────── -->
-  <div class="marquee-strip" aria-hidden="true">
+  <div class="marquee-strip view-inicio" aria-hidden="true">
     <div class="marquee-track">
       <span>Decants Auténticos</span><span class="marquee-dot">·</span>
       <span>Perfumería Árabe</span><span class="marquee-dot">·</span>
@@ -711,7 +795,7 @@
   </div>
 
   <!-- ── Separador parallax decorativo ─────────────────────────────────── -->
-  <div class="parallax-divider" aria-hidden="true">
+  <div class="parallax-divider view-inicio" aria-hidden="true">
     <div class="parallax-deco parallax-deco--left"></div>
     <div class="parallax-deco parallax-deco--right"></div>
     <div class="parallax-divider-line"></div>
@@ -720,7 +804,7 @@
   </div>
 
   <!-- ── Envíos y Clientes ────────────────────────────────────────────────── -->
-  <section id="galeria" class="gallery-section" aria-label="Envíos y clientes" hidden>
+  <section id="galeria" class="gallery-section view-inicio" aria-label="Envíos y clientes" hidden>
     <div class="container">
       <div class="gallery-block" id="galleryBlockEnvios" hidden>
         <p class="gallery-label">Nuestro trabajo</p>
@@ -743,7 +827,7 @@
   </div>
 
   <!-- ── Contacto ──────────────────────────────────────────────────────────── -->
-  <section id="contacto" class="contact-section">
+  <section id="contacto" class="contact-section view-inicio">
     <div class="container">
       <div class="contact-card">
         <p class="contact-label">Contáctanos</p>
@@ -831,6 +915,13 @@
                 <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599s.453.546.598.92c.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92s.546-.453.92-.598c.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334"/></svg>
               </a>
               <div class="social-tooltip">Instagram</div>
+            </li>
+            <li class="social-item">
+              <a data-social="tiktok" href="https://www.tiktok.com/@micht.decants" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+                <div class="filled"></div>
+                <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M9 0h1.98c.144.715.54 1.617 1.235 2.512C12.895 3.389 13.797 4 15 4v2c-1.753 0-3.07-.814-4-1.829V11a5 5 0 1 1-5-5v2a3 3 0 1 0 3 3z"/></svg>
+              </a>
+              <div class="social-tooltip">TikTok</div>
             </li>
           </ul>
         </div>
@@ -1370,34 +1461,37 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con el panel admin) — el orden importa -->
-  <script src="js/shared/data-core.js?v=20260926-2248"></script>
-  <script src="js/shared/catalog.js?v=20260926-2248"></script>
-  <script src="js/shared/data.js?v=20260926-2248"></script>
-  <script src="js/shared/supabase-config.js?v=20260926-2248"></script>
-  <script src="js/shared/cloud-orders.js?v=20260926-2248"></script>
-  <script src="js/shared/cloud-gallery.js?v=20260926-2248"></script>
-  <script src="js/shared/cloud-products.js?v=20260926-2248"></script>
-  <script src="js/shared/slugs.js?v=20260926-2248"></script>
-  <script src="js/shared/cloud-combos.js?v=20260926-2248"></script>
+  <script src="js/shared/data-core.js?v=20261022-0303"></script>
+  <script src="js/shared/catalog.js?v=20261022-0303"></script>
+  <script src="js/shared/data.js?v=20261022-0303"></script>
+  <script src="js/shared/supabase-config.js?v=20261022-0303"></script>
+  <script src="js/shared/cloud-orders.js?v=20261022-0303"></script>
+  <script src="js/shared/cloud-gallery.js?v=20261022-0303"></script>
+  <script src="js/shared/cloud-products.js?v=20261022-0303"></script>
+  <script src="js/shared/slugs.js?v=20261022-0303"></script>
+  <script src="js/shared/cloud-combos.js?v=20261022-0303"></script>
   <!-- Tienda -->
-  <script src="js/store/announcement.js?v=20260926-2248"></script>
-  <script src="js/store/seasonal-theme.js?v=20260926-2248"></script>
-  <script src="js/store/carousel.js?v=20260926-2248"></script>
-  <script src="js/store/cart.js?v=20260926-2248"></script>
-  <script src="js/store/catalog-view.js?v=20260926-2248"></script>
-  <script src="js/store/filters-ui.js?v=20260926-2248"></script>
-  <script src="js/store/combos-carousel.js?v=20260926-2248"></script>
-  <script src="js/store/faq.js?v=20260926-2248"></script>
-  <script src="js/store/product-detail.js?v=20260926-2248"></script>
-  <script src="js/store/combo-detail.js?v=20260926-2248"></script>
-  <script src="js/store/init.js?v=20260926-2248"></script>
-  <script src="js/store/gallery.js?v=20260926-2248"></script>
-  <script src="js/store/scent-finder.js?v=20260926-2248"></script>
-  <script src="js/store/checkout.js?v=20260926-2248"></script>
-  <script src="js/store/customer-auth.js?v=20260926-2248"></script>
-  <script src="js/store/chatbot.js?v=20260926-2248"></script>
-  <script src="js/store/animations.js?v=20260926-2248"></script>
-  <script src="js/store/gsap-animations.js?v=20260926-2248"></script>
+  <script src="js/store/announcement.js?v=20261022-0303"></script>
+  <script src="js/store/seasonal-theme.js?v=20261022-0303"></script>
+  <script src="js/store/carousel.js?v=20261022-0303"></script>
+  <script src="js/store/cart.js?v=20261022-0303"></script>
+  <script src="js/store/catalog-view.js?v=20261022-0303"></script>
+  <script src="js/store/new-arrivals.js?v=20261022-0303"></script>
+  <script src="js/store/coming-soon.js?v=20261022-0303"></script>
+  <script src="js/store/filters-ui.js?v=20261022-0303"></script>
+  <script src="js/store/combos-carousel.js?v=20261022-0303"></script>
+  <script src="js/store/faq.js?v=20261022-0303"></script>
+  <script src="js/store/product-detail.js?v=20261022-0303"></script>
+  <script src="js/store/combo-detail.js?v=20261022-0303"></script>
+  <script src="js/store/store-view.js?v=20261022-0303"></script>
+  <script src="js/store/init.js?v=20261022-0303"></script>
+  <script src="js/store/gallery.js?v=20261022-0303"></script>
+  <script src="js/store/scent-finder.js?v=20261022-0303"></script>
+  <script src="js/store/checkout.js?v=20261022-0303"></script>
+  <script src="js/store/customer-auth.js?v=20261022-0303"></script>
+  <script src="js/store/chatbot.js?v=20261022-0303"></script>
+  <script src="js/store/animations.js?v=20261022-0303"></script>
+  <script src="js/store/gsap-animations.js?v=20261022-0303"></script>
   <script>
     // ── Mobile menu toggle ───────────────────────────────────
     (function () {
@@ -1444,12 +1538,17 @@
 
     document.addEventListener('click', function (e) {
       const a = e.target.closest('a[href^="#"]');
-      if (!a || a.dataset.filter !== undefined) return;
+      // data-filter (carrusel), data-go y data-catalog-type (store-view.js) tienen su propio manejo
+      if (!a || a.dataset.filter !== undefined || a.dataset.go || a.dataset.catalogType) return;
       const href = a.getAttribute('href');
       if (!href || href === '#') return;
+      // #catalogo es la pestaña Catálogo (js/store/store-view.js)
+      if (href === '#catalogo') { e.preventDefault(); goStoreView('catalogo'); return; }
       const target = document.querySelector(href);
       if (!target) return;
       e.preventDefault();
+      // Combos, cómo comprar, contacto…: secciones de la pestaña Inicio
+      if (target.closest('.view-inicio')) { goStoreView('inicio', { section: target.id }); return; }
       cerrarDetallePerfume();
       window.scrollTo({ top: Math.max(0, target.offsetTop - 68), behavior: 'smooth' });
     });
@@ -1510,40 +1609,27 @@
       }
     }
 
-    // ── Link "Catálogo" → ir al inicio de la página ───────────────────────────
+    // ── Link "Catálogo" → pestaña Catálogo (js/store/store-view.js) ───────────
     function activarFiltroCatalogo(e) {
       e.preventDefault();
       e.stopPropagation();
       cerrarMenuMovil();
-      cerrarDetallePerfume();
       // Resetear filtro a "Todos" si no está activo y llevar al catálogo
       const btnTodos = document.querySelector('.filter-btn[data-filter="all"]');
       if (btnTodos && !btnTodos.classList.contains('active')) btnTodos.click();
-      if (typeof scrollToCatalog === 'function') scrollToCatalog();
+      goStoreView('catalogo');
     }
     document.getElementById('navCatalogLink')?.addEventListener('click', activarFiltroCatalogo);
     document.getElementById('mobileCatalogLink')?.addEventListener('click', activarFiltroCatalogo);
 
-    // ── Links "Perfumes Enteros" → mostrar banner correctamente ──────────────
+    // ── Links "Perfumes Enteros" → pestaña Catálogo con ese tipo ─────────────
+    // (el banner de Perfumes Enteros queda arriba, justo debajo de los filtros)
     function activarFiltroEntero(e) {
       e.preventDefault();
       e.stopPropagation();
       cerrarMenuMovil();
-      cerrarDetallePerfume();
-      const btn = document.querySelector('.filter-btn[data-filter="entero"]');
-      if (btn) {
-        btn.click();
-        // Scroll para mostrar el banner justo debajo de los filtros sticky
-        setTimeout(() => {
-          const banner    = document.getElementById('catalogBanner');
-          const filtersEl = document.getElementById('catalogo');
-          if (!banner) return;
-          const headerH  = 64;
-          const filtersH = filtersEl ? filtersEl.offsetHeight : 0;
-          const targetY  = banner.offsetTop - headerH - filtersH;
-          window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
-        }, 100);
-      }
+      document.querySelector('.filter-btn[data-filter="entero"]')?.click();
+      goStoreView('catalogo');
     }
     document.getElementById('navEnteroLink')?.addEventListener('click', activarFiltroEntero);
     document.getElementById('mobileNavEnteroLink')?.addEventListener('click', activarFiltroEntero);

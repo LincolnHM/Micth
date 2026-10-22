@@ -2,24 +2,82 @@
 
 let orderStatusFilter = 'all';
 
+const ORDER_STATUS_LABELS = {
+  pendiente: 'Pendiente', separado: 'Separado', pagado: 'Pagado',
+  cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado'
+};
+const statusLabel = s => ORDER_STATUS_LABELS[s] ?? sanitize(String(s));
+
+// Qué ofrece el selector de estado según el estado actual. "Separado" y "Pagado"
+// abren la ventana de pago: el estado final sale de cuánto pagó.
+const _STATUS_ORDER   = ['pendiente', 'separado', 'pagado', 'enviado', 'entregado', 'cancelado'];
+const _STATUS_CHOICES = {
+  pendiente: ['pendiente', 'separado', 'pagado', 'cancelado'],
+  separado:  ['separado', 'pagado', 'pendiente', 'cancelado'],
+  pagado:    ['pagado', 'pendiente', 'cancelado'],
+  enviado:   ['enviado', 'pendiente', 'cancelado'],
+  entregado: ['entregado', 'pendiente', 'cancelado'],
+  cancelado: ['cancelado', 'pendiente']
+};
+
+// Ya empezó a pagar y le falta una parte (lo que se debe cobrar)
+const orderOwes = o => o.status !== 'cancelado' && (o.payments || []).length > 0 && orderBalance(o) > 0;
+
+const money = n => `S/ ${(Number(n) || 0).toFixed(2)}`;
+
+// "📱 Yape S/ 50.00 + 💵 Efectivo S/ 30.00"
+function paymentsText(payments) {
+  return payments.map(p => {
+    const m = PAYMENT_METHODS[p.method];
+    return `${m ? `${m.icon} ${m.label}` : 'Sin método'} ${money(p.amount)}`;
+  }).join(' + ');
+}
+
+// Chips de método de pago (sumados por método) para la tabla
+function paymentChipsHtml(order) {
+  const pays = orderPayments(order);
+  if (!pays.length) return '';
+  const byMethod = new Map();
+  pays.forEach(p => byMethod.set(p.method || '', (byMethod.get(p.method || '') || 0) + p.amount));
+  const showAmount = byMethod.size > 1 || orderBalance(order) > 0;
+  return `<div class="pay-chips">${[...byMethod].map(([method, amount]) => {
+    const m = PAYMENT_METHODS[method];
+    const label = m ? `${m.icon} ${m.label}` : '⏳ Sin método';
+    return `<span class="pay-badge pay-${method || 'none'}">${label}${showAmount ? ` ${money(amount)}` : ''}</span>`;
+  }).join('')}</div>`;
+}
+
+// Etiqueta grande de entrega: ENVÍO / RECOJO / DELIVERY
+function deliveryBadgeHtml(order) {
+  const type = DELIVERY_TYPES[order.deliveryType] ? order.deliveryType : 'recojo';
+  const info = deliveryInfo(type);
+  const word = { envio: 'Envío', recojo: 'Recojo', delivery: 'Delivery' }[type];
+  const sub  = type === 'envio'
+    ? ['Shalom', [order.department, order.province].filter(Boolean).join(' / ')].filter(Boolean).join(' · ')
+    : type === 'delivery' ? 'Soritor' : 'En tienda';
+  return `<span class="delivery-badge delivery-${type}">
+      <span class="delivery-badge-icon" aria-hidden="true">${info.icon}</span>
+      <span class="delivery-badge-text">${word}<small>${sanitize(sub)}</small></span>
+    </span>`;
+}
+
 async function updateOrderStats(allOrders = null) {
   const bar = document.getElementById('orderStatsBar');
   if (!bar) return;
   try {
     const all = allOrders || await withTimeout(CloudOrders.getAll(), 15000, 'las estadísticas de pedidos');
-    const stats = {
-      total:     all.length,
-      pendiente: all.filter(o => o.status === 'pendiente').length,
-      pagado:    all.filter(o => o.status === 'pagado').length,
-      cancelado: all.filter(o => o.status === 'cancelado').length,
-      revenue:   all.filter(o => o.status === 'pagado').reduce((s, o) => s + o.total, 0)
-    };
+    const count = s => all.filter(o => o.status === s).length;
+    // Cobrado = todo el dinero recibido (adelantos incluidos); Por cobrar = saldos de los separados
+    const cobrado   = incomePayments(all).reduce((s, p) => s + p.amount, 0);
+    const porCobrar = all.filter(orderOwes).reduce((s, o) => s + orderBalance(o), 0);
     bar.innerHTML = `
-      <div class="stat-card"><div class="stat-val" style="color:var(--gold)">${stats.total}</div><div class="stat-label">Total</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:var(--orange)">${stats.pendiente}</div><div class="stat-label">Pendientes</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:var(--green)">${stats.pagado}</div><div class="stat-label">Pagados</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:#ef5350">${stats.cancelado}</div><div class="stat-label">Cancelados</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:var(--gold-d)">S/${stats.revenue.toFixed(0)}</div><div class="stat-label">Facturado</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--gold)">${all.length}</div><div class="stat-label">Total</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--orange)">${count('pendiente')}</div><div class="stat-label">Pendientes</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#ffca28">${count('separado')}</div><div class="stat-label">Separados</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--green)">${count('pagado')}</div><div class="stat-label">Pagados</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#ef5350">${count('cancelado')}</div><div class="stat-label">Cancelados</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--gold-d)">S/${cobrado.toFixed(0)}</div><div class="stat-label">Cobrado</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#ffb74d">S/${porCobrar.toFixed(0)}</div><div class="stat-label">Por cobrar</div></div>
     `;
   } catch (err) {
     console.error('[MICHT] Error cargando resumen de pedidos:', err);
@@ -51,7 +109,7 @@ async function _orderStockLines(order) {
 async function renderOrdersSection() {
   const tbody = document.getElementById('ordersTableBody');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">Cargando pedidos…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">Cargando pedidos…</td></tr>';
 
   try {
     // Una sola query a Supabase — se reutiliza para stats y tabla
@@ -80,7 +138,8 @@ async function renderOrdersSection() {
     const tableWrap = tbody.closest('.orders-table-wrap') || tbody.parentElement;
     tableWrap.parentElement.insertBefore(diagBox, tableWrap);
 
-    if (orderStatusFilter !== 'all') orders = orders.filter(o => o.status === orderStatusFilter);
+    if (orderStatusFilter === 'saldo')    orders = orders.filter(orderOwes);
+    else if (orderStatusFilter !== 'all') orders = orders.filter(o => o.status === orderStatusFilter);
     if (_orderSearch) {
       const q = _orderSearch.toLowerCase();
       orders = orders.filter(o =>
@@ -92,20 +151,22 @@ async function renderOrdersSection() {
     }
 
     if (!orders.length) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">No hay pedidos ${_orderSearch ? 'que coincidan con la búsqueda' : orderStatusFilter !== 'all' ? 'con ese estado' : 'registrados'}</td></tr>`;
+      const why = _orderSearch ? 'que coincidan con la búsqueda'
+                : orderStatusFilter === 'saldo' ? 'con saldo por cobrar'
+                : orderStatusFilter !== 'all' ? 'con ese estado' : 'registrados';
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">No hay pedidos ${why}</td></tr>`;
       return;
     }
-
-    const STATUS_LABELS = { pendiente: 'Pendiente', pagado: 'Pagado', cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado' };
-    const SELECT_OPTIONS = ['pendiente', 'pagado', 'cancelado'];
 
     tbody.innerHTML = orders.map(o => {
     const date       = new Date(o.date).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: '2-digit' });
     const time       = new Date(o.date).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
-    const delivIcon  = deliveryInfo(o.deliveryType).icon;
-    const delivText  = deliveryInfo(o.deliveryType).short;
+    const delivType  = DELIVERY_TYPES[o.deliveryType] ? o.deliveryType : 'recojo';
     const safeStatus = o.status.replace(/[^a-z]/g, '');
-    const selectVal  = SELECT_OPTIONS.includes(o.status) ? o.status : 'pendiente';
+    const choices    = _STATUS_ORDER.filter(s => (_STATUS_CHOICES[o.status] || _STATUS_CHOICES.pendiente).includes(s));
+    const paid       = orderPaidAmount(o);
+    const balance    = orderBalance(o);
+    const owes       = orderOwes(o);
 
     const itemsHtml = (o.items || []).map(i =>
       `<div class="order-item-line">
@@ -114,23 +175,19 @@ async function renderOrdersSection() {
       </div>`
     ).join('');
 
-    const _PAY_BADGE_MAP = {
-      efectivo:      '<span class="pay-badge pay-efectivo">💵 Efectivo</span>',
-      yape:          '<span class="pay-badge pay-yape">📱 Yape</span>',
-      plin:          '<span class="pay-badge pay-plin">📲 Plin</span>',
-      transferencia: '<span class="pay-badge pay-transferencia">🏦 Transferencia</span>'
-    };
-    const payBadge = o.paymentMethod && _PAY_BADGE_MAP[o.paymentMethod]
-      ? `<div style="margin-top:.3rem">${_PAY_BADGE_MAP[o.paymentMethod]}</div>`
-      : '';
+    // Pagó una parte: cuánto pagó y cuánto falta, con una barrita de avance
+    const payProgress = owes ? `
+        <div class="order-pay-progress" aria-hidden="true"><span style="width:${Math.min(100, Math.round(paid / (o.total || 1) * 100))}%"></span></div>
+        <div class="order-pay-line">Pagó ${money(paid)}</div>
+        <div class="order-pay-due">Falta ${money(balance)}</div>` : '';
 
     return `
-    <tr class="order-row">
+    <tr class="order-row deliv-${delivType}">
       <td class="order-col-id">
         <span class="order-id">${sanitize(o.id)}</span>
         <div class="order-date" style="margin-top:.2rem">${date} · ${time}</div>
-        <div class="order-date">${delivIcon} ${delivText}</div>
       </td>
+      <td class="order-col-delivery">${deliveryBadgeHtml(o)}</td>
       <td class="order-col-client">
         <span class="order-customer">${sanitize(o.customerName || '—')}</span>
         ${o.customerPhone ? `<div class="order-date">${sanitize(o.customerPhone)}</div>` : ''}
@@ -141,18 +198,20 @@ async function renderOrdersSection() {
       </td>
       <td class="order-col-total">
         <span class="order-total-cell">S/ ${o.total.toFixed(2)}</span>
+        ${payProgress}
       </td>
       <td class="order-col-status">
-        <span class="status-badge status-${safeStatus}">${STATUS_LABELS[o.status] ?? sanitize(o.status)}</span>
-        ${payBadge}
+        <span class="status-badge status-${safeStatus}">${statusLabel(o.status)}</span>
+        ${o.status !== 'cancelado' ? paymentChipsHtml(o) : ''}
       </td>
       <td class="order-col-actions">
         <div class="order-actions-stack">
           <select class="order-action-select" data-id="${escapeAttr(o.id)}" data-status="${escapeAttr(o.status)}" aria-label="Cambiar estado">
-            ${SELECT_OPTIONS.map(s =>
-              `<option value="${s}" ${selectVal === s ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`
+            ${choices.map(s =>
+              `<option value="${s}" ${o.status === s ? 'selected' : ''}>${ORDER_STATUS_LABELS[s]}</option>`
             ).join('')}
           </select>
+          ${owes ? `<button class="btn-order-collect" data-id="${escapeAttr(o.id)}">💰 Cobrar ${money(balance)}</button>` : ''}
           <div class="order-btn-row">
             <button class="btn-order-detail" data-id="${escapeAttr(o.id)}">Ver</button>
             <button class="btn-edit-order"   data-id="${escapeAttr(o.id)}">Editar</button>
@@ -163,65 +222,30 @@ async function renderOrdersSection() {
     </tr>`;
     }).join('');
 
-    // Cambio de estado
+    // Cambio de estado: "Separado" y "Pagado" abren la ventana de pago; "Pendiente" y
+    // "Cancelado" piden confirmar si se devuelve stock o hay pagos anotados.
     tbody.querySelectorAll('.order-action-select').forEach(sel => {
-      sel.addEventListener('change', () => {
+      sel.addEventListener('change', async () => {
         const id         = sel.dataset.id;
         const newStatus  = sel.value;
-        const prevStatus = sel.dataset.status;
+        sel.value = sel.dataset.status;   // vuelve atrás hasta que se confirme
 
-        const doUpdate = async (paymentMethod = null) => {
-          try {
-            const res = await CloudOrders.updateStatus(id, newStatus, paymentMethod);
-            sel.dataset.status = newStatus;
-            _statsCache = null;
-            renderOrdersSection().catch(console.error);
-            renderAdminProducts().catch(console.error);
-            const _payLabels = { efectivo: '💵 Efectivo', yape: '📱 Yape', plin: '📲 Plin', transferencia: '🏦 Transferencia' };
-            const payLabel = paymentMethod && _payLabels[paymentMethod] ? ` · ${_payLabels[paymentMethod]}` : '';
-            const stockNote = res.stock.length ? `\nStock: ${res.stock.join('; ')}` : '';
-            showToast(`Pedido ${id} → ${STATUS_LABELS[newStatus]}${payLabel}${stockNote}`, res.stock.length ? 6500 : 2800);
-            if (res.skipped.length) alert('⚠ Estos productos ya no existen en el catálogo y NO se les pudo mover el stock:\n\n' + res.skipped.join('\n'));
-          } catch (err) {
-            console.error('Error al actualizar estado:', err);
-            sel.value = prevStatus;
-            alert('⚠ ' + (err.message || 'No se pudo actualizar el pedido. Inténtalo de nuevo.'));
-          }
-        };
+        let order;
+        try { order = await withTimeout(CloudOrders.getById(id), 12000, 'el pedido'); } catch { order = null; }
+        if (!order) { alert('⚠ No se pudo cargar el pedido. Revisa tu conexión e inténtalo de nuevo.'); return; }
 
-        // Al pasar a "pagado" se descuenta stock; al salir de "pagado" se devuelve.
-        // Se muestra exactamente qué se va a mover antes de confirmar.
-        sel.value = prevStatus;
-        const paying   = isPaidStatus(newStatus);
-        const reverting = isPaidStatus(prevStatus) && !paying;
-        CloudOrders.getById(id).then(async order => {
-          const lines = order ? await _orderStockLines(order) : '';
-          if (paying && !isPaidStatus(prevStatus)) {
-            const info = lines ? `Stock a descontar:\n${lines}\n\n` : '';
-            showPaymentModal(
-              `${info}¿Cómo pagó el pedido ${id}?`,
-              (payMethod) => { sel.value = newStatus; doUpdate(payMethod); },
-              () => { sel.value = prevStatus; }
-            );
-          } else if (reverting) {
-            const info = lines ? `Se devolverá al stock:\n${lines}\n\n` : '';
-            showConfirmModal(
-              `${info}¿Pasar el pedido ${id} de Pagado a ${STATUS_LABELS[newStatus]}?`,
-              () => { sel.value = newStatus; doUpdate(); },
-              () => { sel.value = prevStatus; }
-            );
-          } else {
-            sel.value = newStatus; doUpdate();
-          }
-        }).catch(() => {
-          if (paying && !isPaidStatus(prevStatus)) {
-            showPaymentModal(
-              `¿Cómo pagó el pedido ${id}?`,
-              (payMethod) => { sel.value = newStatus; doUpdate(payMethod); },
-              () => { sel.value = prevStatus; }
-            );
-          } else { sel.value = newStatus; doUpdate(); }
-        });
+        if (newStatus === 'separado' || newStatus === 'pagado') openPaymentDialog(order, { target: newStatus });
+        else confirmStatusChange(order, newStatus);
+      });
+    });
+
+    // Cobrar el saldo de un pedido separado
+    tbody.querySelectorAll('.btn-order-collect').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        let order;
+        try { order = await withTimeout(CloudOrders.getById(btn.dataset.id), 12000, 'el pedido'); } catch { order = null; }
+        if (!order) { alert('⚠ No se pudo cargar el pedido. Revisa tu conexión e inténtalo de nuevo.'); return; }
+        openPaymentDialog(order);
       });
     });
 
@@ -239,11 +263,11 @@ async function renderOrdersSection() {
     tbody.querySelectorAll('.btn-delete-order').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
-        const isPaid = isPaidStatus(btn.closest('tr')?.querySelector('.order-action-select')?.dataset.status);
+        const status = btn.closest('tr')?.querySelector('.order-action-select')?.dataset.status;
         // Eliminar solo borra el registro: NO devuelve stock. Para devolverlo, cambia el
         // estado a Cancelado (o Pendiente) y luego elimina si quieres.
-        const warn = isPaid
-          ? '\n\n⚠ Este pedido está PAGADO y ya descontó stock. Eliminarlo NO devuelve el stock ni deja rastro en la contabilidad. Si fue un error, cámbialo primero a Cancelado.'
+        const warn = isPaidStatus(status)
+          ? `\n\n⚠ Este pedido está ${statusLabel(status).toUpperCase()} y ya descontó stock. Eliminarlo NO devuelve el stock y sus pagos dejan de contar en Caja y Contabilidad. Si fue un error, cámbialo primero a Cancelado.`
           : '';
         showConfirmModal(
           `¿Eliminar el pedido ${id}? Esta acción no se puede deshacer.${warn}`,
@@ -264,8 +288,229 @@ async function renderOrdersSection() {
     });
   } catch (err) {
     console.error('[MICHT] renderOrdersSection falló:', err);
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:2rem">No se pudieron cargar los pedidos.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">No se pudieron cargar los pedidos.</td></tr>';
   }
+}
+
+// Después de un cambio de estado o de pagos: avisar y refrescar todo
+function _afterOrderChange(id, res, extra = '') {
+  _statsCache = null;
+  renderOrdersSection().catch(console.error);
+  renderAdminProducts().catch(console.error);
+  const st = res.order ? ` → ${statusLabel(res.order.status)}` : '';
+  const due = res.order && orderOwes(res.order) ? ` · falta ${money(orderBalance(res.order))}` : '';
+  const stockNote = res.stock.length ? `\nStock: ${res.stock.join('; ')}` : '';
+  showToast(`${extra || 'Pedido ' + id}${st}${due}${stockNote}`, res.stock.length ? 6500 : 3200);
+  if (res.skipped.length) alert('⚠ Estos productos ya no existen en el catálogo y NO se les pudo mover el stock:\n\n' + res.skipped.join('\n'));
+}
+
+// Pasar a Pendiente o Cancelado (o reactivar un cancelado). Confirma antes si se
+// devuelve stock o hay pagos anotados.
+async function confirmStatusChange(order, newStatus) {
+  if (order.status === newStatus) return;
+  const pays = orderPayments(order);
+  const msgs = [];
+  if (isPaidStatus(order.status)) {
+    const lines = await _orderStockLines(order);
+    if (lines) msgs.push(`Se devolverá al stock:\n${lines}`);
+  }
+  if (newStatus === 'pendiente' && pays.length) {
+    msgs.push(`Se borrarán los pagos anotados (${paymentsText(pays)}). Úsalo solo si fue un error.`);
+  }
+  if (newStatus === 'cancelado' && pays.length) {
+    msgs.push(`Los pagos anotados (${paymentsText(pays)}) se quedan en el detalle, pero dejan de contar en Caja y Contabilidad (como si se los hubieras devuelto).`);
+  }
+
+  const run = async () => {
+    try {
+      const res = await withTimeout(CloudOrders.updateStatus(order.id, newStatus), 20000, 'el estado del pedido');
+      _afterOrderChange(order.id, res);
+    } catch (err) {
+      console.error('Error al actualizar estado:', err);
+      alert('⚠ ' + (err.message || 'No se pudo actualizar el pedido. Inténtalo de nuevo.'));
+    }
+  };
+  if (!msgs.length) return run();
+  showConfirmModal(`${msgs.join('\n\n')}\n\n¿Pasar el pedido ${order.id} de ${statusLabel(order.status)} a ${statusLabel(newStatus)}?`, run, () => {});
+}
+
+// ─── Ventana "Registrar pago" ─────────────────────────────────────────────────
+// Sirve para todo: pago completo, adelanto (separación), saldo, y pagos divididos
+// (ej. Yape S/ 50 + efectivo S/ 30). El estado sale de lo pagado: una parte →
+// Separado (ya descuenta stock), todo → Pagado.
+//   target: 'separado' | 'pagado' | null — solo cambia el texto de ayuda
+function openPaymentDialog(order, { target = null, onDone = null } = {}) {
+  if (order.status === 'cancelado') {
+    alert('Este pedido está cancelado. Pásalo a Pendiente antes de registrar un pago.');
+    return;
+  }
+  const id      = order.id;
+  const paid    = orderPaidAmount(order);
+  const balance = orderBalance(order);
+
+  if (balance <= 0) {
+    // Nada que cobrar (total S/ 0, o ya está cubierto): solo falta marcarlo pagado
+    if (order.status === 'pagado') { showToast('Este pedido ya está pagado completo.'); return; }
+    showConfirmModal(`El pedido ${id} no tiene saldo por cobrar. ¿Marcarlo como Pagado?`, async () => {
+      try { _afterOrderChange(id, await CloudOrders.updateStatus(id, 'pagado')); }
+      catch (err) { alert('⚠ ' + (err.message || 'No se pudo actualizar el pedido.')); }
+    }, () => {});
+    return;
+  }
+
+  const methodRow = key => {
+    const m = PAYMENT_METHODS[key];
+    return `
+      <div class="paydlg-row">
+        <label class="paydlg-method" for="paydlg-${key}">${m.icon} ${m.label}</label>
+        <div class="paydlg-input"><span aria-hidden="true">S/</span>
+          <input id="paydlg-${key}" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" data-method="${key}">
+        </div>
+        <button type="button" class="paydlg-fill" data-method="${key}" title="Poner aquí todo lo que falta">Todo</button>
+      </div>`;
+  };
+  const hint = target === 'separado'
+    ? 'Escribe el adelanto que dejó. Si pagó con dos métodos, llena los dos.'
+    : 'Si pagó una parte con Yape y otra en efectivo, llena los dos.';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'paydlg-overlay';
+  overlay.innerHTML = `
+    <div class="paydlg" role="dialog" aria-modal="true" aria-labelledby="paydlgTitle">
+      <div class="paydlg-head">
+        <h3 id="paydlgTitle">${target === 'separado' ? 'Separar con adelanto' : 'Registrar pago'}</h3>
+        <button type="button" class="paydlg-close" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="paydlg-body">
+        <div class="paydlg-order">
+          <div>
+            <span class="order-id">${sanitize(id)}</span>
+            <div class="paydlg-customer">${sanitize(order.customerName || '—')}</div>
+          </div>
+          ${deliveryBadgeHtml(order)}
+        </div>
+        <div class="paydlg-summary">
+          <div><span>Total</span><strong>${money(order.total)}</strong></div>
+          <div><span>Ya pagó</span><strong>${money(paid)}</strong></div>
+          <div class="paydlg-due"><span>Falta</span><strong>${money(balance)}</strong></div>
+        </div>
+        <p class="paydlg-question">¿Cuánto pagó y cómo?<small>${hint}</small></p>
+        <div class="paydlg-methods">
+          ${methodRow('yape')}
+          ${methodRow('efectivo')}
+          <div class="paydlg-more" hidden>${methodRow('plin')}${methodRow('transferencia')}</div>
+          <button type="button" class="paydlg-more-btn">+ Plin / Transferencia</button>
+        </div>
+        <div class="field">
+          <label for="paydlgNote">Nota (opcional)</label>
+          <input id="paydlgNote" type="text" maxlength="120" placeholder="${target === 'separado' ? 'Ej: separación, paga el resto al enviar' : 'Ej: saldo al enviar'}">
+        </div>
+        <div class="paydlg-result" aria-live="polite"></div>
+        <div class="paydlg-stock" hidden></div>
+      </div>
+      <div class="paydlg-foot">
+        <button type="button" class="btn-cancel paydlg-cancel">Cancelar</button>
+        <button type="button" class="btn-save paydlg-save" disabled>Guardar pago</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('open'));
+
+  const inputs  = [...overlay.querySelectorAll('.paydlg-input input')];
+  const result  = overlay.querySelector('.paydlg-result');
+  const saveBtn = overlay.querySelector('.paydlg-save');
+  const more    = overlay.querySelector('.paydlg-more');
+  const moreBtn = overlay.querySelector('.paydlg-more-btn');
+
+  // "40", "40.5", "40,50" o "S/ 40" → número; vacío → 0; otra cosa → NaN
+  const parseAmount = v => {
+    const t = String(v).trim().replace(/^s\/\s*/i, '').replace(',', '.');
+    if (!t) return 0;
+    return /^\d+(\.\d{1,2})?$/.test(t) ? parseFloat(t) : NaN;
+  };
+  const entries = () => inputs.map(inp => ({ method: inp.dataset.method, amount: parseAmount(inp.value) }));
+
+  const recalc = () => {
+    const list = entries();
+    const sum  = roundMoney(list.reduce((s, e) => s + (Number.isNaN(e.amount) ? 0 : e.amount), 0));
+    let cls = 'muted', text = 'Escribe cuánto pagó (o toca «Todo» al lado del método).', ok = false;
+    if (list.some(e => Number.isNaN(e.amount))) {
+      cls = 'error'; text = 'Revisa los montos: solo números, por ejemplo 40 o 40.50';
+    } else if (sum > balance + 0.005) {
+      cls = 'error'; text = `Es más de lo que falta pagar (${money(balance)}).`;
+    } else if (sum >= balance - 0.005) {
+      cls = 'ok'; ok = true; text = `Recibes ${money(sum)} → el pedido queda <strong>PAGADO</strong> ✓`;
+    } else if (sum > 0) {
+      cls = 'warn'; ok = true; text = `Recibes ${money(sum)} → queda <strong>SEPARADO</strong> · faltará ${money(balance - sum)}`;
+    }
+    result.className = `paydlg-result ${cls}`;
+    result.innerHTML = text;
+    saveBtn.disabled = !ok;
+  };
+  inputs.forEach(inp => inp.addEventListener('input', recalc));
+
+  // "Todo": pone en ese método lo que falta, descontando lo escrito en los otros
+  overlay.querySelectorAll('.paydlg-fill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const inp = inputs.find(i => i.dataset.method === btn.dataset.method);
+      const others = entries().filter(e => e.method !== btn.dataset.method && !Number.isNaN(e.amount))
+                              .reduce((s, e) => s + e.amount, 0);
+      const rest = roundMoney(balance - others);
+      inp.value = rest > 0 ? rest.toFixed(2) : '';
+      recalc();
+    });
+  });
+  moreBtn.addEventListener('click', () => { more.hidden = false; moreBtn.remove(); });
+
+  // Si el pedido aún no descontó stock, mostrar qué se va a descontar
+  if (!isPaidStatus(order.status)) {
+    _orderStockLines(order).then(lines => {
+      if (!lines || !overlay.isConnected) return;
+      const box = overlay.querySelector('.paydlg-stock');
+      box.textContent = `Al guardar se descuenta del stock (el perfume queda apartado):\n${lines}`;
+      box.hidden = false;
+    }).catch(() => {});
+  }
+
+  const close = () => {
+    overlay.classList.remove('open');
+    document.removeEventListener('keydown', onKey);
+    setTimeout(() => overlay.remove(), 220);
+  };
+  const onKey = e => {
+    if (e.key === 'Escape') close();
+    else if (e.key === 'Enter' && !saveBtn.disabled && overlay.contains(document.activeElement)) save();
+  };
+  document.addEventListener('keydown', onKey);
+  overlay.querySelector('.paydlg-close').addEventListener('click', close);
+  overlay.querySelector('.paydlg-cancel').addEventListener('click', close);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+  let saving = false;
+  async function save() {
+    if (saving || saveBtn.disabled) return;
+    saving = true;
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Guardando…';
+    const note = overlay.querySelector('#paydlgNote').value.trim();
+    const list = entries().filter(e => e.amount > 0).map(e => ({ ...e, note }));
+    try {
+      const res = await withTimeout(CloudOrders.addPayments(id, list), 20000, 'el pago');
+      close();
+      _afterOrderChange(id, res, `Pago registrado: ${paymentsText(list)}`);
+      if (onDone) onDone(res);
+    } catch (err) {
+      console.error('[MICHT] Error registrando pago:', err);
+      alert('⚠ ' + (err.message || 'No se pudo registrar el pago. Inténtalo de nuevo.'));
+      saving = false;
+      saveBtn.textContent = 'Guardar pago';
+      recalc();
+    }
+  }
+  saveBtn.addEventListener('click', save);
+
+  recalc();
+  if (!('ontouchstart' in window)) inputs[0].focus();
 }
 
 async function openOrderDetail(id) {
@@ -281,26 +526,42 @@ async function openOrderDetail(id) {
   const modal = document.getElementById('orderDetailModal');
   const body  = document.getElementById('orderDetailBody');
 
-  const STATUS_LABELS = { pendiente: 'Pendiente', pagado: 'Pagado', cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado' };
   const date = new Date(order.date).toLocaleString('es-PE');
+  const pays      = orderPayments(order);
+  const paid      = orderPaidAmount(order);
+  const balance   = orderBalance(order);
+  const cancelled = order.status === 'cancelado';
+  const payDate   = d => new Date(d).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const methodOptions = p => (p.method ? '' : '<option value="" selected>⏳ Sin método</option>') +
+    Object.entries(PAYMENT_METHODS).map(([k, m]) => `<option value="${k}" ${p.method === k ? 'selected' : ''}>${m.icon} ${m.label}</option>`).join('');
 
   body.innerHTML = `
-    <div class="order-detail-row"><span class="lbl">ID Pedido</span><span class="val order-id">${sanitize(order.id)}</span></div>
-    <div class="order-detail-row"><span class="lbl">Estado</span><span class="val"><span class="status-badge status-${String(order.status).replace(/[^a-z]/g, '')}">${STATUS_LABELS[order.status] ?? sanitize(order.status)}</span></span></div>
-    <div class="order-detail-row">
-      <span class="lbl">Método pago</span>
-      <span class="val" style="display:flex;align-items:center;gap:.5rem">
-        <select id="detPayMethod" style="padding:.3rem .6rem;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:var(--r);font-size:.82rem">
-          <option value=""              ${!order.paymentMethod                         ?'selected':''}>⏳ Por confirmar</option>
-          <option value="yape"          ${order.paymentMethod==='yape'          ?'selected':''}>📱 Yape</option>
-          <option value="plin"          ${order.paymentMethod==='plin'          ?'selected':''}>📲 Plin</option>
-          <option value="efectivo"      ${order.paymentMethod==='efectivo'      ?'selected':''}>💵 Efectivo</option>
-          <option value="transferencia" ${order.paymentMethod==='transferencia' ?'selected':''}>🏦 Transferencia</option>
-        </select>
-        <button id="savePayMethodBtn" style="font-size:.75rem;padding:.3rem .75rem;background:var(--gold);color:#fff;border:none;border-radius:var(--r);font-weight:700;cursor:pointer">Guardar</button>
-      </span>
+    <div class="order-detail-top">
+      ${deliveryBadgeHtml(order)}
+      <span class="status-badge status-${String(order.status).replace(/[^a-z]/g, '')}">${statusLabel(order.status)}</span>
     </div>
+    <div class="order-detail-row"><span class="lbl">ID Pedido</span><span class="val order-id">${sanitize(order.id)}</span></div>
     <div class="order-detail-row"><span class="lbl">Fecha</span><span class="val">${date}</span></div>
+    <div class="order-pay-section">
+      <div class="order-pay-head">
+        <span>💰 Pagos</span>
+        ${!cancelled && balance > 0 ? `<button type="button" id="detAddPaymentBtn" class="btn-order-collect">+ Registrar pago</button>` : ''}
+      </div>
+      ${pays.length ? pays.map(p => `
+      <div class="pay-row">
+        <span class="pay-row-date">${p.legacy ? 'Pago completo' : payDate(p.date)}</span>
+        <select class="pay-row-method" data-pid="${escapeAttr(p.id)}" aria-label="Método de este pago">${methodOptions(p)}</select>
+        <strong class="pay-row-amount">${money(p.amount)}</strong>
+        ${p.legacy ? '<span></span>' : `<button type="button" class="pay-row-del" data-pid="${escapeAttr(p.id)}" title="Quitar este pago (si lo anotaste por error)" aria-label="Quitar este pago">✕</button>`}
+        ${p.note ? `<div class="pay-row-note">${sanitize(p.note)}</div>` : ''}
+      </div>`).join('') : '<p class="order-pay-empty">Todavía no pagó nada.</p>'}
+      <div class="order-pay-totals">
+        <span>Pagado <strong>${money(paid)}</strong> de ${money(order.total)}</span>
+        ${balance > 0 && pays.length ? `<span class="order-pay-due">Falta ${money(balance)}</span>`
+          : balance <= 0 && pays.length ? '<span class="order-pay-ok">✓ Pagado completo</span>' : ''}
+      </div>
+      ${cancelled && pays.length ? '<p class="order-pay-note">Pedido cancelado: estos pagos ya no cuentan en Caja ni Contabilidad.</p>' : ''}
+    </div>
     <hr style="border-color:var(--border)">
     <div class="order-detail-row"><span class="lbl">Cliente</span><span class="val">${sanitize(order.customerName || '—')}</span></div>
     <div class="order-detail-row"><span class="lbl">DNI</span><span class="val">${sanitize(order.customerDni || '—')}</span></div>
@@ -356,7 +617,7 @@ async function openOrderDetail(id) {
       <textarea id="adminNoteInput" rows="2" maxlength="400"
         style="width:100%;padding:.5rem .75rem;background:var(--bg);border:1px solid rgba(124,79,176,.3);border-radius:var(--r);color:var(--text);font-size:.82rem;resize:vertical;box-sizing:border-box;font-family:Inter,sans-serif;line-height:1.4;outline:none;transition:border-color .2s"
         onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='rgba(124,79,176,.3)'"
-        placeholder="Ej: Falta pagar el saldo, cliente frecuente, etc.">${sanitize(getAdminNote(order.id))}</textarea>
+        placeholder="Ej: cliente frecuente, coordinar hora de recojo, etc.">${sanitize(getAdminNote(order.id))}</textarea>
       <button id="saveAdminNoteBtn" data-id="${escapeAttr(order.id)}"
         style="margin-top:.4rem;padding:.35rem .9rem;background:rgba(124,79,176,.12);color:var(--gold-d);border:1px solid rgba(124,79,176,.3);border-radius:var(--r);font-size:.75rem;font-weight:700;cursor:pointer;transition:background .15s"
         onmouseover="this.style.background='rgba(124,79,176,.22)'" onmouseout="this.style.background='rgba(124,79,176,.12)'">
@@ -364,6 +625,7 @@ async function openOrderDetail(id) {
       </button>
     </div>
     ${order.deliveryType === 'envio' ? `
+    ${orderOwes(order) ? `<p class="order-ship-warn">⚠ Falta cobrar ${money(balance)} antes de enviar.</p>` : ''}
     <button id="openShippingLabelBtn" data-id="${escapeAttr(order.id)}"
       style="margin-top:.25rem;width:100%;padding:.55rem;background:rgba(33,150,243,.1);color:#64b5f6;border:1px solid rgba(33,150,243,.25);border-radius:var(--r);font-size:.82rem;font-weight:700;cursor:pointer;transition:background .15s"
       onmouseover="this.style.background='rgba(33,150,243,.18)'" onmouseout="this.style.background='rgba(33,150,243,.1)'">
@@ -371,63 +633,87 @@ async function openOrderDetail(id) {
     </button>` : ''}
   `;
 
-  // Guardar método de pago
-  body.querySelector('#savePayMethodBtn')?.addEventListener('click', async () => {
-    const pm  = body.querySelector('#detPayMethod')?.value || null;
-    const btn = body.querySelector('#savePayMethodBtn');
-    btn.disabled = true; btn.textContent = '…';
-    try {
-      await CloudOrders.update(order.id, { paymentMethod: pm });
-      _statsCache = null;
-      const label = pm === 'efectivo' ? '💵 Efectivo' : pm === 'yape' ? '📱 Yape' : 'Por confirmar';
-      showToast(`Método de pago actualizado: ${label} ✓`);
-      renderOrdersSection().catch(console.error);
-    } catch(e) { showToast('Error al guardar.'); }
-    btn.disabled = false; btn.textContent = 'Guardar';
+  const reopen = () => openOrderDetail(order.id).catch(console.error);
+
+  // Registrar un pago desde el detalle
+  body.querySelector('#detAddPaymentBtn')?.addEventListener('click', () => {
+    openPaymentDialog(order, { onDone: reopen });
   });
 
-  // Guardar nuevo total
+  // Corregir el método de un pago (ej. se anotó Yape y fue efectivo)
+  body.querySelectorAll('.pay-row-method').forEach(sel => {
+    const before = sel.value;
+    sel.addEventListener('change', async () => {
+      sel.disabled = true;
+      try {
+        await withTimeout(CloudOrders.setPaymentMethod(order.id, sel.dataset.pid, sel.value), 15000, 'el pago');
+        _statsCache = null;
+        showToast(`Método de pago corregido: ${PAYMENT_METHODS[sel.value]?.label || 'sin método'} ✓`);
+        renderOrdersSection().catch(console.error);
+        reopen();
+      } catch (err) {
+        sel.value = before;
+        sel.disabled = false;
+        alert('⚠ ' + (err.message || 'No se pudo cambiar el método de pago.'));
+      }
+    });
+  });
+
+  // Quitar un pago anotado por error
+  body.querySelectorAll('.pay-row-del').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const p = order.payments.find(x => x.id === btn.dataset.pid);
+      if (!p) return;
+      const left = roundMoney(paid - p.amount);
+      let next = cancelled ? 'cancelado' : statusForPaid(left, order.total);
+      if (['enviado', 'entregado'].includes(order.status) && left > 0) next = order.status;
+      let msg = `¿Quitar el pago de ${paymentsText([p])}?`;
+      if (next !== order.status) {
+        msg += `\n\nEl pedido pasa de ${statusLabel(order.status)} a ${statusLabel(next)}.`;
+        if (isPaidStatus(order.status) && !isPaidStatus(next)) {
+          const lines = await _orderStockLines(order);
+          if (lines) msg += `\n\nSe devolverá al stock:\n${lines}`;
+        }
+      }
+      showConfirmModal(msg, async () => {
+        try {
+          const res = await withTimeout(CloudOrders.removePayment(order.id, p.id), 20000, 'el pago');
+          _afterOrderChange(order.id, res, 'Pago quitado');
+          reopen();
+        } catch (err) {
+          alert('⚠ ' + (err.message || 'No se pudo quitar el pago.'));
+        }
+      }, () => {});
+    });
+  });
+
+  // Guardar nuevo total (si el pedido tiene pagos, su estado se ajusta a lo pagado)
   body.querySelector('#saveOrderTotalBtn')?.addEventListener('click', async () => {
     const btn   = body.querySelector('#saveOrderTotalBtn');
     const input = body.querySelector('#orderTotalInput');
-    const newTotal = parseFloat(input.value);
+    const typed = parseFloat(input.value);
 
-    if (isNaN(newTotal) || newTotal < 0) {
+    if (isNaN(typed) || typed < 0) {
       showToast('Ingresa un total válido mayor a 0.');
       return;
     }
+    const newTotal = roundMoney(typed);
 
     btn.disabled    = true;
     btn.textContent = 'Guardando…';
 
     try {
-      // Actualizar en Supabase
-      if (db) {
-        const { error } = await db
-          .from('pedidos')
-          .update({ total: newTotal, updated_at: new Date().toISOString() })
-          .eq('id', order.id);
-        if (error) throw error;
-      }
-      // Actualizar en localStorage
-      const local = Orders.getAll();
-      const idx   = local.findIndex(o => o.id === order.id);
-      if (idx !== -1) { local[idx].total = newTotal; Orders.save(local); }
-
-      // Actualizar el display en el modal
-      const display = body.querySelector('#orderDetailTotalDisplay');
-      if (display) display.textContent = `S/ ${newTotal.toFixed(2)}`;
-
+      await withTimeout(CloudOrders.update(order.id, { total: newTotal }), 20000, 'el total');
+      _statsCache = null;
       showToast(`Total del pedido ${order.id} actualizado a S/ ${newTotal.toFixed(2)} ✓`);
-      // Refrescar tabla de pedidos en fondo
       renderOrdersSection().catch(console.error);
+      reopen();
     } catch (err) {
       console.error('Error al actualizar total:', err);
       showToast('Error al guardar. Intenta de nuevo.');
+      btn.disabled    = false;
+      btn.textContent = 'Guardar';
     }
-
-    btn.disabled    = false;
-    btn.textContent = 'Guardar';
   });
 
   // Guardar nota interna
@@ -516,6 +802,7 @@ async function openRegisterOrderModal() {
   document.getElementById('regCustomerPhone').value = '';
   document.getElementById('regCustomerDni').value   = '';
   document.getElementById('regDeliveryType').value  = 'recojo';
+  document.getElementById('regPayNow').value        = 'no';
   document.getElementById('regNotes').value         = '';
   document.getElementById('regOrderItems').innerHTML = '';
   addOrderItemRow();
@@ -736,8 +1023,7 @@ async function saveManualOrder() {
   const phone = document.getElementById('regCustomerPhone').value.trim();
   const dni   = document.getElementById('regCustomerDni').value.trim();
   const dtype    = document.getElementById('regDeliveryType').value;
-  const payMeth  = document.getElementById('regPaymentMethod')?.value || '';
-  const initStat = document.getElementById('regOrderStatus')?.value || 'pendiente';
+  const payNow   = document.getElementById('regPayNow')?.value === 'si';
   const notes    = document.getElementById('regNotes').value.trim();
 
   if (!name) { alert('Ingresa el nombre del cliente.'); return; }
@@ -791,35 +1077,33 @@ async function saveManualOrder() {
 
   let orderId = null;
   try {
-    // Siempre crear como 'pendiente' primero para que updateStatus pueda detectar el cambio
-    // de estado y descontar el stock una sola vez (evita doble deducción)
+    // Siempre se crea como 'pendiente'. Si ya pagó, el pago se anota justo después en
+    // la ventana "Registrar pago", que también descuenta el stock una sola vez.
     orderId = await withTimeout(
-      CloudOrders.create({ customerName: name, customerPhone: phone, customerDni: dni, deliveryType: dtype, notes, items, total, paymentMethod: payMeth || null, status: 'pendiente' }),
+      CloudOrders.create({ customerName: name, customerPhone: phone, customerDni: dni, deliveryType: dtype, notes, items, total, paymentMethod: null, status: 'pendiente' }),
       15000, 'el pedido'
     );
 
-    // Si el admin registra el pedido directo como 'pagado', aplicar el descuento de stock
-    // vía updateStatus (que también cambia el estado a 'pagado')
-    let stockNote = '';
-    if (initStat === 'pagado') {
-      const res = await withTimeout(CloudOrders.updateStatus(orderId, 'pagado', payMeth || null), 20000, 'el estado del pedido');
-      if (res.stock.length) stockNote = `\nStock: ${res.stock.join('; ')}`;
-    }
-
     // Cerrar modal y mostrar éxito inmediatamente — el refresh es no-bloqueante
     document.getElementById('registerOrderModal').classList.remove('open');
-    showToast('Pedido registrado correctamente ✓' + stockNote, stockNote ? 6500 : 2800);
     _statsCache = null;
     renderOrdersSection().catch(console.error);
-    renderAdminProducts().catch(console.error);
+
+    if (payNow) {
+      showToast('Pedido registrado ✓ Ahora anota cuánto pagó.');
+      const order = await withTimeout(CloudOrders.getById(orderId), 12000, 'el pedido').catch(() => null);
+      if (order) openPaymentDialog(order);
+      else alert(`El pedido ${orderId} se registró como PENDIENTE. Anota el pago desde la lista (Estado → Pagado o Separado).`);
+    } else {
+      showToast('Pedido registrado correctamente ✓');
+    }
 
   } catch (err) {
     console.error('[MICHT] Error guardando pedido:', err);
     if (orderId) {
-      // El pedido SÍ se creó, pero no se pudo marcar como pagado / descontar el stock
       document.getElementById('registerOrderModal').classList.remove('open');
       renderOrdersSection().catch(console.error);
-      alert(`⚠ El pedido ${orderId} se registró como PENDIENTE, pero no se pudo marcarlo como pagado:\n\n${err.message}\n\nMárcalo como pagado desde la lista cuando se resuelva.`);
+      alert(`⚠ El pedido ${orderId} se registró como PENDIENTE, pero algo falló después:\n\n${err.message}`);
     } else
     // El pedido ya se guarda en localStorage antes de intentar sincronizar con Supabase
     // (ver CloudOrders.create), así que un timeout de red no significa que se perdió.

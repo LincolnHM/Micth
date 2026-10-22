@@ -30,9 +30,10 @@ async function renderDashboard() {
   const todayOrds = orders.filter(o => new Date(o.date).toDateString() === today);
   const pending   = orders.filter(o => o.status === 'pendiente');
   const weekAgo   = Date.now() - 7 * 24 * 3600 * 1000;
-  const weekRevenue = orders
-    .filter(o => o.status === 'pagado' && new Date(o.date).getTime() > weekAgo)
-    .reduce((s, o) => s + o.total, 0);
+  // Dinero que entró en los últimos 7 días (adelantos y saldos incluidos, el día que se cobraron)
+  const weekRevenue = incomePayments(orders)
+    .filter(p => new Date(p.date).getTime() > weekAgo)
+    .reduce((s, p) => s + p.amount, 0);
 
   // Stock bajo: decants con < 15ml restantes o enteros con stockQuantity < 2
   const lowStock = products.filter(p => {
@@ -44,8 +45,8 @@ async function renderDashboard() {
   // Últimos 5 pedidos
   const recent = [...orders].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
 
-  const STATUS_COLORS = { pendiente: 'var(--orange)', pagado: 'var(--green)', cancelado: 'var(--red)', enviado: '#64b5f6', entregado: 'var(--gold)' };
-  const STATUS_LABELS_D = { pendiente: 'Pendiente', pagado: 'Pagado', cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado' };
+  const STATUS_COLORS = { pendiente: 'var(--orange)', separado: '#ffca28', pagado: 'var(--green)', cancelado: 'var(--red)', enviado: '#64b5f6', entregado: 'var(--gold)' };
+  const STATUS_LABELS_D = { pendiente: 'Pendiente', separado: 'Separado', pagado: 'Pagado', cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado' };
 
   el.innerHTML = `
     <!-- KPIs -->
@@ -137,6 +138,9 @@ async function renderDashboard() {
       </button>
       <button class="dash-action-btn" onclick="document.querySelector('[data-section=products]').click();setTimeout(()=>document.getElementById('addProductBtn')?.click(),300)">
         <span>✦</span> Agregar perfume
+      </button>
+      <button class="dash-action-btn" onclick="window.open('catalogo/', '_blank', 'noopener')">
+        <span>🖨</span> Catálogo para imprimir
       </button>
       <button class="dash-action-btn" onclick="exportCatalogPDF()">
         <span>📄</span> Exportar catálogo PDF

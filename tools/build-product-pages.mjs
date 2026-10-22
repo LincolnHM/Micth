@@ -113,6 +113,9 @@ try { products = await vm.runInContext('CloudProducts.getAll()', ctx); }
 catch (e) { bail('error al leer el catálogo: ' + e.message); }
 if (!reached) bail('Supabase no respondió');
 if (!Array.isArray(products) || !products.length) bail('el catálogo vino vacío');
+// Los que aún no llegan ("Próximamente") no tienen ficha de compra: sin página.
+// Mismo filtro que la tienda (init.js), así los slugs coinciden.
+products = products.filter(p => !ctx.isComingSoon(p));
 
 const { byId: slugs } = ctx.MichtSlugs.buildProductSlugs(products);
 const purchasable = p => ctx.isDecantPurchasable(p);

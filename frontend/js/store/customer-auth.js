@@ -279,17 +279,15 @@ const UserAuth = {
       ? (this._currentProfile?.nombre_completo || '').split(' ')[0]
       : '';
 
-    // Desktop
+    // Desktop: sin sesión, un solo ícono de cuenta (abre "Ingresar", que ofrece crear la cuenta)
     const el = {
       loginBtn:    document.getElementById('headerLoginBtn'),
-      regBtn:      document.getElementById('headerRegisterBtn'),
       userDisplay: document.getElementById('headerUserDisplay'),
       userName:    document.getElementById('headerUserName')
     };
 
     if (el.loginBtn) {
       el.loginBtn.style.display    = loggedIn ? 'none' : '';
-      el.regBtn.style.display      = loggedIn ? 'none' : '';
       el.userDisplay.style.display = loggedIn ? 'flex' : 'none';
       if (el.userName && firstName) el.userName.textContent = firstName;
     }
@@ -390,13 +388,13 @@ async function openHistoryModal() {
       </div>`;
     document.getElementById('historyGoShopBtn')?.addEventListener('click', () => {
       closeHistoryModal();
-      document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
+      goStoreView('catalogo');
     });
     return;
   }
 
   const STATUS_LABELS = {
-    pendiente: 'Pendiente', pagado: 'Pagado',
+    pendiente: 'Pendiente', separado: 'Separado', pagado: 'Pagado',
     cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado'
   };
 
@@ -411,7 +409,8 @@ async function openHistoryModal() {
     const items = (order.items || [])
       .map(i => `${_esc(i.productName)} ${_esc(i.size)} ×${parseInt(i.quantity) || 1}`)
       .join(' · ');
-    const delivery = order.delivery_type === 'envio' ? '📦 Envío' : '🏪 Recojo';
+    const delivery = order.delivery_type === 'envio' ? '📦 Envío'
+                   : order.delivery_type === 'delivery' ? '🛵 Delivery' : '🏪 Recojo';
 
     return `
       <div class="history-order-card">
@@ -712,9 +711,8 @@ const AuthModals = {
 document.addEventListener('DOMContentLoaded', async () => {
   await UserAuth.init();
 
-  // ── Botones login/registro header desktop ────────────────────────────────
+  // ── Ícono de cuenta del header desktop ───────────────────────────────────
   document.getElementById('headerLoginBtn')?.addEventListener('click', () => AuthModals.openLogin());
-  document.getElementById('headerRegisterBtn')?.addEventListener('click', () => AuthModals.openRegister());
 
   // ── Dropdown del usuario (desktop) ───────────────────────────────────────
   const hudTrigger  = document.getElementById('headerUserTrigger');
@@ -855,7 +853,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('promoBannerCta')?.addEventListener('click', () => {
     const action = document.getElementById('promoBannerCta')?.dataset.action;
     if (action === 'register') AuthModals.openRegister();
-    else document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
+    else goStoreView('catalogo');
   });
   document.getElementById('promoBannerClose')?.addEventListener('click', () => {
     sessionStorage.setItem('promoBannerDismissed', '1');

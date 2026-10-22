@@ -10,6 +10,8 @@
     (function () {
       var m = location.pathname.match(/^\/perfume\/([a-z0-9-]+)\/?$/);
       if (m) location.replace('/?perfume=' + m[1]);
+      // michtdecants.com/catalogo → pestaña Catálogo de la tienda
+      else if (/^\/catalogo\/?$/i.test(location.pathname)) location.replace('/' + location.search + '#catalogo');
     })();
   </script>
   <meta name="robots" content="noindex, nofollow">

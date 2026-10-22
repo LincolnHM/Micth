@@ -49,7 +49,7 @@ async function renderUsersSection() {
     if (!dni) return;
     if (!ordersByDni[dni]) ordersByDni[dni] = { count: 0, total: 0 };
     ordersByDni[dni].count++;
-    if (o.status === 'pagado') ordersByDni[dni].total += (o.total || 0);
+    if (o.status !== 'cancelado') ordersByDni[dni].total += orderPaidAmount(o);
   });
 
   updateUsersStats(profilesData, ordersByDni);
@@ -158,7 +158,7 @@ async function openUserOrdersModal(dni, name) {
       return;
     }
 
-    const STATUS_LABELS = { pendiente: 'Pendiente', pagado: 'Pagado', cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado' };
+    const STATUS_LABELS = { pendiente: 'Pendiente', separado: 'Separado', pagado: 'Pagado', cancelado: 'Cancelado', enviado: 'Enviado', entregado: 'Entregado' };
     list.innerHTML = userOrders.map(o => {
       const date  = new Date(o.date).toLocaleString('es-PE', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
       const items = (o.items || []).map(i => `${sanitize(i.productName)} ${sanitize(i.size)} ×${parseInt(i.quantity) || 1}`).join(' · ');

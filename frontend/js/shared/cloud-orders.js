@@ -6,11 +6,48 @@
 // una lista fija, textos con largo máximo) antes de que lo toque cualquier
 // pantalla del panel. Los textos igual se escapan al dibujarlos (sanitize()).
 
-const _ORDER_STATUSES = ['pendiente', 'pagado', 'cancelado', 'enviado', 'entregado'];
+const _ORDER_STATUSES = ['pendiente', 'separado', 'pagado', 'cancelado', 'enviado', 'entregado'];
 const _PAY_METHODS    = ['yape', 'plin', 'efectivo', 'transferencia'];
 
 const _str = (v, max) => String(v ?? '').slice(0, max);
 const _num = (v, def = 0) => { const n = parseFloat(v); return Number.isFinite(n) ? n : def; };
+const _money = v => Math.round(Math.max(0, Math.min(_num(v), 1000000)) * 100) / 100;
+
+// Pagos (abonos) del pedido — ver orderPayments() en data.js
+function _cleanPayments(list, fallbackDate) {
+  return (Array.isArray(list) ? list : [])
+    .slice(0, 50)
+    .map((p, i) => {
+      if (!p || typeof p !== 'object') return null;
+      const d = new Date(p.date);
+      return {
+        id:     _str(p.id, 40) || `p${i}`,
+        amount: _money(p.amount),
+        method: _PAY_METHODS.includes(p.method) ? p.method : null,
+        date:   isNaN(d) ? fallbackDate : d.toISOString(),
+        note:   _str(p.note, 120)
+      };
+    })
+    .filter(p => p && p.amount > 0);
+}
+
+function _newPaymentId() {
+  const bytes = new Uint8Array(4);
+  (window.crypto || window.msCrypto).getRandomValues(bytes);
+  return 'P' + Date.now().toString(36).toUpperCase() + Array.from(bytes, b => (b % 36).toString(36)).join('').toUpperCase();
+}
+
+// El método con más dinero: se guarda también en payment_method (columna vieja)
+function _mainMethod(payments) {
+  const byMethod = {};
+  payments.forEach(p => { if (p.method) byMethod[p.method] = (byMethod[p.method] || 0) + p.amount; });
+  return Object.entries(byMethod).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+}
+
+const _missingColumn = (err, col) =>
+  !!err && (err.code === '42703' || err.code === 'PGRST204') && (err.message || '').includes(col);
+
+const PAYMENTS_SQL_HINT = 'Para guardar adelantos y pagos divididos falta un paso en Supabase: pega el archivo backend/supabase/sql/2026-10-19-pagos-por-pedido.sql en SQL Editor y dale Run.';
 
 function _cleanOrderItems(items) {
   return (Array.isArray(items) ? items : [])
@@ -81,6 +118,7 @@ function orderFromDB(row) {
     total:         Math.max(0, Math.min(_num(row.total), 1000000)),
     status:        _ORDER_STATUSES.includes(row.status) ? row.status : 'pendiente',
     paymentMethod: _PAY_METHODS.includes(row.payment_method) ? row.payment_method : null,
+    payments:      _cleanPayments(row.payments, row.created_at),
     date:          row.created_at,
     updatedAt:     row.updated_at
   };
@@ -414,26 +452,39 @@ const CloudOrders = {
     return { summary, skipped: [...new Set([...cons.skipped, ...rest.skipped])] };
   },
 
-  // ── Cambiar estado ──────────────────────────────────────────────────────────
-  // Pasar a un estado de pago (pagado) DESCUENTA el stock; salir de él (a
-  // pendiente o cancelado) lo DEVUELVE. Se hace una sola vez por cambio:
-  //   1. se reclama el cambio en la base con "solo si sigue en el estado anterior",
-  //      así dos dispositivos/pestañas no pueden descontar el mismo pedido dos veces;
-  //   2. se ajusta el stock; si eso falla, se deshace el cambio de estado.
-  // Devuelve { stock: ['Marca Perfume −10 ml', …], skipped: […] }. Lanza si algo falla
-  // (antes fallaba en silencio y el pedido quedaba "pagado" sin descontar).
-  async updateStatus(id, status, paymentMethod = null) {
-    const result = { stock: [], skipped: [] };
+  // ── Cambiar estado / pagos ──────────────────────────────────────────────────
+  // Todo cambio de estado o de pagos pasa por aquí, una sola vez y contra la base:
+  //   1. se lee la fila fresca y plan(order) dice qué cambia —
+  //      { status, payments?, paymentMethod?, fallback? }— o null si no hay nada que hacer;
+  //   2. se reclama el cambio "solo si el pedido sigue como lo leímos" (mismo estado y
+  //      misma hora de edición): dos dispositivos no pueden descontar el mismo pedido
+  //      dos veces ni pisarse los pagos;
+  //   3. entrar a un estado que descuenta stock (separado/pagado) lo DESCUENTA; salir de
+  //      él (a pendiente o cancelado) lo DEVUELVE. Si el stock falla, se deshace el paso 2.
+  // Devuelve { stock: ['Marca Perfume −10 ml', …], skipped: […], order }. Lanza si algo
+  // falla (antes fallaba en silencio y el pedido quedaba "pagado" sin descontar).
+  async _commit(id, plan) {
+    const result = { stock: [], skipped: [], order: null };
+    const pick = c => {
+      const saved = { status: c.status };
+      if (c.payments !== undefined)      saved.payments      = c.payments;
+      if (c.paymentMethod !== undefined) saved.paymentMethod = c.paymentMethod;
+      return saved;
+    };
 
     if (!db) {
       const local = Orders.getById(id);
       if (!local) throw new Error('El pedido ya no existe.');
-      if (isPaidStatus(local.status) !== isPaidStatus(status)) {
-        const paying = isPaidStatus(status);
-        const r = await this._applyStockDelta(paying ? local.items : [], paying ? [] : local.items);
+      const order  = { ...local, payments: _cleanPayments(local.payments, local.date) };
+      const change = plan(order);
+      if (!change) { result.order = order; return result; }
+      if (isPaidStatus(order.status) !== isPaidStatus(change.status)) {
+        const consume = isPaidStatus(change.status);
+        const r = await this._applyStockDelta(consume ? order.items : [], consume ? [] : order.items);
         result.stock = r.summary; result.skipped = r.skipped;
       }
-      Orders.updateStatus(id, status, paymentMethod);
+      this._cacheLocal(id, pick(change));
+      result.order = { ...order, ...pick(change) };
       return result;
     }
 
@@ -450,47 +501,170 @@ const CloudOrders = {
       ({ data: row } = await db.from('pedidos').select('*').eq('id', id).maybeSingle());
       if (!row) throw new Error('No se pudo encontrar el pedido en Supabase.');
     }
-    const order   = orderFromDB(row);
-    const prevRaw = row.status;
-    if (prevRaw === status && !paymentMethod) return result;
+    const order = orderFromDB(row);
+    let change  = plan(order);
+    if (!change) { result.order = order; return result; }
 
-    // 2) Reclamar el cambio de estado (solo si el pedido sigue como lo leímos)
-    const patch = { status, updated_at: new Date().toISOString() };
-    if (paymentMethod) patch.payment_method = paymentMethod;
+    // 2) Reclamar el cambio (solo si el pedido sigue como lo leímos)
+    const prevRaw = row.status;
+    const toPatch = c => {
+      const p = { status: c.status, updated_at: new Date().toISOString() };
+      if (c.payments !== undefined)      p.payments       = c.payments;
+      if (c.paymentMethod !== undefined) p.payment_method = c.paymentMethod;
+      return p;
+    };
     const claim = payload => {
       let q = db.from('pedidos').update(payload).eq('id', id);
       q = prevRaw == null ? q.is('status', null) : q.eq('status', prevRaw);
+      q = row.updated_at == null ? q.is('updated_at', null) : q.eq('updated_at', row.updated_at);
       return q.select('id');
     };
-    let { data: claimed, error: claimErr } = await claim(patch);
-    if (claimErr && paymentMethod && (claimErr.code === '42703' || claimErr.code === 'PGRST204' || /payment_method/.test(claimErr.message || ''))) {
-      const { payment_method, ...rest } = patch;
-      ({ data: claimed, error: claimErr } = await claim(rest));
+    let patch = toPatch(change);
+    let claimed, claimErr;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      ({ data: claimed, error: claimErr } = await claim(patch));
+      if ('payments' in patch && _missingColumn(claimErr, 'payments')) {
+        // La base aún no tiene la columna de pagos: solo se puede marcar "pagado" de una vez
+        if (!change.fallback) throw new Error(PAYMENTS_SQL_HINT);
+        change = change.fallback;
+        patch  = toPatch(change);
+      } else if ('payment_method' in patch && _missingColumn(claimErr, 'payment_method')) {
+        delete patch.payment_method;
+      } else break;
     }
     if (claimErr) throw new Error('No se pudo actualizar el pedido: ' + (claimErr.message || claimErr.code));
     if (!claimed || !claimed.length) {
-      throw new Error('No se pudo cambiar el estado: el pedido fue modificado desde otro dispositivo o tu sesión de admin venció. Recarga la lista (o cierra sesión y vuelve a entrar).');
+      throw new Error('No se pudo guardar el cambio: el pedido fue modificado desde otro dispositivo o tu sesión de admin venció. Recarga la lista (o cierra sesión y vuelve a entrar).');
     }
 
-    // 3) Stock — solo al pasar de "no pagado" a "pagado" o al revés
-    const wasPaid = isPaidStatus(prevRaw);
-    const willPay = isPaidStatus(status);
-    if (wasPaid !== willPay) {
+    // 3) Stock — solo al entrar o salir de un estado que lo descuenta
+    if (isPaidStatus(prevRaw) !== isPaidStatus(change.status)) {
+      const consume = isPaidStatus(change.status);
       try {
-        const r = await this._applyStockDelta(willPay ? order.items : [], willPay ? [] : order.items);
+        const r = await this._applyStockDelta(consume ? order.items : [], consume ? [] : order.items);
         result.stock = r.summary; result.skipped = r.skipped;
       } catch (err) {
-        try {
-          await db.from('pedidos')
-            .update({ status: prevRaw ?? 'pendiente', updated_at: new Date().toISOString() })
-            .eq('id', id).eq('status', status);
-        } catch {}
+        const undo = { status: prevRaw ?? 'pendiente', updated_at: new Date().toISOString() };
+        if ('payments' in patch)       undo.payments       = row.payments ?? [];
+        if ('payment_method' in patch) undo.payment_method = row.payment_method ?? null;
+        try { await db.from('pedidos').update(undo).eq('id', id).eq('status', change.status); } catch {}
         throw err;
       }
     }
 
-    Orders.updateStatus(id, status, paymentMethod);
+    const saved = pick({
+      status:        change.status,
+      payments:      patch.payments,
+      paymentMethod: 'payment_method' in patch ? patch.payment_method : undefined
+    });
+    this._cacheLocal(id, saved);
+    result.order = { ...order, ...saved, updatedAt: patch.updated_at };
     return result;
+  },
+
+  // Refleja un cambio en la copia de este navegador (si la tiene)
+  _cacheLocal(id, fields) {
+    try {
+      const stored = Orders.getAll();
+      const idx = stored.findIndex(o => o.id === id);
+      if (idx === -1) return;
+      stored[idx] = { ...stored[idx], ...fields, updatedAt: new Date().toISOString() };
+      Orders.save(stored);
+    } catch {}
+  },
+
+  // Qué cambia al registrar `entries` ([{ amount, method, note }]) en un pedido.
+  // El estado sale de lo pagado: una parte → separado, todo → pagado.
+  _planPayments(order, entries) {
+    if (order.status === 'cancelado') throw new Error('Este pedido está cancelado. Pásalo a Pendiente antes de registrar un pago.');
+    const now   = new Date().toISOString();
+    const added = (entries || [])
+      .map(e => ({
+        id:     _newPaymentId(),
+        amount: _money(e.amount),
+        method: _PAY_METHODS.includes(e.method) ? e.method : null,
+        date:   now,
+        note:   _str(e.note, 120)
+      }))
+      .filter(p => p.amount > 0);
+    const balance = orderBalance(order);
+    const adding  = roundMoney(added.reduce((s, p) => s + p.amount, 0));
+    if (adding > balance + 0.005) throw new Error(`Es más de lo que falta pagar (S/ ${balance.toFixed(2)}).`);
+    if (!added.length && balance > 0) throw new Error('Escribe cuánto pagó.');
+
+    const payments = [...order.payments, ...added];   // solo pagos reales, nunca el de pedidos antiguos
+    let status = statusForPaid(roundMoney(orderPaidAmount(order) + adding), order.total);
+    if (status === 'pendiente') status = 'pagado';                                // total S/ 0 (cortesía)
+    if (['enviado', 'entregado'].includes(order.status)) status = order.status;   // estados viejos
+    if (status === order.status && !added.length) return null;
+
+    const change = { status, payments, paymentMethod: _mainMethod(payments) };
+    // Sin la columna de pagos solo se puede marcar "pagado" de una vez, con un método
+    if (!order.payments.length && added.length <= 1 && status === 'pagado') {
+      change.fallback = { status, paymentMethod: added[0]?.method ?? null };
+    }
+    return change;
+  },
+
+  // Registrar uno o más pagos a la vez (ej. Yape S/ 50 + efectivo S/ 30)
+  addPayments(id, entries) {
+    return this._commit(id, order => this._planPayments(order, entries));
+  },
+
+  // Quitar un pago anotado por error. Si no queda ninguno, el pedido vuelve a
+  // pendiente y el stock regresa.
+  removePayment(id, paymentId) {
+    return this._commit(id, order => {
+      const payments = order.payments.filter(p => p.id !== paymentId);
+      if (payments.length === order.payments.length) throw new Error('Ese pago ya no existe. Recarga la lista.');
+      let status = order.status;
+      if (status !== 'cancelado') {
+        status = statusForPaid(roundMoney(payments.reduce((s, p) => s + p.amount, 0)), order.total);
+        if (['enviado', 'entregado'].includes(order.status) && payments.length) status = order.status;
+      }
+      return { status, payments, paymentMethod: _mainMethod(payments) };
+    });
+  },
+
+  // Corregir el método de un pago (ej. se anotó Yape y fue efectivo)
+  setPaymentMethod(id, paymentId, method) {
+    const m = _PAY_METHODS.includes(method) ? method : null;
+    return this._commit(id, order => {
+      if (paymentId === 'legacy') return order.paymentMethod === m ? null : { status: order.status, paymentMethod: m };
+      if (!order.payments.some(p => p.id === paymentId)) throw new Error('Ese pago ya no existe. Recarga la lista.');
+      const payments = order.payments.map(p => p.id === paymentId ? { ...p, method: m } : p);
+      return { status: order.status, payments, paymentMethod: _mainMethod(payments) };
+    });
+  },
+
+  // Cambiar el estado a mano:
+  //   · pendiente → borra los pagos anotados (fue un error) y devuelve el stock
+  //   · cancelado → devuelve el stock; los pagos quedan anotados pero ya no cuentan
+  //   · pagado    → lo que falta se anota como un pago con `paymentMethod`
+  // Para "separado" se usa addPayments con el monto del adelanto.
+  updateStatus(id, status, paymentMethod = null) {
+    return this._commit(id, order => {
+      if (status === 'separado') throw new Error('Para separar un pedido, registra el adelanto.');
+      if (status === 'pagado') return this._planPayments(order, [{ amount: orderBalance(order), method: paymentMethod }]);
+      if (order.status === status) return null;
+      const change = { status };
+      if (status === 'pendiente' && order.payments.length) {
+        change.payments = [];
+        change.fallback = { status };
+      }
+      return change;
+    });
+  },
+
+  // Si cambió el total de un pedido con pagos, su estado se ajusta (ej. subió el total
+  // de uno pagado → queda separado con saldo). El stock no se mueve: separado y
+  // pagado lo descuentan igual.
+  _syncStatusWithPayments(id) {
+    return this._commit(id, order => {
+      if (!['separado', 'pagado'].includes(order.status) || !order.payments.length) return null;
+      const status = statusForPaid(orderPaidAmount(order), order.total);
+      return status === order.status || status === 'pendiente' ? null : { status };
+    });
   },
 
   // Editar un pedido. Si ya está pagado y cambian los productos/cantidades, el
@@ -546,6 +720,12 @@ const CloudOrders = {
       local[idx] = { ...local[idx], ...data, ...(newItems ? { items: newItems } : {}) };
       Orders.save(local);
     }
+
+    // Cambió el total de un pedido con pagos → su estado se ajusta a lo pagado
+    if ('total' in data) {
+      try { await this._syncStatusWithPayments(id); }
+      catch (err) { console.warn('[MICHT] No se pudo ajustar el estado del pedido al nuevo total:', err); }
+    }
     return result;
   },
 
@@ -562,10 +742,10 @@ const CloudOrders = {
     return {
       total:     all.length,
       pendiente: all.filter(o => o.status === 'pendiente').length,
+      separado:  all.filter(o => o.status === 'separado').length,
       pagado:    all.filter(o => o.status === 'pagado').length,
       cancelado: all.filter(o => o.status === 'cancelado').length,
-      revenue:   all.filter(o => o.status === 'pagado')
-                    .reduce((s, o) => s + o.total, 0)
+      revenue:   roundMoney(incomePayments(all).reduce((s, p) => s + p.amount, 0))
     };
   },
 

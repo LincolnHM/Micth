@@ -8,8 +8,8 @@
 // El estado vive en `Filter` y `Sort` (catalog-view.js). renderProducts() llama a
 // syncFilterUI() para que botones, conteos y la dirección queden al día.
 //
-// La dirección guarda los filtros (?tipo=arabe&para=hombre&aroma=dulce…): se
-// pueden compartir y sobreviven a una recarga.
+// La dirección guarda los filtros (/?tipo=arabe&para=hombre&aroma=dulce#catalogo):
+// se pueden compartir y sobreviven a una recarga.
 
 const _URL_KEYS = { tipo: 'type', para: 'gender', momento: 'occasion', aroma: 'aroma' };
 const _GENDER_LBL = { hombre: 'Hombre', mujer: 'Mujer', unisex: 'Solo unisex' };
@@ -37,10 +37,9 @@ function _filtersFromUrl() {
   }
 }
 
-// ─── Escribir los filtros en la dirección (sin crear historial) ─────────────
-function _filtersToUrl() {
-  // Solo en el catálogo: con una ficha abierta la dirección es la del perfume
-  if (location.pathname !== '/' || document.querySelector('.pd-modal.open')) return;
+// ─── Dirección de la pestaña Catálogo con los filtros actuales ──────────────
+// /?tipo=arabe&q=sauvage#catalogo (ver store-view.js)
+function catalogUrl() {
   const q = new URLSearchParams(location.search);
   Object.keys(_URL_KEYS).forEach(k => q.delete(k));
   ['q', 'fav', 'orden'].forEach(k => q.delete(k));
@@ -49,8 +48,16 @@ function _filtersToUrl() {
   if (Sort.mode !== 'relevance') q.set('orden', Sort.mode);
   if (Filter.search) q.set('q', Filter.search);
   const qs = q.toString();
-  const url = '/' + (qs ? '?' + qs : '');
-  if (url !== location.pathname + location.search) {
+  return '/' + (qs ? '?' + qs : '') + '#catalogo';
+}
+
+// ─── Escribir los filtros en la dirección (sin crear historial) ─────────────
+function _filtersToUrl() {
+  // Solo en la pestaña Catálogo: con una ficha abierta la dirección es la del perfume
+  if (location.pathname !== '/' || document.querySelector('.pd-modal.open')) return;
+  if (currentStoreView() !== 'catalogo') return;
+  const url = catalogUrl();
+  if (url !== location.pathname + location.search + location.hash) {
     try { history.replaceState(history.state, '', url); history.scrollRestoration = 'manual'; } catch (_) {}
   }
 }
@@ -164,19 +171,11 @@ function closeFilterSheet() {
 
 // ─── Ir al catálogo (menú "Catálogo" y lupa del encabezado) ─────────────────
 function scrollToCatalog({ focusSearch = false } = {}) {
-  if (typeof closePdModal === 'function' && document.querySelector('.pd-modal.open')) closePdModal({ restoreScroll: false });
-  const el = document.getElementById('catalogo');
-  if (!el) return;
-  const top = Math.max(0, el.offsetTop - 64);
-  if (focusSearch) {
-    // Salto directo + foco en el mismo toque: en el celular el foco corta un
-    // desplazamiento suave a medias, y el iPhone solo abre el teclado si el foco
-    // ocurre dentro del toque
-    window.scrollTo({ top, behavior: 'instant' });
-    document.getElementById('searchInput')?.focus({ preventScroll: true });
-  } else {
-    window.scrollTo({ top, behavior: 'smooth' });
-  }
+  // Salto directo + foco en el mismo toque: en el celular el foco corta un
+  // desplazamiento suave a medias, y el iPhone solo abre el teclado si el foco
+  // ocurre dentro del toque
+  goStoreView('catalogo', { instant: focusSearch });
+  if (focusSearch) document.getElementById('searchInput')?.focus({ preventScroll: true });
 }
 
 function _applyAndRender() {

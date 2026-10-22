@@ -632,13 +632,28 @@ html.pl-skip .page-loader { display: none; }
 
 .nav { display: none; }
 @media(min-width:768px) {
-  .nav { display: flex; gap: 1rem; }
-  .nav a { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text2); white-space: nowrap; }
-  .nav a:hover { color: var(--gold); }
+  .nav { display: flex; gap: 1.5rem; }
+  /* Sin mayúsculas ni letras separadas: con 6 opciones así se veía recargado */
+  .nav a { font-size: .88rem; font-weight: 500; letter-spacing: .01em; color: var(--text2); white-space: nowrap; transition: color .2s ease; }
+  .nav a:hover { color: var(--white); }
 }
-@media(min-width:1024px) {
-  .nav { gap: 1.5rem; }
-  .nav a { font-size: .78rem; letter-spacing: .1em; }
+.nav a.nav-accent { color: var(--gold-l); }   /* Perfumes enteros: solo el color lo destaca */
+/* La tienda (.header-store) tiene 6 opciones: el menú completo entra sin
+   aplastar el logo desde 1160px (con sesión iniciada el nombre ocupa más).
+   Hasta ahí se usa el de hamburguesa (Nosotros y Contacto, con menos opciones,
+   siguen en 768px). */
+@media (min-width: 768px) and (max-width: 1159px) {
+  .header-store .nav, .header-store .header-auth { display: none; }
+  .header-store .menu-btn { display: flex !important; }
+  .header-store ~ .mobile-menu { display: flex !important; }
+}
+/* Tres zonas: logo a la izquierda, menú centrado y los íconos a la derecha.
+   "1fr auto 1fr" (y no minmax(0,1fr)): si el nombre del cliente ocupa más, su
+   columna crece en vez de montarse sobre el menú. */
+@media (min-width: 1160px) {
+  .header-store .header-inner { display: grid; grid-template-columns: 1fr auto 1fr; gap: 1.5rem; }
+  .header-store .header-right { justify-self: end; }
+  .header-store .nav { gap: 1.9rem; }
 }
 
 .header-right { display: flex; align-items: center; gap: .5rem; flex-shrink: 0; }
@@ -1167,6 +1182,169 @@ html.pl-skip .page-loader { display: none; }
 .combo-card-add-btn:hover { background: var(--gold-l); }
 .combo-card-add-btn.added { background: var(--green); color: #fff; }
 .combos-empty { text-align: center; padding: 2.5rem 1rem; color: var(--text2); font-size: .85rem; }
+
+/* ─── Próximamente (js/store/coming-soon.js) ──────────────── */
+.soon-section { padding: 2.25rem 0 1.5rem; }
+.soon-track {
+  display: flex; gap: 1rem;
+  overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-left: 1rem;
+  padding: .4rem 1rem 1rem;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.soon-track::-webkit-scrollbar { display: none; }
+/* centradas si son pocas; con margin auto (y no justify-content) no se corta el inicio al deslizar */
+.soon-card:first-child { margin-left: auto; }
+.soon-card:last-child { margin-right: auto; }
+.soon-card {
+  scroll-snap-align: start;
+  flex: 0 0 min(62vw, 230px);
+  display: flex; flex-direction: column;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+}
+.soon-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,.4), 0 0 0 1px rgba(124,79,176,.3); border-color: rgba(124,79,176,.4); }
+.soon-img-wrap {
+  position: relative; aspect-ratio: 4 / 5;
+  background: linear-gradient(150deg, #ffffff 0%, #f4f4f4 100%);
+}
+.soon-img-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.soon-badge {
+  position: absolute; top: .6rem; left: .6rem;
+  background: var(--gold); color: #fff;
+  font-size: .62rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  padding: .28rem .65rem; border-radius: 50px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.3);
+}
+.soon-info { flex: 1; display: flex; flex-direction: column; gap: .3rem; padding: .9rem 1rem 1rem; }
+.soon-brand { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text3); }
+.soon-name { font-family: var(--font-serif); font-size: 1.05rem; font-weight: 600; color: var(--white); line-height: 1.25; }
+.soon-dupe { font-size: .74rem; color: var(--text2); }
+.soon-dupe strong { color: var(--gold-l); font-weight: 600; }
+.soon-tags { font-size: .72rem; color: var(--text3); }
+.soon-notes {
+  font-size: .76rem; color: var(--text2); line-height: 1.45; margin-bottom: .4rem;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.soon-notify {
+  margin-top: auto; padding: .6rem .7rem; text-align: center;
+  font-size: .78rem; font-weight: 700; color: var(--gold-l);
+  border: 1px solid rgba(124,79,176,.45); border-radius: var(--r);
+  transition: background var(--tr), color var(--tr), border-color var(--tr);
+}
+.soon-notify:hover { background: var(--gold); border-color: var(--gold); color: #fff; }
+
+/* ─── Recién llegados (js/store/new-arrivals.js) ──────────────
+   Usa las tarjetas de Próximamente; cambia la etiqueta y el pie */
+.new-section { padding-top: 2.5rem; }
+.new-card { cursor: pointer; }
+.new-badge {
+  background: linear-gradient(135deg, #f7d488 0%, #e0a23a 100%); color: #2a1800;
+  box-shadow: 0 4px 14px rgba(224,162,58,.4);
+  animation: newBadgeGlow 2.8s ease-in-out infinite;
+}
+@keyframes newBadgeGlow {
+  0%, 100% { box-shadow: 0 4px 14px rgba(224,162,58,.35); }
+  50%      { box-shadow: 0 4px 20px rgba(247,212,136,.7); }
+}
+.new-card .soon-img-wrap img { transition: transform .5s ease; }
+.new-card:hover .soon-img-wrap img { transform: scale(1.06); }
+.new-foot { margin-top: auto; padding-top: .45rem; display: flex; flex-direction: column; gap: .5rem; }
+.new-price { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; color: var(--gold-l); line-height: 1; }
+.new-price small { font-family: var(--font-sans, inherit); font-size: .7rem; font-weight: 500; color: var(--text3); }
+.new-cta {
+  padding: .6rem .7rem; text-align: center; cursor: pointer;
+  font-size: .78rem; font-weight: 700; color: #fff;
+  background: var(--gold); border: 1px solid var(--gold); border-radius: var(--r);
+  transition: background var(--tr), border-color var(--tr);
+}
+.new-card:hover .new-cta, .new-cta:focus-visible { background: var(--gold-l); border-color: var(--gold-l); }
+.new-actions { display: flex; justify-content: center; margin-top: .9rem; }
+.new-all {
+  padding: .7rem 1.4rem; border-radius: 50px; cursor: pointer;
+  font-size: .85rem; font-weight: 700; color: var(--gold-l);
+  background: transparent; border: 1px solid rgba(124,79,176,.45);
+  transition: background var(--tr), color var(--tr), border-color var(--tr);
+}
+.new-all:hover { background: var(--gold); border-color: var(--gold); color: #fff; }
+@media (prefers-reduced-motion: reduce) {
+  .new-badge { animation: none; }
+  .new-card .soon-img-wrap img { transition: none; }
+}
+
+/* ─── Cómo huele, de un vistazo (accordStripHtml, catalog-view.js) ─── */
+.card-accords { display: flex; flex-direction: column; gap: .35rem; margin: .15rem 0 .1rem; }
+.accord-strip {
+  display: flex; gap: 2px; height: 6px;
+  border-radius: 50px; overflow: hidden; background: rgba(255,255,255,.05);
+}
+.accord-strip span { display: block; min-width: 6px; }
+.accord-legend { display: flex; flex-wrap: wrap; gap: .2rem .6rem; font-size: .66rem; line-height: 1.3; color: var(--text2); }
+.accord-legend-item { display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap; }
+.accord-legend-item i { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+/* En el celular las tarjetas del catálogo son angostas: dos nombres bastan */
+@media (max-width: 600px) {
+  .product-card .accord-legend-item:nth-child(n+3) { display: none; }
+}
+
+/* Etiqueta NUEVO de las tarjetas del catálogo (antes no tenía estilo y casi no se veía) */
+.badge-new {
+  align-self: flex-start;
+  font-size: .6rem; font-weight: 800; letter-spacing: .08em;
+  padding: .2rem .6rem; border-radius: 50px;
+  background: linear-gradient(135deg, #f7d488 0%, #e0a23a 100%); color: #2a1800;
+  box-shadow: 0 3px 10px rgba(224,162,58,.35);
+}
+
+/* ─── Pestañas Inicio / Catálogo (js/store/store-view.js) ─────
+   data-view lo pone un script del <head> antes de pintar */
+html[data-view="catalogo"] .view-inicio,
+html:not([data-view="catalogo"]) .view-catalogo { display: none !important; }
+/* Al cambiar de pestaña (o al cerrar una ficha) lo que aparece entra suave */
+@keyframes viewIn { from { opacity: 0; } to { opacity: 1; } }
+.view-inicio, .view-catalogo { animation: viewIn .3s ease; }
+@media (prefers-reduced-motion: reduce) { .view-inicio, .view-catalogo { animation: none; } }
+
+/* Pestaña actual en el menú: texto blanco y la línea morada debajo */
+.nav a[aria-current="page"] { color: var(--white); }
+@media (min-width: 768px) { .nav a[aria-current="page"]::after { width: 100%; height: 2px; bottom: -6px; border-radius: 2px; } }
+.mobile-nav-link[aria-current="page"] { color: var(--gold-l); }
+
+/* ─── Inicio: accesos al catálogo ─────────────────────────── */
+.cat-entry { padding: 2.25rem 0 2.5rem; }
+.cat-entry-grid {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem;
+  max-width: 980px; margin: 0 auto;
+}
+@media (min-width: 768px) { .cat-entry-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.1rem; } }
+.cat-entry-card {
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--r-lg);
+  text-decoration: none;
+  transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+}
+.cat-entry-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,.4), 0 0 0 1px rgba(124,79,176,.3); border-color: rgba(124,79,176,.4); }
+.cat-entry-card:focus-visible { outline: 2px solid var(--gold-l); outline-offset: 2px; }
+/* la foto va en posición absoluta: si no, una foto alta estira su tarjeta y quedan desparejas */
+.cat-entry-img { display: block; position: relative; aspect-ratio: 1; background: linear-gradient(150deg, #ffffff 0%, #f4f4f4 100%); }
+.cat-entry-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: .8rem; box-sizing: border-box; }
+.cat-entry-info { display: flex; flex-direction: column; gap: .15rem; padding: .8rem .95rem .9rem; }
+.cat-entry-name { font-family: var(--font-serif); font-size: 1.08rem; font-weight: 600; color: var(--white); line-height: 1.2; }
+.cat-entry-count { font-size: .74rem; color: var(--text3); min-height: 1.1em; }
+.cat-entry-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .75rem; margin-top: 1.6rem; }
+.cat-entry-all {
+  display: inline-flex; align-items: center; gap: .4rem;
+  background: var(--gold); color: #fff; font-weight: 700; font-size: .9rem;
+  padding: .8rem 1.6rem; border-radius: 999px; text-decoration: none;
+  box-shadow: 0 8px 22px rgba(124,79,176,.3); transition: background var(--tr), transform var(--tr);
+}
+.cat-entry-all:hover { background: var(--gold-l); transform: translateY(-2px); }
+.cat-entry-finder {
+  background: transparent; color: var(--gold-l); font-weight: 600; font-size: .86rem;
+  padding: .75rem 1.25rem; border: 1px solid rgba(124,79,176,.45); border-radius: 999px; cursor: pointer;
+  transition: background var(--tr), color var(--tr);
+}
+.cat-entry-finder:hover { background: rgba(124,79,176,.15); color: #fff; }
 
 /* ─── Carrito lateral ──────────────────────────────────── */
 .cart-sidebar {
@@ -1870,6 +2048,7 @@ html.pl-skip .page-loader { display: none; }
 
 .status-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .22rem .65rem; border-radius: 50px; font-size: .7rem; font-weight: 600; }
 .status-pendiente { background: rgba(255,152,0,.12); color: var(--orange); border: 1px solid rgba(255,152,0,.25); }
+.status-separado  { background: rgba(255,202,40,.12); color: #ffca28; border: 1px solid rgba(255,202,40,.32); }
 .status-pagado    { background: rgba(76,175,80,.12); color: var(--green); border: 1px solid rgba(76,175,80,.25); }
 .status-enviado   { background: rgba(33,150,243,.12); color: #64b5f6; border: 1px solid rgba(33,150,243,.25); }
 .status-entregado { background: rgba(124,79,176,.12); color: var(--gold); border: 1px solid rgba(124,79,176,.25); }
@@ -1877,6 +2056,7 @@ html.pl-skip .page-loader { display: none; }
 
 /* Columnas tabla pedidos */
 .order-col-id      { min-width: 118px; vertical-align: top; }
+.order-col-delivery { min-width: 132px; vertical-align: top; }
 .order-col-client  { min-width: 120px; vertical-align: top; }
 .order-col-items   { min-width: 180px; max-width: 270px; vertical-align: top; }
 .order-col-total   { min-width: 80px;  vertical-align: top; text-align: right; white-space: nowrap; }
@@ -1900,11 +2080,100 @@ html.pl-skip .page-loader { display: none; }
 }
 
 /* Badges de método de pago */
-.pay-badge { display: inline-flex; align-items: center; gap: .25rem; padding: .14rem .48rem; border-radius: 50px; font-size: .67rem; font-weight: 600; }
+.pay-badge { display: inline-flex; align-items: center; gap: .25rem; padding: .14rem .48rem; border-radius: 50px; font-size: .67rem; font-weight: 600; white-space: nowrap; }
 .pay-efectivo      { background: rgba(76,175,80,.12);  color: #81c784; border: 1px solid rgba(76,175,80,.25); }
 .pay-yape          { background: rgba(124,58,237,.12); color: #a78bfa; border: 1px solid rgba(124,58,237,.25); }
 .pay-plin          { background: rgba(41,182,246,.12); color: #4fc3f7; border: 1px solid rgba(41,182,246,.25); }
 .pay-transferencia { background: rgba(102,187,106,.12);color: #a5d6a7; border: 1px solid rgba(102,187,106,.25); }
+.pay-none          { background: rgba(255,255,255,.05); color: var(--text2); border: 1px solid var(--border-l); }
+.pay-chips { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .35rem; }
+
+/* Entrega: etiqueta grande para ver de un vistazo si es envío, recojo o delivery */
+.delivery-badge { display: inline-flex; align-items: center; gap: .5rem; padding: .4rem .7rem .4rem .55rem; border-radius: 10px; border: 1px solid; line-height: 1.15; max-width: 100%; }
+.delivery-badge-icon { font-size: 1.35rem; line-height: 1; flex-shrink: 0; }
+.delivery-badge-text { display: flex; flex-direction: column; min-width: 0; font-size: .9rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.delivery-badge-text small { margin-top: .1rem; font-size: .66rem; font-weight: 600; letter-spacing: .02em; text-transform: none; opacity: .85; overflow-wrap: anywhere; }
+.delivery-envio    { background: rgba(33,150,243,.14); border-color: rgba(66,165,245,.5);  color: #64b5f6; }
+.delivery-recojo   { background: rgba(124,79,176,.16); border-color: rgba(155,114,201,.55); color: #c4a3ea; }
+.delivery-delivery { background: rgba(0,150,136,.14);  border-color: rgba(38,166,154,.5);  color: #4db6ac; }
+/* Franja de color a la izquierda de cada pedido, según la entrega */
+.orders-table tr.deliv-envio    > td:first-child { box-shadow: inset 4px 0 0 #42a5f5; }
+.orders-table tr.deliv-recojo   > td:first-child { box-shadow: inset 4px 0 0 #9b72c9; }
+.orders-table tr.deliv-delivery > td:first-child { box-shadow: inset 4px 0 0 #26a69a; }
+
+/* Pagado / falta (pedidos separados con adelanto) */
+.order-pay-progress { width: 100%; max-width: 110px; height: 5px; margin: .45rem 0 .3rem auto; background: rgba(255,255,255,.08); border-radius: 3px; overflow: hidden; }
+.order-pay-progress span { display: block; height: 100%; background: linear-gradient(90deg, #ffb300, #ffca28); border-radius: 3px; }
+.order-pay-line { font-size: .7rem; color: var(--text2); }
+.order-pay-due  { font-size: .76rem; font-weight: 700; color: #ffb74d; }
+.btn-order-collect { width: 100%; padding: .32rem .6rem; font-size: .74rem; font-weight: 700; white-space: nowrap; border-radius: var(--r); cursor: pointer; background: rgba(255,179,0,.12); color: #ffca28; border: 1px solid rgba(255,179,0,.4); transition: background .15s; }
+.btn-order-collect:hover { background: rgba(255,179,0,.22); }
+
+/* Pagos en el detalle del pedido */
+.order-detail-top { display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; padding-bottom: .55rem; border-bottom: 1px solid var(--border); }
+.order-pay-section { display: flex; flex-direction: column; gap: .45rem; padding: .7rem .8rem; background: rgba(255,255,255,.02); border: 1px solid var(--border-l); border-radius: var(--r); }
+.order-pay-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; font-size: .74rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text2); }
+.order-pay-head .btn-order-collect { width: auto; letter-spacing: 0; text-transform: none; }
+.pay-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto 26px; align-items: center; gap: .45rem; padding: .35rem 0; border-bottom: 1px dashed var(--border); font-size: .8rem; }
+.pay-row-date { font-size: .74rem; color: var(--text2); }
+.pay-row-method { padding: .22rem .4rem; background: var(--bg2); border: 1px solid var(--border-l); border-radius: var(--r); color: var(--text); font-size: .76rem; }
+.pay-row-amount { color: var(--text); white-space: nowrap; }
+.pay-row-del { width: 26px; height: 26px; padding: 0; background: none; border: 1px solid rgba(239,83,80,.35); border-radius: var(--r); color: #ef5350; font-size: .8rem; line-height: 1; cursor: pointer; }
+.pay-row-del:hover { background: #ef5350; color: #fff; }
+.pay-row-note { grid-column: 1 / -1; font-size: .72rem; font-style: italic; color: var(--text3); }
+.order-pay-totals { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; padding-top: .2rem; font-size: .8rem; color: var(--text2); }
+.order-pay-totals strong { color: var(--text); }
+.order-pay-ok    { font-weight: 700; color: var(--green); }
+.order-pay-empty { margin: 0; font-size: .8rem; color: var(--text3); }
+.order-pay-note  { margin: 0; font-size: .72rem; color: #ef9a9a; }
+.order-ship-warn { margin: .25rem 0 0; padding: .5rem .7rem; border-radius: var(--r); background: rgba(255,179,0,.1); border: 1px solid rgba(255,179,0,.35); color: #ffca28; font-size: .8rem; font-weight: 600; }
+@media (max-width: 480px) {
+  .pay-row { grid-template-columns: minmax(0, 1fr) auto 26px; }
+  .pay-row-date { grid-column: 1 / -1; }
+}
+
+/* Ventana "Registrar pago" (adelanto, saldo o pago completo; uno o varios métodos) */
+.paydlg-overlay { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgba(0,0,0,.75); opacity: 0; transition: opacity .2s ease; }
+.paydlg-overlay.open { opacity: 1; }
+.paydlg { display: flex; flex-direction: column; width: 100%; max-width: 440px; max-height: 92vh; background: #161616; border: 1px solid var(--gold-d); border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.6); }
+.paydlg-head { display: flex; align-items: center; justify-content: space-between; padding: .9rem 1.1rem; border-bottom: 1px solid var(--border); }
+.paydlg-head h3 { margin: 0; font-family: var(--font-serif); font-size: 1.05rem; color: var(--gold-l); }
+.paydlg-close { padding: .2rem; background: none; border: none; color: #888; font-size: 1.2rem; line-height: 1; cursor: pointer; }
+.paydlg-body { display: flex; flex-direction: column; gap: .8rem; padding: 1rem 1.1rem; overflow-y: auto; }
+.paydlg-order { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .6rem; }
+.paydlg-customer { margin-top: .15rem; font-size: .85rem; color: var(--text); }
+.paydlg-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; }
+.paydlg-summary > div { display: flex; flex-direction: column; gap: .1rem; padding: .45rem .55rem; background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: var(--r); }
+.paydlg-summary span { font-size: .66rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text2); }
+.paydlg-summary strong { font-size: .92rem; color: var(--text); white-space: nowrap; }
+.paydlg-summary .paydlg-due { background: rgba(255,179,0,.08); border-color: rgba(255,179,0,.4); }
+.paydlg-summary .paydlg-due strong { color: #ffca28; }
+.paydlg-question { display: flex; flex-direction: column; gap: .15rem; margin: 0; font-size: .86rem; font-weight: 700; color: var(--text); }
+.paydlg-question small { font-size: .72rem; font-weight: 400; color: var(--text2); }
+.paydlg-methods, .paydlg-more { display: flex; flex-direction: column; gap: .45rem; }
+.paydlg-more[hidden] { display: none; }
+.paydlg-row { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; align-items: center; gap: .5rem; }
+.paydlg-method { font-size: .85rem; font-weight: 600; color: var(--text); }
+.paydlg-input { position: relative; display: flex; align-items: center; }
+.paydlg-input span { position: absolute; left: .65rem; font-size: .82rem; color: var(--text2); pointer-events: none; }
+.paydlg-input input { width: 100%; padding: .55rem .6rem .55rem 2rem; background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: var(--r); color: var(--text); font-size: 1rem; font-weight: 600; }
+.paydlg-input input:focus { outline: none; border-color: var(--gold-d); }
+.paydlg-fill { padding: .5rem .7rem; font-size: .74rem; font-weight: 700; border-radius: var(--r); cursor: pointer; background: var(--gold-dim); color: var(--gold-l); border: 1px solid rgba(124,79,176,.35); }
+.paydlg-fill:hover { background: rgba(124,79,176,.25); }
+.paydlg-more-btn { align-self: flex-start; padding: .1rem 0; background: none; border: none; color: var(--text2); font-size: .76rem; text-decoration: underline; cursor: pointer; }
+.paydlg-result { padding: .6rem .75rem; border: 1px solid var(--border); border-radius: var(--r); font-size: .84rem; }
+.paydlg-result.muted { color: var(--text2); }
+.paydlg-result.ok    { color: #81c784; background: rgba(76,175,80,.08);  border-color: rgba(76,175,80,.35); }
+.paydlg-result.warn  { color: #ffca28; background: rgba(255,179,0,.08);  border-color: rgba(255,179,0,.35); }
+.paydlg-result.error { color: #ef9a9a; background: rgba(239,83,80,.08);  border-color: rgba(239,83,80,.35); }
+.paydlg-stock { font-size: .74rem; line-height: 1.5; white-space: pre-line; color: var(--text2); }
+.paydlg-foot { display: flex; justify-content: flex-end; gap: .6rem; padding: .85rem 1.1rem; border-top: 1px solid var(--border); }
+.paydlg-save:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 420px) {
+  .paydlg-body { padding: .9rem; }
+  .paydlg-row { grid-template-columns: 92px minmax(0, 1fr) auto; gap: .4rem; }
+  .paydlg-summary strong { font-size: .82rem; }
+}
 
 /* Columna acciones */
 .order-actions-stack { display: flex; flex-direction: column; gap: .38rem; }
@@ -2680,12 +2949,20 @@ html.pl-skip .page-loader { display: none; }
   }
   #section-orders .orders-table tr.order-row > td { display: block; padding: 0; border: 0; min-width: 0; max-width: none; background-color: transparent !important; }
   #section-orders .orders-table tr:hover td { background-color: transparent !important; }
-  #section-orders .order-col-id      { grid-column: 1; grid-row: 1; overflow-wrap: anywhere; }
-  #section-orders .order-col-status  { grid-column: 2; grid-row: 1; text-align: right; }
-  #section-orders .order-col-client  { grid-column: 1 / -1; grid-row: 2; }
-  #section-orders .order-col-items   { grid-column: 1; grid-row: 3; overflow-wrap: anywhere; }
-  #section-orders .order-col-total   { grid-column: 2; grid-row: 3; text-align: right; }
-  #section-orders .order-col-actions { grid-column: 1 / -1; grid-row: 4; }
+  /* Arriba: la entrega (bien grande) y el estado; luego id, cliente, productos + total, acciones */
+  #section-orders .order-col-delivery { grid-column: 1; grid-row: 1; }
+  #section-orders .order-col-status   { grid-column: 2; grid-row: 1; text-align: right; }
+  #section-orders .order-col-id       { grid-column: 1 / -1; grid-row: 2; overflow-wrap: anywhere; }
+  #section-orders .order-col-client   { grid-column: 1 / -1; grid-row: 3; }
+  #section-orders .order-col-items    { grid-column: 1; grid-row: 4; overflow-wrap: anywhere; }
+  #section-orders .order-col-total    { grid-column: 2; grid-row: 4; text-align: right; }
+  #section-orders .order-col-actions  { grid-column: 1 / -1; grid-row: 5; }
+  #section-orders .pay-chips { justify-content: flex-end; }
+  /* La franja de color de la entrega va en el borde izquierdo de la tarjeta */
+  #section-orders .orders-table tr.order-row > td:first-child { box-shadow: none; }
+  #section-orders .orders-table tr.deliv-envio    { border-left: 4px solid #42a5f5; }
+  #section-orders .orders-table tr.deliv-recojo   { border-left: 4px solid #9b72c9; }
+  #section-orders .orders-table tr.deliv-delivery { border-left: 4px solid #26a69a; }
 
   /* Acciones del pedido */
   .order-actions-stack { gap: .3rem; }
@@ -3040,6 +3317,9 @@ html.pl-skip .page-loader { display: none; }
 .social-item a[data-social="instagram"] ~ .social-tooltip {
   background: linear-gradient(45deg, #405de6, #5b51db, #b33ab4, #c135b4, #e1306c, #fd1f1f);
 }
+/* TikTok: sus dos colores de marca (celeste y rosado) */
+.social-item a[data-social="tiktok"] .filled,
+.social-item a[data-social="tiktok"] ~ .social-tooltip { background: linear-gradient(45deg, #25f4ee, #fe2c55); }
 
 /* ── Print CSS para exportar catálogo en PDF ───────────── */
 @media print {
@@ -3269,13 +3549,18 @@ html.pl-skip .page-loader { display: none; }
   z-index: 210;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  gap: 3rem;
+  /* Espacios y letra según el alto de la pantalla: las 7 opciones entran
+     también en un celular bajito (y si aun así no entra, se desliza) */
+  gap: clamp(1.25rem, 4vh, 3rem);
+  overflow-y: auto;
   opacity: 0;
   pointer-events: none;
   transition: opacity .4s cubic-bezier(.22,1,.36,1);
 }
+/* centrado con margin:auto, que a diferencia de justify-content no corta arriba */
+.mobile-menu > :first-child { margin-top: auto; }
+.mobile-menu > :last-child { margin-bottom: auto; }
 .mobile-menu.open { opacity: 1; pointer-events: auto; }
 @media(min-width:768px) { .mobile-menu { display: none !important; } }
 
@@ -3293,11 +3578,12 @@ html.pl-skip .page-loader { display: none; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2.25rem;
+  gap: clamp(.9rem, 3.4vh, 2.25rem);
 }
 .mobile-nav-link {
   font-family: var(--font-serif);
-  font-size: clamp(1.9rem, 9vw, 2.6rem);
+  font-size: clamp(1.5rem, min(9vw, 4.6vh), 2.6rem);
+  line-height: 1.25;
   font-weight: 600;
   color: var(--white);
   text-decoration: none;
@@ -4301,6 +4587,10 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   box-shadow: 0 8px 24px rgba(225,48,108,.35);
   border-color: rgba(225,48,108,.35);
 }
+.footer-social-list .social-item a[data-social="tiktok"]:hover {
+  box-shadow: 0 8px 24px rgba(254,44,85,.35);
+  border-color: rgba(254,44,85,.35);
+}
 .footer-social-list .social-item a svg {
   width: 20px;
   height: 20px;
@@ -5011,46 +5301,11 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
    SISTEMA DE USUARIOS — Auth Modales & Header
    ════════════════════════════════════════════════════════ */
 
-/* ─── Botones de auth en header desktop ──────────────────────────────────── */
+/* ─── Cuenta en el header desktop (ícono sin sesión, nombre con sesión) ──── */
 .header-auth {
   display: flex;
   align-items: center;
   gap: .5rem;
-}
-
-.header-auth-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  font-family: var(--font-sans);
-  font-size: .78rem;
-  font-weight: 500;
-  padding: .42rem .9rem;
-  border-radius: 50px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: all var(--tr);
-  white-space: nowrap;
-}
-
-.header-auth-login {
-  background: transparent;
-  border-color: rgba(124,79,176,.35);
-  color: var(--text);
-}
-.header-auth-login:hover {
-  border-color: var(--gold);
-  color: var(--gold);
-}
-
-.header-auth-register {
-  background: var(--gold);
-  color: #fff;
-  font-weight: 600;
-}
-.header-auth-register:hover {
-  background: var(--gold-l);
-  transform: translateY(-1px);
 }
 
 /* ─── Display de usuario logueado en header ──────────────────────────────── */
@@ -7970,13 +8225,16 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 /* ─── Anuncio de bienvenida (modal al entrar a la tienda) ────────────────── */
 
 .announce-modal {
+  --ann-pad: clamp(.9rem, 3vmin, 2.25rem);
   position: fixed;
   inset: 0;
   z-index: 10000;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.25rem;
+  padding: var(--ann-pad);
+  /* en un celular bajito, si el anuncio no entra, se desliza (el box se
+     centra con margin:auto, que a diferencia de align-items no corta arriba) */
+  overflow-y: auto;
+  overscroll-behavior: contain;
   opacity: 0;
   pointer-events: none;
   transition: opacity .25s ease;
@@ -7984,7 +8242,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 .announce-modal.open { opacity: 1; pointer-events: auto; }
 
 .announce-backdrop {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: rgba(0,0,0,.72);
   backdrop-filter: blur(6px);
@@ -7992,6 +8250,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 
 .announce-box {
   position: relative;
+  margin: auto;
   width: 100%;
   max-width: 380px;
   background: var(--card);
@@ -8020,18 +8279,30 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 }
 .announce-close:hover { background: rgba(124,79,176,.15); color: var(--gold); }
 
-/* Variante con foto: la imagen llena el modal, la X flota encima */
-.announce-box-img {
+/* Variante con foto: la foto se ve COMPLETA (nunca recortada) y tan grande
+   como entre en la pantalla — en PC crece, en celular ocupa el ancho. El box
+   toma el ancho de la foto; announcement.js pone --ann-ratio (ancho/alto de
+   la foto) y --ann-body-h (alto del texto de abajo) para que todo entre.
+   Selectores dobles para que las reglas por tamaño de pantalla de
+   .announce-box no le devuelvan el padding. */
+.announce-box.announce-box-img {
+  width: auto;
+  max-width: 100%;
   padding: 0;
   overflow: hidden;
-  max-width: 420px;
 }
-.announce-img-wrap { width: 100%; line-height: 0; }
+.announce-img-wrap { line-height: 0; min-width: 0; }
 .announce-img {
-  width: 100%;
-  max-height: 66vh;
-  object-fit: cover;
+  --ann-max-h: calc(100vh - 2 * var(--ann-pad) - 2px);
   display: block;
+  /* lo más alta que entre (hasta 1000px de ancho), sin bajar de 280px de
+     ancho: en un celular bajito se desliza en vez de quedar diminuta */
+  width: max(280px, min(1000px, (var(--ann-max-h) - var(--ann-body-h, 0px)) * var(--ann-ratio, .5625)));
+  max-width: 100%;
+  height: auto;
+}
+@supports (height: 100dvh) {
+  .announce-img { --ann-max-h: calc(100dvh - 2 * var(--ann-pad) - 2px); }
 }
 .announce-close-overlay {
   background: rgba(0,0,0,.55);
@@ -8041,8 +8312,12 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 }
 .announce-close-overlay:hover { background: rgba(0,0,0,.75); color: #fff; }
 .announce-box-img .announce-body {
-  padding: 1.4rem 1.6rem 1.7rem;
+  width: 0;
+  min-width: 100%; /* el texto se acomoda al ancho de la foto, no lo agranda */
+  box-sizing: border-box;
+  padding: 1.1rem 1.4rem 1.3rem;
 }
+.announce-box-img .announce-body > :last-child { margin-bottom: 0; }
 .announce-box-img .announce-emoji { display: none; }
 
 .announce-emoji {
@@ -8090,6 +8365,34 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   .announce-title { font-size: 1.15rem; }
 }
 
+/* PC / pantallas grandes: todo un poco más grande */
+@media (min-width: 900px) {
+  .announce-box { max-width: 470px; padding: 2.6rem 2.3rem 2.3rem; }
+  .announce-close { width: 38px; height: 38px; font-size: .95rem; top: .9rem; right: .9rem; }
+  .announce-emoji { font-size: 3rem; }
+  .announce-title { font-size: 1.55rem; }
+  .announce-message { font-size: 1rem; }
+  .announce-cta { font-size: .95rem; padding: .85rem 1.2rem; }
+  .announce-box-img .announce-body { padding: 1.3rem 1.8rem 1.5rem; }
+}
+
+/* PC con afiche vertical y texto: foto a la izquierda con todo el alto de la
+   pantalla, texto a la derecha (en vez de debajo, donde le quitaría alto) */
+@media (min-width: 900px) and (orientation: landscape) {
+  .announce-box.announce-box-side { display: flex; text-align: left; }
+  .announce-box-side .announce-img-wrap { flex: 0 1 auto; }
+  .announce-box-side .announce-img { width: calc(var(--ann-max-h) * var(--ann-ratio, .5625)); }
+  .announce-box-side .announce-body {
+    flex: none;
+    width: clamp(280px, 24vw, 360px);
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 3.5rem 2rem 2rem;
+  }
+}
+
 
 
 /* ════════════════════════════════════════════════════════
@@ -8107,7 +8410,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 /* ── Agotados: se atenúa el contenido pero no el botón de aviso ─── */
 .product-card.out-of-stock { opacity: 1; }
 .product-card.out-of-stock :is(.product-img, .product-img-placeholder, .product-meta-row, .product-name,
-  .product-dupe, .product-content-desc, .product-tags, .product-desc, .price-from, .sizes-row) { opacity: .45; }
+  .product-dupe, .product-content-desc, .product-tags, .card-accords, .product-desc, .price-from, .sizes-row) { opacity: .45; }
 .product-card.out-of-stock .pd-open-btn { pointer-events: auto; }
 .btn-notify-wa {
   display: flex; align-items: center; justify-content: center; gap: .35rem;
@@ -8594,14 +8897,19 @@ body.sheet-open { overflow: hidden; }
 }
 
 /* ── Lupa del encabezado: lleva al buscador del catálogo ── */
-.header-search-btn {
+/* Íconos del header (lupa, cuenta, carrito): mismo tamaño, color y hover */
+.header-icon-btn {
   width: 40px; height: 40px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   border-radius: 50%; background: none; border: 0; color: var(--text); cursor: pointer;
   transition: color .2s ease, background .2s ease;
 }
-.header-search-btn svg { width: 21px; height: 21px; }
-.header-search-btn:hover { color: var(--gold-l); background: rgba(124,79,176,.1); }
+.header-icon-btn svg { width: 21px; height: 21px; }
+.header-icon-btn:hover { color: var(--gold-l); background: rgba(124,79,176,.1); }
+.header-store .cart-btn { width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text); transition: color .2s ease, background .2s ease; }
+.header-store .cart-btn svg { width: 22px; height: 22px; }
+.header-store .cart-btn:hover { color: var(--gold-l); background: rgba(124,79,176,.1); }
+.header-store .cart-count { top: 1px; right: 0; }
 
 /* ── Scent Finder: más compacto (no empuja tanto el catálogo) ── */
 .scent-finder-banner { padding: 1.1rem 1.5rem; margin-bottom: 1.4rem; }
@@ -8625,3 +8933,206 @@ body.sheet-open { overflow: hidden; }
 /* ── Ayuda debajo de un campo del checkout (agencias Shalom) ── */
 .field-help-link { display: inline-block; margin-top: .35rem; font-size: .74rem; font-weight: 600; color: var(--gold-l); }
 .field-help-link:hover { text-decoration: underline; }
+
+
+/* ════════════════════════════════════════════════════════
+   CAMPAÑAS: franja con enlace y selección de perfumes
+   (js/store/seasonal-theme.js — `picks` de una campaña)
+   ════════════════════════════════════════════════════════ */
+.seasonal-ribbon { flex-wrap: wrap; row-gap: .1rem; text-align: center; }
+.seasonal-ribbon-link {
+  margin-left: .4rem; padding: 0; background: none; border: 0; cursor: pointer;
+  font: inherit; font-weight: 700; letter-spacing: .02em; text-transform: none;
+  color: var(--white); text-decoration: underline; text-underline-offset: 3px;
+}
+.seasonal-ribbon-link:hover { color: var(--gold-l); }
+@media (max-width: 640px) { .seasonal-ribbon.has-link .seasonal-ribbon-text { display: none; } }
+
+.seasonal-picks { padding: 2.25rem 0 1.25rem; }
+.seasonal-picks-track {
+  display: flex; gap: .9rem;
+  overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-left: 1rem;
+  padding: .4rem 1rem 1rem;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.seasonal-picks-track::-webkit-scrollbar { display: none; }
+.seasonal-picks-track .pd-mini-card { flex: 0 0 min(42vw, 160px); scroll-snap-align: start; }
+/* En PC entran todos: grilla centrada en vez de fila deslizable */
+@media (min-width: 900px) {
+  .seasonal-picks-track {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 180px));
+    justify-content: center; gap: 1.1rem; overflow: visible; padding: .4rem 0 1rem;
+  }
+}
+.seasonal-picks-actions { text-align: center; margin-top: .5rem; }
+.seasonal-picks-all {
+  background: transparent; color: var(--gold-l); font-weight: 700; font-size: .86rem;
+  padding: .7rem 1.4rem; border: 1px solid rgba(124,79,176,.45); border-radius: 999px; cursor: pointer;
+  transition: background var(--tr), color var(--tr), border-color var(--tr);
+}
+.seasonal-picks-all:hover { background: var(--gold); border-color: var(--gold); color: #fff; }
+
+/* ════════════════════════════════════════════════════════
+   CAMPAÑA DE HALLOWEEN — body[data-campaign="halloween"]
+   Se activa en el panel (Ajustes → Campañas). El morado de la marca se
+   queda; se suma el naranja calabaza como acento. La decoración (telarañas,
+   araña, murciélagos, calabaza) la pone CAMPAIGN_DECOR en seasonal-theme.js.
+   ════════════════════════════════════════════════════════ */
+body[data-campaign="halloween"] { --hw: #ff7a18; --hw-l: #ffa94d; --hw-d: #c2500a; }
+
+/* ── Franja ── */
+body[data-campaign="halloween"] .seasonal-ribbon {
+  color: var(--hw-l);
+  border-bottom-color: rgba(255,122,24,.35);
+  background: linear-gradient(90deg, rgba(124,79,176,.24), rgba(255,122,24,.16) 50%, rgba(124,79,176,.24));
+}
+body[data-campaign="halloween"] .seasonal-ribbon-link:hover { color: var(--hw-l); }
+
+/* ── Carrusel: fondo de noche con resplandor naranja del lado de la luna ── */
+body[data-campaign="halloween"] #carouselWrapper { background: #07040b; }
+body[data-campaign="halloween"] .carousel-slide {
+  background:
+    radial-gradient(ellipse 50% 70% at 78% 44%, rgba(255,122,24,.20) 0%, transparent 64%),
+    radial-gradient(ellipse 60% 80% at 10% 72%, rgba(124,79,176,.22) 0%, transparent 60%),
+    linear-gradient(160deg, #0b0612 0%, #050308 55%, #0d0704 100%);
+}
+body[data-campaign="halloween"] .slide-campaign .carousel-tag { color: var(--hw-l); border-left-color: var(--hw); }
+body[data-campaign="halloween"] .slide-campaign .carousel-title .c-gold {
+  background: linear-gradient(90deg, var(--hw-l), var(--hw));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  padding-right: .12em;   /* la cursiva se recorta sin esto */
+}
+body[data-campaign="halloween"] .slide-campaign .carousel-title::after { background: linear-gradient(90deg, var(--hw), transparent); }
+body[data-campaign="halloween"] .slide-campaign .carousel-cta {
+  background: linear-gradient(90deg, var(--hw-d), var(--hw));
+  box-shadow: 0 10px 30px rgba(255,122,24,.32);
+}
+body[data-campaign="halloween"] .slide-campaign .carousel-cta:hover { background: linear-gradient(90deg, var(--hw), var(--hw-l)); }
+body[data-campaign="halloween"] .deco-ring { border-color: rgba(255,122,24,.2); }
+body[data-campaign="halloween"] .carousel-progress-bar { background: linear-gradient(90deg, var(--gold), var(--hw)); }
+
+/* ── La luna: el halo de la mascota pasa a ser una luna llena naranja ── */
+body[data-campaign="halloween"] .hero-mascot::before {
+  inset: auto; left: 50%; top: 50%;
+  width: 116%; height: auto; aspect-ratio: 1; border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(194,80,10,.26) 0 5%, transparent 6%),
+    radial-gradient(circle at 66% 24%, rgba(194,80,10,.20) 0 3.5%, transparent 4.5%),
+    radial-gradient(circle at 74% 62%, rgba(194,80,10,.22) 0 6%, transparent 7%),
+    radial-gradient(circle at 26% 68%, rgba(194,80,10,.18) 0 4%, transparent 5%),
+    radial-gradient(circle at 44% 40%, #ffe6b0 0%, #ffc56c 42%, #f39030 100%);
+  box-shadow: 0 0 60px 12px rgba(255,140,40,.38), 0 0 150px 50px rgba(255,122,24,.16);
+  transform: translate(-50%, -50%);
+  animation: hwMoon 5s ease-in-out infinite;
+}
+@keyframes hwMoon {
+  0%, 100% { transform: translate(-50%, -50%) scale(1);     opacity: .92; }
+  50%      { transform: translate(-50%, -50%) scale(1.025); opacity: 1; }
+}
+body[data-campaign="halloween"] .hero-mascot::after {
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(255,122,24,.5) 50deg, transparent 100deg, transparent 200deg, rgba(124,79,176,.45) 250deg, transparent 300deg, transparent 360deg);
+}
+body[data-campaign="halloween"] .hero-mascot .mascot-img {
+  filter: drop-shadow(0 24px 44px rgba(0,0,0,.8)) drop-shadow(0 0 22px rgba(60,20,0,.55));
+}
+
+/* ── Adornos junto a la mascota: murciélagos delante de la luna y la calabaza ── */
+.hw-mascot-deco { position: absolute; inset: 0; pointer-events: none; }
+.hw-bat { position: absolute; width: var(--s, 13%); color: #170b14; z-index: 1; animation: hwHover 6s ease-in-out infinite alternate; }
+.hw-bat svg, .hw-fly svg { display: block; width: 100%; height: auto; transform-origin: 50% 40%; animation: hwFlap .32s ease-in-out infinite alternate; }
+.hw-bat-1 { left: -2%;  top: 4%;   --s: 17%; }
+.hw-bat-2 { left: 80%;  top: -3%;  --s: 13%; animation-delay: -2s; }
+.hw-bat-3 { left: -9%;  top: 40%;  --s: 11%; animation-delay: -3.5s; }
+.hw-bat-4 { left: 93%;  top: 34%;  --s: 15%; animation-delay: -1s; }
+@keyframes hwHover { from { transform: translate(0, 0) rotate(-6deg); } to { transform: translate(8%, -22%) rotate(7deg); } }
+@keyframes hwFlap  { from { transform: scaleX(1); } to { transform: scaleX(.56) scaleY(1.08); } }
+.hw-pumpkin {
+  position: absolute; left: -15%; bottom: -3%; width: 36%; z-index: 3;
+  filter: drop-shadow(0 10px 16px rgba(0,0,0,.65)) drop-shadow(0 0 20px rgba(255,122,24,.45));
+}
+.hw-pumpkin svg { display: block; width: 100%; height: auto; }
+.hw-pumpkin-face { animation: hwFlicker 2.8s ease-in-out infinite; }
+@keyframes hwFlicker { 0%, 100% { opacity: 1; } 42% { opacity: .78; } 48% { opacity: 1; } 56% { opacity: .7; } 64% { opacity: 1; } }
+
+/* ── Capa del carrusel: telarañas, araña y niebla (detrás del texto) ── */
+.hw-hero-deco { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; color: rgba(255,255,255,.17); }
+.hw-web { position: absolute; top: 0; width: clamp(120px, 17vw, 250px); }
+.hw-web svg { display: block; width: 100%; height: auto; }
+.hw-web-l { left: 0; }
+.hw-web-r { right: 0; width: clamp(80px, 11vw, 160px); transform: scaleX(-1); opacity: .75; }
+/* El hilo sale por arriba de la pantalla y todo el conjunto sube y baja */
+.hw-spider { position: absolute; top: -120px; left: 53%; width: 24px; color: #a892c9; animation: hwSpider 9s ease-in-out infinite alternate; }
+.hw-spider i { display: block; width: 1px; height: 210px; margin: 0 auto -3px; background: linear-gradient(rgba(255,255,255,.06), rgba(255,255,255,.4)); }
+.hw-spider svg { display: block; width: 100%; height: auto; filter: drop-shadow(0 0 5px rgba(124,79,176,.7)); }
+@keyframes hwSpider { from { transform: translateY(-80px); } to { transform: translateY(18px); } }
+.hw-fog {
+  position: absolute; left: -15%; right: -15%; bottom: -34px; height: 170px;
+  background:
+    radial-gradient(ellipse 32% 62% at 18% 100%, rgba(170,140,210,.20), transparent 70%),
+    radial-gradient(ellipse 36% 70% at 54% 100%, rgba(255,150,70,.12), transparent 70%),
+    radial-gradient(ellipse 30% 56% at 86% 100%, rgba(170,140,210,.17), transparent 70%);
+  filter: blur(8px);
+  animation: hwFog 16s ease-in-out infinite alternate;
+}
+@keyframes hwFog { from { transform: translateX(-4%); } to { transform: translateX(4%); } }
+/* Luna del celular (ahí la mascota no se muestra): asoma por la esquina de arriba */
+.hw-moon { display: none; }
+@media (max-width: 720px) {
+  .hw-moon {
+    display: block; position: absolute; right: -52px; top: -40px; width: 190px; aspect-ratio: 1; border-radius: 50%;
+    background:
+      radial-gradient(circle at 34% 60%, rgba(194,80,10,.24) 0 6%, transparent 7%),
+      radial-gradient(circle at 56% 74%, rgba(194,80,10,.2) 0 4%, transparent 5%),
+      radial-gradient(circle at 44% 46%, #ffe6b0 0%, #ffc56c 42%, #f39030 100%);
+    box-shadow: 0 0 50px 10px rgba(255,140,40,.34), 0 0 120px 40px rgba(255,122,24,.14);
+    opacity: .9;
+  }
+  .hw-bat-m1 { left: 4%;  top: 58%; --s: 26%; }
+  .hw-bat-m2 { left: 40%; top: 80%; --s: 19%; animation-delay: -2.5s; }
+  .hw-web-r { display: none; }
+  .hw-spider { left: 46%; }
+}
+
+/* ── Murciélagos que cruzan la página de vez en cuando ── */
+#hwBatLayer { position: fixed; inset: 0; z-index: 150; overflow: hidden; pointer-events: none; }
+.hw-fly {
+  position: absolute; left: 0; width: var(--hw-size, 36px); color: #1b1024;
+  filter: drop-shadow(0 0 2px rgba(255,150,60,.95)) drop-shadow(0 0 7px rgba(255,122,24,.5));
+  animation: hwFly 11s linear forwards;
+}
+.hw-fly-back { animation-name: hwFlyBack; }
+@keyframes hwFly {
+  0%   { transform: translate(-12vw, 0); }
+  25%  { transform: translate(20vw, -5vh); }
+  50%  { transform: translate(52vw, 3vh); }
+  75%  { transform: translate(82vw, -6vh); }
+  100% { transform: translate(112vw, -1vh); }
+}
+@keyframes hwFlyBack {
+  0%   { transform: translate(112vw, 0); }
+  25%  { transform: translate(80vw, 4vh); }
+  50%  { transform: translate(48vw, -4vh); }
+  75%  { transform: translate(18vw, 5vh); }
+  100% { transform: translate(-12vw, -2vh); }
+}
+
+/* ── Selección de Halloween ── */
+body[data-campaign="halloween"] .seasonal-picks {
+  background:
+    radial-gradient(ellipse 50% 100% at 88% 0%, rgba(255,122,24,.13) 0%, transparent 62%),
+    radial-gradient(ellipse 55% 100% at 10% 100%, rgba(124,79,176,.16) 0%, transparent 62%);
+  border-bottom: 1px solid rgba(255,122,24,.16);
+}
+body[data-campaign="halloween"] .seasonal-picks .combos-eyebrow { color: var(--hw-l); background: rgba(255,122,24,.13); border-color: rgba(255,122,24,.4); }
+body[data-campaign="halloween"] .seasonal-picks .combos-title em { color: var(--hw-l); }
+body[data-campaign="halloween"] .seasonal-picks .pd-mini-card:hover { border-color: rgba(255,122,24,.55); box-shadow: 0 12px 28px rgba(0,0,0,.5), 0 0 22px rgba(255,122,24,.14); }
+body[data-campaign="halloween"] .seasonal-picks-all { color: var(--hw-l); border-color: rgba(255,122,24,.5); }
+body[data-campaign="halloween"] .seasonal-picks-all:hover { background: var(--hw); border-color: var(--hw); color: #1a0b00; }
+
+/* ── Detalles en el resto de la página ── */
+body[data-campaign="halloween"] .scroll-progress-line { background: linear-gradient(90deg, var(--gold-d), var(--gold), var(--hw)); }
+body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0b00; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hw-bat, .hw-bat svg, .hw-spider, .hw-fog, .hw-pumpkin-face, body[data-campaign="halloween"] .hero-mascot::before { animation: none; }
+}

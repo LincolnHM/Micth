@@ -55,6 +55,7 @@ async function renderAdminProducts() {
              style="object-fit:contain"  />
         <div style="flex:1;min-width:0">
           <span class="admin-type-badge ${typeBadge}">${typeLabel}</span>
+          ${isComingSoon(p) ? `<span class="admin-type-badge" style="background:rgba(255,152,0,.15);color:#ffb74d;border:1px solid rgba(255,152,0,.4);margin-left:.3rem">🚚 Próximamente</span>` : ''}
           ${p.gender ? `<span style="font-size:.65rem;color:var(--text2);margin-left:.4rem">${gLabel}</span>` : ''}
           <h3 class="admin-product-name">${sanitize(p.brand)} – ${sanitize(p.name)}</h3>
           ${p.contentDescription ? `<p style="font-size:.72rem;color:var(--gold);margin-top:.2rem">📦 ${sanitize(p.contentDescription)}</p>` : ''}
@@ -178,6 +179,7 @@ async function renderAdminProducts() {
             <span class="ml-values"><strong>${p.bottleRemainingMl} ml</strong> / ${p.bottleTotalMl} ml</span>
           </div>
           <div class="ml-bar-wrap"><div class="ml-bar" style="width:${pct}%;background:${color}"></div></div>
+          ${isComingSoon(p) ? `<p style="font-size:.74rem;color:#ffb74d;margin:.2rem 0 .5rem">Aún no llega: la tienda lo muestra en "Próximamente". Cuando llegue, pon los ml del frasco (ej. 100 y 100) y "Guardar ml": pasa solo al catálogo.</p>` : ''}
           <div class="ml-controls">
             <label>Restante (ml):
               <input type="number" class="ml-input" data-field="bottleRemainingMl" data-id="${p.id}"
@@ -400,6 +402,7 @@ async function renderInventorySection() {
       <div class="admin-card-head">
         <div>
           <span class="admin-type-badge ${productTypeInfo(p.type).badge}">${productTypeInfo(p.type).label}</span>
+          ${isComingSoon(p) ? `<span class="admin-type-badge" style="background:rgba(255,152,0,.15);color:#ffb74d;border:1px solid rgba(255,152,0,.4);margin-left:.3rem" title="Pon los ml cuando llegue y pasa solo al catálogo">🚚 Próximamente</span>` : ''}
           <h3 class="admin-product-name">${sanitize(p.brand)} – ${sanitize(p.name)}</h3>
         </div>
         <span style="font-size:1.1rem;font-weight:700;color:${color}">${pct}%</span>

@@ -261,12 +261,50 @@ function comboAvailableSizes(combo, allProducts) {
 }
 
 // ─── Pedidos → stock (funciones puras, sin red) ───────────────────────────────
-// Un pedido "descontó stock" mientras está en un estado de pago. Pasar a
-// cualquiera de estos estados descuenta; salir de ellos (a pendiente/cancelado)
-// devuelve el stock. "enviado"/"entregado" son estados viejos que ya no se
+// Un pedido "descontó stock" mientras está en uno de estos estados. Pasar a
+// cualquiera de ellos descuenta; salir de ellos (a pendiente/cancelado) devuelve
+// el stock. "separado" = el cliente dejó un adelanto: el perfume ya queda
+// apartado para él. "enviado"/"entregado" son estados viejos que ya no se
 // ofrecen en el panel pero pueden existir en pedidos antiguos.
-const PAID_STATES = ['pagado', 'enviado', 'entregado'];
+const PAID_STATES = ['separado', 'pagado', 'enviado', 'entregado'];
 const isPaidStatus = status => PAID_STATES.includes(status);
+
+// ─── Pedidos → pagos (funciones puras, sin red) ───────────────────────────────
+// Un pedido se puede pagar en partes (adelanto + saldo) y con varios métodos a
+// la vez (parte Yape, parte efectivo). Cada pago queda en `order.payments`:
+// { id, amount, method, date, note }.
+const PAYMENT_METHODS = {
+  yape:          { icon: '📱', label: 'Yape' },
+  efectivo:      { icon: '💵', label: 'Efectivo' },
+  plin:          { icon: '📲', label: 'Plin' },
+  transferencia: { icon: '🏦', label: 'Transferencia' }
+};
+const roundMoney = n => Math.round((Number(n) || 0) * 100) / 100;
+
+// Los pagos del pedido. Un pedido marcado "pagado" antes de que existieran los
+// abonos no tiene lista: cuenta como un solo pago por el total, con su método y
+// la fecha del pedido (así la contabilidad de meses pasados no cambia).
+function orderPayments(order) {
+  if (Array.isArray(order?.payments) && order.payments.length) return order.payments;
+  if (['pagado', 'enviado', 'entregado'].includes(order?.status) && order.total > 0) {
+    return [{ id: 'legacy', amount: roundMoney(order.total), method: order.paymentMethod || null, date: order.date, legacy: true }];
+  }
+  return [];
+}
+const orderPaidAmount = order => roundMoney(orderPayments(order).reduce((s, p) => s + p.amount, 0));
+const orderBalance    = order => Math.max(0, roundMoney((order?.total || 0) - orderPaidAmount(order)));
+
+// Estado que corresponde a lo pagado: nada → pendiente · una parte → separado · todo → pagado
+function statusForPaid(paid, total) {
+  if (paid <= 0) return 'pendiente';
+  return paid >= roundMoney(total) - 0.005 ? 'pagado' : 'separado';
+}
+
+// Todo el dinero recibido, pago por pago: lo que usan Caja, Contabilidad y
+// Estadísticas. Los pagos de un pedido cancelado no cuentan (se asume devuelto).
+function incomePayments(orders) {
+  return (orders || []).flatMap(o => o.status === 'cancelado' ? [] : orderPayments(o).map(p => ({ ...p, order: o })));
+}
 
 // Un item de combo no es un producto real: trae su propio desglose (comboItems)
 // con los perfumes que sí salen del frasco.
@@ -338,18 +376,6 @@ const Orders = {
     return newOrder.id;
   },
 
-  // Solo cambia el estado en el caché local. El stock NO se toca aquí: lo descuenta
-  // (o devuelve) CloudOrders.updateStatus una sola vez, contra la base de datos.
-  updateStatus(id, status, paymentMethod = null) {
-    const orders = this.getAll().map(o => {
-      if (o.id !== id) return o;
-      const updated = { ...o, status, updatedAt: new Date().toISOString() };
-      if (paymentMethod) updated.paymentMethod = paymentMethod;
-      return updated;
-    });
-    this.save(orders);
-  },
-
   delete(id) { this.save(this.getAll().filter(o => o.id !== id)); },
 
   getStats() {
@@ -368,7 +394,10 @@ const Orders = {
 
 // ─── Configuracion de campanas visuales ─────────────────────────────────────
 
-const VALID_CAMPAIGNS = new Set(['default', 'dia-madre', 'dia-padre', 'san-juan', 'navidad']);
+// Deben estar TODAS las del panel (admin/index.html) y de seasonal-theme.js: las
+// cuatro últimas faltaban y al activarlas se guardaba "Diseño normal"
+const VALID_CAMPAIGNS = new Set(['default', 'dia-madre', 'dia-padre', 'san-juan', 'navidad',
+                                 'fiestas-patrias', 'san-valentin', 'halloween', 'anio-nuevo']);
 
 function getNthWeekdayOfMonth(year, monthIndex, weekday, nth) {
   const first = new Date(year, monthIndex, 1);
