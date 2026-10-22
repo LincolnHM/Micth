@@ -18,6 +18,7 @@ function setupNav() {
       if (btn.dataset.section === 'caja')        renderCajaSection().catch(console.error);
       if (btn.dataset.section === 'tools')       setupToolsSection().catch(console.error);
       if (btn.dataset.section === 'precios')     renderPreciosSection().catch(console.error);
+      if (btn.dataset.section === 'cotizador')   renderCotizador().catch(console.error);
       if (btn.dataset.section === 'combos')      renderAdminCombos().catch(console.error);
     });
   });

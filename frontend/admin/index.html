@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../imgGato/web.png">
-  <link rel="stylesheet" href="../css/style.css?v=20261021-2024">
+  <link rel="stylesheet" href="../css/style.css?v=20261022-1232">
   <style>
     html, body {
       background: #050505 !important;
@@ -297,6 +297,15 @@
             Precios
           </button>
 
+          <button class="admin-nav-btn" data-section="cotizador">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <path d="M6 2h9l5 5v13a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>
+            </svg>
+            Cotizador
+          </button>
+
           <div class="admin-nav-divider"></div>
           <span class="admin-nav-section-label">Análisis</span>
 
@@ -488,6 +497,17 @@
         <div id="preciosContent">
           <p style="text-align:center;color:var(--text2);padding:3rem">Cargando precios…</p>
         </div>
+      </div>
+
+      <!-- ── Sección: Cotizador (lista Zimaxx → soles) ──────────────────────── -->
+      <div class="admin-section" id="section-cotizador">
+        <div class="admin-section-header">
+          <div>
+            <h2>Cotizador</h2>
+            <p style="color:var(--text2);font-size:.82rem;margin-top:.2rem">Perfumes enteros por encargo con tu lista de Zimaxx: precio en dólares → costo en soles → precio para el cliente</p>
+          </div>
+        </div>
+        <div id="qtRoot"></div>
       </div>
 
       <!-- ── Sección: Pedidos ───────────────────────────────────────────────── -->
@@ -1414,32 +1434,33 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.min.js" integrity="sha384-fPWur1rx/DE6YtXP/x0MD6dd90RgnVsz5yX/DIg7CcVAnTBZsENWuIcpvVTM39ti" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con la tienda) — el orden importa -->
-  <script src="../js/shared/data-core.js?v=20261021-2024"></script>
-  <script src="../js/shared/catalog.js?v=20261021-2024"></script>
-  <script src="../js/shared/data.js?v=20261021-2024"></script>
-  <script src="../js/shared/supabase-config.js?v=20261021-2024"></script>
-  <script src="../js/shared/cloud-orders.js?v=20261021-2024"></script>
-  <script src="../js/shared/cloud-gallery.js?v=20261021-2024"></script>
-  <script src="../js/shared/cloud-products.js?v=20261021-2024"></script>
-  <script src="../js/shared/cloud-combos.js?v=20261021-2024"></script>
+  <script src="../js/shared/data-core.js?v=20261022-1232"></script>
+  <script src="../js/shared/catalog.js?v=20261022-1232"></script>
+  <script src="../js/shared/data.js?v=20261022-1232"></script>
+  <script src="../js/shared/supabase-config.js?v=20261022-1232"></script>
+  <script src="../js/shared/cloud-orders.js?v=20261022-1232"></script>
+  <script src="../js/shared/cloud-gallery.js?v=20261022-1232"></script>
+  <script src="../js/shared/cloud-products.js?v=20261022-1232"></script>
+  <script src="../js/shared/cloud-combos.js?v=20261022-1232"></script>
   <!-- Panel admin -->
-  <script src="../js/admin/core.js?v=20261021-2024"></script>
-  <script src="../js/admin/ui.js?v=20261021-2024"></script>
-  <script src="../js/admin/login.js?v=20261021-2024"></script>
-  <script src="../js/admin/nav.js?v=20261021-2024"></script>
-  <script src="../js/admin/dashboard.js?v=20261021-2024"></script>
-  <script src="../js/admin/products.js?v=20261021-2024"></script>
-  <script src="../js/admin/catalog-pdf.js?v=20261021-2024"></script>
-  <script src="../js/admin/orders.js?v=20261021-2024"></script>
-  <script src="../js/admin/order-edit.js?v=20261021-2024"></script>
-  <script src="../js/admin/orders-realtime.js?v=20261021-2024"></script>
-  <script src="../js/admin/combos.js?v=20261021-2024"></script>
-  <script src="../js/admin/site-content.js?v=20261021-2024"></script>
-  <script src="../js/admin/users.js?v=20261021-2024"></script>
-  <script src="../js/admin/accounting.js?v=20261021-2024"></script>
-  <script src="../js/admin/stats.js?v=20261021-2024"></script>
-  <script src="../js/admin/pricing.js?v=20261021-2024"></script>
-  <script src="../js/admin/tools.js?v=20261021-2024"></script>
-  <script src="../js/admin/cash.js?v=20261021-2024"></script>
+  <script src="../js/admin/core.js?v=20261022-1232"></script>
+  <script src="../js/admin/ui.js?v=20261022-1232"></script>
+  <script src="../js/admin/login.js?v=20261022-1232"></script>
+  <script src="../js/admin/nav.js?v=20261022-1232"></script>
+  <script src="../js/admin/dashboard.js?v=20261022-1232"></script>
+  <script src="../js/admin/products.js?v=20261022-1232"></script>
+  <script src="../js/admin/catalog-pdf.js?v=20261022-1232"></script>
+  <script src="../js/admin/orders.js?v=20261022-1232"></script>
+  <script src="../js/admin/order-edit.js?v=20261022-1232"></script>
+  <script src="../js/admin/orders-realtime.js?v=20261022-1232"></script>
+  <script src="../js/admin/combos.js?v=20261022-1232"></script>
+  <script src="../js/admin/site-content.js?v=20261022-1232"></script>
+  <script src="../js/admin/users.js?v=20261022-1232"></script>
+  <script src="../js/admin/accounting.js?v=20261022-1232"></script>
+  <script src="../js/admin/stats.js?v=20261022-1232"></script>
+  <script src="../js/admin/pricing.js?v=20261022-1232"></script>
+  <script src="../js/admin/tools.js?v=20261022-1232"></script>
+  <script src="../js/admin/quote.js?v=20261022-1232"></script>
+  <script src="../js/admin/cash.js?v=20261022-1232"></script>
 </body>
 </html>
