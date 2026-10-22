@@ -30,6 +30,7 @@ Cada archivo se pega completo en **Supabase → SQL Editor → Run**. Van en ord
 | `2026-09-26-favoritos-en-cuenta.sql` | Columna `favoritos` en `perfiles_usuarios`: los ♡ del cliente se guardan en su cuenta y aparecen en cualquier celular donde entre. Sin correrlo, los favoritos siguen solo en el navegador. |
 | `2026-09-23-validar-pedidos.sql` *(actualizado 2026-09-26)* | Ahora también acepta el tipo de entrega "delivery" (Soritor). Volver a pegarlo es **opcional**: con la versión anterior el panel igual reconoce esos pedidos. |
 | `2026-10-19-pagos-por-pedido.sql` | Columna `payments` en `pedidos`: cada pago del pedido por separado (adelanto + saldo, o parte Yape y parte efectivo) y el estado **Separado**. La tienda no puede mandar pagos: un guardia los vacía en cada pedido que llega de un visitante. Sin correrlo, el panel solo deja marcar "Pagado" completo con un método. |
+| `2026-10-22-cotizador-zimaxx.sql` | Tabla `cotizador_proveedor` (solo admin) para el **Cotizador** del panel: guarda los perfumes del proveedor con su precio en US$. Sin correrlo, el cotizador funciona igual pero la lista queda solo en el navegador donde la cargues. |
 
 ## Qué correr ahora (2026-09-23), en este orden
 
