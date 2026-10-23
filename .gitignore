@@ -15,3 +15,6 @@ _*.html
 # Generado al publicar por tools/build-product-pages.mjs (no se sube a git)
 frontend/perfume/
 frontend/sitemap-perfumes.xml
+frontend/marca/
+frontend/marcas/
+frontend/coleccion/

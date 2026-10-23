@@ -9438,3 +9438,98 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
   .hw-bat, .hw-bat svg, .hw-spider, .hw-fog, .hw-pumpkin-face, body[data-campaign="halloween"] .hero-mascot::before { animation: none; }
 }
 
+
+/* ═══ Páginas para buscadores: marcas, colecciones y ficha en HTML ═══════════
+   (las genera tools/build-product-pages.mjs al publicar) */
+.seo-page { padding: 2.5rem 1rem 3.5rem; max-width: 1100px; }
+.seo-crumbs { font-size: .74rem; color: var(--text3); margin-bottom: 1.4rem; display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
+.seo-crumbs a { color: var(--text2); text-decoration: none; }
+.seo-crumbs a:hover { color: var(--gold-l); }
+.seo-crumbs span { color: var(--gold-l); }
+.seo-hero { text-align: center; margin-bottom: 2.5rem; }
+.seo-hero .section-tag {
+  display: inline-block; font-size: .62rem; letter-spacing: .3em; text-transform: uppercase;
+  color: var(--gold-l); padding: .35rem .9rem; border-radius: 50px;
+  border: 1px solid rgba(124,79,176,.3); background: rgba(124,79,176,.08); margin-bottom: 1rem;
+}
+.seo-hero h1, .seo-ficha h1 { font-family: var(--font-serif); font-size: clamp(1.8rem, 5vw, 2.8rem); color: var(--white); line-height: 1.2; margin: 0 0 1rem; }
+.seo-lead { color: var(--text2); font-size: clamp(.88rem, 2vw, 1rem); line-height: 1.75; max-width: 640px; margin: 0 auto 1.6rem; }
+.seo-lead strong { color: var(--gold-l); }
+.seo-hero-actions { display: flex; flex-wrap: wrap; gap: .7rem; justify-content: center; }
+.seo-hero .btn-store, .seo-wa {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 46px;
+  font-weight: 700; font-size: .88rem; padding: .8rem 1.7rem; border-radius: 50px; text-decoration: none;
+  transition: background var(--tr), transform var(--tr), border-color var(--tr);
+}
+.seo-hero .btn-store { background: var(--gold); color: #fff; box-shadow: 0 5px 20px rgba(124,79,176,.3); }
+.seo-hero .btn-store:hover { background: var(--gold-l); color: #fff; }
+.seo-wa { border: 1px solid rgba(37,211,102,.45); color: #25d366; background: rgba(37,211,102,.06); }
+.seo-wa:hover { background: rgba(37,211,102,.14); color: #25d366; }
+.seo-section { margin-top: 2.6rem; }
+.seo-section > h2, .seo-ficha h2 { font-family: var(--font-serif); font-size: clamp(1.2rem, 3vw, 1.55rem); color: var(--white); margin: 0 0 1rem; }
+.seo-sub { color: var(--text2); font-size: .85rem; margin: -.5rem 0 1rem; }
+
+.seo-grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 1rem; }
+.seo-card {
+  display: flex; flex-direction: column; gap: .3rem; height: 100%; text-decoration: none;
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: .8rem .8rem 1rem;
+  transition: border-color var(--tr), transform var(--tr);
+}
+.seo-card:hover { border-color: rgba(124,79,176,.45); }
+@media (hover: hover) and (pointer: fine) { .seo-card:hover { transform: translateY(-4px); } }
+.seo-card-img { display: block; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--bg2); margin-bottom: .4rem; }
+.seo-card-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.seo-card-brand { font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-l); }
+.seo-card h3 { font-family: var(--font-serif); font-size: 1rem; color: var(--white); margin: 0; line-height: 1.3; }
+.seo-card-dupe { font-size: .72rem; color: var(--text2); font-style: italic; }
+.seo-card-price { margin-top: auto; padding-top: .35rem; font-weight: 700; color: var(--white); font-size: .9rem; }
+.seo-card-price em { font-style: normal; color: var(--red); font-weight: 600; font-size: .78rem; }
+.seo-card-sizes { font-size: .7rem; color: var(--text3); }
+
+.seo-info { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 1.4rem 1.5rem; }
+.seo-info ul, .seo-links { margin: 0; padding-left: 1.1rem; color: var(--text2); font-size: .86rem; line-height: 1.9; }
+.seo-info strong { color: var(--white); }
+.seo-chips, .seo-brands { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
+.seo-chips a {
+  display: inline-flex; align-items: center; min-height: 38px; padding: .4rem .95rem; border-radius: 50px;
+  border: 1px solid var(--border); color: var(--text2); font-size: .8rem; text-decoration: none; transition: all var(--tr);
+}
+.seo-chips a:hover { border-color: var(--gold-d); color: var(--gold-l); }
+.seo-brands { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .6rem; }
+.seo-brands a {
+  display: flex; justify-content: space-between; align-items: center; gap: .5rem; padding: .85rem 1rem;
+  border-radius: 14px; background: var(--card); border: 1px solid var(--border); text-decoration: none; transition: border-color var(--tr);
+}
+.seo-brands a:hover { border-color: rgba(124,79,176,.45); }
+.seo-brands strong { color: var(--white); font-size: .9rem; }
+.seo-brands span { color: var(--text3); font-size: .72rem; white-space: nowrap; }
+
+/* Ficha en HTML de cada perfume (al final de /perfume/<nombre>/) */
+.seo-ficha { padding: 2.5rem 1rem; max-width: 900px; border-top: 1px solid var(--border); margin-top: 2rem; }
+.seo-ficha h1 { font-size: clamp(1.4rem, 4vw, 2rem); }
+.seo-ficha .seo-lead { margin: 0 0 1rem; }
+.seo-dupe { color: var(--text2); font-size: .9rem; margin-bottom: 1.2rem; }
+.seo-dupe strong { color: var(--gold-l); }
+.seo-ficha-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin: 1.5rem 0; }
+.seo-ficha h2 { font-size: 1.1rem; }
+.seo-prices { list-style: none; padding: 0; margin: 0; }
+.seo-prices li { display: flex; justify-content: space-between; padding: .5rem 0; border-bottom: 1px solid var(--border); font-size: .86rem; color: var(--text2); }
+.seo-prices strong { color: var(--gold-l); }
+.seo-notes { margin: 0; font-size: .84rem; }
+.seo-notes dt { color: var(--text3); font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; margin-top: .6rem; }
+.seo-notes dd { margin: .15rem 0 0; color: var(--text2); line-height: 1.6; }
+.seo-ship { color: var(--text3); font-size: .8rem; }
+.seo-more { color: var(--gold-l); font-weight: 600; font-size: .88rem; text-decoration: none; }
+.seo-links { columns: 2; column-gap: 1.5rem; }
+.seo-links a { color: var(--text2); text-decoration: none; }
+.seo-links a:hover { color: var(--gold-l); }
+
+@media (max-width: 600px) {
+  .seo-page { padding: 1.6rem .9rem 2.5rem; }
+  .seo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+  .seo-card { padding: .6rem .6rem .8rem; border-radius: 14px; }
+  .seo-card h3 { font-size: .9rem; }
+  .seo-hero-actions > a { width: 100%; max-width: 340px; }
+  .seo-brands { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .seo-links { columns: 1; }
+}
