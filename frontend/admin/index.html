@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../imgGato/web.png">
-  <link rel="stylesheet" href="../css/style.css?v=20261022-0305">
+  <link rel="stylesheet" href="../css/style.css?v=20261022-1232">
   <style>
     html, body {
       background: #050505 !important;
@@ -299,11 +299,9 @@
 
           <button class="admin-nav-btn" data-section="cotizador">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
-              <rect x="4" y="2" width="16" height="20" rx="2"/>
-              <line x1="8" y1="6" x2="16" y2="6"/>
-              <line x1="8" y1="11" x2="8" y2="11.01"/><line x1="12" y1="11" x2="12" y2="11.01"/><line x1="16" y1="11" x2="16" y2="11.01"/>
-              <line x1="8" y1="15" x2="8" y2="15.01"/><line x1="12" y1="15" x2="12" y2="15.01"/><line x1="16" y1="15" x2="16" y2="18"/>
-              <line x1="8" y1="18" x2="12" y2="18"/>
+              <path d="M6 2h9l5 5v13a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>
             </svg>
             Cotizador
           </button>
@@ -501,87 +499,15 @@
         </div>
       </div>
 
-      <!-- ── Sección: Cotizador (proveedor Zimaxx) ─────────────────────────── -->
+      <!-- ── Sección: Cotizador (lista Zimaxx → soles) ──────────────────────── -->
       <div class="admin-section" id="section-cotizador">
         <div class="admin-section-header">
           <div>
             <h2>Cotizador</h2>
-            <p style="color:var(--text2);font-size:.82rem;margin-top:.2rem">Precios del proveedor Zimaxx en dólares → costo puesto en Perú y tu precio de venta</p>
+            <p style="color:var(--text2);font-size:.82rem;margin-top:.2rem">Perfumes enteros por encargo con tu lista de Zimaxx: precio en dólares → costo en soles → precio para el cliente</p>
           </div>
         </div>
-
-        <div class="quoter-top">
-          <section class="tool-card tool-card-primary quoter-config">
-            <div class="quoter-config-grid">
-              <div class="pass-field quoter-rate-field">
-                <label for="qRate">Tipo de cambio (S/ por US$)</label>
-                <div class="quoter-rate-row">
-                  <input type="number" id="qRate" min="1" max="10" step="0.001" inputmode="decimal">
-                  <button type="button" id="qRateRefresh" class="quoter-btn" title="Traer el tipo de cambio de hoy">↻ Del día</button>
-                </div>
-                <span id="qRateInfo" class="quoter-rate-info">Cargando…</span>
-              </div>
-              <div class="pass-field">
-                <label for="qCargo1">Cargo 1 (US$)</label>
-                <input type="number" id="qCargo1" min="0" step="0.5" inputmode="decimal">
-              </div>
-              <div class="pass-field">
-                <label for="qCargo2">Cargo 2 (US$)</label>
-                <input type="number" id="qCargo2" min="0" step="0.5" inputmode="decimal">
-              </div>
-              <div class="pass-field">
-                <label for="qMargen">Ganancia (% sobre el costo)</label>
-                <input type="number" id="qMargen" min="0" max="500" step="5" inputmode="decimal">
-              </div>
-              <div class="pass-field">
-                <label for="qRedondeo">Redondear venta a</label>
-                <select id="qRedondeo" class="quoter-select">
-                  <option value="0">Sin redondeo</option>
-                  <option value="1">S/ 1</option>
-                  <option value="5">S/ 5</option>
-                  <option value="10">S/ 10</option>
-                </select>
-              </div>
-            </div>
-            <p id="qFormula" class="quoter-formula"></p>
-          </section>
-
-          <section class="tool-card quoter-quick">
-            <div class="pass-field">
-              <label for="qQuickUsd">Cotizar un perfume rápido (precio en US$)</label>
-              <input type="number" id="qQuickUsd" min="0" step="0.01" placeholder="Ej: 25" inputmode="decimal">
-            </div>
-            <div id="qQuickOut" class="quoter-quick-out"></div>
-          </section>
-        </div>
-
-        <div class="quoter-toolbar">
-          <input type="search" id="qSearch" placeholder="🔍  Buscar perfume…" class="quoter-search">
-          <select id="qSort" class="quoter-select" aria-label="Ordenar">
-            <option value="nombre">A → Z</option>
-            <option value="precio_asc">Más baratos</option>
-            <option value="precio_desc">Más caros</option>
-          </select>
-          <button type="button" id="qImportOpen" class="btn-save">Importar lista</button>
-          <button type="button" id="qExport" class="quoter-btn">Descargar Excel (CSV)</button>
-        </div>
-
-        <section id="qImportPanel" class="tool-card quoter-import" hidden>
-          <div class="pass-field">
-            <label for="qImportText">Pega la lista del proveedor: un perfume por línea con su precio en dólares</label>
-            <textarea id="qImportText" rows="8" placeholder="Club de Nuit Intense Man 105 ml - $25.50&#10;Khamrah Lattafa 100 ml $22&#10;Asad Lattafa; 18"></textarea>
-          </div>
-          <p id="qImportPreview" class="quoter-import-preview"></p>
-          <div class="quoter-import-actions">
-            <label class="quoter-check"><input type="checkbox" id="qImportReplace" checked> Reemplazar la lista actual</label>
-            <span style="flex:1"></span>
-            <button type="button" id="qImportCancel" class="quoter-btn">Cancelar</button>
-            <button type="button" id="qImportSave" class="btn-save">Guardar</button>
-          </div>
-        </section>
-
-        <p class="quoter-meta"><span id="qCount"></span> <span id="qStorage"></span></p>
-        <div id="qList" class="quoter-list" role="table" aria-label="Cotización de perfumes del proveedor"></div>
+        <div id="qtRoot"></div>
       </div>
 
       <!-- ── Sección: Pedidos ───────────────────────────────────────────────── -->
@@ -1508,33 +1434,33 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.min.js" integrity="sha384-fPWur1rx/DE6YtXP/x0MD6dd90RgnVsz5yX/DIg7CcVAnTBZsENWuIcpvVTM39ti" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con la tienda) — el orden importa -->
-  <script src="../js/shared/data-core.js?v=20261022-0305"></script>
-  <script src="../js/shared/catalog.js?v=20261022-0305"></script>
-  <script src="../js/shared/data.js?v=20261022-0305"></script>
-  <script src="../js/shared/supabase-config.js?v=20261022-0305"></script>
-  <script src="../js/shared/cloud-orders.js?v=20261022-0305"></script>
-  <script src="../js/shared/cloud-gallery.js?v=20261022-0305"></script>
-  <script src="../js/shared/cloud-products.js?v=20261022-0305"></script>
-  <script src="../js/shared/cloud-combos.js?v=20261022-0305"></script>
+  <script src="../js/shared/data-core.js?v=20261022-1232"></script>
+  <script src="../js/shared/catalog.js?v=20261022-1232"></script>
+  <script src="../js/shared/data.js?v=20261022-1232"></script>
+  <script src="../js/shared/supabase-config.js?v=20261022-1232"></script>
+  <script src="../js/shared/cloud-orders.js?v=20261022-1232"></script>
+  <script src="../js/shared/cloud-gallery.js?v=20261022-1232"></script>
+  <script src="../js/shared/cloud-products.js?v=20261022-1232"></script>
+  <script src="../js/shared/cloud-combos.js?v=20261022-1232"></script>
   <!-- Panel admin -->
-  <script src="../js/admin/core.js?v=20261022-0305"></script>
-  <script src="../js/admin/ui.js?v=20261022-0305"></script>
-  <script src="../js/admin/login.js?v=20261022-0305"></script>
-  <script src="../js/admin/nav.js?v=20261022-0305"></script>
-  <script src="../js/admin/dashboard.js?v=20261022-0305"></script>
-  <script src="../js/admin/products.js?v=20261022-0305"></script>
-  <script src="../js/admin/catalog-pdf.js?v=20261022-0305"></script>
-  <script src="../js/admin/orders.js?v=20261022-0305"></script>
-  <script src="../js/admin/order-edit.js?v=20261022-0305"></script>
-  <script src="../js/admin/orders-realtime.js?v=20261022-0305"></script>
-  <script src="../js/admin/combos.js?v=20261022-0305"></script>
-  <script src="../js/admin/site-content.js?v=20261022-0305"></script>
-  <script src="../js/admin/users.js?v=20261022-0305"></script>
-  <script src="../js/admin/accounting.js?v=20261022-0305"></script>
-  <script src="../js/admin/stats.js?v=20261022-0305"></script>
-  <script src="../js/admin/pricing.js?v=20261022-0305"></script>
-  <script src="../js/admin/tools.js?v=20261022-0305"></script>
-  <script src="../js/admin/quoter.js?v=20261022-0305"></script>
-  <script src="../js/admin/cash.js?v=20261022-0305"></script>
+  <script src="../js/admin/core.js?v=20261022-1232"></script>
+  <script src="../js/admin/ui.js?v=20261022-1232"></script>
+  <script src="../js/admin/login.js?v=20261022-1232"></script>
+  <script src="../js/admin/nav.js?v=20261022-1232"></script>
+  <script src="../js/admin/dashboard.js?v=20261022-1232"></script>
+  <script src="../js/admin/products.js?v=20261022-1232"></script>
+  <script src="../js/admin/catalog-pdf.js?v=20261022-1232"></script>
+  <script src="../js/admin/orders.js?v=20261022-1232"></script>
+  <script src="../js/admin/order-edit.js?v=20261022-1232"></script>
+  <script src="../js/admin/orders-realtime.js?v=20261022-1232"></script>
+  <script src="../js/admin/combos.js?v=20261022-1232"></script>
+  <script src="../js/admin/site-content.js?v=20261022-1232"></script>
+  <script src="../js/admin/users.js?v=20261022-1232"></script>
+  <script src="../js/admin/accounting.js?v=20261022-1232"></script>
+  <script src="../js/admin/stats.js?v=20261022-1232"></script>
+  <script src="../js/admin/pricing.js?v=20261022-1232"></script>
+  <script src="../js/admin/tools.js?v=20261022-1232"></script>
+  <script src="../js/admin/quote.js?v=20261022-1232"></script>
+  <script src="../js/admin/cash.js?v=20261022-1232"></script>
 </body>
 </html>
