@@ -30,6 +30,7 @@ Cada archivo se pega completo en **Supabase → SQL Editor → Run**. Van en ord
 | `2026-09-26-favoritos-en-cuenta.sql` | Columna `favoritos` en `perfiles_usuarios`: los ♡ del cliente se guardan en su cuenta y aparecen en cualquier celular donde entre. Sin correrlo, los favoritos siguen solo en el navegador. |
 | `2026-09-23-validar-pedidos.sql` *(actualizado 2026-09-26)* | Ahora también acepta el tipo de entrega "delivery" (Soritor). Volver a pegarlo es **opcional**: con la versión anterior el panel igual reconoce esos pedidos. |
 | `2026-10-19-pagos-por-pedido.sql` | Columna `payments` en `pedidos`: cada pago del pedido por separado (adelanto + saldo, o parte Yape y parte efectivo) y el estado **Separado**. La tienda no puede mandar pagos: un guardia los vacía en cada pedido que llega de un visitante. Sin correrlo, el panel solo deja marcar "Pagado" completo con un método. |
+| `2026-10-25-talla-30ml.sql` | **Nueva talla 30 ml.** Agrega el decant de 30 ml a cada perfume árabe, de diseñador y nicho, con precio sugerido a partir del de 10 ml (árabe ×2.4, diseñador/nicho ×2.6, redondeado). Primero muestra la vista previa. No toca los que ya tengan 30 ml ni los enteros. Ajusta luego en el panel → Precios. |
 
 ## Qué correr ahora (2026-09-23), en este orden
 

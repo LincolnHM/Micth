@@ -295,7 +295,7 @@ function _pdSizeCardHtml({ size, price, off = false, note = '', badge = '', befo
 
 // Sprays de cada tamaño, iguales para todos los perfumes. Si cambian, actualizar
 // también "¿Qué tamaño me conviene?" en faq.js.
-const SPRAYS_BY_SIZE = { '2ml': 39, '3ml': 50, '5ml': 90, '10ml': 180 };
+const SPRAYS_BY_SIZE = { '2ml': 39, '3ml': 50, '5ml': 90, '10ml': 180, '30ml': 540 };
 
 function _pdSpraysNote(size) {
   const known = SPRAYS_BY_SIZE[String(size).replace(/\s+/g, '').toLowerCase()];

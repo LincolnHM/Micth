@@ -354,9 +354,9 @@ const COLLECTIONS = [
   { slug: 'decants-disenador',  test: p => p.type === 'diseñador', h1: 'Decants de perfumes de diseñador en Perú',   short: 'Perfumes de diseñador', lead: 'Dior, Valentino, Jean Paul Gaultier, Paco Rabanne y más: prueba los perfumes de diseñador en decant antes de comprar el frasco.' },
   { slug: 'perfumes-nicho',     test: p => p.type === 'nicho',     h1: 'Decants de perfumes nicho en Perú',          short: 'Perfumes nicho',      lead: 'Alta perfumería en decants: prueba perfumes nicho sin pagar el frasco completo.' },
   { slug: 'perfumes-enteros',   test: p => p.type === 'entero',    h1: 'Perfumes enteros originales en Perú',        short: 'Perfumes enteros',    lead: 'Frascos originales sellados, para regalar o para tu colección.' },
-  { slug: 'decants-para-hombre', test: p => p.type !== 'entero' && p.gender === 'hombre', h1: 'Decants de perfumes para hombre en Perú', short: 'Para hombre', lead: 'Perfumes masculinos árabes y de diseñador en decants de 2, 3, 5 y 10 ml.' },
-  { slug: 'decants-para-mujer',  test: p => p.type !== 'entero' && p.gender === 'mujer',  h1: 'Decants de perfumes para mujer en Perú',  short: 'Para mujer',  lead: 'Perfumes femeninos árabes y de diseñador en decants de 2, 3, 5 y 10 ml.' },
-  { slug: 'decants-unisex',      test: p => p.type !== 'entero' && p.gender === 'unisex', h1: 'Decants de perfumes unisex en Perú',      short: 'Unisex',      lead: 'Fragancias para todos, en decants de 2, 3, 5 y 10 ml.' },
+  { slug: 'decants-para-hombre', test: p => p.type !== 'entero' && p.gender === 'hombre', h1: 'Decants de perfumes para hombre en Perú', short: 'Para hombre', lead: 'Perfumes masculinos árabes y de diseñador en decants de 2, 3, 5, 10 y 30 ml.' },
+  { slug: 'decants-para-mujer',  test: p => p.type !== 'entero' && p.gender === 'mujer',  h1: 'Decants de perfumes para mujer en Perú',  short: 'Para mujer',  lead: 'Perfumes femeninos árabes y de diseñador en decants de 2, 3, 5, 10 y 30 ml.' },
+  { slug: 'decants-unisex',      test: p => p.type !== 'entero' && p.gender === 'unisex', h1: 'Decants de perfumes unisex en Perú',      short: 'Unisex',      lead: 'Fragancias para todos, en decants de 2, 3, 5, 10 y 30 ml.' },
 ].map(c => ({ ...c, items: listed.filter(c.test) })).filter(c => c.items.length);
 
 const WA = 'https://wa.me/51917452643';
@@ -364,7 +364,7 @@ const HOW_TO_BUY = `
     <section class="seo-section seo-info">
       <h2>Cómo comprar en MICHT Decants</h2>
       <ul>
-        <li><strong>Decants originales</strong> envasados del frasco, en 2, 3, 5 y 10 ml.</li>
+        <li><strong>Decants originales</strong> envasados del frasco, en 2, 3, 5, 10 y 30 ml.</li>
         <li><strong>Pago con Yape</strong> y confirmación por WhatsApp.</li>
         <li><strong>Envíos a todo el Perú</strong> por Shalom · delivery gratis en Soritor desde 2 decants o 1 perfume entero.</li>
       </ul>
@@ -401,7 +401,7 @@ for (const b of brandList) {
   const h1 = `${word} de ${b.name} en Perú`;
   const top = b.items.slice(0, 3).map(p => p.name).join(', ');
   const title = `${h1}${isFinite(low) ? ` — desde S/ ${low}` : ''} | Micht Decants`;
-  const tail = ` ${decants.length ? 'En 2, 3, 5 y 10 ml. ' : ''}Envíos a todo el Perú.`;
+  const tail = ` ${decants.length ? 'En 2, 3, 5, 10 y 30 ml. ' : ''}Envíos a todo el Perú.`;
   const description = clip(`${word} originales de ${b.name} en Perú: ${top}${b.items.length > 3 ? ' y más' : ''}.`, 158 - tail.length) + tail;
   const body = `
   <main class="seo-page container">

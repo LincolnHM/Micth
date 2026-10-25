@@ -1057,6 +1057,15 @@ html.pl-skip .page-loader { display: none; }
 .btn-consultar-wa:hover { opacity: .8; }
 
 .sizes-row { display: flex; gap: .4rem; flex-wrap: wrap; }
+/* Con 30 ml son 5 tamaños: en una fila en computadora y 3 + 2 en celular,
+   sin que la tarjeta crezca a tres filas */
+.sizes-row:has(> .size-btn:nth-child(5)) { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .3rem; }
+.sizes-row:has(> .size-btn:nth-child(5)) .size-btn { min-width: 0; padding: .45rem .1rem; }
+.sizes-row:has(> .size-btn:nth-child(5)) .size-ml,
+.sizes-row:has(> .size-btn:nth-child(5)) .size-price { font-size: .68rem; white-space: nowrap; }
+@media (max-width: 600px) {
+  .sizes-row:has(> .size-btn:nth-child(5)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 .size-btn {
   display: flex; flex-direction: column; align-items: center; gap: .1rem;
   background: var(--bg2); border: 1px solid var(--border-l);
@@ -8884,6 +8893,15 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 .pd-size-price { font-size: .95rem; font-weight: 700; color: var(--gold-l); }
 .pd-size-note  { font-size: .62rem; color: var(--text3); white-space: nowrap; }
 .pd-size-off   { opacity: .4; cursor: not-allowed; }
+/* 5 tamaños (2, 3, 5, 10 y 30 ml): todos en una fila, más compactos en celular */
+.pd-size-cards:has(> :nth-child(5)) { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .4rem; }
+@media (max-width: 480px) {
+  .pd-size-cards:has(> :nth-child(5)) .pd-size-card  { padding: .9rem .15rem .55rem; }
+  .pd-size-cards:has(> :nth-child(5)) .pd-size-ml    { font-size: .74rem; }
+  .pd-size-cards:has(> :nth-child(5)) .pd-size-price { font-size: .8rem; white-space: nowrap; }
+  .pd-size-cards:has(> :nth-child(5)) .pd-size-note  { font-size: .52rem; }
+  .pd-size-cards:has(> :nth-child(5)) .pd-size-badge { font-size: .44rem; padding: .12rem .3rem; }
+}
 .pd-size-badge {
   position: absolute; top: -.6rem; left: 50%; transform: translateX(-50%);
   white-space: nowrap; padding: .14rem .45rem; border-radius: 4px;
