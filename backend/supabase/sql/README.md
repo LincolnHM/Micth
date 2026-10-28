@@ -30,6 +30,7 @@ Cada archivo se pega completo en **Supabase → SQL Editor → Run**. Van en ord
 | `2026-09-26-favoritos-en-cuenta.sql` | Columna `favoritos` en `perfiles_usuarios`: los ♡ del cliente se guardan en su cuenta y aparecen en cualquier celular donde entre. Sin correrlo, los favoritos siguen solo en el navegador. |
 | `2026-09-23-validar-pedidos.sql` *(actualizado 2026-09-26)* | Ahora también acepta el tipo de entrega "delivery" (Soritor). Volver a pegarlo es **opcional**: con la versión anterior el panel igual reconoce esos pedidos. |
 | `2026-10-19-pagos-por-pedido.sql` | Columna `payments` en `pedidos`: cada pago del pedido por separado (adelanto + saldo, o parte Yape y parte efectivo) y el estado **Separado**. La tienda no puede mandar pagos: un guardia los vacía en cada pedido que llega de un visitante. Sin correrlo, el panel solo deja marcar "Pagado" completo con un método. |
+| `2026-10-27-envios-shalom.sql` | Tabla `pedidos_shalom` (solo el admin la lee): N° de orden, código y clave de Shalom de cada pedido de envío, y cuándo se le mandaron al cliente por WhatsApp. Sin correrlo, el panel no deja guardar esos datos. |
 
 ## Qué correr ahora (2026-09-23), en este orden
 
@@ -49,6 +50,10 @@ Con el paso 1 **ya no necesitas** desplegar la Edge Function ni correr `2026-08-
 ## Nuevo (2026-10-19)
 
 8. `2026-10-19-pagos-por-pedido.sql` → adelantos (pedido "Separado") y pagos divididos Yape + efectivo. Después, haz un pedido de prueba desde la tienda y confirma que llega al panel.
+
+## Nuevo (2026-10-27)
+
+9. `2026-10-27-envios-shalom.sql` → datos de Shalom (N° de orden, código, clave) por pedido y botón para mandárselos al cliente por WhatsApp cuando ya pagó.
 
 ## Cómo saber si uno ya está aplicado
 

@@ -112,8 +112,11 @@ async function renderOrdersSection() {
   tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">Cargando pedidos…</td></tr>';
 
   try {
-    // Una sola query a Supabase — se reutiliza para stats y tabla
+    // Una sola query a Supabase — se reutiliza para stats y tabla. Los datos de
+    // Shalom van aparte; si no cargan, la lista sale igual.
+    const shalomLoad = Promise.all([ShalomShipments.loadAll(), ClienteAdmin.sync()]).catch(() => {});
     let orders = await withTimeout(CloudOrders.getAll(), 15000, 'los pedidos');
+    await withTimeout(shalomLoad, 8000, 'los datos de Shalom').catch(() => {});
     await updateOrderStats(orders);
 
     // Aviso diagnóstico — siempre visible para saber de dónde vienen los datos
@@ -146,7 +149,8 @@ async function renderOrdersSection() {
         (o.customerName  || '').toLowerCase().includes(q) ||
         (o.customerPhone || '').includes(q) ||
         (o.customerDni   || '').includes(q) ||
-        o.id.toLowerCase().includes(q)
+        o.id.toLowerCase().includes(q) ||
+        (ShalomShipments.get(o.id)?.number || '').toLowerCase().includes(q)
       );
     }
 
@@ -192,6 +196,8 @@ async function renderOrdersSection() {
         <span class="order-customer">${sanitize(o.customerName || '—')}</span>
         ${o.customerPhone ? `<div class="order-date">${sanitize(o.customerPhone)}</div>` : ''}
         ${o.customerDni   ? `<div class="order-date" style="font-size:.68rem">DNI ${sanitize(o.customerDni)}</div>` : ''}
+        ${delivType === 'envio' && o.status !== 'cancelado' && orderNeedsClientPhone(o)
+          ? `<span class="order-phone-flag" title="Falta el número del cliente para mandarle su clave de Shalom">${ClienteAdmin.is(o.customerPhone) ? '👤 Cliente admin' : '📵 Sin número'}</span>` : ''}
       </td>
       <td class="order-col-items">
         <div class="order-items-list">${itemsHtml}</div>
@@ -212,6 +218,7 @@ async function renderOrdersSection() {
             ).join('')}
           </select>
           ${owes ? `<button class="btn-order-collect" data-id="${escapeAttr(o.id)}">💰 Cobrar ${money(balance)}</button>` : ''}
+          ${shalomRowButtonHtml(o)}
           <div class="order-btn-row">
             <button class="btn-order-detail" data-id="${escapeAttr(o.id)}">Ver</button>
             <button class="btn-edit-order"   data-id="${escapeAttr(o.id)}">Editar</button>
@@ -247,6 +254,11 @@ async function renderOrdersSection() {
         if (!order) { alert('⚠ No se pudo cargar el pedido. Revisa tu conexión e inténtalo de nuevo.'); return; }
         openPaymentDialog(order);
       });
+    });
+
+    // Datos de Shalom y WhatsApp al cliente
+    tbody.querySelectorAll('.btn-order-shalom').forEach(btn => {
+      btn.addEventListener('click', () => openShalomDialog(btn.dataset.id).catch(console.error));
     });
 
     // Ver detalle
@@ -525,13 +537,17 @@ async function openOrderDetail(id) {
   if (!order) return;
   const modal = document.getElementById('orderDetailModal');
   const body  = document.getElementById('orderDetailBody');
+  const shalom = order.deliveryType === 'envio'
+    ? await withTimeout(ShalomShipments.load(order.id), 8000, 'los datos de Shalom').catch(() => ShalomShipments.get(order.id))
+    : null;
+  const shortDate = d => new Date(d).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
 
   const date = new Date(order.date).toLocaleString('es-PE');
   const pays      = orderPayments(order);
   const paid      = orderPaidAmount(order);
   const balance   = orderBalance(order);
   const cancelled = order.status === 'cancelado';
-  const payDate   = d => new Date(d).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const payDate   = shortDate;
   const methodOptions = p => (p.method ? '' : '<option value="" selected>⏳ Sin método</option>') +
     Object.entries(PAYMENT_METHODS).map(([k, m]) => `<option value="${k}" ${p.method === k ? 'selected' : ''}>${m.icon} ${m.label}</option>`).join('');
 
@@ -574,6 +590,11 @@ async function openOrderDetail(id) {
     ${order.deliveryType === 'envio' ? `
     <div class="order-detail-row"><span class="lbl">Dpto / Prov</span><span class="val">${sanitize(order.department || '')} / ${sanitize(order.province || '')}</span></div>
     <div class="order-detail-row"><span class="lbl">Agencia Shalom</span><span class="val">${sanitize(order.shalomOffice || '—')}</span></div>
+    <div class="order-detail-row"><span class="lbl">Orden Shalom</span><span class="val">${shalom
+      ? `N° ${sanitize(shalom.number || '—')} · Código ${sanitize(shalom.code || '—')} · Clave ${sanitize(shalom.password || '—')}`
+      : 'Sin datos todavía'}</span></div>
+    ${shalom?.notifiedAt ? `<div class="order-detail-row"><span class="lbl">Aviso al cliente</span><span class="val">✓ Enviado por WhatsApp el ${shortDate(shalom.notifiedAt)}</span></div>` : ''}
+    ${shalomRowButtonHtml(order)}
     ` : ''}
     <hr style="border-color:var(--border)">
     <strong style="color:var(--text2);font-size:.75rem;text-transform:uppercase;letter-spacing:.08em">Productos</strong>
@@ -634,6 +655,11 @@ async function openOrderDetail(id) {
   `;
 
   const reopen = () => openOrderDetail(order.id).catch(console.error);
+
+  // Datos de Shalom y WhatsApp al cliente
+  body.querySelector('.btn-order-shalom')?.addEventListener('click', () => {
+    openShalomDialog(order.id, { onDone: reopen }).catch(console.error);
+  });
 
   // Registrar un pago desde el detalle
   body.querySelector('#detAddPaymentBtn')?.addEventListener('click', () => {

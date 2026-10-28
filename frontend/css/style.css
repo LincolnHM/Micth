@@ -1563,6 +1563,15 @@ html:not([data-view="catalogo"]) .view-catalogo { display: none !important; }
 .cib-link  { display: inline-block; margin-top: .35rem; font-size: .76rem; font-weight: 600; color: var(--gold-l); }
 .cib-link:hover { text-decoration: underline; }
 .form-optional { color: var(--text3); font-weight: 400; }
+/* Envío Shalom: los datos del destinatario deben ser de un mayor de edad */
+.checkout-adult-note {
+  display: flex; gap: .55rem; align-items: flex-start;
+  margin: -.25rem 0 1rem; padding: .6rem .85rem;
+  border-radius: var(--r);
+  background: rgba(255,179,0,.08); border: 1px solid rgba(255,179,0,.35);
+  font-size: .78rem; line-height: 1.5; color: var(--text2);
+}
+.checkout-adult-note strong { color: #ffca28; }
 
 .shipping-form { display: flex; flex-direction: column; gap: .8rem; }
 .form-group { display: flex; flex-direction: column; gap: .3rem; }
@@ -2173,6 +2182,39 @@ html:not([data-view="catalogo"]) .view-catalogo { display: none !important; }
   .paydlg-body { padding: .9rem; }
   .paydlg-row { grid-template-columns: 92px minmax(0, 1fr) auto; gap: .4rem; }
   .paydlg-summary strong { font-size: .82rem; }
+}
+
+/* Envío Shalom: N° de orden, código, clave y WhatsApp al cliente */
+.btn-order-shalom { width: 100%; padding: .32rem .6rem; font-size: .74rem; font-weight: 700; white-space: nowrap; border-radius: var(--r); cursor: pointer; background: rgba(33,150,243,.1); color: #64b5f6; border: 1px solid rgba(66,165,245,.35); transition: background .15s; }
+.btn-order-shalom:hover { background: rgba(33,150,243,.2); }
+.btn-order-shalom.is-ready { background: rgba(37,211,102,.14); color: #4ade80; border-color: rgba(37,211,102,.5); }
+.btn-order-shalom.is-ready:hover { background: rgba(37,211,102,.24); }
+.btn-order-shalom.is-sent { background: transparent; color: var(--text2); border-color: var(--border-l); font-weight: 600; }
+.order-modal-body .btn-order-shalom { padding: .55rem; font-size: .82rem; }
+.order-phone-flag { display: inline-block; margin-top: .3rem; padding: .12rem .45rem; border-radius: 50px; white-space: nowrap; font-size: .66rem; font-weight: 600; background: rgba(255,179,0,.1); color: #ffca28; border: 1px solid rgba(255,179,0,.35); }
+.shdlg-where { margin: 0; font-size: .8rem; color: var(--text2); }
+.shdlg-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+.shdlg-field { display: flex; flex-direction: column; gap: .25rem; min-width: 0; }
+.shdlg-field label { font-size: .72rem; font-weight: 600; color: var(--text2); }
+.shdlg-field input, .shdlg-admin-row input { width: 100%; padding: .55rem .65rem; background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: var(--r); color: var(--text); font-size: .95rem; font-weight: 600; }
+.shdlg-field input:focus, .shdlg-admin-row input:focus { outline: none; border-color: var(--gold-d); }
+.shdlg-phone-note:empty { display: none; }
+.shdlg-phone-note { font-size: .72rem; color: var(--text2); }
+.shdlg-phone-note.warn { color: #ffca28; }
+.shdlg-phone-note.bad  { color: #ef9a9a; }
+.shdlg-preview { display: flex; flex-direction: column; gap: .3rem; }
+.shdlg-preview[hidden] { display: none; }
+.shdlg-preview > span { font-size: .66rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text2); }
+.shdlg-preview pre { margin: 0; padding: .6rem .75rem; background: rgba(37,211,102,.06); border: 1px solid rgba(37,211,102,.25); border-radius: var(--r); color: var(--text); font-family: inherit; font-size: .8rem; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.shdlg-admin { font-size: .76rem; color: var(--text2); }
+.shdlg-admin summary { cursor: pointer; }
+.shdlg-admin summary b { color: var(--text); }
+.shdlg-admin p { margin: .4rem 0; line-height: 1.45; }
+.shdlg-admin-row { display: flex; gap: .4rem; }
+.shdlg .paydlg-foot .btn-cancel:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 420px) {
+  .shdlg-grid { grid-template-columns: 1fr 1fr; }
+  .shdlg-grid .shdlg-field:first-child { grid-column: 1 / -1; }
 }
 
 /* Columna acciones */
