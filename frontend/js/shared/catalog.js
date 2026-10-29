@@ -2202,6 +2202,29 @@ const DEFAULT_PRODUCTS = [
     featured: false,
     bottleRemainingMl: 0,
     bottleTotalMl: 0
+  },
+  // Notas: Parfumo y tiendas (misma pirámide que Born in Roma Intense). Acordes estimados.
+  {
+    id: 120,
+    name: 'Paladin',
+    brand: 'Velixir',
+    type: 'arabe',
+    gender: 'unisex',
+    occasion: 'noche',
+    olfFamily: 'Oriental Fougère',
+    topNotes: 'Vainilla',
+    heartNotes: 'Lavanda',
+    baseNotes: 'Vetiver',
+    accords: [ { name: 'avainillado', pct: 100 }, { name: 'lavanda', pct: 80 }, { name: 'aromático', pct: 70 }, { name: 'dulce', pct: 62 }, { name: 'terrosos', pct: 54 }, { name: 'amaderado', pct: 46 }, { name: 'atalcado', pct: 40 }, { name: 'ámbar', pct: 34 } ],
+    description: 'Paladin de Velixir: vainilla cremosa con lavanda limpia sobre un fondo seco de vetiver. Dulce, aromático y elegante; ideal para la noche y ocasiones especiales.',
+    dupeOf: { name: 'Born in Roma Intense', brand: 'Valentino', imageUrl: '/img PERFUMES/valentino_intense.png' },
+    comingSoon: true,
+    imageUrl: '/img PERFUMES/velixir paladin.webp',
+    sizes: { '2ml': 0, '3ml': 18, '5ml': 26, '10ml': 45 },
+    inStock: true,
+    featured: false,
+    bottleRemainingMl: 0,
+    bottleTotalMl: 0
   }
 ];
 
