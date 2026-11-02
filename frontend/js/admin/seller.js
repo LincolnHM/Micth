@@ -57,7 +57,8 @@ async function showSellerPanel(user) {
   } catch (_) {}
 
   // Su nombre (y que siga activa)
-  const { data: me, error } = await db.from('vendedoras').select('nombre, activa').eq('user_id', user.id).maybeSingle();
+  // select('*'): la meta (meta_mensual) existe solo si se corrió 2026-11-03-trabajadores.sql
+  const { data: me, error } = await db.from('vendedoras').select('*').eq('user_id', user.id).maybeSingle();
   if (error || !me || !me.activa) {
     await db.auth.signOut();
     app.style.display = 'none';
@@ -72,6 +73,7 @@ async function showSellerPanel(user) {
     return;
   }
   _seller.name = me.nombre;
+  _seller.meta = parseFloat(me.meta_mensual) || 0;
   document.getElementById('sellerName').textContent = me.nombre;
 
   if (!_seller.ready) {
@@ -490,6 +492,23 @@ function _sellerUnits(o) {
   return flattenOrderItems(o.items).reduce((s, i) => s + (parseInt(i.quantity) || 1), 0);
 }
 
+// Meta del mes que le puso la tienda (Trabajadores → Editar)
+function _sellerGoalHtml() {
+  if (!(_seller.meta > 0)) return '';
+  const now = new Date();
+  const sold = _seller.orders
+    .filter(o => _sellerCounts(o) && new Date(o.date).getMonth() === now.getMonth() && new Date(o.date).getFullYear() === now.getFullYear())
+    .reduce((s, o) => s + o.total, 0);
+  const pct = Math.min(100, Math.round(sold / _seller.meta * 100));
+  return `
+    <div class="seller-goal">
+      <span>Tu meta de ${now.toLocaleDateString('es-PE', { month: 'long' })}</span>
+      <strong>${_sMoney(sold)} <small>de ${_sMoney(_seller.meta)}</small></strong>
+      <div class="seller-bar ${pct >= 100 ? '' : 'low'}"><span style="width:${pct}%"></span></div>
+      <small>${pct >= 100 ? '🎉 ¡Cumpliste tu meta!' : `${pct}% · te faltan ${_sMoney(_seller.meta - sold)}`}</small>
+    </div>`;
+}
+
 function _sellerRenderSales() {
   const [from, to] = _sellerPeriodRange(_seller.period);
   const inPeriod = _seller.orders.filter(o => {
@@ -522,6 +541,7 @@ function _sellerRenderSales() {
       <div><span>Productos</span><strong>${units}</strong></div>
     </div>
 
+    ${_sellerGoalHtml()}
     <div class="seller-owe-card ${owesTotal > 0 ? '' : 'is-zero'}">
       <span>Tienes por entregar a la tienda</span>
       <strong>${_sMoney(owesTotal)}</strong>

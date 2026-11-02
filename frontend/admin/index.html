@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../imgGato/web.png">
-  <link rel="stylesheet" href="../css/style.css?v=20261102-1539">
+  <link rel="stylesheet" href="../css/style.css?v=20261102-1658">
   <style>
     html, body {
       background: #050505 !important;
@@ -456,6 +456,15 @@
             Clientes
           </button>
 
+          <button class="admin-nav-btn" data-section="trabajadores">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+              <rect x="2" y="7" width="20" height="14" rx="2"/>
+              <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+              <path d="M2 13h20"/>
+            </svg>
+            Trabajadores
+          </button>
+
           <button class="admin-nav-btn" data-section="galeria">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
               <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -683,6 +692,18 @@
         </div>
       </div>
 
+
+      <!-- ── Sección: Trabajadores (js/admin/workers.js) ─────────────────────── -->
+      <div class="admin-section" id="section-trabajadores">
+        <div class="admin-section-header">
+          <div>
+            <h2>Trabajadores</h2>
+            <p style="color:var(--text2);font-size:.82rem;margin-top:.2rem">Lo que vende cada trabajadora, su meta, el dinero que tiene y su acceso al panel</p>
+          </div>
+          <button class="btn-add" id="addWorkerBtn" hidden>+ Agregar trabajadora</button>
+        </div>
+        <div id="workersContent"></div>
+      </div>
 
       <!-- ── Sección: Contabilidad ────────────────────────────────────────────── -->
       <div class="admin-section" id="section-accounting">
@@ -1551,36 +1572,37 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.min.js" integrity="sha384-fPWur1rx/DE6YtXP/x0MD6dd90RgnVsz5yX/DIg7CcVAnTBZsENWuIcpvVTM39ti" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con la tienda) — el orden importa -->
-  <script src="../js/shared/data-core.js?v=20261102-1539"></script>
-  <script src="../js/shared/catalog.js?v=20261102-1539"></script>
-  <script src="../js/shared/data.js?v=20261102-1539"></script>
-  <script src="../js/shared/supabase-config.js?v=20261102-1539"></script>
-  <script src="../js/shared/cloud-orders.js?v=20261102-1539"></script>
-  <script src="../js/shared/cloud-gallery.js?v=20261102-1539"></script>
-  <script src="../js/shared/cloud-products.js?v=20261102-1539"></script>
-  <script src="../js/shared/cloud-combos.js?v=20261102-1539"></script>
+  <script src="../js/shared/data-core.js?v=20261102-1658"></script>
+  <script src="../js/shared/catalog.js?v=20261102-1658"></script>
+  <script src="../js/shared/data.js?v=20261102-1658"></script>
+  <script src="../js/shared/supabase-config.js?v=20261102-1658"></script>
+  <script src="../js/shared/cloud-orders.js?v=20261102-1658"></script>
+  <script src="../js/shared/cloud-gallery.js?v=20261102-1658"></script>
+  <script src="../js/shared/cloud-products.js?v=20261102-1658"></script>
+  <script src="../js/shared/cloud-combos.js?v=20261102-1658"></script>
   <!-- Panel admin -->
-  <script src="../js/admin/core.js?v=20261102-1539"></script>
-  <script src="../js/admin/ui.js?v=20261102-1539"></script>
-  <script src="../js/admin/login.js?v=20261102-1539"></script>
-  <script src="../js/admin/nav.js?v=20261102-1539"></script>
-  <script src="../js/admin/dashboard.js?v=20261102-1539"></script>
-  <script src="../js/admin/products.js?v=20261102-1539"></script>
-  <script src="../js/admin/catalog-pdf.js?v=20261102-1539"></script>
-  <script src="../js/admin/orders.js?v=20261102-1539"></script>
-  <script src="../js/admin/order-edit.js?v=20261102-1539"></script>
-  <script src="../js/admin/order-shalom.js?v=20261102-1539"></script>
-  <script src="../js/admin/orders-realtime.js?v=20261102-1539"></script>
-  <script src="../js/admin/combos.js?v=20261102-1539"></script>
-  <script src="../js/admin/site-content.js?v=20261102-1539"></script>
-  <script src="../js/admin/users.js?v=20261102-1539"></script>
-  <script src="../js/admin/accounting.js?v=20261102-1539"></script>
-  <script src="../js/admin/stats.js?v=20261102-1539"></script>
-  <script src="../js/admin/pricing.js?v=20261102-1539"></script>
-  <script src="../js/admin/tools.js?v=20261102-1539"></script>
-  <script src="../js/admin/quote.js?v=20261102-1539"></script>
-  <script src="../js/admin/cash.js?v=20261102-1539"></script>
-  <script src="../js/admin/seller.js?v=20261102-1539"></script>
-  <script src="../js/admin/sellers-admin.js?v=20261102-1539"></script>
+  <script src="../js/admin/core.js?v=20261102-1658"></script>
+  <script src="../js/admin/ui.js?v=20261102-1658"></script>
+  <script src="../js/admin/login.js?v=20261102-1658"></script>
+  <script src="../js/admin/nav.js?v=20261102-1658"></script>
+  <script src="../js/admin/dashboard.js?v=20261102-1658"></script>
+  <script src="../js/admin/products.js?v=20261102-1658"></script>
+  <script src="../js/admin/catalog-pdf.js?v=20261102-1658"></script>
+  <script src="../js/admin/orders.js?v=20261102-1658"></script>
+  <script src="../js/admin/order-edit.js?v=20261102-1658"></script>
+  <script src="../js/admin/order-shalom.js?v=20261102-1658"></script>
+  <script src="../js/admin/orders-realtime.js?v=20261102-1658"></script>
+  <script src="../js/admin/combos.js?v=20261102-1658"></script>
+  <script src="../js/admin/site-content.js?v=20261102-1658"></script>
+  <script src="../js/admin/users.js?v=20261102-1658"></script>
+  <script src="../js/admin/accounting.js?v=20261102-1658"></script>
+  <script src="../js/admin/stats.js?v=20261102-1658"></script>
+  <script src="../js/admin/pricing.js?v=20261102-1658"></script>
+  <script src="../js/admin/tools.js?v=20261102-1658"></script>
+  <script src="../js/admin/quote.js?v=20261102-1658"></script>
+  <script src="../js/admin/cash.js?v=20261102-1658"></script>
+  <script src="../js/admin/seller.js?v=20261102-1658"></script>
+  <script src="../js/admin/sellers-admin.js?v=20261102-1658"></script>
+  <script src="../js/admin/workers.js?v=20261102-1658"></script>
 </body>
 </html>
