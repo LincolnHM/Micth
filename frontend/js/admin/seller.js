@@ -25,6 +25,8 @@ const _seller = {
   orders: [],
   cart: [],                 // { productId, name, brand, size, price, quantity }
   method: null,
+  cat: 'all',               // categoría elegida en Vender
+  limit: 25,                // cuántos perfumes se muestran (botón "Ver más")
   stockFilter: 'all',
   stockSearch: '',
   ordersFilter: 'all',
@@ -57,7 +59,8 @@ async function showSellerPanel(user) {
   } catch (_) {}
 
   // Su nombre (y que siga activa)
-  const { data: me, error } = await db.from('vendedoras').select('nombre, activa').eq('user_id', user.id).maybeSingle();
+  // select('*'): la meta (meta_mensual) existe solo si se corrió 2026-11-03-trabajadores.sql
+  const { data: me, error } = await db.from('vendedoras').select('*').eq('user_id', user.id).maybeSingle();
   if (error || !me || !me.activa) {
     await db.auth.signOut();
     app.style.display = 'none';
@@ -72,6 +75,7 @@ async function showSellerPanel(user) {
     return;
   }
   _seller.name = me.nombre;
+  _seller.meta = parseFloat(me.meta_mensual) || 0;
   document.getElementById('sellerName').textContent = me.nombre;
 
   if (!_seller.ready) {
@@ -126,6 +130,8 @@ function _sellerShow(view) {
   document.querySelectorAll('#sellerSection .seller-view').forEach(v => v.classList.toggle('active', v.dataset.view === view));
   document.querySelectorAll('#sellerSection .seller-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
   document.getElementById('sellerCheckoutBar').hidden = view !== 'vender';
+  document.getElementById('sellerSheet').hidden = true;
+  document.body.style.overflow = '';
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
@@ -185,65 +191,109 @@ function _sellerStockText(p) {
 }
 
 // ── Vender ───────────────────────────────────────────────────────────────────
+// Flujo: 1) tocar el tamaño de cada perfume (con foto, sin tener que escribir),
+// 2) "Continuar" abre "Finalizar venta" (pedido + cliente + cómo pagó),
+// 3) al registrar, pantalla de listo con el resumen para mandarle al cliente.
 
-function _sellerRenderSearch() {
-  const box = document.getElementById('sellerResults');
-  const q = _sNorm(document.getElementById('sellerSearch').value).trim();
-  if (!q) {
-    box.innerHTML = '<p class="seller-hint">Escribe el nombre o la marca del perfume.</p>';
-    return;
-  }
-  const words = q.split(/\s+/);
-  const found = _seller.products
-    .filter(p => { const t = _sNorm(`${p.name} ${p.brand}`); return words.every(w => t.includes(w)); })
-    .sort((a, b) => Number(isDecantPurchasable(b)) - Number(isDecantPurchasable(a)) || a.name.localeCompare(b.name, 'es'))
-    .slice(0, 12);
-  if (!found.length) {
-    box.innerHTML = '<p class="seller-hint">No encontré ese perfume. Prueba con otra palabra.</p>';
-    return;
-  }
-  box.innerHTML = found.map(p => `
-    <div class="seller-prod">
-      <div class="seller-prod-head">
-        <div>
-          <strong>${sanitize(p.name)}</strong>
-          <span>${sanitize(p.brand)} · ${_sellerStockText(p)}</span>
-        </div>
-      </div>
-      <div class="seller-sizes">
-        ${_sellerOptions(p).map(o => `
-          <button type="button" class="seller-size" data-id="${p.id}" data-size="${escapeAttr(o.size)}" ${o.ok ? '' : 'disabled'}>
-            <b>${sanitize(o.label || o.size)}</b><span>S/ ${o.price}</span>
-          </button>`).join('') || '<span class="seller-hint">Sin precios cargados</span>'}
-      </div>
-    </div>`).join('');
+const SELLER_PAGE = 25;
+
+// Foto del perfume (o del primer perfume de un combo)
+function _sellerImg(p) {
+  const u = p?.imageUrl || '';
+  if (!u) return '/imgGato/icons/icon-192.png';
+  if (/^(data:|https?:)/.test(u)) return u;
+  return encodeURI(u.startsWith('/') ? u : '/' + u);
+}
+function _sellerComboImg(c) {
+  if (c.imageUrl && !c.imageUrl.startsWith('data:')) return _sellerImg({ imageUrl: c.imageUrl });
+  return _sellerImg(_seller.lookup.get((c.items || [])[0]));
+}
+const _sellerLineImg = c => c.isCombo ? _sellerComboImg(_seller.combos.find(x => x.id === c.comboId) || {}) : _sellerImg(_seller.lookup.get(c.productId));
+const _sellerInCart  = (match) => _seller.cart.filter(match).reduce((s, c) => s + c.quantity, 0);
+const _sellerSizeLabel = s => s === 'Unidad' ? 'Entero' : s;
+
+function _sellerMatches(text, words) {
+  const t = _sNorm(text);
+  return words.every(w => t.includes(w));
 }
 
-function _sellerRenderCombos() {
-  const card = document.getElementById('sellerCombosCard');
-  const box  = document.getElementById('sellerCombos');
-  if (!card || !box) return;
-  card.hidden = !_seller.combos.length;
-  box.innerHTML = _seller.combos.map(c => {
-    const opts = _sellerComboOptions(c);
-    const names = (c.items || []).map(id => _seller.lookup.get(id)).filter(Boolean)
-      .map(p => `${sanitize(p.name)} <small>(${sanitize(p.brand)})</small>`).join(' + ');
-    return `
-    <div class="seller-prod seller-combo">
-      <div class="seller-prod-head">
-        <div>
-          <strong>🎁 ${sanitize(c.title)}</strong>
-          <span>${names || 'Sin perfumes'}</span>
-        </div>
-      </div>
-      <div class="seller-sizes">
-        ${opts.map(o => `
-          <button type="button" class="seller-size seller-combo-size" data-combo="${c.id}" data-size="${escapeAttr(o.size)}" ${o.ok ? '' : 'disabled'}>
-            <b>${sanitize(o.size)}</b><span>S/ ${o.price}</span>${o.before > o.price ? `<s>S/ ${o.before}</s>` : ''}
-          </button>`).join('') || '<span class="seller-hint">Sin tallas disponibles ahora</span>'}
-      </div>
-    </div>`;
-  }).join('');
+function _sellerSizeBtn({ attrs, label, price, before, ok, n }) {
+  return `<button type="button" class="sv-size ${n ? 'in-cart' : ''}" ${attrs} ${ok ? '' : 'disabled'}>
+    <b>${sanitize(label)}</b><span>S/ ${price}</span>${before > price ? `<s>S/ ${before}</s>` : ''}${n ? `<em>×${n}</em>` : ''}
+  </button>`;
+}
+
+function _sellerProductHtml(p) {
+  const opts = _sellerOptions(p);
+  const out = !isDecantPurchasable(p);
+  return `
+  <div class="sv-item ${out ? 'is-out' : ''}">
+    <img class="sv-thumb" src="${escapeAttr(_sellerImg(p))}" alt="" loading="lazy" decoding="async">
+    <div class="sv-info">
+      <strong>${sanitize(p.name)}</strong>
+      <span>${sanitize(p.brand)} · ${_sellerStockText(p)}</span>
+      ${out ? '' : `<div class="sv-sizes">${opts.map(o => _sellerSizeBtn({
+        attrs: `data-id="${p.id}" data-size="${escapeAttr(o.size)}"`, label: o.label || o.size, price: o.price, ok: o.ok,
+        n: _sellerInCart(c => !c.isCombo && c.productId === p.id && c.size === o.size)
+      })).join('') || '<span class="seller-hint">Sin precios cargados</span>'}</div>`}
+    </div>
+  </div>`;
+}
+
+function _sellerComboHtml(c) {
+  const names = (c.items || []).map(id => _seller.lookup.get(id)).filter(Boolean).map(p => sanitize(p.name)).join(' + ');
+  const opts = _sellerComboOptions(c);
+  return `
+  <div class="sv-item sv-combo">
+    <div class="sv-thumb sv-thumb-combo">
+      ${(c.items || []).slice(0, 2).map(id => `<img src="${escapeAttr(_sellerImg(_seller.lookup.get(id)))}" alt="" loading="lazy" decoding="async">`).join('')}
+    </div>
+    <div class="sv-info">
+      <strong>🎁 ${sanitize(c.title)}</strong>
+      <span>${names || 'Combo'}</span>
+      <div class="sv-sizes">${opts.map(o => _sellerSizeBtn({
+        attrs: `data-combo="${c.id}" data-size="${escapeAttr(o.size)}"`, label: o.size, price: o.price, before: o.before, ok: o.ok,
+        n: _sellerInCart(x => x.isCombo && x.comboId === c.id && x.size === o.size)
+      })).join('') || '<span class="seller-hint">Sin tallas disponibles ahora</span>'}</div>
+    </div>
+  </div>`;
+}
+
+function _sellerRenderSearch() {
+  const box  = document.getElementById('sellerResults');
+  const info = document.getElementById('sellerResultsInfo');
+  const more = document.getElementById('sellerMore');
+  const q = _sNorm(document.getElementById('sellerSearch').value).trim();
+  const words = q ? q.split(/\s+/) : [];
+  const cat = _seller.cat || 'all';
+
+  const combos = (cat === 'all' || cat === 'combos')
+    ? _seller.combos.filter(c => !words.length || _sellerMatches(`${c.title} ${(c.items || []).map(id => _seller.lookup.get(id)?.name || '').join(' ')}`, words))
+    : [];
+  const products = cat === 'combos' ? [] : _seller.products
+    .filter(p => (cat === 'all' || p.type === cat) && (!words.length || _sellerMatches(`${p.name} ${p.brand}`, words)))
+    .sort((a, b) => Number(isDecantPurchasable(b)) - Number(isDecantPurchasable(a)) || a.name.localeCompare(b.name, 'es'));
+
+  const shown = products.slice(0, _seller.limit || SELLER_PAGE);
+  info.textContent = q || cat !== 'all'
+    ? `${products.length + combos.length} ${products.length + combos.length === 1 ? 'resultado' : 'resultados'}`
+    : 'Toca el tamaño para agregarlo al pedido.';
+  // Sin búsqueda, los combos van arriba; buscando, primero el perfume que escribió
+  const combosHtml = combos.map(_sellerComboHtml).join(''), productsHtml = shown.map(_sellerProductHtml).join('');
+  box.innerHTML = (words.length ? productsHtml + combosHtml : combosHtml + productsHtml)
+    || '<p class="seller-hint">No encontré ese perfume. Prueba con otra palabra o cambia de categoría.</p>';
+  more.hidden = shown.length >= products.length;
+  more.textContent = `Ver más perfumes (${products.length - shown.length})`;
+}
+
+// Se mantiene por compatibilidad: los combos ya salen en la misma lista
+function _sellerRenderCombos() {}
+
+function _sellerAfterAdd(text) {
+  try { navigator.vibrate?.(15); } catch (_) {}
+  _sellerRenderCart();
+  _sellerRenderSearch();
+  showToast(text);
 }
 
 function _sellerAddCombo(comboId, size) {
@@ -257,45 +307,53 @@ function _sellerAddCombo(comboId, size) {
   } else {
     _seller.cart.push(_sellerComboLine(combo, size));
   }
-  _sellerRenderCart();
-  _sellerRenderSearch();
-  _sellerRenderCombos();
-  showToast(`${combo.title} ${size} agregado`);
+  _sellerAfterAdd(`✓ ${combo.title} ${size} agregado`);
 }
 
 function _sellerAdd(productId, size) {
   const p = _seller.lookup.get(productId);
   const opt = _sellerOptions(p).find(o => o.size === size);
   if (!p || !opt || !opt.ok) return;
-  const line = _seller.cart.find(c => c.productId === productId && c.size === size);
+  const line = _seller.cart.find(c => !c.isCombo && c.productId === productId && c.size === size);
   if (line) line.quantity++;
   else _seller.cart.push({ productId, name: p.name, brand: p.brand, size, price: opt.price, quantity: 1 });
-  _sellerRenderCart();
-  _sellerRenderSearch();
-  _sellerRenderCombos();
-  showToast(`${p.name} ${opt.label || size} agregado`);
+  _sellerAfterAdd(`✓ ${p.name} ${opt.label || size} agregado`);
+}
+
+function _sellerTotals() {
+  return {
+    total: _seller.cart.reduce((s, c) => s + c.price * c.quantity, 0),
+    count: _seller.cart.reduce((s, c) => s + c.quantity, 0),
+  };
 }
 
 function _sellerRenderCart() {
-  const box = document.getElementById('sellerCart');
-  const total = _seller.cart.reduce((s, c) => s + c.price * c.quantity, 0);
-  const count = _seller.cart.reduce((s, c) => s + c.quantity, 0);
-  box.innerHTML = _seller.cart.length ? _seller.cart.map((c, i) => `
-    <div class="seller-line">
-      <div class="seller-line-info">
-        <strong>${sanitize(c.name)}</strong>
-        <span>${c.isCombo ? `🎁 ${sanitize(c.composition)}` : sanitize(c.brand)} · ${sanitize(c.size === 'Unidad' ? 'Entero' : c.size)} · S/ ${c.price}</span>
-      </div>
-      <div class="seller-qty">
-        <button type="button" data-i="${i}" data-d="-1" aria-label="Quitar uno">−</button>
-        <span>${c.quantity}</span>
-        <button type="button" data-i="${i}" data-d="1" aria-label="Agregar uno">+</button>
-      </div>
-      <strong class="seller-line-total">${_sMoney(c.price * c.quantity)}</strong>
-    </div>`).join('')
-    : '<p class="seller-hint">Aún no agregas perfumes.</p>';
+  const { total, count } = _sellerTotals();
+  // Barra de abajo (pantalla de perfumes)
+  document.getElementById('sellerBarThumbs').innerHTML = _seller.cart.slice(0, 4)
+    .map(c => `<img src="${escapeAttr(_sellerLineImg(c))}" alt="">`).join('');
+  document.getElementById('sellerCount').textContent = count ? `${count} ${count === 1 ? 'producto' : 'productos'}` : 'Elige perfumes';
   document.getElementById('sellerTotal').textContent = _sMoney(total);
-  document.getElementById('sellerCount').textContent = count ? `${count} ${count === 1 ? 'producto' : 'productos'}` : 'Sin productos';
+  document.getElementById('sellerContinue').disabled = !count;
+
+  // Pedido dentro de "Finalizar venta"
+  document.getElementById('sellerCart').innerHTML = _seller.cart.length ? _seller.cart.map((c, i) => `
+    <div class="sv-line">
+      <img class="sv-line-img" src="${escapeAttr(_sellerLineImg(c))}" alt="">
+      <div class="sv-line-info">
+        <strong>${sanitize(c.name)}</strong>
+        <span>${c.isCombo ? `🎁 ${sanitize(c.composition)} · ` : `${sanitize(c.brand)} · `}${sanitize(_sellerSizeLabel(c.size))} · S/ ${c.price}</span>
+        <div class="seller-qty">
+          <button type="button" data-i="${i}" data-d="-1" aria-label="Quitar uno">${c.quantity === 1 ? '🗑' : '−'}</button>
+          <span>${c.quantity}</span>
+          <button type="button" data-i="${i}" data-d="1" aria-label="Agregar uno">+</button>
+        </div>
+      </div>
+      <strong class="sv-line-total">${_sMoney(c.price * c.quantity)}</strong>
+    </div>`).join('')
+    : '<p class="seller-hint">Tu pedido está vacío. Vuelve y toca los tamaños que quieras.</p>';
+  document.getElementById('sellerSheetTotal').textContent = _sMoney(total);
+  document.getElementById('sellerSheetCount').textContent = `${count} ${count === 1 ? 'producto' : 'productos'}`;
   document.getElementById('sellerSubmit').disabled = !count;
 }
 
@@ -310,7 +368,31 @@ function _sellerChangeQty(i, d) {
   if (c.quantity <= 0) _seller.cart.splice(i, 1);
   _sellerRenderCart();
   _sellerRenderSearch();
-  _sellerRenderCombos();
+  if (!_seller.cart.length) _sellerCloseSheet();
+}
+
+// ── "Finalizar venta" ────────────────────────────────────────────────────────
+function _sellerOpenSheet() {
+  if (!_seller.cart.length) return;
+  _sellerRenderCart();
+  document.getElementById('sellerSheet').hidden = false;
+  document.getElementById('sellerCheckoutBar').hidden = true;
+  document.body.style.overflow = 'hidden';
+  document.querySelector('#sellerSheet .sv-sheet-body').scrollTop = 0;
+}
+function _sellerCloseSheet() {
+  document.getElementById('sellerSheet').hidden = true;
+  document.body.style.overflow = '';
+  const onVender = document.querySelector('#sellerSection .seller-view.active')?.dataset.view === 'vender';
+  document.getElementById('sellerCheckoutBar').hidden = !onVender;
+}
+
+function _sellerMarkMissing(id, msg) {
+  const el = document.getElementById(id);
+  el.classList.add('sv-missing');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(() => el.classList.remove('sv-missing'), 1800);
+  showToast(msg);
 }
 
 async function _sellerSubmit() {
@@ -319,11 +401,11 @@ async function _sellerSubmit() {
   const phone   = document.getElementById('sellerClientPhone').value.trim();
   const dtype   = document.getElementById('sellerDelivery').value;
   const notes   = document.getElementById('sellerNotes').value.trim();
-  const total   = _seller.cart.reduce((s, c) => s + c.price * c.quantity, 0);
+  const { total } = _sellerTotals();
 
-  if (!_seller.cart.length)   { showToast('Agrega al menos un perfume.'); return; }
-  if (name.length < 2)        { showToast('Escribe el nombre del cliente.'); document.getElementById('sellerClientName').focus(); return; }
-  if (!_seller.method)        { showToast('Elige cómo te pagó el cliente.'); return; }
+  if (!_seller.cart.length) { showToast('Agrega al menos un perfume.'); return; }
+  if (name.length < 2)      { _sellerMarkMissing('sellerClientBox', 'Escribe el nombre del cliente.'); document.getElementById('sellerClientName').focus(); return; }
+  if (!_seller.method)      { _sellerMarkMissing('sellerPayBox', 'Elige cómo te pagó el cliente.'); return; }
 
   // Revisión rápida de stock antes de mandar (la base igual lo vuelve a revisar)
   const short = stockShortages(_seller.cart, _seller.lookup);
@@ -333,11 +415,9 @@ async function _sellerSubmit() {
     return;
   }
 
-  const method = PAYMENT_METHODS[_seller.method]?.label || _seller.method;
-  if (!confirm(`¿Registrar la venta a ${name} por ${_sMoney(total)} (${method})?\n\nQuedará como Pagado y se descontará el stock.`)) return;
-
   btn.disabled = true;
   btn.textContent = 'Registrando…';
+  const cart = _seller.cart.map(c => ({ ...c }));
   const row = {
     id:             generateOrderId(),
     customer_name:  name,
@@ -345,7 +425,7 @@ async function _sellerSubmit() {
     delivery_type:  dtype,
     notes,
     // Precios y contenido de combos los vuelve a poner la base (guardia de precios)
-    items: _seller.cart.map(c => c.isCombo ? {
+    items: cart.map(c => c.isCombo ? {
       productId: c.productId, isCombo: true, comboId: c.comboId, productName: c.name, brand: c.brand,
       size: c.size, price: c.price, quantity: c.quantity, comboItems: c.comboItems
     } : {
@@ -361,26 +441,56 @@ async function _sellerSubmit() {
     // completa (no tiene .finally, que usa withTimeout)
     const { data, error } = await withTimeout(Promise.resolve(db.from('pedidos').insert(row).select('id, total').single()), 20000, 'el registro del pedido');
     if (error) throw new Error(error.message || error.code);
+    const method = _seller.method;
     _seller.cart = [];
     _seller.method = null;
     ['sellerClientName', 'sellerClientPhone', 'sellerNotes', 'sellerSearch'].forEach(id => { document.getElementById(id).value = ''; });
     document.getElementById('sellerDelivery').value = 'recojo';
     document.querySelectorAll('#sellerSection .seller-pay').forEach(b => b.classList.remove('active'));
-    showToast(`✅ Venta registrada · ${_sMoney(data?.total ?? total)}`);
+    _sellerCloseSheet();
+    _sellerShowDone({ name, phone, total: data?.total ?? total, method, cart });
     await Promise.all([_sellerLoadProducts(), _sellerLoadOrders()]);
     _sellerRenderAll();
-    _sellerShow('pedidos');
   } catch (err) {
     console.error('[MICHT] Vendedora: registrar pedido', err);
     alert('⚠ No se registró la venta: ' + (err.message || 'error de conexión'));
     // El stock pudo cambiar: refrescar
     await _sellerLoadProducts();
     _sellerRenderSearch();
-    _sellerRenderCombos();
+    _sellerRenderCart();
   } finally {
     btn.textContent = 'Registrar venta';
     btn.disabled = !_seller.cart.length;
   }
+}
+
+// ── Venta lista: resumen y mensaje para el cliente ───────────────────────────
+function _sellerShowDone({ name, phone, total, method, cart }) {
+  const lines = cart.map(c => `• ${c.name}${c.isCombo ? ` (${c.composition})` : ''} ${_sellerSizeLabel(c.size)} x${c.quantity} — ${_sMoney(c.price * c.quantity)}`);
+  const msg = `¡Hola ${name}! Gracias por tu compra en MICHT Decants 💜\n\n${lines.join('\n')}\n\nTotal: ${_sMoney(total)} (${PAYMENT_METHODS[method]?.label || method})\n\nCualquier consulta, aquí estoy.`;
+  const digits = phone.replace(/\D/g, '');
+  const wa = digits ? `https://wa.me/${digits.length === 9 ? '51' + digits : digits}?text=${encodeURIComponent(msg)}` : '';
+  const box = document.getElementById('sellerDone');
+  box.querySelector('.sv-done-body').innerHTML = `
+    <div class="sv-done-icon">✅</div>
+    <h2>¡Venta registrada!</h2>
+    <p class="sv-done-total">${_sMoney(total)} <small>${PAYMENT_METHODS[method]?.icon || ''} ${PAYMENT_METHODS[method]?.label || ''}</small></p>
+    <p class="sv-done-client">${sanitize(name)}</p>
+    <ul class="sv-done-items">${cart.map(c => `<li><img src="${escapeAttr(_sellerLineImg(c))}" alt=""><span>${sanitize(c.name)} <small>${sanitize(_sellerSizeLabel(c.size))} ×${c.quantity}</small></span></li>`).join('')}</ul>
+    <p class="seller-hint">Quedó como pagada y el stock ya se descontó.</p>
+    ${wa ? `<a class="sv-btn sv-btn-wa" href="${escapeAttr(wa)}" target="_blank" rel="noopener noreferrer">📲 Mandar resumen al cliente</a>` : ''}
+    <button type="button" class="sv-btn sv-btn-main" data-done="new">+ Nueva venta</button>
+    <button type="button" class="sv-btn" data-done="orders">Ver mis pedidos</button>`;
+  box.hidden = false;
+  document.body.style.overflow = 'hidden';
+  // Que ningún aviso anterior tape el botón de WhatsApp
+  const t = document.getElementById('adminToast');
+  if (t) { clearTimeout(t._timer); t.style.opacity = '0'; }
+}
+function _sellerCloseDone(goTo) {
+  document.getElementById('sellerDone').hidden = true;
+  document.body.style.overflow = '';
+  _sellerShow(goTo);
 }
 
 // ── Mis pedidos ──────────────────────────────────────────────────────────────
@@ -465,12 +575,15 @@ function _sellerRenderStock() {
       .map(([s, v]) => `${sanitize(s)} S/ ${v}`).join(' · ');
     return `
     <div class="seller-stock-row ${isDecantPurchasable(p) ? '' : 'is-out'}">
-      <div class="seller-stock-top">
-        <div><strong>${sanitize(p.name)}</strong><span>${sanitize(p.brand)}</span></div>
-        <em>${_sellerStockText(p)}</em>
+      <img class="sv-thumb" src="${escapeAttr(_sellerImg(p))}" alt="" loading="lazy" decoding="async">
+      <div class="seller-stock-main">
+        <div class="seller-stock-top">
+          <div><strong>${sanitize(p.name)}</strong><span>${sanitize(p.brand)}</span></div>
+          <em>${_sellerStockText(p)}</em>
+        </div>
+        ${pct !== null ? `<div class="seller-bar ${low(p) ? 'low' : ''}"><span style="width:${pct}%"></span></div>` : ''}
+        <small>${prices || 'Sin precios cargados'}</small>
       </div>
-      ${pct !== null ? `<div class="seller-bar ${low(p) ? 'low' : ''}"><span style="width:${pct}%"></span></div>` : ''}
-      <small>${prices || 'Sin precios cargados'}</small>
     </div>`;
   }).join('') : '<p class="seller-hint">No hay perfumes con ese filtro.</p>';
 }
@@ -488,6 +601,23 @@ function _sellerPeriodRange(period) {
 
 function _sellerUnits(o) {
   return flattenOrderItems(o.items).reduce((s, i) => s + (parseInt(i.quantity) || 1), 0);
+}
+
+// Meta del mes que le puso la tienda (Trabajadores → Editar)
+function _sellerGoalHtml() {
+  if (!(_seller.meta > 0)) return '';
+  const now = new Date();
+  const sold = _seller.orders
+    .filter(o => _sellerCounts(o) && new Date(o.date).getMonth() === now.getMonth() && new Date(o.date).getFullYear() === now.getFullYear())
+    .reduce((s, o) => s + o.total, 0);
+  const pct = Math.min(100, Math.round(sold / _seller.meta * 100));
+  return `
+    <div class="seller-goal">
+      <span>Tu meta de ${now.toLocaleDateString('es-PE', { month: 'long' })}</span>
+      <strong>${_sMoney(sold)} <small>de ${_sMoney(_seller.meta)}</small></strong>
+      <div class="seller-bar ${pct >= 100 ? '' : 'low'}"><span style="width:${pct}%"></span></div>
+      <small>${pct >= 100 ? '🎉 ¡Cumpliste tu meta!' : `${pct}% · te faltan ${_sMoney(_seller.meta - sold)}`}</small>
+    </div>`;
 }
 
 function _sellerRenderSales() {
@@ -522,6 +652,7 @@ function _sellerRenderSales() {
       <div><span>Productos</span><strong>${units}</strong></div>
     </div>
 
+    ${_sellerGoalHtml()}
     <div class="seller-owe-card ${owesTotal > 0 ? '' : 'is-zero'}">
       <span>Tienes por entregar a la tienda</span>
       <strong>${_sMoney(owesTotal)}</strong>
@@ -543,14 +674,25 @@ function _sellerBindEvents() {
   const app = document.getElementById('sellerSection');
   app.querySelectorAll('.seller-tab').forEach(t => t.addEventListener('click', () => _sellerShow(t.dataset.view)));
 
-  document.getElementById('sellerSearch').addEventListener('input', _sellerRenderSearch);
+  document.getElementById('sellerSearch').addEventListener('input', () => { _seller.limit = SELLER_PAGE; _sellerRenderSearch(); });
+  app.querySelectorAll('[data-cat]').forEach(b => b.addEventListener('click', () => {
+    _seller.cat = b.dataset.cat;
+    _seller.limit = SELLER_PAGE;
+    app.querySelectorAll('[data-cat]').forEach(x => x.classList.toggle('active', x === b));
+    _sellerRenderSearch();
+  }));
+  document.getElementById('sellerMore').addEventListener('click', () => { _seller.limit += SELLER_PAGE; _sellerRenderSearch(); });
   document.getElementById('sellerResults').addEventListener('click', e => {
-    const b = e.target.closest('.seller-size');
-    if (b && !b.disabled) _sellerAdd(parseInt(b.dataset.id), b.dataset.size);
+    const b = e.target.closest('.sv-size');
+    if (!b || b.disabled) return;
+    if (b.dataset.combo) _sellerAddCombo(parseInt(b.dataset.combo), b.dataset.size);
+    else _sellerAdd(parseInt(b.dataset.id), b.dataset.size);
   });
-  document.getElementById('sellerCombos').addEventListener('click', e => {
-    const b = e.target.closest('.seller-combo-size');
-    if (b && !b.disabled) _sellerAddCombo(parseInt(b.dataset.combo), b.dataset.size);
+  document.getElementById('sellerContinue').addEventListener('click', _sellerOpenSheet);
+  document.getElementById('sellerSheetBack').addEventListener('click', _sellerCloseSheet);
+  document.getElementById('sellerDone').addEventListener('click', e => {
+    const b = e.target.closest('[data-done]');
+    if (b) _sellerCloseDone(b.dataset.done === 'orders' ? 'pedidos' : 'vender');
   });
   document.getElementById('sellerCart').addEventListener('click', e => {
     const b = e.target.closest('.seller-qty button');

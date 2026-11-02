@@ -91,8 +91,9 @@ async function renderSellersAccounting() {
   }));
 }
 
-// Elegir qué ventas te entregó (por defecto todas) y marcarlas
-function _saOpenReceive(s) {
+// Elegir qué ventas te entregó (por defecto todas) y marcarlas. `onDone` refresca
+// la pantalla desde donde se abrió (Contabilidad o Trabajadores).
+function _saOpenReceive(s, onDone = () => renderSellersAccounting()) {
   const overlay = document.createElement('div');
   overlay.className = 'sa-overlay';
   overlay.innerHTML = `
@@ -137,6 +138,6 @@ function _saOpenReceive(s) {
     if (error) { alert('⚠ No se pudo guardar: ' + (error.message || error.code)); okBtn.disabled = false; return; }
     close();
     showToast(`✓ Recibido: ${data?.length || 0} ${data?.length === 1 ? 'venta' : 'ventas'} de ${s.name}`);
-    renderSellersAccounting().catch(console.error);
+    Promise.resolve(onDone()).catch(console.error);
   });
 }
