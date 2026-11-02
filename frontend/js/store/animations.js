@@ -3,6 +3,8 @@
 
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const isMobile       = () => window.innerWidth < 768;
+  // Tilt y brillos solo con mouse real: tablets y laptops táctiles no los necesitan
+  const canHover       = window.matchMedia('(hover: hover) and (pointer: fine)');
 
   // ─── Barra de progreso de scroll ─────────────────────────
   const progressLine = document.createElement('div');
@@ -11,7 +13,9 @@
 
   function updateProgress() {
     const max = document.documentElement.scrollHeight - window.innerHeight;
-    progressLine.style.width = max > 0 ? (window.scrollY / max * 100) + '%' : '0%';
+    const pct = max > 0 ? Math.min(1, window.scrollY / max) : 0;
+    // scaleX en vez de width: no recalcula el layout y va fluido en celulares
+    progressLine.style.transform = `scaleX(${pct})`;
   }
 
   // ─── Sistema parallax ─────────────────────────────────────
@@ -120,42 +124,51 @@
   }
 
   // ─── Efecto tilt en tarjetas de producto (hover) ─────────
+  let tiltReady = false;
+
   function initCardTilt() {
-    if (prefersReduced || isMobile()) return;
+    if (tiltReady || prefersReduced || !canHover.matches) return;
+    tiltReady = true;
 
-    document.addEventListener('mousemove', e => {
-      const card = e.target.closest('.product-card');
-      if (!card) {
-        // Resetear todas las tarjetas sin hover
-        document.querySelectorAll('.product-card.tilted').forEach(c => {
-          c.style.transform = '';
-          c.classList.remove('tilted');
-        });
-        return;
-      }
-      const rect   = card.getBoundingClientRect();
-      const cx     = rect.left + rect.width  / 2;
-      const cy     = rect.top  + rect.height / 2;
-      const dx     = (e.clientX - cx) / (rect.width  / 2);
-      const dy     = (e.clientY - cy) / (rect.height / 2);
-      const rx     = -dy * 4;
-      const ry     =  dx * 4;
-      card.style.transform = `perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(4px)`;
-      card.classList.add('tilted');
+    let pending = null;
+    let tiltFrame = 0;
 
-      // Coordenadas locales para el brillo reflectivo
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      card.style.setProperty('--x', `${x}px`);
-      card.style.setProperty('--y', `${y}px`);
-    });
-
-    document.addEventListener('mouseleave', () => {
+    function resetTilt(except) {
       document.querySelectorAll('.product-card.tilted').forEach(c => {
+        if (c === except) return;
         c.style.transform = '';
         c.classList.remove('tilted');
       });
-    }, true);
+    }
+
+    function applyTilt() {
+      tiltFrame = 0;
+      const e = pending;
+      if (!e) return;
+      const card = e.target.closest ? e.target.closest('.product-card') : null;
+      resetTilt(card);
+      if (!card || !canHover.matches) return;
+
+      const rect = card.getBoundingClientRect();
+      const dx   = (e.clientX - (rect.left + rect.width  / 2)) / (rect.width  / 2);
+      const dy   = (e.clientY - (rect.top  + rect.height / 2)) / (rect.height / 2);
+      card.style.transform = `perspective(800px) rotateX(${-dy * 4}deg) rotateY(${dx * 4}deg) translateZ(4px)`;
+      card.classList.add('tilted');
+
+      // Coordenadas locales para el brillo reflectivo
+      card.style.setProperty('--x', `${e.clientX - rect.left}px`);
+      card.style.setProperty('--y', `${e.clientY - rect.top}px`);
+    }
+
+    // Un cálculo por frame como máximo (antes corría en cada píxel del mouse)
+    document.addEventListener('mousemove', e => {
+      pending = e;
+      if (!tiltFrame) tiltFrame = requestAnimationFrame(applyTilt);
+    }, { passive: true });
+
+    document.addEventListener('mouseleave', () => resetTilt(null), true);
+    // Si se conecta/desconecta un mouse (tablet con teclado), limpiar el efecto
+    canHover.addEventListener?.('change', () => { if (!canHover.matches) resetTilt(null); });
   }
 
   // ─── Loop RAF unificado ───────────────────────────────────
@@ -178,6 +191,9 @@
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
+  // Al girar el celular o cambiar el tamaño de la ventana, recalcular posiciones
+  window.addEventListener('resize', onScroll, { passive: true });
+  window.addEventListener('orientationchange', () => setTimeout(onScroll, 150));
 
   // ─── Partículas doradas ───────────────────────────────────
   function createParticles() {
@@ -211,6 +227,12 @@
     const revealEls = document.querySelectorAll('.reveal-on-scroll');
     if (!revealEls.length) return;
 
+    // Navegadores sin IntersectionObserver o sin animaciones: mostrar todo de una vez
+    if (prefersReduced || !('IntersectionObserver' in window)) {
+      revealEls.forEach(el => el.classList.add('revealed'));
+      return;
+    }
+
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -218,7 +240,11 @@
           observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.12 });
+    }, {
+      // En celular los elementos son altos: umbral bajo y un margen para que aparezcan antes
+      threshold: isMobile() ? 0.05 : 0.12,
+      rootMargin: '0px 0px -6% 0px',
+    });
 
     revealEls.forEach(el => observer.observe(el));
   }
@@ -238,6 +264,7 @@
 
     // Init card tilt after a short delay (productos se renderizan dinámicamente)
     setTimeout(initCardTilt, 800);
+    canHover.addEventListener?.('change', initCardTilt);
 
     updateProgress();
     onScroll();

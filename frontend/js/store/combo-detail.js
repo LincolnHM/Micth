@@ -229,6 +229,7 @@ function openComboModal(comboId, { fromHistory = false } = {}) {
 
   // Ocultar el catálogo y mostrar la ficha
   document.querySelectorAll(_PD_HIDE_SELECTOR).forEach(el => el.classList.add('pd-page-hidden'));
+  if (typeof _toggleSeoFicha === 'function') _toggleSeoFicha(null);
   document.body.classList.add('pd-open');
   document.getElementById('cdModal').classList.add('open');
   window.scrollTo({ top: 0, behavior: 'instant' });

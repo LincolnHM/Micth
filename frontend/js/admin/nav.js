@@ -14,6 +14,7 @@ function setupNav() {
       if (btn.dataset.section === 'orders')      renderOrdersSection().catch(console.error);
       if (btn.dataset.section === 'users')       renderUsersSection().catch(console.error);
       if (btn.dataset.section === 'accounting')  renderAccountingSection().catch(console.error);
+      if (btn.dataset.section === 'accounting')  renderSellersAccounting().catch(console.error);
       if (btn.dataset.section === 'stats')       renderStatsSection().catch(console.error);
       if (btn.dataset.section === 'caja')        renderCajaSection().catch(console.error);
       if (btn.dataset.section === 'tools')       setupToolsSection().catch(console.error);

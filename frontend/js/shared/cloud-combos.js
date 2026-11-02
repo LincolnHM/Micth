@@ -54,9 +54,10 @@ function comboDbError(error) {
 
 const CloudCombos = {
 
-  async getAll() {
-    if (db) {
-      const { data, error } = await db
+  // `client`: el panel de una vendedora lee con un cliente anónimo (solo combos activos)
+  async getAll({ client = db } = {}) {
+    if (client) {
+      const { data, error } = await client
         .from('combos')
         .select('*')
         .order('id', { ascending: true });

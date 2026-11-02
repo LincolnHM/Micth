@@ -19,6 +19,19 @@ Regla de oro: **si algo no debe verlo el público (SQL, políticas, funciones de
 
 **Antes de subir cambios de `frontend/js/` o `frontend/css/`:** corre `node tools/bump-version.mjs`. Cambia el número `?v=` de los archivos en los HTML; sin eso, Cloudflare/GitHub pueden seguir mostrando la versión vieja en caché.
 
+## Google (SEO)
+
+Al publicar, `tools/build-product-pages.mjs` lee el catálogo de Supabase y genera (no se suben a git):
+
+| Página | Para búsquedas como |
+|---|---|
+| `/perfume/<nombre>/` | "decant Khamrah", "Dior Sauvage decant precio" |
+| `/marca/<marca>/` | "decants de Valentino", "Lattafa Perú" |
+| `/coleccion/<tipo>/` | "decants árabes", "perfumes para mujer decant" |
+| `/marcas/` | índice de marcas y colecciones (enlazado desde el pie de página) |
+
+Todas van en `sitemap-perfumes.xml`. Perfumes, precios y marcas nuevas del panel salen solos en la siguiente publicación (o en la diaria de las 5 a. m.). Para probarlo sin internet: `PAGES_OFFLINE=1 node tools/build-product-pages.mjs` (usa el catálogo local).
+
 ## Estructura
 
 ```

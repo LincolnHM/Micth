@@ -106,7 +106,9 @@ const CajaManager = {
       total: 0
     };
 
-    incomePayments(orders).forEach(p => {
+    // Las ventas de una vendedora no entran a tu caja: ese dinero lo tiene ella
+    // (se controla en Contabilidad → Vendedoras)
+    incomePayments(orders.filter(o => !o.vendedoraId)).forEach(p => {
       const t = new Date(p.date).getTime();
       if (t < inicio || t > fin) return;
       if (p.method && p.method in ventas) ventas[p.method] += p.amount;

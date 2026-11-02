@@ -120,7 +120,12 @@ function orderFromDB(row) {
     paymentMethod: _PAY_METHODS.includes(row.payment_method) ? row.payment_method : null,
     payments:      _cleanPayments(row.payments, row.created_at),
     date:          row.created_at,
-    updatedAt:     row.updated_at
+    updatedAt:     row.updated_at,
+    // Venta de una vendedora (backend/supabase/sql/2026-11-02-vendedoras.sql)
+    vendedoraId:     /^[0-9a-f-]{36}$/i.test(row.vendedora_id || '') ? row.vendedora_id : null,
+    vendedoraNombre: _str(row.vendedora_nombre, 60),
+    rendidoAt:       row.rendido_at || null,                 // te entregó ese dinero
+    anuladoVendedoraAt: row.anulado_por_vendedora_at || null
   };
 }
 

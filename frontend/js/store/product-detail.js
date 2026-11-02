@@ -221,7 +221,9 @@ function _createPdModal() {
     </div>
   `;
   const footer = document.querySelector('.footer');
-  if (footer) footer.parentNode.insertBefore(el, footer);
+  // En /perfume/<nombre>/ la ficha en texto para Google (.seo-ficha) va debajo del detalle
+  const below = document.querySelector('.seo-ficha') || footer;
+  if (below) below.parentNode.insertBefore(el, below);
   else document.body.appendChild(el);
 
   el.querySelector('.pd-close').addEventListener('click', () => closePdModal());
@@ -293,7 +295,7 @@ function _pdSizeCardHtml({ size, price, off = false, note = '', badge = '', befo
 
 // Sprays de cada tamaño, iguales para todos los perfumes. Si cambian, actualizar
 // también "¿Qué tamaño me conviene?" en faq.js.
-const SPRAYS_BY_SIZE = { '2ml': 39, '3ml': 50, '5ml': 90, '10ml': 180 };
+const SPRAYS_BY_SIZE = { '2ml': 39, '3ml': 50, '5ml': 90, '10ml': 180, '30ml': 540 };
 
 function _pdSpraysNote(size) {
   const known = SPRAYS_BY_SIZE[String(size).replace(/\s+/g, '').toLowerCase()];
@@ -657,6 +659,7 @@ function openPdModal(productId, { fromHistory = false } = {}) {
   // Ocultar secciones del catálogo
   document.querySelectorAll(_PD_HIDE_SELECTOR).forEach(el => el.classList.add('pd-page-hidden'));
   document.body.classList.add('pd-open');
+  _toggleSeoFicha(p.id);
 
   const modal = document.getElementById('pdModal');
   modal.classList.add('open');
@@ -673,12 +676,20 @@ function closePdModal({ restoreScroll = true } = {}) {
   if (depth > 0 && (Number.isInteger(history.state?.pd) || Number.isInteger(history.state?.combo))) history.go(-depth);
 }
 
+// Página /perfume/<nombre>/: su ficha en texto (la que lee Google) se ve debajo
+// del detalle solo mientras está abierto ESE perfume
+function _toggleSeoFicha(openId) {
+  const box = document.querySelector('.seo-ficha');
+  if (box) box.hidden = Number(box.dataset.productId) !== openId;
+}
+
 function _pdHide(restoreScroll) {
   _pdDepth = 0;
   const open = document.querySelectorAll('.pd-modal.open');   // perfume o combo
   if (!open.length) return;
   open.forEach(m => m.classList.remove('open'));
   document.body.classList.remove('pd-open');
+  _toggleSeoFicha(null);
   document.querySelectorAll('.pd-page-hidden').forEach(el => el.classList.remove('pd-page-hidden'));
   if (typeof renderRecentlyViewed === 'function') {
     // "Vistos recientemente" crece arriba del catálogo: se compensa lo que crezca
