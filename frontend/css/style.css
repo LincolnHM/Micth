@@ -9797,3 +9797,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .sa-modal-foot { display: flex; justify-content: flex-end; gap: .5rem; }
 /* Avisos del panel por encima del total y las pestañas de la vendedora */
 .seller-mode #adminToast { bottom: calc(150px + env(safe-area-inset-bottom, 0px)) !important; }
+/* Combos en el panel de la vendedora */
+.seller-combo { border-color: rgba(124,79,176,.3); }
+.seller-combo .seller-prod-head span small { color: var(--text3); }
+.seller-size s { font-size: .62rem; color: var(--text3); }

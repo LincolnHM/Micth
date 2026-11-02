@@ -21,6 +21,7 @@ const _seller = {
   name: '',
   products: [],
   lookup: new Map(),
+  combos: [],               // combos activos (la tienda los arma en Combos)
   orders: [],
   cart: [],                 // { productId, name, brand, size, price, quantity }
   method: null,
@@ -92,6 +93,13 @@ async function _sellerLoadProducts() {
     showToast('⚠ No se pudieron cargar los perfumes. Revisa tu conexión.');
   }
   _seller.lookup = new Map(_seller.products.map(p => [p.id, p]));
+  try {
+    const combos = await withTimeout(CloudCombos.getAll({ client: dbPublic || db }), 15000, 'los combos');
+    _seller.combos = combos.filter(c => c.active && (c.items || []).length);
+  } catch (err) {
+    console.error('[MICHT] Vendedora: no se pudieron cargar los combos', err);
+    _seller.combos = [];
+  }
 }
 
 async function _sellerLoadOrders() {
@@ -107,6 +115,7 @@ async function _sellerLoadOrders() {
 
 function _sellerRenderAll() {
   _sellerRenderSearch();
+  _sellerRenderCombos();
   _sellerRenderCart();
   _sellerRenderOrders();
   _sellerRenderStock();
@@ -122,6 +131,12 @@ function _sellerShow(view) {
 
 // ── Qué tallas se pueden vender de un perfume ────────────────────────────────
 
+// ¿Alcanza el stock si se agrega `extra` a lo que ya lleva el pedido? Cuenta
+// juntos los perfumes sueltos y los que van dentro de combos (mismo frasco).
+function _sellerFits(extra) {
+  return stockShortages([..._seller.cart, extra], _seller.lookup).length === 0;
+}
+
 function _sellerOptions(p) {
   const out = [];
   if (!p) return out;
@@ -130,23 +145,36 @@ function _sellerOptions(p) {
     price = parseFloat(price) || 0;
     if (price <= 0) return;
     if (p.type !== 'entero' && !/^\d/.test(size)) return;
-    const inCart = _seller.cart.filter(c => c.productId === p.id && c.size === size).reduce((s, c) => s + c.quantity, 0);
-    const ok = buyable && (p.type === 'entero' ? (p.stockQuantity || 0) > inCart : bottleHasMl(p, size, inCart + 1 + _sellerCartMlOtherSizes(p, size) / (parseFloat(size) || 1)));
-    out.push({ size, price, ok });
+    out.push({ size, price, ok: buyable && _sellerFits({ productId: p.id, size, quantity: 1 }) });
   });
   // Frasco entero sellado de un perfume que también va en decant
   if (p.type !== 'entero' && p.availableAsEntero && (p.enteroPrice || 0) > 0) {
-    const inCart = _seller.cart.filter(c => c.productId === p.id && c.size === 'Unidad').reduce((s, c) => s + c.quantity, 0);
-    out.push({ size: 'Unidad', label: 'Entero', price: p.enteroPrice, ok: (p.enteroStock || 0) > inCart });
+    out.push({ size: 'Unidad', label: 'Entero', price: p.enteroPrice, ok: _sellerFits({ productId: p.id, size: 'Unidad', quantity: 1 }) });
   }
   return out;
 }
 
-// ml que ya lleva el carrito de ESE perfume en otras tallas (salen del mismo frasco)
-function _sellerCartMlOtherSizes(p, size) {
-  return _seller.cart
-    .filter(c => c.productId === p.id && c.size !== size)
-    .reduce((s, c) => s + (parseFloat(c.size) || 0) * c.quantity, 0);
+// ── Combos: una talla para todos sus perfumes, precio del combo ──────────────
+function _sellerComboLine(combo, size) {
+  const comboItems = (combo.items || []).map(productId => {
+    const p = _seller.lookup.get(productId);
+    return { productId, size, qty: 1, name: p?.name || '', brand: p?.brand || '' };
+  });
+  return {
+    isCombo: true, comboId: combo.id, productId: -combo.id,
+    name: combo.title, brand: 'Combo MICHT', size,
+    price: parseFloat(combo.prices?.[size]) || 0, quantity: 1,
+    comboItems, composition: comboItems.map(ci => ci.name).filter(Boolean).join(' + ')
+  };
+}
+
+function _sellerComboOptions(combo) {
+  // Todos sus perfumes tienen que estar a la venta (no agotados ni en "Próximamente")
+  const allBuyable = (combo.items || []).every(id => isDecantPurchasable(_seller.lookup.get(id)));
+  return comboAvailableSizes(combo, _seller.products).map(s => ({
+    size: s.size, price: s.price, before: s.before,
+    ok: allBuyable && _sellerFits(_sellerComboLine(combo, s.size))
+  }));
 }
 
 function _sellerStockText(p) {
@@ -191,6 +219,50 @@ function _sellerRenderSearch() {
     </div>`).join('');
 }
 
+function _sellerRenderCombos() {
+  const card = document.getElementById('sellerCombosCard');
+  const box  = document.getElementById('sellerCombos');
+  if (!card || !box) return;
+  card.hidden = !_seller.combos.length;
+  box.innerHTML = _seller.combos.map(c => {
+    const opts = _sellerComboOptions(c);
+    const names = (c.items || []).map(id => _seller.lookup.get(id)).filter(Boolean)
+      .map(p => `${sanitize(p.name)} <small>(${sanitize(p.brand)})</small>`).join(' + ');
+    return `
+    <div class="seller-prod seller-combo">
+      <div class="seller-prod-head">
+        <div>
+          <strong>🎁 ${sanitize(c.title)}</strong>
+          <span>${names || 'Sin perfumes'}</span>
+        </div>
+      </div>
+      <div class="seller-sizes">
+        ${opts.map(o => `
+          <button type="button" class="seller-size seller-combo-size" data-combo="${c.id}" data-size="${escapeAttr(o.size)}" ${o.ok ? '' : 'disabled'}>
+            <b>${sanitize(o.size)}</b><span>S/ ${o.price}</span>${o.before > o.price ? `<s>S/ ${o.before}</s>` : ''}
+          </button>`).join('') || '<span class="seller-hint">Sin tallas disponibles ahora</span>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function _sellerAddCombo(comboId, size) {
+  const combo = _seller.combos.find(c => c.id === comboId);
+  const opt = combo && _sellerComboOptions(combo).find(o => o.size === size);
+  if (!combo || !opt || !opt.ok) return;
+  const line = _seller.cart.find(c => c.isCombo && c.comboId === comboId && c.size === size);
+  if (line) {
+    if (line.quantity >= 10) { showToast('Máximo 10 combos iguales por pedido.'); return; }
+    line.quantity++;
+  } else {
+    _seller.cart.push(_sellerComboLine(combo, size));
+  }
+  _sellerRenderCart();
+  _sellerRenderSearch();
+  _sellerRenderCombos();
+  showToast(`${combo.title} ${size} agregado`);
+}
+
 function _sellerAdd(productId, size) {
   const p = _seller.lookup.get(productId);
   const opt = _sellerOptions(p).find(o => o.size === size);
@@ -200,6 +272,7 @@ function _sellerAdd(productId, size) {
   else _seller.cart.push({ productId, name: p.name, brand: p.brand, size, price: opt.price, quantity: 1 });
   _sellerRenderCart();
   _sellerRenderSearch();
+  _sellerRenderCombos();
   showToast(`${p.name} ${opt.label || size} agregado`);
 }
 
@@ -211,7 +284,7 @@ function _sellerRenderCart() {
     <div class="seller-line">
       <div class="seller-line-info">
         <strong>${sanitize(c.name)}</strong>
-        <span>${sanitize(c.brand)} · ${sanitize(c.size === 'Unidad' ? 'Entero' : c.size)} · S/ ${c.price}</span>
+        <span>${c.isCombo ? `🎁 ${sanitize(c.composition)}` : sanitize(c.brand)} · ${sanitize(c.size === 'Unidad' ? 'Entero' : c.size)} · S/ ${c.price}</span>
       </div>
       <div class="seller-qty">
         <button type="button" data-i="${i}" data-d="-1" aria-label="Quitar uno">−</button>
@@ -230,14 +303,14 @@ function _sellerChangeQty(i, d) {
   const c = _seller.cart[i];
   if (!c) return;
   if (d > 0) {
-    const p = _seller.lookup.get(c.productId);
-    const opt = _sellerOptions(p).find(o => o.size === c.size);
-    if (!opt?.ok) { showToast('No hay más stock de ese perfume.'); return; }
+    if (c.isCombo && c.quantity >= 10) { showToast('Máximo 10 combos iguales por pedido.'); return; }
+    if (!_sellerFits({ ...c, quantity: 1 })) { showToast('No hay más stock para agregar otro.'); return; }
   }
   c.quantity += d;
   if (c.quantity <= 0) _seller.cart.splice(i, 1);
   _sellerRenderCart();
   _sellerRenderSearch();
+  _sellerRenderCombos();
 }
 
 async function _sellerSubmit() {
@@ -271,10 +344,14 @@ async function _sellerSubmit() {
     customer_phone: phone,
     delivery_type:  dtype,
     notes,
-    items: _seller.cart.map(c => ({
+    // Precios y contenido de combos los vuelve a poner la base (guardia de precios)
+    items: _seller.cart.map(c => c.isCombo ? {
+      productId: c.productId, isCombo: true, comboId: c.comboId, productName: c.name, brand: c.brand,
+      size: c.size, price: c.price, quantity: c.quantity, comboItems: c.comboItems
+    } : {
       productId: c.productId, productName: c.name, brand: c.brand,
       size: c.size, price: c.price, quantity: c.quantity
-    })),
+    }),
     total,
     status:         'pagado',
     payment_method: _seller.method
@@ -299,6 +376,7 @@ async function _sellerSubmit() {
     // El stock pudo cambiar: refrescar
     await _sellerLoadProducts();
     _sellerRenderSearch();
+    _sellerRenderCombos();
   } finally {
     btn.textContent = 'Registrar venta';
     btn.disabled = !_seller.cart.length;
@@ -339,7 +417,7 @@ function _sellerRenderOrders() {
         <span class="seller-badge ${st.cls}">${st.label}</span>
       </header>
       <strong class="seller-order-client">${sanitize(o.customerName || '—')}</strong>
-      <ul>${(o.items || []).map(i => `<li>${sanitize(i.productName || '')} <small>${sanitize(i.size === 'Unidad' ? 'Entero' : i.size || '')} ×${parseInt(i.quantity) || 1}</small></li>`).join('')}</ul>
+      <ul>${(o.items || []).map(i => `<li>${i.comboComposition ? '🎁 ' : ''}${sanitize(i.productName || '')} <small>${sanitize(i.size === 'Unidad' ? 'Entero' : i.size || '')} ×${parseInt(i.quantity) || 1}</small>${i.comboComposition ? `<br><small>${sanitize(i.comboComposition)}</small>` : ''}</li>`).join('')}</ul>
       <footer>
         <div>
           <strong>${_sMoney(o.total)}</strong>
@@ -469,6 +547,10 @@ function _sellerBindEvents() {
   document.getElementById('sellerResults').addEventListener('click', e => {
     const b = e.target.closest('.seller-size');
     if (b && !b.disabled) _sellerAdd(parseInt(b.dataset.id), b.dataset.size);
+  });
+  document.getElementById('sellerCombos').addEventListener('click', e => {
+    const b = e.target.closest('.seller-combo-size');
+    if (b && !b.disabled) _sellerAddCombo(parseInt(b.dataset.combo), b.dataset.size);
   });
   document.getElementById('sellerCart').addEventListener('click', e => {
     const b = e.target.closest('.seller-qty button');
