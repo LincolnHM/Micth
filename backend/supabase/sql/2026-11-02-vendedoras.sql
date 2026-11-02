@@ -24,16 +24,18 @@
 --   · 2026-10-19-pagos-por-pedido.sql       (columna de pagos)
 --   · 2026-09-09c-stock-entero-para-decants.sql
 --
--- CÓMO AGREGAR UNA VENDEDORA (después de correr este archivo):
---   1. Supabase → Authentication → Users → "Add user" → "Create new user":
---      su correo y una contraseña, con "Auto Confirm User" marcado.
---   2. SQL Editor → Run (cambia el correo y el nombre):
---        SELECT registrar_vendedora('correo@ejemplo.com', 'María');
---   3. Ella entra a michtdecants.com/admin/ con ese correo y contraseña.
+-- CÓMO AGREGAR UNA VENDEDORA (después de correr este archivo), en SQL Editor → Run.
+-- Cambia el correo, la contraseña (mínimo 8 caracteres) y el nombre:
+--        SELECT crear_vendedora('maria@gmail.com', 'Micht2026!', 'María');
+--   Crea su cuenta ya confirmada. Ella entra a michtdecants.com/admin/ con ese
+--   correo y esa contraseña. Si el correo ya tenía cuenta, le pone esa contraseña.
+-- Para cambiarle la contraseña: vuelve a correr crear_vendedora con la nueva.
 -- Para quitarle el acceso (sus ventas quedan registradas):
---        SELECT quitar_vendedora('correo@ejemplo.com');
+--        SELECT quitar_vendedora('maria@gmail.com');
 -- Para ver tus vendedoras:
 --        SELECT nombre, activa, created_at FROM vendedoras;
+-- (Otra forma: crear el usuario en Authentication → Users → Add user, con
+--  "Auto Confirm User", y luego: SELECT registrar_vendedora('correo', 'Nombre');)
 
 -- ─── 0. Requisitos ───────────────────────────────────────────────────────────
 DO $$
@@ -370,6 +372,84 @@ BEGIN
 END;
 $$;
 REVOKE ALL ON FUNCTION public.registrar_vendedora(text, text) FROM PUBLIC, anon, authenticated;
+
+-- Crea la cuenta (correo + contraseña, ya confirmada) y la registra como vendedora.
+-- Si el correo ya tiene cuenta, le cambia la contraseña y la marca como vendedora.
+CREATE OR REPLACE FUNCTION public.crear_vendedora(p_email text, p_password text, p_nombre text)
+RETURNS text
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, auth, extensions, pg_temp
+AS $$
+DECLARE
+  v_email  text := lower(btrim(coalesce(p_email, '')));
+  v_nombre text := btrim(coalesce(p_nombre, ''));
+  v_id     uuid;
+  v_role   text;
+  v_nueva  boolean := false;
+BEGIN
+  IF v_email !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' THEN
+    RAISE EXCEPTION 'El correo "%" no es válido.', p_email;
+  END IF;
+  IF length(coalesce(p_password, '')) < 8 THEN
+    RAISE EXCEPTION 'La contraseña debe tener al menos 8 caracteres.';
+  END IF;
+  IF char_length(v_nombre) < 2 THEN
+    RAISE EXCEPTION 'Escribe el nombre de la vendedora.';
+  END IF;
+
+  SELECT id, raw_app_meta_data ->> 'role' INTO v_id, v_role
+    FROM auth.users WHERE lower(email) = v_email;
+  IF v_role = 'admin' THEN
+    RAISE EXCEPTION 'El correo % es de un administrador: usa otro correo para la vendedora.', v_email;
+  END IF;
+
+  IF v_id IS NULL THEN
+    -- Cuenta nueva, ya confirmada (no necesita abrir ningún correo)
+    v_id := gen_random_uuid();
+    v_nueva := true;
+    INSERT INTO auth.users (
+      instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+      raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+      confirmation_token, recovery_token, email_change_token_new, email_change)
+    VALUES (
+      coalesce((SELECT instance_id FROM auth.users WHERE instance_id IS NOT NULL LIMIT 1), '00000000-0000-0000-0000-000000000000'::uuid),
+      v_id, 'authenticated', 'authenticated', v_email, crypt(p_password, gen_salt('bf', 10)), now(),
+      jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email'), 'role', 'vendedora'),
+      jsonb_build_object('nombre', v_nombre), now(), now(),
+      '', '', '', '');
+    -- Su "identidad" de correo: sin ella Supabase no la deja iniciar sesión
+    IF EXISTS (SELECT 1 FROM information_schema.columns
+               WHERE table_schema = 'auth' AND table_name = 'identities' AND column_name = 'provider_id') THEN
+      INSERT INTO auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+      VALUES (v_id::text, v_id,
+              jsonb_build_object('sub', v_id::text, 'email', v_email, 'email_verified', true, 'phone_verified', false),
+              'email', now(), now(), now());
+    ELSE
+      -- Proyectos de Supabase más antiguos (identities.id era el texto del id)
+      EXECUTE 'INSERT INTO auth.identities (id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+               VALUES ($1, $2, $3, ''email'', now(), now(), now())'
+        USING v_id::text, v_id, jsonb_build_object('sub', v_id::text, 'email', v_email);
+    END IF;
+  ELSE
+    -- Ya tenía cuenta: nueva contraseña, correo confirmado y rol de vendedora
+    UPDATE auth.users
+       SET encrypted_password = crypt(p_password, gen_salt('bf', 10)),
+           email_confirmed_at = coalesce(email_confirmed_at, now()),
+           raw_app_meta_data  = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"vendedora"}'::jsonb,
+           updated_at         = now()
+     WHERE id = v_id;
+  END IF;
+
+  INSERT INTO vendedoras (user_id, nombre, activa) VALUES (v_id, v_nombre, true)
+    ON CONFLICT (user_id) DO UPDATE SET nombre = EXCLUDED.nombre, activa = true;
+
+  RETURN CASE WHEN v_nueva
+    THEN 'Listo: ' || v_nombre || ' ya puede entrar a michtdecants.com/admin/ con ' || v_email || ' y la contraseña que pusiste.'
+    ELSE 'Listo: ' || v_email || ' ya tenía cuenta; ahora es vendedora (' || v_nombre || ') y entra con la contraseña nueva.'
+  END;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.crear_vendedora(text, text, text) FROM PUBLIC, anon, authenticated;
 
 CREATE OR REPLACE FUNCTION public.quitar_vendedora(p_email text)
 RETURNS text
