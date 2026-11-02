@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await db.auth.signOut();
         showLoginScreen();
         const errEl = document.getElementById('loginError');
-        if (errEl) { errEl.textContent = 'Acceso denegado. Esta cuenta no tiene permisos de administrador.'; errEl.style.display = 'block'; }
+        if (errEl) { errEl.textContent = 'Esta cuenta no tiene acceso al panel (ni de administradora ni de vendedora). Revisa el correo o pide que te registren.'; errEl.style.display = 'block'; }
       } else {
         await showDashboard();
       }
@@ -112,12 +112,23 @@ async function showDashboard() {
 
 async function handleLogin(e) {
   e.preventDefault();
-  const email = (document.getElementById('loginEmail')?.value || '').trim();
+  // El formulario no usa la validación del navegador (su aviso "no debe incluir el
+  // símbolo @" confundía): se limpia el correo y se explica en palabras simples.
+  const emailInput = document.getElementById('loginEmail');
+  const email = (emailInput?.value || '').replace(/\s+/g, '').toLowerCase();
+  if (emailInput) emailInput.value = email;
   const pw    = document.getElementById('loginPassword').value;
   const err   = document.getElementById('loginError');
   err.style.display = 'none';
 
   if (!email) { err.textContent = 'Ingresa tu correo electrónico.'; err.style.display = 'block'; return; }
+  if ((email.match(/@/g) || []).length !== 1 || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
+    err.textContent = (email.match(/@/g) || []).length > 1
+      ? 'El correo tiene dos "@". Bórralo y escríbelo de nuevo (ej. nombre@gmail.com).'
+      : 'Revisa el correo: debe ser como nombre@gmail.com.';
+    err.style.display = 'block';
+    return;
+  }
   if (!pw)    { err.textContent = 'Ingresa tu contraseña.'; err.style.display = 'block'; return; }
 
   const btn = e.target.querySelector('button[type=submit]');
@@ -140,7 +151,7 @@ async function handleLogin(e) {
   }
   if (!isAdminUser(loginData?.user)) {
     await db.auth.signOut();
-    err.textContent = 'Esta cuenta no tiene permisos de administrador.';
+    err.textContent = 'Esta cuenta no tiene acceso al panel (ni de administradora ni de vendedora). Revisa el correo o pide que te registren.';
     err.style.display = 'block';
     return;
   }
