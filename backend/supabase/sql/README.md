@@ -31,6 +31,7 @@ Cada archivo se pega completo en **Supabase → SQL Editor → Run**. Van en ord
 | `2026-09-23-validar-pedidos.sql` *(actualizado 2026-09-26)* | Ahora también acepta el tipo de entrega "delivery" (Soritor). Volver a pegarlo es **opcional**: con la versión anterior el panel igual reconoce esos pedidos. |
 | `2026-10-19-pagos-por-pedido.sql` | Columna `payments` en `pedidos`: cada pago del pedido por separado (adelanto + saldo, o parte Yape y parte efectivo) y el estado **Separado**. La tienda no puede mandar pagos: un guardia los vacía en cada pedido que llega de un visitante. Sin correrlo, el panel solo deja marcar "Pagado" completo con un método. |
 | `2026-10-25-talla-30ml.sql` | **Nueva talla 30 ml.** Agrega el decant de 30 ml a cada perfume árabe, de diseñador y nicho, con precio sugerido a partir del de 10 ml (árabe ×2.4, diseñador/nicho ×2.6, redondeado). Primero muestra la vista previa. No toca los que ya tengan 30 ml ni los enteros. Ajusta luego en el panel → Precios. |
+| `2026-10-27-envios-shalom.sql` | Tabla `pedidos_shalom` (solo el admin la lee): N° de orden, código y clave de Shalom de cada pedido de envío, y cuándo se le mandaron al cliente por WhatsApp. Sin correrlo, el panel no deja guardar esos datos. |
 
 ## Qué correr ahora (2026-09-23), en este orden
 
@@ -50,6 +51,10 @@ Con el paso 1 **ya no necesitas** desplegar la Edge Function ni correr `2026-08-
 ## Nuevo (2026-10-19)
 
 8. `2026-10-19-pagos-por-pedido.sql` → adelantos (pedido "Separado") y pagos divididos Yape + efectivo. Después, haz un pedido de prueba desde la tienda y confirma que llega al panel.
+
+## Nuevo (2026-10-27)
+
+9. `2026-10-27-envios-shalom.sql` → datos de Shalom (N° de orden, código, clave) por pedido y botón para mandárselos al cliente por WhatsApp cuando ya pagó.
 
 ## Cómo saber si uno ya está aplicado
 
