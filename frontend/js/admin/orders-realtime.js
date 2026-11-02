@@ -45,7 +45,9 @@ function _showNewOrderToast(order) {
 
   const name  = order.customerName ? `de ${order.customerName}` : '';
   const total = order.total > 0 ? ` · S/ ${order.total.toFixed(2)}` : '';
-  msg.textContent = `Pedido ${name}${total}`;
+  // Venta registrada por una vendedora: se dice quién
+  const seller = order.vendedoraNombre ? ` · 🛍 vendido por ${order.vendedoraNombre}` : '';
+  msg.textContent = `Pedido ${name}${total}${seller}`;
   toast.style.display = 'block';
 
   // Auto-ocultar a los 12 segundos

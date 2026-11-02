@@ -1,6 +1,31 @@
 // ─── Sección: Pedidos ─────────────────────────────────────────────────────────
 
 let orderStatusFilter = 'all';
+let orderSellerFilter = 'all';     // 'all' · 'tienda' (web y tú) · id de una vendedora
+
+// Venta de una vendedora: quién la hizo y si ya te entregó el dinero
+function sellerBadgeHtml(o) {
+  if (!o.vendedoraId && !o.vendedoraNombre) return '';
+  const name = sanitize(o.vendedoraNombre || 'Vendedora');
+  if (o.anuladoVendedoraAt) return `<span class="order-seller-badge is-cancel">🛍 ${name} · la anuló</span>`;
+  const money = o.status === 'cancelado' ? ''
+    : o.rendidoAt ? ' · ✓ dinero recibido' : ' · 💰 dinero por recibir';
+  return `<span class="order-seller-badge ${o.rendidoAt ? 'is-done' : ''}">🛍 Vendido por ${name}${money}</span>`;
+}
+
+// Opciones del filtro por vendedora, con las vendedoras que tienen pedidos
+function _fillSellerFilter(all) {
+  const sel = document.getElementById('orderSellerFilter');
+  if (!sel) return;
+  const sellers = new Map();
+  all.forEach(o => { if (o.vendedoraId) sellers.set(o.vendedoraId, o.vendedoraNombre || 'Vendedora'); });
+  sel.hidden = !sellers.size;
+  if (!sellers.has(orderSellerFilter) && !['all', 'tienda'].includes(orderSellerFilter)) orderSellerFilter = 'all';
+  sel.innerHTML = `<option value="all">Todos los vendedores</option><option value="tienda">Solo la tienda (web y tú)</option>`
+    + [...sellers].sort((a, b) => a[1].localeCompare(b[1], 'es'))
+        .map(([id, name]) => `<option value="${escapeAttr(id)}">🛍 ${sanitize(name)}</option>`).join('');
+  sel.value = orderSellerFilter;
+}
 
 const ORDER_STATUS_LABELS = {
   pendiente: 'Pendiente', separado: 'Separado', pagado: 'Pagado',
@@ -141,6 +166,9 @@ async function renderOrdersSection() {
     const tableWrap = tbody.closest('.orders-table-wrap') || tbody.parentElement;
     tableWrap.parentElement.insertBefore(diagBox, tableWrap);
 
+    _fillSellerFilter(orders);
+    if (orderSellerFilter === 'tienda')   orders = orders.filter(o => !o.vendedoraId);
+    else if (orderSellerFilter !== 'all') orders = orders.filter(o => o.vendedoraId === orderSellerFilter);
     if (orderStatusFilter === 'saldo')    orders = orders.filter(orderOwes);
     else if (orderStatusFilter !== 'all') orders = orders.filter(o => o.status === orderStatusFilter);
     if (_orderSearch) {
@@ -156,6 +184,7 @@ async function renderOrdersSection() {
 
     if (!orders.length) {
       const why = _orderSearch ? 'que coincidan con la búsqueda'
+                : orderSellerFilter !== 'all' ? 'con ese filtro'
                 : orderStatusFilter === 'saldo' ? 'con saldo por cobrar'
                 : orderStatusFilter !== 'all' ? 'con ese estado' : 'registrados';
       tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">No hay pedidos ${why}</td></tr>`;
@@ -194,6 +223,7 @@ async function renderOrdersSection() {
       <td class="order-col-delivery">${deliveryBadgeHtml(o)}</td>
       <td class="order-col-client">
         <span class="order-customer">${sanitize(o.customerName || '—')}</span>
+        ${sellerBadgeHtml(o)}
         ${o.customerPhone ? `<div class="order-date">${sanitize(o.customerPhone)}</div>` : ''}
         ${o.customerDni   ? `<div class="order-date" style="font-size:.68rem">DNI ${sanitize(o.customerDni)}</div>` : ''}
         ${delivType === 'envio' && o.status !== 'cancelado' && orderNeedsClientPhone(o)
@@ -558,6 +588,13 @@ async function openOrderDetail(id) {
     </div>
     <div class="order-detail-row"><span class="lbl">ID Pedido</span><span class="val order-id">${sanitize(order.id)}</span></div>
     <div class="order-detail-row"><span class="lbl">Fecha</span><span class="val">${date}</span></div>
+    ${order.vendedoraId || order.vendedoraNombre ? `
+    <div class="order-detail-row"><span class="lbl">Vendido por</span><span class="val">🛍 ${sanitize(order.vendedoraNombre || 'Vendedora')}</span></div>
+    <div class="order-detail-row"><span class="lbl">Dinero</span><span class="val">${
+      order.anuladoVendedoraAt ? `Anulado por la vendedora el ${shortDate(order.anuladoVendedoraAt)}`
+      : cancelled ? '—'
+      : order.rendidoAt ? `✓ Te lo entregó el ${shortDate(order.rendidoAt)}`
+      : '💰 Lo tiene la vendedora (márcalo en Contabilidad → Vendedoras cuando te lo entregue)'}</span></div>` : ''}
     <div class="order-pay-section">
       <div class="order-pay-head">
         <span>💰 Pagos</span>
@@ -775,6 +812,12 @@ function setupOrderEvents() {
       orderStatusFilter = btn.dataset.status;
       renderOrdersSection().catch(console.error);
     });
+  });
+
+  // Filtro por vendedora
+  document.getElementById('orderSellerFilter')?.addEventListener('change', function() {
+    orderSellerFilter = this.value;
+    renderOrdersSection().catch(console.error);
   });
 
   // Actualizar pedidos

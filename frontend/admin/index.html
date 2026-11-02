@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../imgGato/web.png">
-  <link rel="stylesheet" href="../css/style.css?v=20261102-1252">
+  <link rel="stylesheet" href="../css/style.css?v=20261102-1306">
   <style>
     html, body {
       background: #050505 !important;
@@ -188,7 +188,7 @@
   <div id="loginSection">
     <div class="login-box">
       <p class="logo-admin">MICHT<span>Decants</span></p>
-      <p class="login-subtitle">Panel de Administrador</p>
+      <p class="login-subtitle">Panel de la tienda</p>
 
       <!-- Login con contraseña existente -->
       <form id="loginForm" style="display:none">
@@ -225,6 +225,114 @@
         <a href="../" style="font-size:.8rem;color:var(--text2)">← Volver a la tienda</a>
       </p>
     </div>
+  </div>
+
+  <!-- ── Panel de la vendedora (js/admin/seller.js) ─────────────────────── -->
+  <div id="sellerSection" class="seller-app" style="display:none">
+    <header class="seller-top">
+      <div>
+        <p class="seller-brand">MICHT<span> Decants</span></p>
+        <p class="seller-hello">Hola, <strong id="sellerName">…</strong></p>
+      </div>
+      <div class="seller-top-actions">
+        <button type="button" id="sellerRefresh" aria-label="Actualizar">↻</button>
+        <button type="button" id="sellerLogout">Salir</button>
+      </div>
+    </header>
+
+    <main class="seller-main">
+      <!-- Vender -->
+      <section class="seller-view active" data-view="vender">
+        <h2 class="seller-title">Nueva venta</h2>
+        <div class="seller-card">
+          <label class="seller-field"><span>Cliente *</span>
+            <input type="text" id="sellerClientName" maxlength="120" autocomplete="off" placeholder="Nombre del cliente"></label>
+          <label class="seller-field"><span>Celular (opcional)</span>
+            <input type="tel" id="sellerClientPhone" maxlength="20" inputmode="tel" autocomplete="off" placeholder="999 999 999"></label>
+        </div>
+
+        <div class="seller-card">
+          <label class="seller-field"><span>Buscar perfume</span>
+            <input type="search" id="sellerSearch" autocomplete="off" placeholder="Ej: Khamrah, 9PM, Lattafa…"></label>
+          <div id="sellerResults" class="seller-results"></div>
+        </div>
+
+        <div class="seller-card">
+          <h3 class="seller-subtitle">Pedido</h3>
+          <div id="sellerCart"></div>
+        </div>
+
+        <div class="seller-card">
+          <h3 class="seller-subtitle">¿Cómo te pagó? *</h3>
+          <div class="seller-pays">
+            <button type="button" class="seller-pay" data-method="yape">📱 Yape</button>
+            <button type="button" class="seller-pay" data-method="efectivo">💵 Efectivo</button>
+            <button type="button" class="seller-pay" data-method="plin">📲 Plin</button>
+            <button type="button" class="seller-pay" data-method="transferencia">🏦 Transferencia</button>
+          </div>
+          <label class="seller-field"><span>Entrega</span>
+            <select id="sellerDelivery">
+              <option value="recojo">Recojo en tienda</option>
+              <option value="delivery">Delivery en Soritor</option>
+              <option value="envio">Envío por Shalom</option>
+            </select></label>
+          <label class="seller-field"><span>Nota (opcional)</span>
+            <textarea id="sellerNotes" rows="2" maxlength="300" placeholder="Ej: envío a Tarapoto, DNI 12345678"></textarea></label>
+        </div>
+      </section>
+
+      <!-- Mis pedidos -->
+      <section class="seller-view" data-view="pedidos">
+        <h2 class="seller-title">Mis pedidos</h2>
+        <div class="seller-chips">
+          <button type="button" class="active" data-orders-filter="all">Todos</button>
+          <button type="button" data-orders-filter="deber">💰 Por entregar</button>
+          <button type="button" data-orders-filter="anulados">Anulados</button>
+        </div>
+        <div id="sellerOrders"></div>
+      </section>
+
+      <!-- Stock -->
+      <section class="seller-view" data-view="stock">
+        <h2 class="seller-title">Stock <small id="sellerStockCount"></small></h2>
+        <input type="search" id="sellerStockSearch" class="seller-input" autocomplete="off" placeholder="🔍  Buscar perfume…">
+        <div class="seller-chips">
+          <button type="button" class="active" data-stock-filter="all">Todos</button>
+          <button type="button" data-stock-filter="arabe">Árabes</button>
+          <button type="button" data-stock-filter="diseñador">Diseñador</button>
+          <button type="button" data-stock-filter="nicho">Nicho</button>
+          <button type="button" data-stock-filter="entero">Enteros</button>
+          <button type="button" data-stock-filter="poco">Poco stock</button>
+          <button type="button" data-stock-filter="agotado">Agotados</button>
+        </div>
+        <div id="sellerStock"></div>
+      </section>
+
+      <!-- Mis ventas -->
+      <section class="seller-view" data-view="ventas">
+        <h2 class="seller-title">Mis ventas</h2>
+        <div class="seller-chips">
+          <button type="button" data-period="hoy">Hoy</button>
+          <button type="button" data-period="semana">Esta semana</button>
+          <button type="button" class="active" data-period="mes">Este mes</button>
+          <button type="button" data-period="pasado">Mes pasado</button>
+        </div>
+        <div id="sellerSales"></div>
+      </section>
+    </main>
+
+    <!-- Total y botón (solo en Vender) -->
+    <div class="seller-checkout" id="sellerCheckoutBar">
+      <div><span id="sellerCount">Sin productos</span><strong id="sellerTotal">S/ 0.00</strong></div>
+      <button type="button" id="sellerSubmit" disabled>Registrar venta</button>
+    </div>
+
+    <nav class="seller-tabs" aria-label="Secciones">
+      <button type="button" class="seller-tab active" data-view="vender"><span>🛍</span>Vender</button>
+      <button type="button" class="seller-tab" data-view="pedidos"><span>📋</span>Mis pedidos</button>
+      <button type="button" class="seller-tab" data-view="stock"><span>📦</span>Stock</button>
+      <button type="button" class="seller-tab" data-view="ventas"><span>📊</span>Mis ventas</button>
+    </nav>
   </div>
 
   <!-- ── Dashboard ──────────────────────────────────────────────────────────── -->
@@ -542,6 +650,7 @@
           <button class="order-filter-btn" data-status="saldo">💰 Con saldo por cobrar</button>
           <button class="order-filter-btn" data-status="enviado">Enviado</button>
           <button class="order-filter-btn" data-status="cancelado">Cancelado</button>
+          <select id="orderSellerFilter" class="order-seller-filter" aria-label="Filtrar por vendedora" hidden></select>
         </div>
 
         <!-- Tabla de pedidos -->
@@ -585,6 +694,9 @@
             <button class="btn-add" id="addExpenseBtn" style="font-size:.78rem;padding:.42rem .9rem">+ Registrar Gasto</button>
           </div>
         </div>
+
+        <!-- Vendedoras: lo vendido en el mes y el dinero que tienen (js/admin/sellers-admin.js) -->
+        <div id="sellersAccounting" class="sa-box" hidden></div>
 
         <!-- Tarjetas de resumen del año -->
         <div id="accountingSummary" class="order-stats-bar" style="grid-template-columns:repeat(auto-fill,minmax(155px,1fr));margin-bottom:1.25rem"></div>
@@ -1434,34 +1546,36 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.min.js" integrity="sha384-fPWur1rx/DE6YtXP/x0MD6dd90RgnVsz5yX/DIg7CcVAnTBZsENWuIcpvVTM39ti" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con la tienda) — el orden importa -->
-  <script src="../js/shared/data-core.js?v=20261102-1252"></script>
-  <script src="../js/shared/catalog.js?v=20261102-1252"></script>
-  <script src="../js/shared/data.js?v=20261102-1252"></script>
-  <script src="../js/shared/supabase-config.js?v=20261102-1252"></script>
-  <script src="../js/shared/cloud-orders.js?v=20261102-1252"></script>
-  <script src="../js/shared/cloud-gallery.js?v=20261102-1252"></script>
-  <script src="../js/shared/cloud-products.js?v=20261102-1252"></script>
-  <script src="../js/shared/cloud-combos.js?v=20261102-1252"></script>
+  <script src="../js/shared/data-core.js?v=20261102-1306"></script>
+  <script src="../js/shared/catalog.js?v=20261102-1306"></script>
+  <script src="../js/shared/data.js?v=20261102-1306"></script>
+  <script src="../js/shared/supabase-config.js?v=20261102-1306"></script>
+  <script src="../js/shared/cloud-orders.js?v=20261102-1306"></script>
+  <script src="../js/shared/cloud-gallery.js?v=20261102-1306"></script>
+  <script src="../js/shared/cloud-products.js?v=20261102-1306"></script>
+  <script src="../js/shared/cloud-combos.js?v=20261102-1306"></script>
   <!-- Panel admin -->
-  <script src="../js/admin/core.js?v=20261102-1252"></script>
-  <script src="../js/admin/ui.js?v=20261102-1252"></script>
-  <script src="../js/admin/login.js?v=20261102-1252"></script>
-  <script src="../js/admin/nav.js?v=20261102-1252"></script>
-  <script src="../js/admin/dashboard.js?v=20261102-1252"></script>
-  <script src="../js/admin/products.js?v=20261102-1252"></script>
-  <script src="../js/admin/catalog-pdf.js?v=20261102-1252"></script>
-  <script src="../js/admin/orders.js?v=20261102-1252"></script>
-  <script src="../js/admin/order-edit.js?v=20261102-1252"></script>
-  <script src="../js/admin/order-shalom.js?v=20261102-1252"></script>
-  <script src="../js/admin/orders-realtime.js?v=20261102-1252"></script>
-  <script src="../js/admin/combos.js?v=20261102-1252"></script>
-  <script src="../js/admin/site-content.js?v=20261102-1252"></script>
-  <script src="../js/admin/users.js?v=20261102-1252"></script>
-  <script src="../js/admin/accounting.js?v=20261102-1252"></script>
-  <script src="../js/admin/stats.js?v=20261102-1252"></script>
-  <script src="../js/admin/pricing.js?v=20261102-1252"></script>
-  <script src="../js/admin/tools.js?v=20261102-1252"></script>
-  <script src="../js/admin/quote.js?v=20261102-1252"></script>
-  <script src="../js/admin/cash.js?v=20261102-1252"></script>
+  <script src="../js/admin/core.js?v=20261102-1306"></script>
+  <script src="../js/admin/ui.js?v=20261102-1306"></script>
+  <script src="../js/admin/login.js?v=20261102-1306"></script>
+  <script src="../js/admin/nav.js?v=20261102-1306"></script>
+  <script src="../js/admin/dashboard.js?v=20261102-1306"></script>
+  <script src="../js/admin/products.js?v=20261102-1306"></script>
+  <script src="../js/admin/catalog-pdf.js?v=20261102-1306"></script>
+  <script src="../js/admin/orders.js?v=20261102-1306"></script>
+  <script src="../js/admin/order-edit.js?v=20261102-1306"></script>
+  <script src="../js/admin/order-shalom.js?v=20261102-1306"></script>
+  <script src="../js/admin/orders-realtime.js?v=20261102-1306"></script>
+  <script src="../js/admin/combos.js?v=20261102-1306"></script>
+  <script src="../js/admin/site-content.js?v=20261102-1306"></script>
+  <script src="../js/admin/users.js?v=20261102-1306"></script>
+  <script src="../js/admin/accounting.js?v=20261102-1306"></script>
+  <script src="../js/admin/stats.js?v=20261102-1306"></script>
+  <script src="../js/admin/pricing.js?v=20261102-1306"></script>
+  <script src="../js/admin/tools.js?v=20261102-1306"></script>
+  <script src="../js/admin/quote.js?v=20261102-1306"></script>
+  <script src="../js/admin/cash.js?v=20261102-1306"></script>
+  <script src="../js/admin/seller.js?v=20261102-1306"></script>
+  <script src="../js/admin/sellers-admin.js?v=20261102-1306"></script>
 </body>
 </html>

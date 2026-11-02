@@ -13,12 +13,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // de ejecutar el SQL. Si no lo tiene, se verifica con getUser() (más lento).
     if (isAdminUser(session.user)) {
       await showDashboard();
+    } else if (isSellerUser(session.user)) {
+      await showSellerPanel(session.user);
     } else {
       // Token viejo — verificar con datos frescos del servidor
       const userResult = await withTimeout(db.auth.getUser(), 12000, 'la verificación del usuario');
       const user = userResult?.data?.user;
       const userErr = userResult?.error;
-      if (userErr || !isAdminUser(user)) {
+      if (!userErr && isSellerUser(user)) {
+        await showSellerPanel(user);
+      } else if (userErr || !isAdminUser(user)) {
         await db.auth.signOut();
         showLoginScreen();
         const errEl = document.getElementById('loginError');
@@ -130,6 +134,10 @@ async function handleLogin(e) {
   }
 
   // signInWithPassword devuelve el user con app_metadata del servidor (siempre fresco)
+  if (isSellerUser(loginData?.user)) {
+    await showSellerPanel(loginData.user);
+    return;
+  }
   if (!isAdminUser(loginData?.user)) {
     await db.auth.signOut();
     err.textContent = 'Esta cuenta no tiene permisos de administrador.';

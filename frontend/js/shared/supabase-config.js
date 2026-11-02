@@ -38,6 +38,15 @@ const db = SUPABASE_READY
     )
   : null;
 
+// Cliente sin sesión (rol anónimo), solo para leer el catálogo público desde el
+// panel de una vendedora: ella no tiene permisos sobre la tabla de perfumes y así
+// nunca recibe columnas privadas como el costo. Se crea solo en el panel.
+const dbPublic = SUPABASE_READY && _isAdminPage
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'micht-public-read' }
+    })
+  : null;
+
 // Conexión silenciosa — no exponer detalles del stack en consola pública
 
 // ─── Cliente Supabase con sesión persistente para Auth de clientes ────────────

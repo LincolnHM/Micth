@@ -251,9 +251,11 @@ const _isMissingColumnError = e => !!e && (e.code === '42703' || e.code === 'PGR
 
 const CloudProducts = {
 
-  async getAll() {
-    if (db) {
-      let { data, error } = await db
+  // `client`: por defecto la sesión del sitio. El panel de una vendedora pasa un
+  // cliente anónimo (ella no tiene permiso sobre la tabla y no debe ver el costo).
+  async getAll({ client = db } = {}) {
+    if (client) {
+      let { data, error } = await client
         .from('productos')
         .select('*')
         .order('id', { ascending: true });
@@ -262,7 +264,7 @@ const CloudProducts = {
       // públicas sí sean legibles. Reintentar solo con esas.
       if (error && error.code === '42501') {
         for (const cols of _PRODUCT_COLUMN_SETS) {
-          ({ data, error } = await db.from('productos').select(cols).order('id', { ascending: true }));
+          ({ data, error } = await client.from('productos').select(cols).order('id', { ascending: true }));
           // columna que aún no existe (42703) o sin permiso de lectura (42501) → probar sin ella
           if (!error || !(_isMissingColumnError(error) || error.code === '42501')) break;
         }
@@ -339,7 +341,7 @@ const CloudProducts = {
       Products.save(products);
 
       // Auto-sincronizar localExtras a Supabase si el admin está logueado
-      if (localExtras.length && _isAdminPage) {
+      if (localExtras.length && _isAdminPage && client === db) {
         (async () => {
           try {
             const { data: { session } } = await db.auth.getSession();
