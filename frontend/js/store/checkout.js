@@ -139,6 +139,7 @@ const Checkout = {
   deliveryType: 'pickup',
   _step: 1,
   _sending: false,
+  _gift: null,          // regalo del Club MICHT elegido: { tier, productId, name, brand, imageUrl }
 
   // Retorna el total efectivo (con descuento si aplica)
   _effectiveTotal() {
@@ -283,6 +284,11 @@ const Checkout = {
         <strong>S/ ${base.toFixed(2)}</strong>
       </div>`;
 
+    // Regalo del Club MICHT: solo si sigue valiendo para este total
+    const hasClub = typeof Club !== 'undefined';
+    if (this._gift && !(hasClub && Club.giftAllowed(this._gift.tier, effective))) this._gift = null;
+    const gift = this._gift;
+
     el.innerHTML = `
       ${discountBanner}
       <h4>Resumen del Pedido</h4>
@@ -293,10 +299,23 @@ const Checkout = {
             <span>S/ ${(i.price * i.quantity).toFixed(2)}</span>
           </li>
         `).join('')}
+        ${gift ? `
+          <li class="order-gift-line">
+            <span>🎁 ${sanitize(gift.brand)} – ${sanitize(gift.name)} (5ml) × 1<br><small>Regalo Club MICHT ${gift.tier === 'black' ? 'Black' : 'Golden'}</small></span>
+            <span>GRATIS</span>
+          </li>` : ''}
       </ul>
       ${hasDisc ? `<div class="order-total-row" style="text-decoration:line-through;color:var(--text3);font-size:.85rem"><span>Subtotal</span><span>S/ ${base.toFixed(2)}</span></div>` : ''}
       ${discountRow}
+      ${hasClub ? `<div class="checkout-club" id="checkoutClubBox">${Club.checkoutHtml(effective, gift)}</div>` : ''}
     `;
+    const clubBox = el.querySelector('#checkoutClubBox');
+    if (clubBox) {
+      Club.bindCheckout(clubBox, {
+        onPick:   g  => { this._gift = g; this.renderSummary(); },
+        onRemove: () => { this._gift = null; this.renderSummary(); }
+      });
+    }
   },
 
   populateDepartments() {
@@ -327,6 +346,10 @@ const Checkout = {
         lines.push(`      ↳ Incluye: ${i.comboComposition}`);
       }
     });
+    if (this._gift) {
+      const g = this._gift;
+      lines.push(`  • 🎁 ${g.brand} – ${g.name} (5ml) × 1 = GRATIS _(Regalo Club MICHT ${g.tier === 'black' ? 'Black' : 'Golden'})_`);
+    }
 
     if (hasDisc) {
       const profile = UserAuth.getProfile();
@@ -441,6 +464,13 @@ const Checkout = {
     }));
     const orderTotal    = this._effectiveTotal();
     const profile       = (typeof UserAuth !== 'undefined') ? UserAuth.getProfile() : null;
+    // Club MICHT: el regalo va como una línea a S/ 0 (la base lo revisa) y el
+    // pedido se manda con la sesión del cliente para que sume huellitas
+    const hasClub       = typeof Club !== 'undefined';
+    const gift          = hasClub && this._gift && Club.giftAllowed(this._gift.tier, orderTotal) ? this._gift : null;
+    this._gift          = gift;                 // el mensaje de WhatsApp usa el mismo regalo
+    if (gift) orderItems.push(Club.giftLine(gift));
+    const clubUid       = (typeof UserAuth !== 'undefined' && UserAuth.isLoggedIn()) ? UserAuth._currentUser?.id : null;
     const val           = id => document.getElementById(id).value.trim();
     const customer = type === 'shipping' ? {
       customerName:  val('nameInput'),
@@ -477,7 +507,8 @@ const Checkout = {
                       hasDiscount ? 'DESCUENTO 10% PRIMERA COMPRA aplicado' : ''].filter(Boolean).join(' · '),
       items:         orderItems,
       total:         orderTotal,
-      paymentMethod: 'yape'
+      paymentMethod: 'yape',
+      ...(clubUid ? { _clubUid: clubUid } : {})
     };
 
     // Marcar descuento como usado (si aplica) antes de que la página cambie
@@ -501,7 +532,10 @@ const Checkout = {
 
     this.close();
     Cart.clear();
+    this._gift = null;
     _showOrderSuccessModal(orderData);
+    // La tarjeta muestra el pedido como "por confirmar" apenas llega a la base
+    if (hasClub && clubUid) setTimeout(() => Club.load(true), 4000);
   }
 };
 
@@ -521,6 +555,7 @@ function _showOrderSuccessModal(order) {
         <p class="os-order-id">N° de pedido <strong id="osOrderId"></strong></p>
         <p class="os-sub">Tu pedido fue enviado por WhatsApp. Te confirmaremos en breve.</p>
         <div id="osSummary" class="os-summary"></div>
+        <div id="osClub"></div>
         <div class="os-actions">
           <a href="https://wa.me/${WHATSAPP_NUMBER}" target="_blank" rel="noopener noreferrer" class="os-wa-btn">
             <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -536,9 +571,14 @@ function _showOrderSuccessModal(order) {
   document.getElementById('osOrderId').textContent = order.id || '';
   document.getElementById('osSummary').innerHTML = `
     <ul class="os-items">
-      ${order.items.map(i => `<li><span>${sanitize(i.brand)} – ${sanitize(i.productName)} (${sanitize(i.size)}) × ${i.quantity}</span><span>S/ ${(i.price * i.quantity).toFixed(2)}</span></li>`).join('')}
+      ${order.items.map(i => `<li><span>${i.clubRegalo ? '🎁 ' : ''}${sanitize(i.brand)} – ${sanitize(i.productName)} (${sanitize(i.size)}) × ${i.quantity}</span><span>${i.clubRegalo ? 'GRATIS' : `S/ ${(i.price * i.quantity).toFixed(2)}`}</span></li>`).join('')}
     </ul>
     <div class="os-total"><span>Total</span><strong>S/ ${order.total.toFixed(2)}</strong></div>`;
+  const clubEl = document.getElementById('osClub');
+  if (clubEl) {
+    clubEl.innerHTML = typeof Club !== 'undefined' ? Club.successHtml(order) : '';
+    if (typeof Club !== 'undefined') Club.bindSuccess(clubEl);
+  }
   modal.classList.add('open');
 }
 
