@@ -9971,7 +9971,6 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
   --club-gold:   #e8c46e;
   --club-gold-l: #f7e2a4;
   --club-gold-d: #b8892f;
-  --club-purple: #7c4fb0;
 }
 @property --club-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 
@@ -9988,21 +9987,83 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
   transition: transform .35s ease, box-shadow .35s ease;
 }
 .club-card:hover { transform: translateY(-3px); box-shadow: 0 24px 48px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.14); }
+.club-card-fx, .club-card-shine { position: absolute; pointer-events: none; z-index: 0; }
+.club-card-top, .club-card-slots, .club-card-foot { position: relative; z-index: 2; }
+
+/* ════ GOLDEN: oro metálico cepillado, con reflejos que se mueven y destellos ════ */
 .club-card--golden {
+  color: #3a2706;
   background:
-    radial-gradient(120% 90% at 0% 0%, rgba(247,226,164,.30), transparent 55%),
-    radial-gradient(90% 80% at 100% 100%, rgba(232,196,110,.20), transparent 60%),
-    linear-gradient(135deg, #2a1342 0%, #5a3980 42%, #7c4fb0 70%, #3b1d5e 100%);
-  border: 1px solid rgba(232,196,110,.6);
+    repeating-linear-gradient(100deg, rgba(255,255,255,.07) 0 1px, transparent 1px 3px),
+    radial-gradient(120% 90% at 0% 0%, rgba(255,250,225,.55), transparent 50%),
+    linear-gradient(125deg, #8a6119 0%, #c9952e 16%, #f3d684 32%, #fff3c8 40%, #e5b955 50%, #b07f23 64%, #e8c467 80%, #8c651c 100%);
+  border: 1px solid #fff0bf;
+  box-shadow: 0 18px 40px rgba(0,0,0,.55), 0 0 22px rgba(232,196,110,.18),
+              inset 0 1px 0 rgba(255,255,255,.7), inset 0 -2px 0 rgba(90,60,10,.35), inset 0 0 40px rgba(120,80,10,.25);
 }
+/* Reflejos que corren sobre el metal */
+.club-card--golden .club-card-fx {
+  inset: 0; mix-blend-mode: soft-light;
+  background: linear-gradient(110deg, transparent 22%, rgba(255,255,255,.95) 32%, transparent 42%, transparent 58%, rgba(255,255,255,.75) 68%, transparent 78%);
+  background-size: 300% 100%;
+}
+.club-play.club-card--golden .club-card-fx { animation: club-metal 7s linear infinite; }
+@keyframes club-metal { from { background-position: 100% 0; } to { background-position: -200% 0; } }
+/* Destello fuerte que cruza la tarjeta */
+.club-card--golden .club-card-shine {
+  inset: -30% -60%;
+  background: linear-gradient(105deg, transparent 43%, rgba(255,255,255,.75) 49%, rgba(255,248,215,.95) 50%, rgba(255,255,255,.75) 51%, transparent 57%);
+  transform: translateX(-70%);
+}
+.club-play.club-card--golden .club-card-shine { animation: club-shine 4.2s cubic-bezier(.45,.05,.35,1) 1.2s infinite; }
+@keyframes club-shine { 0% { transform: translateX(-70%); } 30%, 100% { transform: translateX(70%); } }
+/* Destellos (estrellitas) */
+.club-glint {
+  position: absolute; left: var(--x); top: var(--y); z-index: 3; pointer-events: none;
+  width: var(--z, 12px); height: var(--z, 12px); opacity: 0;
+  background: radial-gradient(circle, #fff 0 18%, rgba(255,255,255,0) 60%);
+  clip-path: polygon(50% 0, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0 50%, 42% 42%);
+  filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 6px rgba(255,236,170,.9));
+}
+.club-glint::after { content: ''; position: absolute; inset: 0; background: #fff; clip-path: inherit; }
+.club-play .club-glint { animation: club-glint 3.2s ease-in-out var(--d) infinite; }
+@keyframes club-glint { 0%, 100% { opacity: 0; transform: scale(.2) rotate(0deg); } 12% { opacity: 1; transform: scale(1.15) rotate(45deg); } 26% { opacity: 0; transform: scale(.3) rotate(90deg); } }
+/* Textos grabados en el oro */
+.club-card--golden .club-card-brand { color: rgba(58,39,6,.85); text-shadow: 0 1px 0 rgba(255,255,255,.55); }
+.club-card--golden .club-card-brand b { color: #2a1b03; }
+.club-card--golden .club-card-tier { color: #2a1b03; text-shadow: 0 1px 0 rgba(255,255,255,.6), 0 -1px 0 rgba(90,60,10,.25); }
+.club-card--golden .club-card-holder { color: #3a2706; text-shadow: 0 1px 0 rgba(255,255,255,.55), 0 -1px 0 rgba(90,60,10,.3); }
+.club-card--golden .club-card-count { color: rgba(58,39,6,.75); }
+.club-card--golden .club-card-count b { color: #2a1b03; text-shadow: 0 1px 0 rgba(255,255,255,.55); }
+/* Casilleros: monedas oscuras con la huellita en oro */
+.club-card--golden .club-slot { border: 1.5px dashed rgba(70,46,8,.45); background: rgba(255,255,255,.16); box-shadow: inset 0 1px 2px rgba(90,60,10,.25); }
+.club-card--golden .club-slot svg { fill: rgba(70,46,8,.22); }
+.club-card--golden .club-slot.is-on {
+  border: 1px solid rgba(255,240,200,.75);
+  background: radial-gradient(circle at 34% 28%, #6b4e18 0%, #2e2108 58%, #140d02 100%);
+  box-shadow: 0 2px 5px rgba(60,40,5,.5), inset 0 1px 0 rgba(255,230,160,.35);
+}
+.club-card--golden .club-slot.is-on svg { fill: #f6d680; filter: drop-shadow(0 0 2px rgba(255,220,130,.6)); }
+.club-card--golden .club-slot--gift { border: 1.5px solid rgba(70,46,8,.6); background: rgba(255,255,255,.22); }
+.club-card--golden .club-slot--gift svg { fill: #4a3108; }
+.club-card--golden .club-slot--gift.is-ready, .club-card--golden .club-slot--gift.is-transit {
+  border-color: #fff4cf; background: radial-gradient(circle at 34% 28%, #6b4e18 0%, #2e2108 58%, #140d02 100%);
+}
+.club-card--golden .club-slot--gift.is-ready svg, .club-card--golden .club-slot--gift.is-transit svg { fill: #f6d680; }
+.club-card--golden .club-slot--gift .club-gift-ribbon { fill: rgba(0,0,0,.3); }
+.club-card--golden .club-card-cat { filter: drop-shadow(0 8px 12px rgba(70,46,8,.55)); }
+.club-card--golden.is-ready { box-shadow: 0 18px 40px rgba(0,0,0,.55), 0 0 0 1px #fff4cf, 0 0 34px rgba(247,214,128,.55); }
+
+/* ════ BLACK: fibra de carbono, humo de perfume dorado y polvo de oro ════ */
 .club-card--black {
   background:
+    repeating-linear-gradient(45deg, rgba(255,255,255,.028) 0 2px, transparent 2px 5px),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,.02) 0 2px, transparent 2px 5px),
     radial-gradient(100% 80% at 100% 0%, rgba(232,196,110,.16), transparent 55%),
-    radial-gradient(80% 70% at 0% 100%, rgba(124,79,176,.12), transparent 60%),
-    linear-gradient(140deg, #040405 0%, #16161b 46%, #09090b 100%);
+    linear-gradient(140deg, #030304 0%, #141417 46%, #070708 100%);
   border: 1px solid rgba(232,196,110,.28);
 }
-/* Black: un brillo dorado recorre el borde */
+/* Un brillo dorado recorre el borde */
 .club-card--black::before {
   content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none;
   border-radius: inherit; padding: 1.5px;
@@ -10012,42 +10073,63 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
   animation: club-border 6s linear infinite;
 }
 @keyframes club-border { to { --club-a: 360deg; } }
-
-/* Reflejo holográfico (Black) y destello que cruza la tarjeta (ambas) */
-.club-card-holo, .club-card-shine { position: absolute; pointer-events: none; z-index: 0; }
-.club-card-holo { inset: 0; opacity: 0; }
-.club-card--black .club-card-holo {
-  opacity: 1; mix-blend-mode: screen;
-  background: linear-gradient(115deg, transparent 18%, rgba(255,64,180,.10) 32%, rgba(64,220,255,.12) 44%, rgba(255,226,120,.14) 56%, rgba(150,110,255,.10) 66%, transparent 80%);
-  background-size: 260% 260%;
-  animation: club-holo 7s ease-in-out infinite alternate;
+/* Humo de perfume: estelas doradas que fluyen */
+.club-card--black .club-card-fx { inset: 0; }
+.club-vapor { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.club-vapor path { fill: none; stroke-linecap: round; }
+.club-vapor .v-base { stroke: rgba(232,196,110,.13); stroke-width: 1; }
+.club-vapor .v-flow { stroke: var(--club-gold-l); stroke-width: 1.6; stroke-dasharray: 46 420; opacity: .85; filter: drop-shadow(0 0 3px rgba(247,226,164,.9)); }
+.club-play .club-vapor .v-flow { animation: club-vapor-flow var(--t, 5s) linear var(--d, 0s) infinite; }
+@keyframes club-vapor-flow { from { stroke-dashoffset: 466; } to { stroke-dashoffset: 0; } }
+.club-play .club-vapor { animation: club-vapor-drift 9s ease-in-out infinite alternate; }
+@keyframes club-vapor-drift { from { transform: translateX(-3%) translateY(1%); } to { transform: translateX(3%) translateY(-2%); } }
+/* Polvo de oro que sube */
+.club-dust {
+  position: absolute; left: var(--x); bottom: -6px; z-index: 1; pointer-events: none;
+  width: var(--z, 3px); height: var(--z, 3px); border-radius: 50%; opacity: 0;
+  background: #ffe7a6; box-shadow: 0 0 6px 1px rgba(247,214,128,.85);
 }
-@keyframes club-holo { from { background-position: 0% 40%; } to { background-position: 100% 60%; } }
-.club-card-shine {
+.club-play .club-dust { animation: club-dust var(--t, 5s) ease-in var(--d, 0s) infinite; }
+@keyframes club-dust {
+  0%   { opacity: 0; transform: translate(0, 0) scale(.6); }
+  15%  { opacity: 1; }
+  70%  { opacity: .8; }
+  100% { opacity: 0; transform: translate(var(--sx, 10px), -150px) scale(1.1); }
+}
+/* Brillo suave que cruza (dorado, más lento) */
+.club-card--black .club-card-shine {
   inset: -30% -60%;
-  background: linear-gradient(105deg, transparent 42%, rgba(255,255,255,.26) 50%, transparent 58%);
+  background: linear-gradient(105deg, transparent 44%, rgba(247,226,164,.16) 50%, transparent 56%);
   transform: translateX(-70%);
-  animation: club-shine 5.5s ease-in-out 1.4s infinite;
 }
-@keyframes club-shine { 0% { transform: translateX(-70%); } 32%, 100% { transform: translateX(70%); } }
-
-/* Destellos dorados (Black) */
-.club-spark {
-  position: absolute; left: var(--x); top: var(--y); z-index: 1; width: 8px; height: 8px;
-  background: var(--club-gold-l);
-  clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
-  filter: drop-shadow(0 0 4px rgba(247,226,164,.9));
-  opacity: 0; animation: club-twinkle 3.8s ease-in-out var(--d) infinite;
-}
-@keyframes club-twinkle { 0%, 100% { opacity: 0; transform: scale(.3); } 45% { opacity: .95; transform: scale(1); } 60% { opacity: .2; } }
-
-.club-card-top, .club-card-slots, .club-card-foot { position: relative; z-index: 2; }
-.club-card-top { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
-.club-card-brand { font-size: .64rem; letter-spacing: .24em; font-weight: 600; color: rgba(255,255,255,.82); }
-.club-card-brand b, .club-card-tier, .club-card-count b {
+.club-play.club-card--black .club-card-shine { animation: club-shine 6.5s ease-in-out 2s infinite; }
+.club-card--black .club-card-brand { color: rgba(255,255,255,.82); }
+.club-card--black .club-card-brand b, .club-card--black .club-card-tier, .club-card--black .club-card-count b {
   background: linear-gradient(180deg, var(--club-gold-l) 0%, var(--club-gold) 55%, var(--club-gold-d) 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
+.club-card--black .club-card-holder { color: #f3e6c4; text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 -1px 0 rgba(255,255,255,.12); }
+.club-card--black .club-card-count { color: rgba(255,255,255,.75); }
+.club-card--black .club-slot { border: 1.5px dashed rgba(232,196,110,.35); background: rgba(0,0,0,.35); }
+.club-card--black .club-slot svg { fill: rgba(232,196,110,.16); }
+.club-card--black .club-slot.is-on {
+  border: 1px solid rgba(255,240,200,.55);
+  background: radial-gradient(circle at 34% 28%, #fff4cf 0%, var(--club-gold) 42%, var(--club-gold-d) 100%);
+  box-shadow: 0 2px 6px rgba(0,0,0,.55), inset 0 -2px 3px rgba(0,0,0,.18), 0 0 8px rgba(232,196,110,.25);
+}
+.club-card--black .club-slot.is-on svg { fill: #111114; }
+.club-card--black .club-slot--gift { border: 1.5px solid rgba(232,196,110,.55); background: rgba(232,196,110,.08); }
+.club-card--black .club-slot--gift svg { fill: var(--club-gold); }
+.club-card--black .club-slot--gift .club-gift-ribbon { fill: rgba(0,0,0,.25); }
+.club-card--black .club-slot--gift.is-ready, .club-card--black .club-slot--gift.is-transit {
+  border-color: #fff4cf; background: radial-gradient(circle at 34% 28%, #fff4cf 0%, var(--club-gold) 42%, var(--club-gold-d) 100%);
+}
+.club-card--black .club-slot--gift.is-ready svg, .club-card--black .club-slot--gift.is-transit svg { fill: #111114; }
+.club-card--black.is-ready { box-shadow: 0 18px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(247,226,164,.5), 0 0 28px rgba(232,196,110,.3); }
+
+/* ── Partes comunes ── */
+.club-card-top { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
+.club-card-brand { font-size: .64rem; letter-spacing: .24em; font-weight: 600; }
 .club-card-tier { font-family: var(--font-serif); font-size: clamp(.85rem, 5.2cqw, 1.15rem); font-weight: 700; letter-spacing: .26em; font-style: italic; }
 
 /* El gato de la marca */
@@ -10056,7 +10138,6 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
   filter: drop-shadow(0 8px 14px rgba(0,0,0,.55));
   pointer-events: none;
 }
-.club-card--golden .club-card-cat { opacity: .92; }
 .club-play .club-card-cat { animation: club-float 6s ease-in-out 1s infinite; }
 @keyframes club-float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-4px) rotate(-1.5deg); } }
 
@@ -10068,33 +10149,16 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .club-slot {
   position: relative; width: var(--s); height: var(--s); border-radius: 50%;
   display: grid; place-items: center;
-  border: 1.5px dashed rgba(255,255,255,.3); background: rgba(0,0,0,.18);
 }
-.club-slot svg { width: 60%; height: 60%; fill: rgba(255,255,255,.14); }
-.club-slot.is-on {
-  border: 1px solid rgba(255,240,200,.55);
-  background: radial-gradient(circle at 34% 28%, #fff4cf 0%, var(--club-gold) 42%, var(--club-gold-d) 100%);
-  box-shadow: 0 2px 6px rgba(0,0,0,.45), inset 0 -2px 3px rgba(0,0,0,.18);
-}
-.club-card--golden .club-slot.is-on svg { fill: #3b1d5e; }
-.club-card--black  .club-slot.is-on svg { fill: #111114; }
-.club-slot--gift { border: 1.5px solid rgba(232,196,110,.55); background: rgba(232,196,110,.08); color: var(--club-gold); }
-.club-slot--gift svg { width: 66%; height: 66%; fill: var(--club-gold); }
-.club-slot--gift .club-gift-ribbon { fill: rgba(0,0,0,.25); }
-.club-slot--gift.is-ready, .club-slot--gift.is-transit {
-  background: radial-gradient(circle at 34% 28%, #fff4cf 0%, var(--club-gold) 42%, var(--club-gold-d) 100%);
-  border-color: #fff4cf;
-}
-.club-slot--gift.is-ready svg, .club-slot--gift.is-transit svg { fill: #2a1342; color: #2a1342; }
-.club-card--black .club-slot--gift.is-ready svg, .club-card--black .club-slot--gift.is-transit svg { fill: #111114; color: #111114; }
+.club-slot svg { width: 60%; height: 60%; }
+.club-slot--gift svg { width: 66%; height: 66%; }
 
 .club-card-foot { display: flex; justify-content: space-between; align-items: flex-end; gap: .5rem; }
 .club-card-holder {
   font-size: clamp(.6rem, 3.4cqw, .74rem); letter-spacing: .16em; font-weight: 600;
-  color: #f3e6c4; text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 -1px 0 rgba(255,255,255,.12);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;
 }
-.club-card-count { font-size: .72rem; color: rgba(255,255,255,.75); white-space: nowrap; }
+.club-card-count { font-size: .72rem; white-space: nowrap; }
 .club-card-count b { font-size: 1.25rem; font-weight: 800; }
 
 /* ── Animaciones (arrancan cuando la tarjeta se ve) ── */
@@ -10111,18 +10175,17 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .club-play .club-slot.is-new::after { animation: club-ripple .9s ease-out 1.6s; }
 @keyframes club-ripple { from { opacity: 1; transform: scale(.7); } to { opacity: 0; transform: scale(1.7); } }
 .club-play .club-slot.is-next { animation: club-next 1.9s ease-in-out 1.4s infinite; }
-@keyframes club-next { 0%, 100% { box-shadow: 0 0 0 0 rgba(232,196,110,.55); border-color: rgba(232,196,110,.75); } 60% { box-shadow: 0 0 0 7px rgba(232,196,110,0); border-color: rgba(255,255,255,.3); } }
+@keyframes club-next { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,236,170,.75); } 60% { box-shadow: 0 0 0 7px rgba(255,236,170,0); } }
 .club-play .club-slot--gift.is-ready { animation: club-gift 1.7s ease-in-out 1.2s infinite; }
 @keyframes club-gift { 0%, 100% { transform: none; box-shadow: 0 0 0 0 rgba(247,226,164,.7); } 20% { transform: rotate(-10deg) scale(1.08); } 40% { transform: rotate(8deg) scale(1.08); box-shadow: 0 0 14px 4px rgba(247,226,164,.55); } 60% { transform: none; } }
 .club-play .club-slot--gift.is-ready .club-gift-lid { transform-origin: 16px 13px; animation: club-lid 1.7s ease-in-out 1.2s infinite; }
 @keyframes club-lid { 0%, 100% { transform: none; } 30% { transform: translateY(-3px) rotate(-12deg); } }
-.club-card.is-ready { box-shadow: 0 18px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(247,226,164,.5), 0 0 28px rgba(232,196,110,.28); }
 
 /* ── Sección en Inicio ── */
 .club-home { position: relative; padding: clamp(2.5rem, 6vw, 4.5rem) 0; overflow: hidden; }
 .club-home::before {
   content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: radial-gradient(50% 60% at 25% 50%, rgba(124,79,176,.18), transparent 70%), radial-gradient(40% 50% at 80% 40%, rgba(232,196,110,.08), transparent 70%);
+  background: radial-gradient(50% 60% at 25% 50%, rgba(232,196,110,.12), transparent 70%), radial-gradient(40% 50% at 80% 40%, rgba(232,196,110,.06), transparent 70%);
 }
 .club-home-inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(1.5rem, 5vw, 4rem); align-items: center; }
 .club-home-cards { position: relative; height: clamp(250px, 30vw, 300px); }
@@ -10133,16 +10196,18 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .club-home-cards:hover .is-back  { transform: translate(-30%, -68%) rotate(10deg); }
 .club-home-cards:hover .is-front { transform: translate(-66%, -36%) rotate(-6deg); }
 .club-home-sub { color: var(--text2); line-height: 1.6; margin: .6rem 0 1rem; }
+.club-home .combos-title em { color: var(--club-gold); }
+.club-home .combos-eyebrow { color: var(--club-gold); background: rgba(232,196,110,.1); border-color: rgba(232,196,110,.38); }
 .club-home-sub strong { color: var(--text); }
 .club-home-tiers { list-style: none; padding: 0; margin: 0 0 1.3rem; display: grid; gap: .55rem; }
 .club-home-tiers li { display: flex; gap: .7rem; align-items: center; padding: .65rem .85rem; border-radius: 12px; font-size: .85rem; color: var(--text2); }
 .club-home-tiers li b { font-family: var(--font-serif); font-style: italic; letter-spacing: .14em; font-size: .95rem; min-width: 4.4rem; color: var(--club-gold); }
-.club-home-tiers li.is-golden { background: linear-gradient(90deg, rgba(124,79,176,.32), rgba(124,79,176,.08)); border: 1px solid rgba(232,196,110,.28); }
+.club-home-tiers li.is-golden { background: linear-gradient(90deg, rgba(232,196,110,.24), rgba(232,196,110,.05)); border: 1px solid rgba(232,196,110,.4); }
 .club-home-tiers li.is-black  { background: linear-gradient(90deg, rgba(0,0,0,.65), rgba(20,20,24,.3)); border: 1px solid rgba(232,196,110,.2); }
 .club-home-actions { display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; }
 .club-cta {
   position: relative; overflow: hidden; border: 0; cursor: pointer;
-  padding: .8rem 1.4rem; border-radius: 999px; font-weight: 700; font-size: .9rem; color: #1b1026;
+  padding: .8rem 1.4rem; border-radius: 999px; font-weight: 700; font-size: .9rem; color: #2b1d04;
   background: linear-gradient(180deg, var(--club-gold-l), var(--club-gold) 60%, var(--club-gold-d));
   box-shadow: 0 6px 18px rgba(232,196,110,.25);
 }
@@ -10164,7 +10229,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .hud-item-club svg { color: var(--club-gold); }
 .club-menu-badge {
   margin-left: auto; padding: .08rem .45rem; border-radius: 999px; font-size: .68rem; font-weight: 700;
-  color: #1b1026; background: linear-gradient(180deg, var(--club-gold-l), var(--club-gold));
+  color: #2b1d04; background: linear-gradient(180deg, var(--club-gold-l), var(--club-gold));
 }
 .mob-btn-club { display: flex; align-items: center; justify-content: center; gap: .5rem; border-color: rgba(232,196,110,.45) !important; color: var(--club-gold) !important; }
 
@@ -10178,7 +10243,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .club-modal {
   position: relative; width: min(440px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto;
   padding: 22px 20px 20px; border-radius: 20px;
-  background: linear-gradient(180deg, #17121f 0%, #0e0e10 40%); border: 1px solid rgba(232,196,110,.2);
+  background: linear-gradient(180deg, #17150f 0%, #0e0e10 40%); border: 1px solid rgba(232,196,110,.2);
   box-shadow: 0 24px 60px rgba(0,0,0,.7);
   animation: club-pop .35s cubic-bezier(.2,.8,.2,1);
 }
@@ -10195,7 +10260,8 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
   transition: background .25s, color .25s, border-color .25s;
 }
 .club-tab small { font-family: var(--font-sans); font-style: normal; letter-spacing: 0; font-weight: 500; font-size: .7rem; color: var(--text3); }
-.club-tab--golden.is-active { background: linear-gradient(135deg, #3b1d5e, #7c4fb0); color: var(--club-gold-l); border-color: rgba(232,196,110,.5); }
+.club-tab--golden.is-active { background: linear-gradient(125deg, #b4852a, #f3d684 45%, #c9952e); color: #2a1b03; border-color: #fff0bf; }
+.club-tab--golden.is-active small { color: rgba(42,27,3,.8) !important; }
 .club-tab--black.is-active  { background: linear-gradient(135deg, #050506, #1b1b20); color: var(--club-gold-l); border-color: rgba(232,196,110,.45); }
 .club-tab.is-active small { color: rgba(255,255,255,.75); }
 .club-stage { position: relative; display: grid; place-items: center; padding: .2rem 0 1rem; perspective: 900px; }
@@ -10210,7 +10276,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .club-how li { display: flex; gap: .6rem; align-items: flex-start; font-size: .82rem; color: var(--text2); line-height: 1.5; }
 .club-how li strong { color: var(--text); }
 .club-dot { flex: none; width: 14px; height: 14px; margin-top: .2rem; border-radius: 4px; border: 1px solid var(--club-gold); }
-.club-dot--golden { background: linear-gradient(135deg, #3b1d5e, #7c4fb0); }
+.club-dot--golden { background: linear-gradient(125deg, #b4852a, #f3d684 50%, #c9952e); }
 .club-dot--black  { background: #0a0a0c; }
 .club-fine { font-size: .72rem; color: var(--text3); margin: .2rem 0 0; }
 .club-history { margin-top: 1rem; }
@@ -10250,8 +10316,8 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .club-co strong, .club-os strong { color: var(--text); }
 .club-co-paw { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
   background: radial-gradient(circle at 34% 28%, #fff4cf 0%, var(--club-gold) 42%, var(--club-gold-d) 100%); }
-.club-co-paw svg { width: 62%; height: 62%; fill: #2a1342; }
-.club-co--golden, .club-os--golden { background: linear-gradient(90deg, rgba(124,79,176,.22), rgba(124,79,176,.05)); border-color: rgba(232,196,110,.3); }
+.club-co-paw svg { width: 62%; height: 62%; fill: #2b1d04; }
+.club-co--golden, .club-os--golden { background: linear-gradient(90deg, rgba(232,196,110,.16), rgba(232,196,110,.03)); border-color: rgba(232,196,110,.4); }
 .club-co--black, .club-os--black { background: linear-gradient(90deg, rgba(0,0,0,.6), rgba(30,30,34,.3)); border-color: rgba(232,196,110,.3); }
 .club-co--ready { border-color: rgba(247,226,164,.6); box-shadow: 0 0 0 1px rgba(247,226,164,.15), 0 0 18px rgba(232,196,110,.12); }
 .club-co--ready .club-co-paw { animation: club-gift 1.8s ease-in-out infinite; }
@@ -10259,7 +10325,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .club-co-up b { font-family: var(--font-serif); font-style: italic; letter-spacing: .08em; }
 .club-co-link { background: none; border: 0; padding: 0; color: var(--club-gold); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; font-size: inherit; }
 .club-co-btn {
-  flex: none; border: 0; border-radius: 999px; padding: .5rem .95rem; cursor: pointer; font-weight: 700; font-size: .8rem; color: #1b1026;
+  flex: none; border: 0; border-radius: 999px; padding: .5rem .95rem; cursor: pointer; font-weight: 700; font-size: .8rem; color: #2b1d04;
   background: linear-gradient(180deg, var(--club-gold-l), var(--club-gold) 60%, var(--club-gold-d));
 }
 .order-list .order-gift-line > span:last-child { color: var(--club-gold); font-weight: 700; }
@@ -10279,7 +10345,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
   transition: border-color .2s, transform .2s;
 }
 .club-pick:hover, .club-pick:focus-visible { border-color: var(--club-gold); transform: translateY(-2px); }
-.club-pick-img { width: 100%; height: 108px; border-radius: 10px; background: radial-gradient(circle, rgba(124,79,176,.18), transparent 70%); display: grid; place-items: center; overflow: hidden; }
+.club-pick-img { width: 100%; height: 108px; border-radius: 10px; background: radial-gradient(circle, rgba(232,196,110,.14), transparent 70%); display: grid; place-items: center; overflow: hidden; }
 .club-pick-img img { width: 86%; height: 86%; object-fit: contain; }
 .club-pick-brand { font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text3); }
 .club-pick-name { font-size: .84rem; color: var(--text); font-weight: 600; line-height: 1.25; }
@@ -10294,7 +10360,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
   position: fixed; left: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 9500;
   display: flex; align-items: stretch; max-width: min(360px, calc(100vw - 32px));
   border-radius: 16px; overflow: hidden; border: 1px solid rgba(232,196,110,.45);
-  background: linear-gradient(135deg, #2a1342, #120d18); box-shadow: 0 14px 34px rgba(0,0,0,.6);
+  background: linear-gradient(135deg, #3a2a0c, #15110a); box-shadow: 0 14px 34px rgba(0,0,0,.6);
   transform: translateY(150%); opacity: 0; transition: transform .45s cubic-bezier(.2,1.2,.4,1), opacity .3s;
 }
 .club-toast--black { background: linear-gradient(135deg, #050506, #1b1b20); }
@@ -10306,7 +10372,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 
 @media (prefers-reduced-motion: reduce) {
   .club-card, .club-card *, .club-card::before, .club-cta::after, .club-co-paw, .club-modal { animation: none !important; }
-  .club-card-shine, .club-card-holo { display: none; }
+  .club-card-shine, .club-glint, .club-dust, .club-vapor .v-flow { display: none; }
   .club-toast { transition: none; }
 }
 
@@ -10328,7 +10394,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .ca-alert div { display: flex; flex-direction: column; min-width: 0; }
 .ca-alert strong { color: var(--text); font-size: .85rem; }
 .ca-alert small { color: var(--text2); font-size: .74rem; }
-.ca-alert--golden { background: linear-gradient(90deg, rgba(124,79,176,.22), rgba(124,79,176,.04)); }
+.ca-alert--golden { background: linear-gradient(90deg, rgba(232,196,110,.16), rgba(232,196,110,.03)); }
 .ca-alert--black  { background: linear-gradient(90deg, rgba(0,0,0,.55), rgba(30,30,34,.2)); }
 .ca-toolbar { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin-bottom: .7rem; }
 .ca-toolbar input { flex: 1 1 240px; min-height: 38px; padding: .45rem .8rem; border-radius: var(--r); border: 1px solid var(--border); background: var(--bg2); color: var(--text); font-size: .85rem; }
@@ -10344,7 +10410,6 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .ca-paws { display: flex; align-items: center; gap: 3px; }
 .ca-paws i { width: 11px; height: 11px; border-radius: 50%; border: 1px dashed rgba(255,255,255,.25); }
 .ca-paws i.on { border: 0; background: radial-gradient(circle at 34% 28%, #fff4cf, var(--club-gold) 45%, var(--club-gold-d)); }
-.ca-tier--golden .ca-paws i.on { box-shadow: 0 0 0 1px rgba(124,79,176,.6); }
 .ca-paws em { font-style: normal; font-size: .78rem; margin-left: 2px; opacity: .3; filter: grayscale(1); }
 .ca-paws em.on { opacity: 1; filter: none; }
 .ca-tier-state { font-size: .72rem; color: var(--text2); }
@@ -10363,7 +10428,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .ca-undo:hover { color: #ef9a9a; }
 .order-club-badge {
   display: inline-block; margin-top: .3rem; padding: .18rem .5rem; border-radius: 6px; font-size: .68rem; font-weight: 600; line-height: 1.4;
-  background: rgba(124,79,176,.14); color: var(--gold-l); border: 1px solid rgba(124,79,176,.35);
+  background: rgba(232,196,110,.08); color: #e8c46e; border: 1px solid rgba(232,196,110,.3);
 }
 .order-club-badge.is-gift { background: rgba(232,196,110,.12); color: #e8c46e; border-color: rgba(232,196,110,.4); }
 .order-gift-tag { font-size: .62rem; font-weight: 700; letter-spacing: .06em; color: #e8c46e; margin-left: .25rem; }

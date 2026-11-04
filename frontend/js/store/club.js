@@ -24,6 +24,20 @@ const CLUB_CAT_IMG    = '/imgGato/gato-removebg-preview.png';
 const _CLUB_PAW  = '<svg viewBox="0 0 32 32" aria-hidden="true"><ellipse cx="16" cy="21.5" rx="7.2" ry="6.2"/><ellipse cx="7.3" cy="13.6" rx="3" ry="3.8" transform="rotate(-18 7.3 13.6)"/><ellipse cx="12.6" cy="8.3" rx="3" ry="3.9" transform="rotate(-6 12.6 8.3)"/><ellipse cx="19.4" cy="8.3" rx="3" ry="3.9" transform="rotate(6 19.4 8.3)"/><ellipse cx="24.7" cy="13.6" rx="3" ry="3.8" transform="rotate(18 24.7 13.6)"/></svg>';
 const _CLUB_GIFT = '<svg viewBox="0 0 32 32" aria-hidden="true"><g class="club-gift-lid"><rect x="5" y="10" width="22" height="6" rx="1.5"/><path d="M16 10c-2-4.5-7-5.5-7.5-2.5S12 10 16 10zm0 0c2-4.5 7-5.5 7.5-2.5S20 10 16 10z" fill="none" stroke="currentColor" stroke-width="1.8"/></g><rect x="7" y="16" width="18" height="11" rx="1.5"/><rect x="14.6" y="10" width="2.8" height="17" class="club-gift-ribbon"/></svg>';
 
+// Golden: destellos de luz sobre el oro
+const _CLUB_GLINTS = [[24, 30, 11, 0], [46, 7, 9, .8], [30, 52, 9, 1.6], [63, 28, 13, 2.3], [89, 11, 10, 1.1], [80, 76, 10, 2.8], [13, 84, 10, 2]]
+  .map(([x, y, z, d]) => `<i class="club-glint" aria-hidden="true" style="--x:${x}%;--y:${y}%;--z:${z}px;--d:${d}s"></i>`).join('');
+// Black: humo de perfume dorado (estelas que fluyen) y polvo de oro que sube
+const _CLUB_VAPOR = `<svg class="club-vapor" viewBox="0 0 320 200" preserveAspectRatio="none">
+  ${[['M-10 190C40 150 20 112 80 100S150 62 200 80 280 40 332 8', 5.5, 0],
+     ['M30 206C70 172 60 140 120 136S190 120 232 140 300 108 334 90', 7, 1.8],
+     ['M-12 122C30 100 62 70 112 62S172 32 224 22 300 30 334 4', 6.2, 3.4]]
+    .map(([d, t, delay]) => `<path class="v-base" d="${d}"/><path class="v-flow" pathLength="420" style="--t:${t}s;--d:${delay}s" d="${d}"/>`).join('')}
+</svg>`;
+const _CLUB_DUST = [[6, 0, 5.2, 8, 2.5], [17, 2.4, 6, -10, 3], [28, 1.1, 4.6, 12, 2], [39, 3.6, 5.6, -6, 3.5], [51, .5, 6.4, 9, 2.5],
+  [60, 2.9, 4.8, -12, 2], [70, 1.7, 5.8, 7, 3], [81, 4.2, 5, -8, 2.5], [90, .9, 6.2, 10, 3], [96, 3.1, 4.4, -5, 2]]
+  .map(([x, d, t, sx, z]) => `<i class="club-dust" style="--x:${x}%;--d:${d}s;--t:${t}s;--sx:${sx}px;--z:${z}px"></i>`).join('');
+
 const Club = {
   enabled: null,       // null: aún no se sabe · true/false: el SQL del Club está (o no) corrido
   state:   null,       // respuesta de club_mi_tarjeta()
@@ -128,14 +142,13 @@ const Club = {
       slots.push(`<span class="club-slot${on ? ' is-on' : ''}${isNew ? ' is-new' : ''}${next ? ' is-next' : ''}" style="--i:${i}">${_CLUB_PAW}</span>`);
     }
     slots.push(`<span class="club-slot club-slot--gift${info.listo ? ' is-ready' : ''}${info.enCamino ? ' is-transit' : ''}" style="--i:9" title="Regalo: ${escapeAttr(T.prize)}">${_CLUB_GIFT}</span>`);
-    const sparks = tier === 'black'
-      ? '<i class="club-spark" style="--x:57%;--y:10%;--d:0s"></i><i class="club-spark" style="--x:93%;--y:34%;--d:1.3s"></i><i class="club-spark" style="--x:66%;--y:62%;--d:2.2s"></i><i class="club-spark" style="--x:46%;--y:86%;--d:3.1s"></i>'
-      : '';
+    const fx = tier === 'black' ? _CLUB_VAPOR + _CLUB_DUST : '';
+    const glints = tier === 'golden' ? _CLUB_GLINTS : '';
     return `
       <div class="club-card club-card--${tier}${info.listo ? ' is-ready' : ''}${play ? ' club-play' : ''}" data-tier="${tier}">
-        <span class="club-card-holo" aria-hidden="true"></span>
+        <span class="club-card-fx" aria-hidden="true">${fx}</span>
         <span class="club-card-shine" aria-hidden="true"></span>
-        ${sparks}
+        ${glints}
         <div class="club-card-top">
           <span class="club-card-brand">CLUB <b>MICHT</b></span>
           <span class="club-card-tier">${T.name.toUpperCase()}</span>
@@ -363,7 +376,7 @@ const Club = {
     if (!host || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
     const box = document.createElement('div');
     box.className = 'club-confetti';
-    const colors = ['#e8c46e', '#f5dc8e', '#9b72c9', '#7c4fb0', '#ffffff'];
+    const colors = ['#e8c46e', '#f7e2a4', '#fff4cf', '#b8892f', '#ffffff'];
     for (let i = 0; i < 36; i++) {
       const p = document.createElement('i');
       p.style.setProperty('--x', `${(Math.random() * 2 - 1) * 170}px`);
