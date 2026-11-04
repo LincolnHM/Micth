@@ -203,7 +203,7 @@ async function renderOrdersSection() {
 
     const itemsHtml = (o.items || []).map(i =>
       `<div class="order-item-line">
-        <span class="order-item-name">${sanitize((i.brand||'') + (i.brand && i.productName ? ' ' : '') + (i.productName||''))}</span>
+        <span class="order-item-name">${i.clubRegalo ? '🎁 ' : ''}${sanitize((i.brand||'') + (i.brand && i.productName ? ' ' : '') + (i.productName||''))}${i.clubRegalo ? ' <small class="order-gift-tag">REGALO CLUB</small>' : ''}</span>
         <span class="order-item-size-chip">${sanitize(i.size||'')} ×${parseInt(i.quantity)||1}</span>
       </div>`
     ).join('');
@@ -224,6 +224,7 @@ async function renderOrdersSection() {
       <td class="order-col-client">
         <span class="order-customer">${sanitize(o.customerName || '—')}</span>
         ${sellerBadgeHtml(o)}
+        ${typeof clubBadgeHtml === 'function' ? clubBadgeHtml(o) : ''}
         ${o.customerPhone ? `<div class="order-date">${sanitize(o.customerPhone)}</div>` : ''}
         ${o.customerDni   ? `<div class="order-date" style="font-size:.68rem">DNI ${sanitize(o.customerDni)}</div>` : ''}
         ${delivType === 'envio' && o.status !== 'cancelado' && orderNeedsClientPhone(o)
@@ -639,8 +640,8 @@ async function openOrderDetail(id) {
       ${order.items.map(i => `
       <li style="display:flex;flex-direction:column;gap:.15rem;font-size:.82rem;color:var(--text2)">
         <div style="display:flex;justify-content:space-between">
-          <span>${sanitize(i.brand || '')} ${sanitize(i.productName)} <span class="decant-chip">${sanitize(i.size)}</span> ×${parseInt(i.quantity) || 1}</span>
-          <strong style="color:var(--gold)">S/ ${(i.price * i.quantity).toFixed(2)}</strong>
+          <span>${i.clubRegalo ? '🎁 ' : ''}${sanitize(i.brand || '')} ${sanitize(i.productName)} <span class="decant-chip">${sanitize(i.size)}</span> ×${parseInt(i.quantity) || 1}${i.clubRegalo ? ` <small class="order-gift-tag">REGALO CLUB ${i.clubRegalo === 'black' ? 'BLACK' : 'GOLDEN'}</small>` : ''}</span>
+          <strong style="color:var(--gold)">${i.clubRegalo ? 'GRATIS' : `S/ ${(i.price * i.quantity).toFixed(2)}`}</strong>
         </div>
         ${i.comboComposition ? `<span style="font-size:.72rem;color:var(--text3)">Incluye: ${sanitize(i.comboComposition)}</span>` : ''}
       </li>`).join('')}

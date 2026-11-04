@@ -63,6 +63,8 @@ function _cleanOrderItems(items) {
         price:       Math.max(0, _num(i.price)),
         quantity:    Math.max(1, Math.min(99, parseInt(i.quantity) || 1))
       };
+      // Regalo del Club MICHT (va a S/ 0): backend/supabase/sql/2026-11-04-club-micht.sql
+      if (i.clubRegalo === 'golden' || i.clubRegalo === 'black') out.clubRegalo = i.clubRegalo;
       if (i.isCombo === true) {
         const cid = parseInt(i.comboId);
         out.isCombo          = true;
@@ -125,7 +127,10 @@ function orderFromDB(row) {
     vendedoraId:     /^[0-9a-f-]{36}$/i.test(row.vendedora_id || '') ? row.vendedora_id : null,
     vendedoraNombre: _str(row.vendedora_nombre, 60),
     rendidoAt:       row.rendido_at || null,                 // te entregó ese dinero
-    anuladoVendedoraAt: row.anulado_por_vendedora_at || null
+    anuladoVendedoraAt: row.anulado_por_vendedora_at || null,
+    // Club MICHT (backend/supabase/sql/2026-11-04-club-micht.sql)
+    clubCliente:     /^[0-9a-f-]{36}$/i.test(row.club_cliente || '') ? row.club_cliente : null,
+    clubRegalo:      row.club_regalo === 'golden' || row.club_regalo === 'black' ? row.club_regalo : null
   };
 }
 
@@ -315,13 +320,20 @@ const CloudOrders = {
         // otro error de la función → cae al envío directo de abajo
       }
 
+      // Club MICHT: si el cliente hizo el pedido con su sesión iniciada, se manda
+      // con su sesión para que la base sepa de quién es (suma huellitas). Si la
+      // sesión ya no vale, se manda como siempre (el pedido nunca se pierde).
+      let bearer = SUPABASE_ANON_KEY;
+      const clientToken = await this._customerToken(order);
+      if (clientToken) bearer = clientToken;
+
       const post = async payload => {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
           method: 'POST',
           keepalive: true,
           headers: {
             'Content-Type':  'application/json',
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Authorization': `Bearer ${bearer}`,
             'apikey':        SUPABASE_ANON_KEY,
             'Prefer':        'return=minimal'
           },
@@ -333,6 +345,10 @@ const CloudOrders = {
       };
 
       let r = await post(row);
+      if (!r.ok && bearer !== SUPABASE_ANON_KEY && (r.status === 401 || r.status === 403 || /jwt/i.test(r.message || ''))) {
+        bearer = SUPABASE_ANON_KEY;
+        r = await post(row);
+      }
       // Columna payment_method todavía no creada en esa base → reintentar sin ella
       if (!r.ok && (r.code === '42703' || r.code === 'PGRST204') && /payment_method/.test(r.message || '')) {
         const { payment_method, ...fallback } = row;
@@ -346,6 +362,16 @@ const CloudOrders = {
     } catch (err) {
       return { ok: false, network: true, message: err.message };
     }
+  },
+
+  // Sesión del cliente que hizo el pedido (solo en la tienda y si sigue siendo él)
+  async _customerToken(order) {
+    if (!order?._clubUid || typeof authClient === 'undefined' || !authClient) return null;
+    try {
+      const { data } = await authClient.auth.getSession();
+      const s = data?.session;
+      return s?.access_token && s.user?.id === order._clubUid ? s.access_token : null;
+    } catch (_) { return null; }
   },
 
   // Reenvía los pedidos guardados solo en este navegador. Devuelve cuántos llegaron.

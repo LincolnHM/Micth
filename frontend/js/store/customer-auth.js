@@ -313,6 +313,9 @@ const UserAuth = {
 
     // Banner promocional
     this._updatePromoBanner();
+
+    // Club MICHT: tarjeta del cliente (js/store/club.js)
+    if (typeof Club !== 'undefined') Club.onAuthChange();
   },
 
   _updatePromoBanner() {
@@ -330,9 +333,12 @@ const UserAuth = {
     const loggedIn    = this.isLoggedIn();
     const hasDiscount = this.hasFirstDiscount();
 
+    const club = typeof Club !== 'undefined' && Club.enabled;
     if (!loggedIn) {
       // No logueado → invitar a registrarse
-      if (text)  text.innerHTML  = 'Regístrate y obtén <strong>10% OFF</strong> en tu primera compra';
+      if (text)  text.innerHTML  = club
+        ? 'Regístrate: <strong>10% OFF</strong> en tu primera compra y tu tarjeta <strong>Club MICHT</strong> 🐾'
+        : 'Regístrate y obtén <strong>10% OFF</strong> en tu primera compra';
       if (cta) { cta.textContent = 'Crear cuenta gratis'; cta.dataset.action = 'register'; }
       banner.style.display = '';
     } else if (hasDiscount) {

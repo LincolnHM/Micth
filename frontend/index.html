@@ -206,7 +206,7 @@
   <link rel="icon" type="image/png" href="imgGato/icons/icon-192.png">
   <link rel="apple-touch-icon" href="imgGato/icons/icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261102-1706">
+  <link rel="stylesheet" href="css/style.css?v=20261104-0231">
   <!-- La pantalla de carga solo se muestra la primera vez en la sesión; en las
        siguientes visitas (volver de Nosotros, recargar) no hace esperar. -->
   <script>try { if (sessionStorage.getItem('micht_loader_seen')) document.documentElement.classList.add('pl-skip'); } catch (e) {}</script>
@@ -359,6 +359,12 @@
               </button>
 
               <div class="hud-dropdown" id="headerUserDropdown" aria-hidden="true">
+                <!-- Club MICHT (js/store/club.js) -->
+                <button class="hud-item hud-item-club" id="headerClubBtn" hidden>
+                  <svg viewBox="0 0 32 32" fill="currentColor" width="15" height="15" aria-hidden="true"><ellipse cx="16" cy="21.5" rx="7.2" ry="6.2"/><ellipse cx="7.3" cy="13.6" rx="3" ry="3.8"/><ellipse cx="12.6" cy="8.3" rx="3" ry="3.9"/><ellipse cx="19.4" cy="8.3" rx="3" ry="3.9"/><ellipse cx="24.7" cy="13.6" rx="3" ry="3.8"/></svg>
+                  Mi tarjeta Club MICHT
+                  <span class="club-menu-badge" hidden></span>
+                </button>
                 <!-- Mis compras -->
                 <button class="hud-item" id="headerHistoryBtn">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
@@ -446,6 +452,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <span>Hola, <strong id="mobileUserName">Usuario</strong></span>
         </div>
+        <button class="mobile-auth-btn mob-btn-secondary mob-btn-club" id="mobileClubBtn" hidden>🐾 Mi tarjeta Club MICHT <span class="club-menu-badge" hidden></span></button>
         <button class="mobile-auth-btn mob-btn-secondary" id="mobileHistoryBtn">📦 Mis compras</button>
         <button class="mobile-auth-btn mob-btn-secondary" id="mobileChangePassBtn">🔑 Cambiar contraseña</button>
         <div class="mob-pass-panel" id="mobilePassPanel" style="display:none">
@@ -572,6 +579,27 @@
       <div class="cat-entry-actions">
         <a href="#catalogo" class="cat-entry-all" data-catalog-type="all">Ver todo el catálogo →</a>
         <button type="button" class="cat-entry-finder" id="catEntryFinderBtn">🔮 ¿No sabes cuál elegir? Haz el test</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Club MICHT: tarjetas de fidelidad (js/store/club.js) ──────────────────
+       Oculta hasta saber que el SQL del Club está corrido. -->
+  <section class="club-home view-inicio" id="clubHome" aria-labelledby="clubHomeTitle" hidden>
+    <div class="container club-home-inner">
+      <div class="club-home-cards" id="clubHomeCards"></div>
+      <div class="club-home-copy">
+        <span class="combos-eyebrow">🐾 Club MICHT</span>
+        <h2 class="combos-title" id="clubHomeTitle">Cada compra suma. <em>Tu pedido 10 va con regalo.</em></h2>
+        <p class="club-home-sub" id="clubHomeSub">Cada pedido pagado suma 1 huellita. Junta 9 y tu <strong>pedido 10 lleva un decant de 5 ml gratis</strong>.</p>
+        <ul class="club-home-tiers">
+          <li class="is-golden"><b>Golden</b><span>Pedidos desde S/ 15 · regalo: 5 ml de cualquier árabe</span></li>
+          <li class="is-black"><b>Black</b><span>Pedidos desde S/ 60 · regalo: 5 ml árabe o diseñador</span></li>
+        </ul>
+        <div class="club-home-actions">
+          <button type="button" class="club-cta" id="clubHomeCta" data-action="register">Crear mi cuenta gratis</button>
+          <button type="button" class="club-link" id="clubHomeMore">¿Cómo funciona?</button>
+        </div>
       </div>
     </div>
   </section>
@@ -1466,37 +1494,38 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con el panel admin) — el orden importa -->
-  <script src="js/shared/data-core.js?v=20261102-1706"></script>
-  <script src="js/shared/catalog.js?v=20261102-1706"></script>
-  <script src="js/shared/data.js?v=20261102-1706"></script>
-  <script src="js/shared/supabase-config.js?v=20261102-1706"></script>
-  <script src="js/shared/cloud-orders.js?v=20261102-1706"></script>
-  <script src="js/shared/cloud-gallery.js?v=20261102-1706"></script>
-  <script src="js/shared/cloud-products.js?v=20261102-1706"></script>
-  <script src="js/shared/slugs.js?v=20261102-1706"></script>
-  <script src="js/shared/cloud-combos.js?v=20261102-1706"></script>
+  <script src="js/shared/data-core.js?v=20261104-0231"></script>
+  <script src="js/shared/catalog.js?v=20261104-0231"></script>
+  <script src="js/shared/data.js?v=20261104-0231"></script>
+  <script src="js/shared/supabase-config.js?v=20261104-0231"></script>
+  <script src="js/shared/cloud-orders.js?v=20261104-0231"></script>
+  <script src="js/shared/cloud-gallery.js?v=20261104-0231"></script>
+  <script src="js/shared/cloud-products.js?v=20261104-0231"></script>
+  <script src="js/shared/slugs.js?v=20261104-0231"></script>
+  <script src="js/shared/cloud-combos.js?v=20261104-0231"></script>
   <!-- Tienda -->
-  <script src="js/store/announcement.js?v=20261102-1706"></script>
-  <script src="js/store/seasonal-theme.js?v=20261102-1706"></script>
-  <script src="js/store/carousel.js?v=20261102-1706"></script>
-  <script src="js/store/cart.js?v=20261102-1706"></script>
-  <script src="js/store/catalog-view.js?v=20261102-1706"></script>
-  <script src="js/store/new-arrivals.js?v=20261102-1706"></script>
-  <script src="js/store/coming-soon.js?v=20261102-1706"></script>
-  <script src="js/store/filters-ui.js?v=20261102-1706"></script>
-  <script src="js/store/combos-carousel.js?v=20261102-1706"></script>
-  <script src="js/store/faq.js?v=20261102-1706"></script>
-  <script src="js/store/product-detail.js?v=20261102-1706"></script>
-  <script src="js/store/combo-detail.js?v=20261102-1706"></script>
-  <script src="js/store/store-view.js?v=20261102-1706"></script>
-  <script src="js/store/init.js?v=20261102-1706"></script>
-  <script src="js/store/gallery.js?v=20261102-1706"></script>
-  <script src="js/store/scent-finder.js?v=20261102-1706"></script>
-  <script src="js/store/checkout.js?v=20261102-1706"></script>
-  <script src="js/store/customer-auth.js?v=20261102-1706"></script>
-  <script src="js/store/chatbot.js?v=20261102-1706"></script>
-  <script src="js/store/animations.js?v=20261102-1706"></script>
-  <script src="js/store/gsap-animations.js?v=20261102-1706"></script>
+  <script src="js/store/announcement.js?v=20261104-0231"></script>
+  <script src="js/store/seasonal-theme.js?v=20261104-0231"></script>
+  <script src="js/store/carousel.js?v=20261104-0231"></script>
+  <script src="js/store/cart.js?v=20261104-0231"></script>
+  <script src="js/store/catalog-view.js?v=20261104-0231"></script>
+  <script src="js/store/new-arrivals.js?v=20261104-0231"></script>
+  <script src="js/store/coming-soon.js?v=20261104-0231"></script>
+  <script src="js/store/filters-ui.js?v=20261104-0231"></script>
+  <script src="js/store/combos-carousel.js?v=20261104-0231"></script>
+  <script src="js/store/faq.js?v=20261104-0231"></script>
+  <script src="js/store/product-detail.js?v=20261104-0231"></script>
+  <script src="js/store/combo-detail.js?v=20261104-0231"></script>
+  <script src="js/store/store-view.js?v=20261104-0231"></script>
+  <script src="js/store/init.js?v=20261104-0231"></script>
+  <script src="js/store/gallery.js?v=20261104-0231"></script>
+  <script src="js/store/scent-finder.js?v=20261104-0231"></script>
+  <script src="js/store/checkout.js?v=20261104-0231"></script>
+  <script src="js/store/customer-auth.js?v=20261104-0231"></script>
+  <script src="js/store/club.js?v=20261104-0231"></script>
+  <script src="js/store/chatbot.js?v=20261104-0231"></script>
+  <script src="js/store/animations.js?v=20261104-0231"></script>
+  <script src="js/store/gsap-animations.js?v=20261104-0231"></script>
   <script>
     // ── Mobile menu toggle ───────────────────────────────────
     (function () {
