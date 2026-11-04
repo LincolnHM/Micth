@@ -10054,15 +10054,32 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .club-card--golden .club-card-cat { filter: drop-shadow(0 8px 12px rgba(70,46,8,.55)); }
 .club-card--golden.is-ready { box-shadow: 0 18px 40px rgba(0,0,0,.55), 0 0 0 1px #fff4cf, 0 0 34px rgba(247,214,128,.55); }
 
-/* ════ BLACK: fibra de carbono, humo de perfume dorado y polvo de oro ════ */
+/* ════ BLACK: obsidiana — vidrio volcánico negro, brillante, con ondas de fractura ════ */
 .club-card--black {
   background:
-    repeating-linear-gradient(45deg, rgba(255,255,255,.028) 0 2px, transparent 2px 5px),
-    repeating-linear-gradient(-45deg, rgba(255,255,255,.02) 0 2px, transparent 2px 5px),
-    radial-gradient(100% 80% at 100% 0%, rgba(232,196,110,.16), transparent 55%),
-    linear-gradient(140deg, #030304 0%, #141417 46%, #070708 100%);
-  border: 1px solid rgba(232,196,110,.28);
+    /* reflejo del vidrio arriba */
+    linear-gradient(168deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 20%, transparent 36%),
+    /* ondas de fractura (como la obsidiana partida) */
+    radial-gradient(120% 95% at 8% 118%, transparent 52%, rgba(170,185,210,.12) 53.5%, rgba(170,185,210,.03) 56%, transparent 59%),
+    radial-gradient(95% 85% at 108% 122%, transparent 47%, rgba(170,185,210,.10) 48.5%, rgba(170,185,210,.02) 51%, transparent 55%),
+    radial-gradient(75% 65% at 28% -22%, transparent 58%, rgba(205,215,235,.09) 59.5%, transparent 65%),
+    radial-gradient(55% 50% at 62% 48%, transparent 66%, rgba(170,185,210,.06) 67.5%, transparent 72%),
+    /* destello dorado de la marca en la esquina */
+    radial-gradient(60% 55% at 96% -8%, rgba(232,196,110,.16), transparent 62%),
+    /* profundidad del vidrio */
+    radial-gradient(80% 70% at 68% 62%, #1d2029 0%, transparent 66%),
+    linear-gradient(150deg, #040507 0%, #10121a 32%, #06070a 58%, #171a23 80%, #030304 100%);
+  border: 1px solid rgba(200,210,230,.2);
+  box-shadow: 0 18px 40px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(0,0,0,.7), inset 0 0 34px rgba(0,0,0,.55);
 }
+/* Brillo tornasol de la obsidiana (dorado y frío) que se mueve despacio */
+.club-card--black::after {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; border-radius: inherit;
+  background: linear-gradient(115deg, transparent 24%, rgba(232,196,110,.12) 37%, rgba(120,175,210,.10) 46%, rgba(232,196,110,.14) 55%, transparent 70%);
+  background-size: 260% 260%; mix-blend-mode: screen;
+}
+.club-play.club-card--black::after { animation: club-obsidian 9s ease-in-out infinite alternate; }
+@keyframes club-obsidian { from { background-position: 0% 30%; } to { background-position: 100% 70%; } }
 /* Un brillo dorado recorre el borde */
 .club-card--black::before {
   content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none;
@@ -10077,8 +10094,8 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .club-card--black .club-card-fx { inset: 0; }
 .club-vapor { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .club-vapor path { fill: none; stroke-linecap: round; }
-.club-vapor .v-base { stroke: rgba(232,196,110,.13); stroke-width: 1; }
-.club-vapor .v-flow { stroke: var(--club-gold-l); stroke-width: 1.6; stroke-dasharray: 46 420; opacity: .85; filter: drop-shadow(0 0 3px rgba(247,226,164,.9)); }
+.club-vapor .v-base { stroke: rgba(232,196,110,.09); stroke-width: 1; }
+.club-vapor .v-flow { stroke: var(--club-gold-l); stroke-width: 1.4; stroke-dasharray: 46 420; opacity: .6; filter: drop-shadow(0 0 3px rgba(247,226,164,.9)); }
 .club-play .club-vapor .v-flow { animation: club-vapor-flow var(--t, 5s) linear var(--d, 0s) infinite; }
 @keyframes club-vapor-flow { from { stroke-dashoffset: 466; } to { stroke-dashoffset: 0; } }
 .club-play .club-vapor { animation: club-vapor-drift 9s ease-in-out infinite alternate; }
@@ -10096,10 +10113,10 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
   70%  { opacity: .8; }
   100% { opacity: 0; transform: translate(var(--sx, 10px), -150px) scale(1.1); }
 }
-/* Brillo suave que cruza (dorado, más lento) */
+/* Reflejo de vidrio que cruza */
 .club-card--black .club-card-shine {
   inset: -30% -60%;
-  background: linear-gradient(105deg, transparent 44%, rgba(247,226,164,.16) 50%, transparent 56%);
+  background: linear-gradient(105deg, transparent 44%, rgba(255,255,255,.10) 48.5%, rgba(255,255,255,.26) 50%, rgba(255,255,255,.10) 51.5%, transparent 56%);
   transform: translateX(-70%);
 }
 .club-play.club-card--black .club-card-shine { animation: club-shine 6.5s ease-in-out 2s infinite; }
@@ -10110,7 +10127,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 }
 .club-card--black .club-card-holder { color: #f3e6c4; text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 -1px 0 rgba(255,255,255,.12); }
 .club-card--black .club-card-count { color: rgba(255,255,255,.75); }
-.club-card--black .club-slot { border: 1.5px dashed rgba(232,196,110,.35); background: rgba(0,0,0,.35); }
+.club-card--black .club-slot { border: 1.5px dashed rgba(232,196,110,.35); background: rgba(0,0,0,.4); box-shadow: inset 0 1px 2px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.06); }
 .club-card--black .club-slot svg { fill: rgba(232,196,110,.16); }
 .club-card--black .club-slot.is-on {
   border: 1px solid rgba(255,240,200,.55);
@@ -10203,7 +10220,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .club-home-tiers li { display: flex; gap: .7rem; align-items: center; padding: .65rem .85rem; border-radius: 12px; font-size: .85rem; color: var(--text2); }
 .club-home-tiers li b { font-family: var(--font-serif); font-style: italic; letter-spacing: .14em; font-size: .95rem; min-width: 4.4rem; color: var(--club-gold); }
 .club-home-tiers li.is-golden { background: linear-gradient(90deg, rgba(232,196,110,.24), rgba(232,196,110,.05)); border: 1px solid rgba(232,196,110,.4); }
-.club-home-tiers li.is-black  { background: linear-gradient(90deg, rgba(0,0,0,.65), rgba(20,20,24,.3)); border: 1px solid rgba(232,196,110,.2); }
+.club-home-tiers li.is-black  { background: linear-gradient(100deg, #050609, #161922 60%, rgba(22,25,34,.4)); border: 1px solid rgba(200,210,230,.18); }
 .club-home-actions { display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; }
 .club-cta {
   position: relative; overflow: hidden; border: 0; cursor: pointer;
@@ -10262,7 +10279,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .club-tab small { font-family: var(--font-sans); font-style: normal; letter-spacing: 0; font-weight: 500; font-size: .7rem; color: var(--text3); }
 .club-tab--golden.is-active { background: linear-gradient(125deg, #b4852a, #f3d684 45%, #c9952e); color: #2a1b03; border-color: #fff0bf; }
 .club-tab--golden.is-active small { color: rgba(42,27,3,.8) !important; }
-.club-tab--black.is-active  { background: linear-gradient(135deg, #050506, #1b1b20); color: var(--club-gold-l); border-color: rgba(232,196,110,.45); }
+.club-tab--black.is-active  { background: linear-gradient(150deg, #040507, #1a1d26 55%, #07080b); color: var(--club-gold-l); border-color: rgba(200,210,230,.3); box-shadow: inset 0 1px 0 rgba(255,255,255,.15); }
 .club-tab.is-active small { color: rgba(255,255,255,.75); }
 .club-stage { position: relative; display: grid; place-items: center; padding: .2rem 0 1rem; perspective: 900px; }
 .club-status { text-align: center; }
@@ -10277,7 +10294,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .club-how li strong { color: var(--text); }
 .club-dot { flex: none; width: 14px; height: 14px; margin-top: .2rem; border-radius: 4px; border: 1px solid var(--club-gold); }
 .club-dot--golden { background: linear-gradient(125deg, #b4852a, #f3d684 50%, #c9952e); }
-.club-dot--black  { background: #0a0a0c; }
+.club-dot--black  { background: linear-gradient(150deg, #040507, #232733 55%, #07080b); }
 .club-fine { font-size: .72rem; color: var(--text3); margin: .2rem 0 0; }
 .club-history { margin-top: 1rem; }
 .club-history h3 { font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text3); margin: 0 0 .5rem; }
@@ -10318,7 +10335,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
   background: radial-gradient(circle at 34% 28%, #fff4cf 0%, var(--club-gold) 42%, var(--club-gold-d) 100%); }
 .club-co-paw svg { width: 62%; height: 62%; fill: #2b1d04; }
 .club-co--golden, .club-os--golden { background: linear-gradient(90deg, rgba(232,196,110,.16), rgba(232,196,110,.03)); border-color: rgba(232,196,110,.4); }
-.club-co--black, .club-os--black { background: linear-gradient(90deg, rgba(0,0,0,.6), rgba(30,30,34,.3)); border-color: rgba(232,196,110,.3); }
+.club-co--black, .club-os--black { background: linear-gradient(100deg, #050609, rgba(22,25,34,.5)); border-color: rgba(200,210,230,.22); }
 .club-co--ready { border-color: rgba(247,226,164,.6); box-shadow: 0 0 0 1px rgba(247,226,164,.15), 0 0 18px rgba(232,196,110,.12); }
 .club-co--ready .club-co-paw { animation: club-gift 1.8s ease-in-out infinite; }
 .club-co-up { display: block; margin-top: .15rem; color: var(--club-gold); }
@@ -10363,7 +10380,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
   background: linear-gradient(135deg, #3a2a0c, #15110a); box-shadow: 0 14px 34px rgba(0,0,0,.6);
   transform: translateY(150%); opacity: 0; transition: transform .45s cubic-bezier(.2,1.2,.4,1), opacity .3s;
 }
-.club-toast--black { background: linear-gradient(135deg, #050506, #1b1b20); }
+.club-toast--black { background: linear-gradient(150deg, #040507, #1a1d26 60%, #07080b); }
 .club-toast.show { transform: none; opacity: 1; }
 .club-toast-body { flex: 1; background: none; border: 0; text-align: left; padding: .8rem .9rem; color: var(--text); font-size: .84rem; line-height: 1.45; cursor: pointer; }
 .club-toast-body strong { color: var(--club-gold-l); }
@@ -10371,7 +10388,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .club-toast-x { background: none; border: 0; color: var(--text3); font-size: 1.2rem; padding: 0 .8rem; cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) {
-  .club-card, .club-card *, .club-card::before, .club-cta::after, .club-co-paw, .club-modal { animation: none !important; }
+  .club-card, .club-card *, .club-card::before, .club-card::after, .club-cta::after, .club-co-paw, .club-modal { animation: none !important; }
   .club-card-shine, .club-glint, .club-dust, .club-vapor .v-flow { display: none; }
   .club-toast { transition: none; }
 }
@@ -10395,7 +10412,7 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .ca-alert strong { color: var(--text); font-size: .85rem; }
 .ca-alert small { color: var(--text2); font-size: .74rem; }
 .ca-alert--golden { background: linear-gradient(90deg, rgba(232,196,110,.16), rgba(232,196,110,.03)); }
-.ca-alert--black  { background: linear-gradient(90deg, rgba(0,0,0,.55), rgba(30,30,34,.2)); }
+.ca-alert--black  { background: linear-gradient(100deg, #050609, rgba(22,25,34,.4)); }
 .ca-toolbar { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin-bottom: .7rem; }
 .ca-toolbar input { flex: 1 1 240px; min-height: 38px; padding: .45rem .8rem; border-radius: var(--r); border: 1px solid var(--border); background: var(--bg2); color: var(--text); font-size: .85rem; }
 .ca-chips { margin-bottom: 0; }
