@@ -102,6 +102,8 @@ const Club = {
         try { sessionStorage.setItem('clubOn', '1'); } catch (_) {}
         this._setEnabled(true);
         this._maybeNotify();
+        this._maybeWelcome();
+        this._openFromHash();
       } catch (_) { /* sin red: se reintenta en la próxima carga */ }
       finally { this._loading = null; }
     })();
@@ -124,6 +126,8 @@ const Club = {
   renderAll() {
     this.renderHome();
     this.renderEntryPoints();
+    this.renderInvites();
+    this.renderCart();
     if (typeof UserAuth !== 'undefined') UserAuth._updatePromoBanner?.();
     if (typeof Checkout !== 'undefined' && document.getElementById('checkoutModal')?.classList.contains('open')) Checkout.renderSummary();
     if (document.getElementById('clubOverlay')?.classList.contains('open')) this._renderModal();
@@ -247,6 +251,140 @@ const Club = {
     document.querySelectorAll('.club-menu-badge').forEach(el => { el.textContent = badge; el.hidden = !badge; });
   },
 
+  // ─── Invitaciones a unirse (enlace del menú, ventanas de cuenta, carrito) ──
+  renderInvites() {
+    const on = !!this.enabled;
+    ['navClubLink', 'mobileNavClubLink'].forEach(id => { const a = document.getElementById(id); if (a) a.hidden = !on; });
+    const strip = document.getElementById('authClubStrip');
+    if (strip) strip.hidden = !on;
+    const loginSub = document.getElementById('authLoginSub');
+    if (loginSub) loginSub.innerHTML = on
+      ? 'Entra para usar tu descuento y sumar huellitas del <strong style="color:var(--club-gold)">Club MICHT</strong> 🐾'
+      : 'Accede a tu cuenta para disfrutar tu descuento de bienvenida';
+    if (on) this._scheduleInvite();
+  },
+
+  // Línea del Club en el carrito
+  renderCart() {
+    const box = document.getElementById('cartClub');
+    if (!box) return;
+    const items = typeof Cart !== 'undefined' ? Cart.items : [];
+    if (!this.enabled || !items.length) { box.hidden = true; box.innerHTML = ''; return; }
+    const total  = Cart.total();
+    const logged = typeof UserAuth !== 'undefined' && UserAuth.isLoggedIn();
+    let html;
+    if (!logged) {
+      html = `<span class="club-co-paw">${_CLUB_PAW}</span><p>Con tu cuenta, este pedido suma <strong>1 huellita</strong> del Club MICHT. <button type="button" class="club-co-link" data-cart-club="register">Crear cuenta gratis</button></p>`;
+    } else if (!this.isMember()) {
+      html = '';
+    } else if (this.readyTiers().length) {
+      html = `<span class="club-co-paw">${_CLUB_GIFT}</span><p><strong>🎁 ¡Tu regalo está listo!</strong> Elígelo al finalizar tu pedido.</p>`;
+    } else {
+      const tier = this.tierFor(total);
+      html = `<span class="club-co-paw">${_CLUB_PAW}</span><p>${tier
+        ? `Este pedido suma <strong>1 huellita ${CLUB_TIERS[tier].name}</strong>.${tier === 'golden' ? ` <span class="club-co-up">Con S/ ${(CLUB_BLACK_MIN - total).toFixed(2)} más suma en tu Black ✦</span>` : ''}`
+        : `Agrega <strong>S/ ${(CLUB_MIN - total).toFixed(2)}</strong> más y este pedido suma 1 huellita Golden.`}</p>`;
+    }
+    box.hidden = !html;
+    box.innerHTML = html;
+    box.querySelector('[data-cart-club="register"]')?.addEventListener('click', () => {
+      if (typeof Cart !== 'undefined') Cart.hideCart?.();
+      AuthModals.openRegister();
+    });
+  },
+
+  // Ventana de invitación para quien todavía no tiene cuenta (máx. 1 vez cada 4 días)
+  _inviteTimer: null,
+  _scheduleInvite() {
+    if (this._inviteTimer || this._invited) return;
+    if (typeof UserAuth !== 'undefined' && UserAuth.isLoggedIn()) return;
+    if (location.pathname.toLowerCase().includes('admin')) return;
+    try {
+      const last = parseInt(localStorage.getItem('clubInviteAt') || '0', 10);
+      if (Date.now() - last < 4 * 864e5) return;
+    } catch (_) {}
+    const start = Date.now();
+    const tryShow = () => {
+      const waited = Date.now() - start;
+      const scrolled = window.scrollY > 280;
+      if (!(waited > 15000 || (waited > 6000 && scrolled))) return;
+      if (document.body.style.overflow === 'hidden' || document.querySelector('.auth-modal.open, .club-overlay.open, #checkoutModal.open')) return;
+      if (typeof UserAuth !== 'undefined' && UserAuth.isLoggedIn()) { stop(); return; }
+      stop();
+      this.openInvite();
+    };
+    const stop = () => { clearInterval(this._inviteTimer); window.removeEventListener('scroll', tryShow); };
+    this._inviteTimer = setInterval(tryShow, 1500);
+    window.addEventListener('scroll', tryShow, { passive: true });
+  },
+
+  openInvite() {
+    this._invited = true;
+    try { localStorage.setItem('clubInviteAt', String(Date.now())); } catch (_) {}
+    document.getElementById('clubInvite')?.remove();
+    const ov = document.createElement('div');
+    ov.id = 'clubInvite';
+    ov.className = 'club-overlay club-invite open';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.setAttribute('aria-label', 'Únete al Club MICHT');
+    ov.innerHTML = `
+      <div class="club-modal club-invite-modal">
+        <button type="button" class="club-close" aria-label="Cerrar">×</button>
+        <div class="club-modal-head">
+          <span class="club-eyebrow">🐾 Club MICHT</span>
+          <h2>Únete gratis y gana perfumes</h2>
+        </div>
+        <div class="club-invite-cards">
+          <div class="club-invite-card is-back">${this.cardHtml('black', this._demoInfo('black'), { play: true })}</div>
+          <div class="club-invite-card is-front">${this.cardHtml('golden', this._demoInfo('golden'), { play: true })}</div>
+        </div>
+        <ul class="club-invite-list">
+          <li><span>🎁</span><div><strong>10% OFF</strong> en tu primera compra</div></li>
+          <li><span>🐾</span><div>Cada pedido pagado suma <strong>1 huellita</strong> (tu primera compra suma 2)</div></li>
+          <li><span>✨</span><div>Junta 9 y tu <strong>pedido 10 va con un 5 ml GRATIS</strong></div></li>
+        </ul>
+        <div class="club-actions">
+          <button type="button" class="club-cta" data-inv="register">Crear mi cuenta gratis</button>
+          <button type="button" class="club-link" data-inv="login">Ya tengo cuenta</button>
+        </div>
+        <button type="button" class="club-invite-later" data-inv="later">Ahora no</button>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow = 'hidden';
+    const close = () => { ov.remove(); document.body.style.overflow = ''; };
+    ov.addEventListener('click', e => {
+      const act = e.target.closest('[data-inv]')?.dataset.inv;
+      if (e.target === ov || e.target.closest('.club-close') || act === 'later') { close(); return; }
+      if (act === 'register') { close(); AuthModals.openRegister(); }
+      if (act === 'login')    { close(); AuthModals.openLogin(); }
+    });
+    document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); } });
+  },
+
+  // Bienvenida: la primera vez que entra con su cuenta, le mostramos su tarjeta
+  _maybeWelcome() {
+    if (!this.isMember() || !this._uid) return;
+    const g = this.info('golden'), b = this.info('black');
+    if (g.saldo || b.saldo || g.completadas || b.completadas || (this.state.historial || []).length) return;
+    const key = 'clubWelcome_' + this._uid;
+    try { if (localStorage.getItem(key)) return; } catch (_) { return; }
+    const show = () => {
+      if (document.body.style.overflow === 'hidden' || document.querySelector('.auth-modal.open, .club-overlay.open, #checkoutModal.open')) { setTimeout(show, 2500); return; }
+      try { localStorage.setItem(key, '1'); } catch (_) {}
+      this._welcome = true;
+      this.open('golden');
+    };
+    setTimeout(show, 1200);
+  },
+
+  // michtdecants.com/#club abre la tarjeta (sirve para el link de Instagram)
+  _openFromHash() {
+    if (this._hashDone || location.hash !== '#club') return;
+    this._hashDone = true;
+    setTimeout(() => this.open(), 400);
+  },
+
   // ─── Modal "Mi tarjeta" ──────────────────────────────────────────────────
   open(tier) {
     let ov = document.getElementById('clubOverlay');
@@ -271,6 +409,7 @@ const Club = {
     }
   },
   close() {
+    this._welcome = false;
     document.getElementById('clubOverlay')?.classList.remove('open');
     document.body.style.overflow = '';
     this._markSeen();
@@ -324,11 +463,16 @@ const Club = {
         <ul>${hist.slice(0, 12).map(h => this._histRow(h)).join('')}</ul>
       </div>` : '';
 
+    const first = member ? (this._holder().split(' ')[0] || '') : '';
+    const welcome = member && this._welcome ? `
+      <div class="club-welcome">🎉 <strong>¡Ya eres parte del Club MICHT${first ? `, ${sanitize(first.charAt(0) + first.slice(1).toLowerCase())}` : ''}!</strong>
+        Tu primera compra desde S/ ${CLUB_MIN} suma <strong>2 huellitas</strong> (1 de regalo por unirte).</div>` : '';
     body.innerHTML = `
       <div class="club-modal-head">
         <span class="club-eyebrow">🐾 Club MICHT</span>
         <h2>${member ? 'Tu tarjeta' : 'Tarjetas de fidelidad'}</h2>
       </div>
+      ${welcome}
       <div class="club-tabs" role="tablist" aria-label="Tarjetas">${tabs}</div>
       <div class="club-stage">${this.cardHtml(tier, info, { holder: member ? this._holder() : '', fresh, play: true })}</div>
       <div class="club-status">${status}</div>
@@ -600,6 +744,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.overflow = '';
     Club.open();
   });
+  ['navClubLink', 'mobileNavClubLink'].forEach(id => document.getElementById(id)?.addEventListener('click', e => {
+    e.preventDefault();
+    document.getElementById('mobileMenu')?.classList.remove('open');
+    document.getElementById('menuBtn')?.classList.remove('open');
+    document.body.style.overflow = '';
+    Club.open();
+  }));
+  window.addEventListener('hashchange', () => { if (location.hash === '#club' && Club.enabled) Club.open(); });
   // Si UserAuth no avisa (sin Supabase), igual se averigua si el Club existe
   setTimeout(() => { if (Club.enabled === null && !Club._loading) Club.load(); }, 2500);
 });

@@ -10456,3 +10456,34 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 }
 .ca-alert > div { flex: 1; }
 .ca-alert .btn-order-collect { flex: none; width: auto; min-width: 0; padding: .4rem .85rem; }
+
+/* ── Club MICHT: invitaciones (menú, registro, carrito, ventana de bienvenida) ── */
+#navClubLink[hidden], #mobileNavClubLink[hidden], #cartClub[hidden], #authClubStrip[hidden] { display: none !important; }
+.nav a.nav-club { color: var(--club-gold); }
+.mobile-nav-club { color: var(--club-gold) !important; }
+.auth-club-strip {
+  display: flex; gap: .6rem; align-items: flex-start; margin: -.2rem 0 1rem; padding: .65rem .8rem; border-radius: 12px;
+  background: linear-gradient(100deg, rgba(232,196,110,.16), rgba(232,196,110,.04)); border: 1px solid rgba(232,196,110,.4);
+  font-size: .8rem; line-height: 1.45; color: var(--text2); text-align: left;
+}
+.auth-club-strip strong { color: var(--club-gold-l); }
+.auth-club-paw { font-size: 1.05rem; }
+.cart-club { margin-bottom: .7rem; font-size: .78rem; }
+.cart-club .club-co-paw { width: 26px; height: 26px; }
+.club-welcome {
+  margin: -.2rem 0 .9rem; padding: .7rem .85rem; border-radius: 12px; text-align: center;
+  background: linear-gradient(100deg, rgba(232,196,110,.18), rgba(232,196,110,.05)); border: 1px solid rgba(232,196,110,.45);
+  font-size: .86rem; line-height: 1.5; color: var(--text);
+}
+.club-welcome strong { color: var(--club-gold-l); }
+.club-invite-cards { position: relative; height: 232px; margin: .5rem 0 1rem; }
+.club-invite-card { position: absolute; left: 50%; top: 50%; width: min(300px, 82%); }
+.club-invite-card.is-back  { transform: translate(-40%, -56%) rotate(6deg); }
+.club-invite-card.is-back .club-card { filter: brightness(.85); }
+.club-invite-card.is-front { transform: translate(-60%, -42%) rotate(-4deg); z-index: 2; }
+.club-invite-list { list-style: none; padding: 0; margin: 0 0 1rem; display: grid; gap: .5rem; }
+.club-invite-list li { display: flex; gap: .65rem; align-items: center; padding: .55rem .75rem; border-radius: 12px; background: rgba(255,255,255,.03); border: 1px solid var(--border-l); font-size: .86rem; color: var(--text2); }
+.club-invite-list li span { font-size: 1.1rem; }
+.club-invite-list strong { color: var(--club-gold-l); }
+.club-invite-later { display: block; margin: .2rem auto 0; background: none; border: 0; color: var(--text3); font-size: .78rem; cursor: pointer; padding: .4rem; }
+@media (max-width: 560px) { .club-invite-cards { height: 206px; } }

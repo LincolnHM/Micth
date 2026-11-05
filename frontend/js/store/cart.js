@@ -143,6 +143,9 @@ const Cart = {
     const clearBtn = document.getElementById('clearCartBtn');
     if (clearBtn) clearBtn.style.display = n > 0 ? 'flex' : 'none';
 
+    // Club MICHT: cuánto suma este pedido o invitación a crear la cuenta (js/store/club.js)
+    if (typeof Club !== 'undefined') Club.renderCart();
+
     if (!this.items.length) {
       container.innerHTML = `
         <div class="cart-empty-state">
