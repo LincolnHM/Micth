@@ -10801,3 +10801,11 @@ body[data-campaign="navidad"] .carousel-dots .dot.active { background: var(--xm-
 @media (prefers-reduced-motion: reduce) {
   .ab-halo, .ab-orbit, .ab-mascot, .ab-chip, .ab-marquee-track, .ab-cta-cat { animation: none; }
 }
+
+/* ── Nosotros y Contacto: mismo encabezado que la tienda ── */
+.header-store .floating-cart-btn {
+  width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: none; box-shadow: none; color: var(--text);
+}
+.header-store .floating-cart-btn:hover { color: var(--gold-l); background: rgba(124,79,176,.1); border: 0; box-shadow: none; }
+.header-store .floating-cart-btn svg { width: 22px; height: 22px; }
+.header-store .floating-cart-btn .cart-count { top: 1px; right: 0; width: 17px; height: 17px; font-size: .6rem; }

@@ -714,8 +714,23 @@ const AuthModals = {
 
 // ─── Inicialización al cargar el DOM ──────────────────────────────────────────
 
+// Se lee apenas carga el archivo: otras partes de la tienda reescriben la dirección
+const _authHashAtLoad = location.hash;
+
 document.addEventListener('DOMContentLoaded', async () => {
   await UserAuth.init();
+
+  // ── Desde Nosotros / Contacto: /#cuenta (ícono de cuenta) y /#registro ───
+  if (_authHashAtLoad === '#cuenta' || _authHashAtLoad === '#registro') {
+    const wantsRegister = _authHashAtLoad === '#registro';
+    if (location.hash === _authHashAtLoad) history.replaceState(null, '', location.pathname + location.search);
+    setTimeout(() => {
+      if (!UserAuth.isLoggedIn()) { wantsRegister ? AuthModals.openRegister() : AuthModals.openLogin(); return; }
+      // Con sesión: en la computadora su menú de cuenta; en el celular, el menú
+      if (window.matchMedia('(min-width: 1160px)').matches) document.getElementById('headerUserDropdown')?.classList.add('open');
+      else document.getElementById('menuBtn')?.click();
+    }, 300);
+  }
 
   // ── Ícono de cuenta del header desktop ───────────────────────────────────
   document.getElementById('headerLoginBtn')?.addEventListener('click', () => AuthModals.openLogin());
