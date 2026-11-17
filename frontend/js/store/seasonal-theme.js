@@ -379,13 +379,12 @@
     return `<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" aria-hidden="true"><path d="${d}"/></svg>`;
   }
 
-  // ── Navidad: luces que titilan, nieve, gorro y regalo para la mascota ──
+  // ── Navidad (minimalista): luces cálidas, un poco de nieve y gorro para la mascota ──
   const XM_HAT_SVG = '<svg viewBox="0 0 130 104" aria-hidden="true"><defs><linearGradient id="xmHatRed" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5a5f"/><stop offset=".5" stop-color="#d4182c"/><stop offset="1" stop-color="#7e0b17"/></linearGradient><radialGradient id="xmFur" cx="45%" cy="35%" r="70%"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e6e2dc"/></radialGradient></defs><path fill="url(#xmHatRed)" d="M14 80C20 46 44 16 80 10c18-3 32 6 36 22 2 8 0 16-4 22-2-10-8-18-17-20 6 14 9 30 9 46z"/><path fill="#000" opacity=".14" d="M80 10c18-3 32 6 36 22 2 8 0 16-4 22-2-10-8-18-17-20C90 24 84 16 80 10z"/><circle cx="112" cy="58" r="11" fill="url(#xmFur)"/><rect x="4" y="72" width="112" height="24" rx="12" fill="url(#xmFur)"/><path fill="none" stroke="#cfc8bf" stroke-width="2" stroke-linecap="round" opacity=".7" d="M18 84h4m10 3h4m12-4h4m12 3h4m12-3h4m12 4h4"/></svg>';
-  const XM_GIFT_SVG = '<svg viewBox="0 0 120 112" aria-hidden="true"><defs><linearGradient id="xmBox" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e3263c"/><stop offset="1" stop-color="#8f0d1d"/></linearGradient><linearGradient id="xmRib" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b8892f"/><stop offset=".5" stop-color="#f7e2a4"/><stop offset="1" stop-color="#c9973a"/></linearGradient></defs><rect x="14" y="50" width="92" height="58" rx="6" fill="url(#xmBox)"/><rect x="8" y="36" width="104" height="20" rx="5" fill="#c4182d"/><rect x="52" y="36" width="16" height="72" fill="url(#xmRib)"/><rect x="8" y="42" width="104" height="8" fill="url(#xmRib)" opacity=".9"/><path fill="url(#xmRib)" d="M60 38C46 18 24 16 26 28c2 10 20 10 34 10zm0 0c14-20 36-22 34-10-2 10-20 10-34 10z"/><circle cx="60" cy="37" r="6" fill="#f7e2a4"/></svg>';
-  const XM_COLORS = ['r', 'g', 'y', 'w', 'r', 'y', 'g', 'w'];
+  const XM_COLORS = ['w', 'y', 'w', 'y', 'r', 'y'];   // luces cálidas, con un toque de rojo
 
   // Guirnalda: cable colgando en 4 curvas y focos de colores sobre él
-  function xmLightsHtml(swags = 4, perSwag = 5) {
+  function xmLightsHtml(swags = 4, perSwag = 4) {
     const w = 100 / swags;
     let path = 'M0 2';
     for (let i = 0; i < swags; i++) path += `Q${(i * w + w / 2).toFixed(2)} 22 ${((i + 1) * w).toFixed(2)} 2`;
@@ -407,7 +406,7 @@
     let html = '';
     for (let i = 0; i < count; i++) {
       const r = (a, b) => (a + Math.random() * (b - a)).toFixed(2);
-      html += `<i style="--x:${r(0, 100)}%;--s:${r(2, 6)}px;--t:${r(9, 18)}s;--d:-${r(0, 18)}s;--o:${r(.35, .9)};--sx:${r(-30, 30)}px"></i>`;
+      html += `<i style="--x:${r(0, 100)}%;--s:${r(1.5, 4)}px;--t:${r(11, 20)}s;--d:-${r(0, 20)}s;--o:${r(.25, .7)};--sx:${r(-24, 24)}px"></i>`;
     }
     return html;
   }
@@ -422,28 +421,20 @@
           deco.setAttribute('aria-hidden', 'true');
           deco.innerHTML = `
             ${xmLightsHtml()}
-            <div class="xm-snow">${xmFlakesHtml(36)}</div>
-            <div class="xm-baubles"><span class="xm-bauble xm-bauble-1"><i></i></span><span class="xm-bauble xm-bauble-2"><i></i></span><span class="xm-bauble xm-bauble-3"><i></i></span></div>
-            <div class="xm-drift"></div>`;
+            <div class="xm-snow">${xmFlakesHtml(16)}</div>
+            <div class="xm-baubles"><span class="xm-bauble xm-bauble-1"><i></i></span><span class="xm-bauble xm-bauble-2"><i></i></span></div>`;
           hero.appendChild(deco);
           const mascot = hero.querySelector('.hero-mascot');
           if (mascot) {
             const extra = document.createElement('div');
             extra.className = 'xm-mascot-deco';
-            extra.innerHTML = `<div class="xm-hat">${XM_HAT_SVG}</div><div class="xm-gift">${XM_GIFT_SVG}</div>`;
+            extra.innerHTML = `<div class="xm-hat">${XM_HAT_SVG}</div>`;
             mascot.appendChild(extra);
           }
         }
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        // Nieve suave en toda la página (pocos copos, detrás de lo que se toca)
-        const layer = document.createElement('div');
-        layer.id = 'xmSnowLayer';
-        layer.setAttribute('aria-hidden', 'true');
-        layer.innerHTML = xmFlakesHtml(18);
-        document.body.appendChild(layer);
       },
       unmount() {
-        document.querySelectorAll('.xm-hero-deco, .xm-mascot-deco, #xmSnowLayer').forEach(el => el.remove());
+        document.querySelectorAll('.xm-hero-deco, .xm-mascot-deco').forEach(el => el.remove());
       }
     },
 
