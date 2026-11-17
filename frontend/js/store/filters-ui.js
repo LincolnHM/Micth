@@ -248,4 +248,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFilterSheet(); });
 
   document.getElementById('headerSearchBtn')?.addEventListener('click', () => scrollToCatalog({ focusSearch: true }));
+
+  // La lupa de Nosotros y Contacto lleva a /#buscar: abre el catálogo con el buscador listo
+  if (location.hash === '#buscar') {
+    history.replaceState(null, '', location.pathname + location.search);
+    scrollToCatalog({ focusSearch: true });
+  }
 });

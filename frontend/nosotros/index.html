@@ -24,7 +24,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../imgGato/icons/icon-192.png">
   <link rel="apple-touch-icon" href="../imgGato/icons/icon-192.png">
-  <link rel="stylesheet" href="../css/style.css?v=20261117-2059">
+  <link rel="stylesheet" href="../css/style.css?v=20261117-2212">
 </head>
 <body>
 
@@ -36,170 +36,226 @@
   </div>
 
   <!-- ── Header ──────────────────────────────────────────────────────────── -->
-  <header class="header">
+  <header class="header header-store">
     <div class="header-inner container">
-      <a href="../" class="logo" aria-label="MICHT Decants — inicio">
+      <a href="../" class="logo" aria-label="Micht Decants — inicio">
         <div>
-          <p class="logo-text">MICHT<span> Decants</span></p>
+          <p class="logo-text">Micht<span> Decants</span></p>
           <p class="logo-sub">Perfumería Árabe & Diseñador</p>
         </div>
       </a>
+      <!-- Mismo menú que el Inicio (los enlaces llevan a la tienda) -->
       <nav class="nav" aria-label="Principal">
         <a href="../">Inicio</a>
         <a href="../#catalogo">Catálogo</a>
-        <a href="../nosotros/" style="color:var(--gold)">Nosotros</a>
+        <a href="../#combos">Combos</a>
+        <a href="../?tipo=entero#catalogo" class="nav-accent">Perfumes enteros</a>
+        <a href="../#club" class="nav-club">🐾 Club MICHT</a>
+        <a href="../nosotros/" aria-current="page">Nosotros</a>
         <a href="../contacto/">Contacto</a>
       </nav>
       <div class="header-right">
-        <a href="../#catalogo"
-           style="display:inline-flex;align-items:center;gap:.45rem;background:var(--gold);color:#fff;font-weight:700;font-size:.78rem;padding:.45rem 1rem;border-radius:var(--r);transition:background .2s"
-           onmouseover="this.style.background='#9b72c9'" onmouseout="this.style.background='var(--gold)'">
-          Ver tienda →
+        <a href="../#buscar" class="header-icon-btn header-search-btn" aria-label="Buscar perfume" title="Buscar perfume">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
         </a>
-        <a href="../?cart=1" id="nosotrosCartBtn" class="floating-cart-btn" aria-label="Ver carrito">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-          </svg>
-          <span class="cart-count" id="nosotrosCartCount" style="display:none">0</span>
-        </a>
+        <div class="header-auth">
+          <a href="../#cuenta" class="header-icon-btn" aria-label="Mi cuenta" title="Mi cuenta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </a>
+        </div>
         <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobileMenu">
           <span></span><span></span><span></span>
         </button>
+        <a href="../?cart=1" id="nosotrosCartBtn" class="cart-btn floating-cart-btn" aria-label="Ver carrito">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          <span class="cart-count" id="nosotrosCartCount" style="display:none">0</span>
+        </a>
       </div>
     </div>
   </header>
 
   <!-- ── Menú móvil ─────────────────────────────────────────────────────── -->
-  <div class="mobile-menu" id="mobileMenu" aria-hidden="true" role="dialog" aria-label="Menú de navegación">
+  <div class="mobile-menu" id="mobileMenu" aria-hidden="true" role="dialog" aria-label="Menú principal">
     <span class="mobile-menu-brand">MICHT DECANTS</span>
     <nav class="mobile-nav">
       <a href="../" class="mobile-nav-link">Inicio</a>
       <a href="../#catalogo" class="mobile-nav-link">Catálogo</a>
-      <a href="../nosotros/" class="mobile-nav-link" style="color:var(--gold)">Nosotros</a>
+      <a href="../#combos" class="mobile-nav-link">Combos</a>
+      <a href="../#como-comprar" class="mobile-nav-link">Cómo comprar</a>
+      <a href="../?tipo=entero#catalogo" class="mobile-nav-link" style="color:var(--gold)">✦ Perfumes Enteros</a>
+      <a href="../#club" class="mobile-nav-link mobile-nav-club">🐾 Club MICHT</a>
+      <a href="../nosotros/" class="mobile-nav-link" aria-current="page">Nosotros</a>
       <a href="../contacto/" class="mobile-nav-link">Contacto</a>
     </nav>
+    <div class="mobile-auth-section">
+      <a href="../#cuenta" class="mobile-auth-btn mobile-auth-login">Iniciar sesión</a>
+      <a href="../#registro" class="mobile-auth-btn mobile-auth-register">Crear cuenta</a>
+    </div>
     <div class="mobile-menu-footer">@michtdecants</div>
   </div>
 
   <div class="page-sep page-sep-top" aria-hidden="true"></div>
 
-  <!-- ── Hero ──────────────────────────────────────────────────────────────── -->
-  <section class="nosotros-hero">
-    <div class="container">
-      <span class="section-tag">Quiénes somos</span>
-      <h1>La esencia del perfume,<br>en cada decant</h1>
-      <p class="hero-lead">
-        En <strong style="color:var(--text)">MICHT Decants</strong> seleccionamos y preparamos muestras auténticas
-        de los perfumes más exclusivos del mundo — desde casas árabes de Medio Oriente hasta las más reconocidas
-        firmas de diseñador. Cada decant es preparado con cuidado para preservar la calidad original del frasco.
-      </p>
-      <div class="ns-stats">
-        <div class="ns-stat">
-          <span class="ns-stat-num">100+</span>
-          <span class="ns-stat-lbl">Fragancias</span>
-        </div>
-        <div class="ns-stat-sep"></div>
-        <div class="ns-stat">
-          <span class="ns-stat-num">100%</span>
-          <span class="ns-stat-lbl">Auténticas</span>
-        </div>
-        <div class="ns-stat-sep"></div>
-        <div class="ns-stat">
-          <span class="ns-stat-num">Todo Perú</span>
-          <span class="ns-stat-lbl">Envíos Shalom</span>
+  <!-- ── Portada ───────────────────────────────────────────────────────────── -->
+  <section class="ab-hero">
+    <div class="container ab-hero-grid">
+      <div class="ab-hero-copy">
+        <span class="ab-eyebrow">Quiénes somos</span>
+        <h1 class="ab-title">La esencia del perfume,<br><em>en cada decant.</em></h1>
+        <p class="ab-lead">
+          En <strong>MICHT Decants</strong> seleccionamos y preparamos decants auténticos de los perfumes más
+          exclusivos del mundo: desde casas árabes de Medio Oriente hasta las firmas de diseñador más reconocidas.
+          Cada uno se prepara con cuidado para conservar la calidad del frasco original.
+        </p>
+        <div class="ab-actions">
+          <a href="../#catalogo" class="ab-btn ab-btn-primary">Explorar catálogo <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+          <a href="https://wa.me/51917452643" target="_blank" rel="noopener noreferrer" class="ab-btn ab-btn-ghost">Asesoría por WhatsApp</a>
         </div>
       </div>
-      <a href="../#catalogo" class="btn-store">
-        Explorar catálogo
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-        </svg>
-      </a>
+      <div class="ab-hero-art" aria-hidden="true">
+        <div class="ab-halo"></div>
+        <div class="ab-orbit"><i></i><i></i><i></i></div>
+        <img src="../imgGato/gato-removebg-preview.png" alt="" class="ab-mascot" width="474" height="526">
+        <div class="ab-chip ab-chip-1"><b>100%</b> originales</div>
+        <div class="ab-chip ab-chip-2"><span class="ab-chip-dot"></span>Árabes &amp; diseñador</div>
+        <div class="ab-chip ab-chip-3">Envíos a <b>todo el Perú</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Cifras ────────────────────────────────────────────────────────────── -->
+  <section class="ab-stats-band" aria-label="MICHT en cifras">
+    <div class="container">
+      <div class="ab-stats">
+        <div class="ab-stat"><span class="ab-stat-num">100+</span><span class="ab-stat-lbl">Fragancias</span></div>
+        <div class="ab-stat"><span class="ab-stat-num">100%</span><span class="ab-stat-lbl">Originales</span></div>
+        <div class="ab-stat"><span class="ab-stat-num">2–30 ml</span><span class="ab-stat-lbl">Tamaños</span></div>
+        <div class="ab-stat"><span class="ab-stat-num">Todo el Perú</span><span class="ab-stat-lbl">Envíos por Shalom</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Cómo trabajamos ───────────────────────────────────────────────────── -->
+  <section class="ab-section ab-process">
+    <div class="container">
+      <div class="ab-head">
+        <span class="ab-eyebrow">Cómo trabajamos</span>
+        <h2>Del frasco original <em>a tus manos</em></h2>
+        <p>Un decant es una porción de un perfume original en un frasco pequeño: pruebas o usas perfumes de lujo pagando solo por lo que necesitas.</p>
+      </div>
+      <ol class="ab-steps">
+        <li class="ab-step">
+          <span class="ab-step-num">01</span>
+          <div class="ab-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 2h5v3h-5z"/><path d="M8 5h8l1.5 3.5V20a2 2 0 01-2 2h-7a2 2 0 01-2-2V8.5z"/><path d="M6.5 12.5h11"/></svg></div>
+          <h3>Frasco original</h3>
+          <p>Trabajamos con frascos originales de cada casa. Nunca imitaciones ni mezclas.</p>
+        </li>
+        <li class="ab-step">
+          <span class="ab-step-num">02</span>
+          <div class="ab-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2h4"/><path d="M11 2v4.5L8.5 10v10a2 2 0 002 2h3a2 2 0 002-2V10L13 6.5V2"/><path d="M8.5 14.5h7"/></svg></div>
+          <h3>Tu decant, con cuidado</h3>
+          <p>Pasamos el perfume directo del frasco a tu decant, cuidando que conserve su calidad y su aroma.</p>
+        </li>
+        <li class="ab-step">
+          <span class="ab-step-num">03</span>
+          <div class="ab-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></div>
+          <h3>Llega a ti</h3>
+          <p>Lo embalamos para protegerlo y lo enviamos por Shalom a todo el Perú. En Soritor, delivery o recojo en tienda.</p>
+        </li>
+      </ol>
     </div>
   </section>
 
   <!-- ── Misión & Visión ──────────────────────────────────────────────────── -->
-  <section class="mv-section">
+  <section class="ab-section ab-mv">
     <div class="container">
-      <div class="section-header">
-        <p>Nuestro propósito</p>
-        <h2>Misión & Visión</h2>
+      <div class="ab-head">
+        <span class="ab-eyebrow">Nuestro propósito</span>
+        <h2>Misión <em>&amp;</em> Visión</h2>
       </div>
-      <div class="mv-grid">
-        <div class="mv-card">
-          <div class="mv-card-icon">🎯</div>
-          <p class="mv-card-label">Misión</p>
+      <div class="ab-mv-grid">
+        <article class="ab-mv-card">
+          <div class="ab-mv-top">
+            <span class="ab-mv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/></svg></span>
+            <span class="ab-mv-label">Misión</span>
+          </div>
           <h3>Lo que hacemos hoy</h3>
-          <p>
-            Hacer accesible el mundo de la perfumería de lujo en el Perú, ofreciendo decants auténticos extraídos
-            directamente de los mejores frascos de casas árabes y de diseñador, con honestidad, pasión y atención
-            personalizada en cada pedido — para que cada persona pueda descubrir su fragancia perfecta sin
-            renunciar a la calidad.
-          </p>
-        </div>
-        <div class="mv-card">
-          <div class="mv-card-icon">🌟</div>
-          <p class="mv-card-label">Visión</p>
+          <p>Hacer accesible el mundo de la perfumería de lujo en el Perú, ofreciendo decants auténticos extraídos directamente de los mejores frascos de casas árabes y de diseñador, con honestidad, pasión y atención personalizada en cada pedido, para que cada persona pueda descubrir su fragancia perfecta sin renunciar a la calidad.</p>
+        </article>
+        <article class="ab-mv-card">
+          <div class="ab-mv-top">
+            <span class="ab-mv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.8-7 10-7 10 7 10 7-3.8 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>
+            <span class="ab-mv-label">Visión</span>
+          </div>
           <h3>A dónde vamos</h3>
-          <p>
-            Convertirnos en la tienda de referencia en decants de perfumería en el Perú, reconocida por la
-            autenticidad de sus productos, la experiencia única que brinda a cada cliente y por acercar las
-            fragancias más exclusivas del mundo a cada rincón del país.
-          </p>
+          <p>Convertirnos en la tienda de referencia en decants de perfumería en el Perú, reconocida por la autenticidad de sus productos, la experiencia única que brinda a cada cliente y por acercar las fragancias más exclusivas del mundo a cada rincón del país.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Valores ───────────────────────────────────────────────────────────── -->
+  <section class="ab-section ab-values">
+    <div class="container">
+      <div class="ab-head">
+        <span class="ab-eyebrow">En qué creemos</span>
+        <h2>Nuestros <em>valores</em></h2>
+      </div>
+      <div class="ab-values-grid">
+        <div class="ab-value">
+          <span class="ab-value-num">01</span>
+          <span class="ab-value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></span>
+          <h3>Autenticidad total</h3>
+          <p>Cada decant sale directo del frasco original. Sin mezclas, sin adulteraciones, sin compromisos.</p>
+        </div>
+        <div class="ab-value">
+          <span class="ab-value-num">02</span>
+          <span class="ab-value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M12 21L8 9l4-6 4 6z"/></svg></span>
+          <h3>Lujo accesible</h3>
+          <p>Prueba una fragancia de S/ 300 por una fracción de su precio. El lujo no debería ser privilegio de pocos.</p>
+        </div>
+        <div class="ab-value">
+          <span class="ab-value-num">03</span>
+          <span class="ab-value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 7h12.5v9H1.5z"/><path d="M14 10h4l3.5 3.5V16H14"/><circle cx="5.5" cy="18" r="2"/><circle cx="17.5" cy="18" r="2"/></svg></span>
+          <h3>Envíos confiables</h3>
+          <p>Por Shalom a todo el Perú, con un embalaje pensado para proteger cada decant en el camino.</p>
+        </div>
+        <div class="ab-value">
+          <span class="ab-value-num">04</span>
+          <span class="ab-value-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8.5 8.5 0 01-12.3 7.6L3 21l1.4-5.4A8.5 8.5 0 1121 12z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg></span>
+          <h3>Atención personalizada</h3>
+          <p>Te orientamos para encontrar tu fragancia ideal según tu estilo, tu personalidad y la ocasión.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ── Nuestros valores ────────────────────────────────────────────────── -->
-  <section class="nosotros-values">
-    <div class="container">
-      <div class="section-header">
-        <p>En qué creemos</p>
-        <h2>Nuestros valores</h2>
-      </div>
-      <div class="info-grid">
-        <div class="info-card">
-          <div class="info-icon">🔬</div>
-          <h3>Autenticidad Total</h3>
-          <p>Cada decant es extraído directamente del frasco original. Sin mezclas, sin adulteraciones, sin compromisos.</p>
-        </div>
-        <div class="info-card">
-          <div class="info-icon">💎</div>
-          <h3>Lujo Accesible</h3>
-          <p>Prueba una fragancia de S/ 300 por solo S/ 15. El lujo no debería ser un privilegio de pocos.</p>
-        </div>
-        <div class="info-card">
-          <div class="info-icon">📦</div>
-          <h3>Envíos Confiables</h3>
-          <p>Vía Shalom a todo el Perú. Embalaje especial para proteger cada decant en el camino.</p>
-        </div>
-        <div class="info-card">
-          <div class="info-icon">🤝</div>
-          <h3>Atención Personalizada</h3>
-          <p>Te orientamos para encontrar tu fragancia ideal según tu estilo, personalidad y ocasión.</p>
-        </div>
-      </div>
+  <!-- ── Casas del catálogo ────────────────────────────────────────────────── -->
+  <section class="ab-brands" aria-label="Algunas casas del catálogo">
+    <p class="ab-brands-title">Algunas de las casas que encontrarás</p>
+    <div class="ab-marquee">
+      <div class="ab-marquee-track"><span>Lattafa</span><i aria-hidden="true">✦</i><span>Dior</span><i aria-hidden="true">✦</i><span>Armaf</span><i aria-hidden="true">✦</i><span>Chanel</span><i aria-hidden="true">✦</i><span>Afnan</span><i aria-hidden="true">✦</i><span>Jean Paul Gaultier</span><i aria-hidden="true">✦</i><span>Rasasi</span><i aria-hidden="true">✦</i><span>Xerjoff</span><i aria-hidden="true">✦</i><span>Paco Rabanne</span><i aria-hidden="true">✦</i><span>Valentino</span><i aria-hidden="true">✦</i><span>Louis Vuitton</span><i aria-hidden="true">✦</i><span>Giorgio Armani</span><i aria-hidden="true">✦</i><span>Azzaro</span><i aria-hidden="true">✦</i><span>Kilian</span><i aria-hidden="true">✦</i><span>Yves Saint Laurent</span><i aria-hidden="true">✦</i><span>Parfums de Marly</span><i aria-hidden="true">✦</i><span>Creed</span><i aria-hidden="true">✦</i><span>Carolina Herrera</span><i aria-hidden="true">✦</i><span>Tom Ford</span><i aria-hidden="true">✦</i><span>Versace</span><i aria-hidden="true">✦</i><span>Kayali</span><i aria-hidden="true">✦</i><span>Lattafa</span><i aria-hidden="true">✦</i><span>Dior</span><i aria-hidden="true">✦</i><span>Armaf</span><i aria-hidden="true">✦</i><span>Chanel</span><i aria-hidden="true">✦</i><span>Afnan</span><i aria-hidden="true">✦</i><span>Jean Paul Gaultier</span><i aria-hidden="true">✦</i><span>Rasasi</span><i aria-hidden="true">✦</i><span>Xerjoff</span><i aria-hidden="true">✦</i><span>Paco Rabanne</span><i aria-hidden="true">✦</i><span>Valentino</span><i aria-hidden="true">✦</i><span>Louis Vuitton</span><i aria-hidden="true">✦</i><span>Giorgio Armani</span><i aria-hidden="true">✦</i><span>Azzaro</span><i aria-hidden="true">✦</i><span>Kilian</span><i aria-hidden="true">✦</i><span>Yves Saint Laurent</span><i aria-hidden="true">✦</i><span>Parfums de Marly</span><i aria-hidden="true">✦</i><span>Creed</span><i aria-hidden="true">✦</i><span>Carolina Herrera</span><i aria-hidden="true">✦</i><span>Tom Ford</span><i aria-hidden="true">✦</i><span>Versace</span><i aria-hidden="true">✦</i><span>Kayali</span><i aria-hidden="true">✦</i></div>
     </div>
   </section>
 
-  <!-- ── CTA Final ──────────────────────────────────────────────────────── -->
-  <section class="ns-cta-section">
+  <!-- ── Llamada final ─────────────────────────────────────────────────────── -->
+  <section class="ab-cta">
     <div class="container">
-      <div class="ns-cta-card">
-        <div class="ns-cta-glow" aria-hidden="true"></div>
-        <p class="ns-cta-eyebrow">¿Listo para comenzar?</p>
-        <h2 class="ns-cta-title">Encuentra tu fragancia<br><span>perfecta hoy</span></h2>
-        <p class="ns-cta-sub">Escríbenos por WhatsApp — te asesoramos sin compromiso, todos los días</p>
-        <div class="ns-cta-actions">
-          <a href="https://wa.me/51917452643" target="_blank" rel="noopener noreferrer" class="ns-wa-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="20" height="20" aria-hidden="true">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-            Escribir por WhatsApp
-          </a>
-          <a href="../contacto/" class="ns-more-link">Ver todos los canales de contacto →</a>
+      <div class="ab-cta-card">
+        <div class="ab-cta-copy">
+          <span class="ab-eyebrow">¿Listo para comenzar?</span>
+          <h2>Encuentra tu fragancia <em>perfecta hoy</em></h2>
+          <p>Escríbenos por WhatsApp: te asesoramos sin compromiso, todos los días.</p>
+          <div class="ab-actions">
+            <a href="https://wa.me/51917452643" target="_blank" rel="noopener noreferrer" class="ab-btn ab-btn-wa">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="19" height="19" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              Escribir por WhatsApp
+            </a>
+            <a href="../#catalogo" class="ab-btn ab-btn-ghost">Ver catálogo</a>
+          </div>
+          <a href="../contacto/" class="ab-more">Ver todos los canales de contacto →</a>
         </div>
+        <img src="../imgGato/gato-removebg-preview.png" alt="" class="ab-cta-cat" aria-hidden="true" loading="lazy" width="474" height="526">
       </div>
     </div>
   </section>
@@ -224,6 +280,8 @@
           <h3 class="footer-col-title">Explorar</h3>
           <nav class="footer-nav" aria-label="Footer">
             <a href="../#catalogo">Catálogo completo</a>
+            <a href="../?tipo=entero#catalogo">Perfumes Enteros</a>
+            <a href="../#como-comprar">Cómo comprar</a>
             <a href="../marcas/">Marcas</a>
             <a href="../nosotros/">Nosotros</a>
             <a href="../contacto/">Contacto</a>
@@ -338,8 +396,8 @@
 
   <div class="overlay" id="overlay" aria-hidden="true"></div>
 
-  <script src="../js/store/cart-mini.js?v=20261117-2059"></script>
-  <script src="../js/store/seasonal-theme.js?v=20261117-2059"></script>
+  <script src="../js/store/cart-mini.js?v=20261117-2212"></script>
+  <script src="../js/store/seasonal-theme.js?v=20261117-2212"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
   <script>
@@ -350,24 +408,13 @@
         gsap.from('.header-right > *', { opacity: 0, scale: 0.8, stagger: 0.08, duration: 0.4, ease: 'power4.out', delay: 0.4 });
         ScrollTrigger.config({ ignoreMobileResize: true });
 
-        gsap.from('.section-tag',      { opacity: 0, y: 18, duration: 0.6, ease: 'power3.out', delay: 0.2 });
-        gsap.from('.nosotros-hero h1', { opacity: 0, y: 30, duration: 0.75, ease: 'power3.out', delay: 0.35 });
-        gsap.from('.hero-lead',        { opacity: 0, y: 20, duration: 0.65, ease: 'power3.out', delay: 0.5 });
-        gsap.from('.ns-stat',          { opacity: 0, y: 20, stagger: 0.1, duration: 0.55, ease: 'power3.out', delay: 0.62 });
-        gsap.from('.btn-store',        { opacity: 0, y: 18, scale: 0.93, duration: 0.65, ease: 'expo.out', delay: 0.8 });
-
-        gsap.from('.mv-card', {
-          scrollTrigger: { trigger: '.mv-section', start: 'top 80%' },
-          opacity: 0, y: 40, scale: 0.94, stagger: 0.15, duration: 0.8, ease: 'power3.out',
-        });
-        gsap.from('.info-card', {
-          scrollTrigger: { trigger: '.nosotros-values', start: 'top 80%' },
-          opacity: 0, y: 35, scale: 0.93, stagger: 0.1, duration: 0.7, ease: 'power3.out',
-        });
-        gsap.from('.ns-cta-card', {
-          scrollTrigger: { trigger: '.ns-cta-section', start: 'top 78%' },
-          opacity: 0, y: 50, scale: 0.92, duration: 1, ease: 'expo.out',
-        });
+        gsap.from('.ab-hero-copy > *', { opacity: 0, y: 24, stagger: 0.1, duration: 0.7, ease: 'power3.out', delay: 0.2 });
+        gsap.from('.ab-hero-art',      { opacity: 0, scale: 0.92, duration: 1, ease: 'expo.out', delay: 0.35 });
+        gsap.from('.ab-stat',          { scrollTrigger: { trigger: '.ab-stats', start: 'top 88%' }, opacity: 0, y: 20, stagger: 0.08, duration: 0.6, ease: 'power3.out' });
+        gsap.from('.ab-step',          { scrollTrigger: { trigger: '.ab-steps', start: 'top 82%' }, opacity: 0, y: 36, stagger: 0.14, duration: 0.75, ease: 'power3.out' });
+        gsap.from('.ab-mv-card',       { scrollTrigger: { trigger: '.ab-mv-grid', start: 'top 82%' }, opacity: 0, y: 40, stagger: 0.15, duration: 0.8, ease: 'power3.out' });
+        gsap.from('.ab-value',         { scrollTrigger: { trigger: '.ab-values-grid', start: 'top 85%' }, opacity: 0, y: 32, stagger: 0.1, duration: 0.7, ease: 'power3.out' });
+        gsap.from('.ab-cta-card',      { scrollTrigger: { trigger: '.ab-cta', start: 'top 80%' }, opacity: 0, y: 46, scale: 0.95, duration: 0.9, ease: 'expo.out' });
         gsap.from('.footer-logo, .footer > p, .footer-social', {
           scrollTrigger: { trigger: '.footer', start: 'top 93%' },
           opacity: 0, y: 24, stagger: 0.1, duration: 0.6, ease: 'power3.out',
