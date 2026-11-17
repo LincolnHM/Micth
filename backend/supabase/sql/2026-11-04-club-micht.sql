@@ -421,6 +421,9 @@ $$;
 REVOKE ALL ON FUNCTION public.club_admin_resumen() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.club_admin_resumen() TO authenticated;
 
+-- Que la página vea las funciones nuevas al instante (sin esperar)
+NOTIFY pgrst, 'reload schema';
+
 -- ─── Comprobación: deben salir los 3 guardias del Club ───────────────────────
 SELECT tgname FROM pg_trigger
  WHERE tgrelid = 'public.pedidos'::regclass AND NOT tgisinternal AND tgname LIKE '%club%'

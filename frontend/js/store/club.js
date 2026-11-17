@@ -86,7 +86,7 @@ const Club = {
     if (!uid && !force) {
       try {
         const cached = sessionStorage.getItem('clubOn');
-        if (cached) { this.state = { miembro: false }; this._setEnabled(cached === '1'); return; }
+        if (cached === '1') { this.state = { miembro: false }; this._setEnabled(true); return; }
       } catch (_) {}
     }
     this._loading = (async () => {
@@ -94,7 +94,8 @@ const Club = {
         const { data, error } = await authClient.rpc('club_mi_tarjeta');
         if (error) {
           const missing = error.code === 'PGRST202' || error.code === '42883' || /could not find|does not exist/i.test(error.message || '');
-          if (missing) { this.state = null; this._setEnabled(false); try { sessionStorage.setItem('clubOn', '0'); } catch (_) {} }
+          // No se guarda el "no está": así, apenas corras el SQL, el Club aparece al recargar
+          if (missing) { this.state = null; this._setEnabled(false); try { sessionStorage.removeItem('clubOn'); } catch (_) {} }
           return;
         }
         if (this._uid !== uid) return;                 // cambió la sesión mientras cargaba
