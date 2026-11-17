@@ -77,7 +77,7 @@ const Carousel = {
           <span class="carousel-tag">${s.tag}</span>
           <h2 class="carousel-title">${s.titleHtml || s.title.replace(/\n/g, '<br>')}</h2>
           <p class="carousel-sub">${s.subtitle}</p>
-          <a href="${s.cta.href}" class="carousel-cta" ${s.cta.filter ? `data-filter="${s.cta.filter}"` : ''} ${s.cta.occasion ? `data-occasion="${s.cta.occasion}"` : ''}>
+          <a href="${s.cta.href}" class="carousel-cta" ${s.cta.filter ? `data-filter="${s.cta.filter}"` : ''} ${s.cta.occasion ? `data-occasion="${s.cta.occasion}"` : ''} ${s.cta.scrollTo ? `data-scroll-to="${s.cta.scrollTo}"` : ''}>
             ${s.cta.text}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
@@ -111,6 +111,17 @@ const Carousel = {
         const btn = document.querySelector(`.filter-btn[data-filter="${a.dataset.filter}"]`);
         if (btn) btn.click();
         goStoreView('catalogo');
+      });
+    });
+    // CTA que baja a una sección del Inicio (ej. "Ver ideas de regalo" en Navidad);
+    // si esa sección no está, abre el catálogo
+    track.querySelectorAll('.carousel-cta[data-scroll-to]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();   // que el enlace a #catalogo no cambie de pestaña
+        const target = document.getElementById(a.dataset.scrollTo);
+        if (target && target.offsetParent) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        else goStoreView('catalogo');
       });
     });
     // CTA por momento del día (ej. "Ver fragancias de noche" en Halloween)

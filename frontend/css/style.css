@@ -10487,3 +10487,161 @@ body[data-campaign="halloween"] .cart-count { background: var(--hw); color: #1a0
 .club-invite-list strong { color: var(--club-gold-l); }
 .club-invite-later { display: block; margin: .2rem auto 0; background: none; border: 0; color: var(--text3); font-size: .78rem; cursor: pointer; padding: .4rem; }
 @media (max-width: 560px) { .club-invite-cards { height: 206px; } }
+
+/* ════════════════════════════════════════════════════════
+   CAMPAÑA DE NAVIDAD — body[data-campaign="navidad"]
+   Rojo navideño, verde esmeralda y el dorado de la marca. La decoración
+   (luces, nieve, esferas, gorro y regalo de la mascota) la pone
+   CAMPAIGN_DECOR.navidad en seasonal-theme.js.
+   ════════════════════════════════════════════════════════ */
+body[data-campaign="navidad"] { --xm-r: #d4182c; --xm-rl: #ff5a5f; --xm-rd: #8e0f1c; --xm-g: #12855a; --xm-gl: #3ddc97; --xm-au: #e8c46e; --xm-aul: #f7e2a4; }
+
+/* ── Franja ── */
+body[data-campaign="navidad"] .seasonal-ribbon {
+  color: var(--xm-aul);
+  border-bottom-color: rgba(232,196,110,.35);
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0 10px, transparent 10px 20px),
+    linear-gradient(90deg, rgba(142,15,28,.55), rgba(18,133,90,.38) 50%, rgba(142,15,28,.55));
+}
+body[data-campaign="navidad"] .seasonal-ribbon strong { color: #fff; }
+body[data-campaign="navidad"] .seasonal-ribbon-link { color: var(--xm-aul); }
+body[data-campaign="navidad"] .seasonal-ribbon-link:hover { color: #fff; }
+
+/* ── Carrusel: noche de Navidad, con brillo rojo junto a la mascota y verde al otro lado ── */
+body[data-campaign="navidad"] #carouselWrapper { background: #070405; }
+body[data-campaign="navidad"] .carousel-slide {
+  background:
+    radial-gradient(ellipse 50% 70% at 78% 46%, rgba(212,24,44,.24) 0%, transparent 64%),
+    radial-gradient(ellipse 60% 80% at 8% 78%, rgba(18,133,90,.20) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 0%, rgba(232,196,110,.08) 0%, transparent 70%),
+    linear-gradient(160deg, #0e0507 0%, #050304 55%, #04090a 100%);
+}
+body[data-campaign="navidad"] .slide-campaign .carousel-tag { color: var(--xm-aul); border-left-color: var(--xm-r); }
+body[data-campaign="navidad"] .slide-campaign .carousel-title .c-gold {
+  background: linear-gradient(90deg, var(--xm-aul), var(--xm-au) 55%, #c9973a);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  padding-right: .12em;
+}
+body[data-campaign="navidad"] .slide-campaign .carousel-title::after { background: linear-gradient(90deg, var(--xm-r), var(--xm-g), transparent); }
+body[data-campaign="navidad"] .slide-campaign .carousel-cta {
+  background: linear-gradient(90deg, var(--xm-rd), var(--xm-r));
+  box-shadow: 0 10px 30px rgba(212,24,44,.35);
+}
+body[data-campaign="navidad"] .slide-campaign .carousel-cta:hover { background: linear-gradient(90deg, var(--xm-r), var(--xm-rl)); }
+body[data-campaign="navidad"] .deco-ring { border-color: rgba(232,196,110,.16); }
+body[data-campaign="navidad"] .carousel-progress-bar { background: linear-gradient(90deg, var(--xm-g), var(--xm-au), var(--xm-r)); }
+
+/* ── Mascota: halo cálido, anillo rojo/verde/dorado, gorro y regalo ── */
+body[data-campaign="navidad"] .hero-mascot::before {
+  background: radial-gradient(circle at 46% 46%, rgba(255,214,140,.20), rgba(212,24,44,.16) 38%, transparent 66%);
+}
+body[data-campaign="navidad"] .hero-mascot::after {
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(212,24,44,.55) 50deg, transparent 100deg, transparent 160deg, rgba(232,196,110,.5) 210deg, transparent 260deg, rgba(18,133,90,.5) 300deg, transparent 350deg);
+}
+body[data-campaign="navidad"] .hero-mascot .mascot-img {
+  filter: drop-shadow(0 22px 40px rgba(0,0,0,.75)) drop-shadow(0 0 22px rgba(212,24,44,.25));
+}
+.xm-mascot-deco { position: absolute; inset: 0; pointer-events: none; }
+.xm-hat {
+  position: absolute; left: 24%; top: -6%; width: 46%; z-index: 3;
+  transform: rotate(-12deg); transform-origin: 30% 90%;
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,.5));
+  animation: xmHat 4s ease-in-out infinite;
+}
+.xm-hat svg, .xm-gift svg { display: block; width: 100%; height: auto; }
+@keyframes xmHat { 0%, 100% { transform: rotate(-12deg); } 50% { transform: rotate(-8deg) translateY(-2px); } }
+.xm-gift {
+  position: absolute; left: -16%; bottom: -4%; width: 34%; z-index: 3;
+  filter: drop-shadow(0 10px 16px rgba(0,0,0,.6)) drop-shadow(0 0 18px rgba(232,196,110,.35));
+  animation: xmGift 3.2s ease-in-out infinite;
+}
+@keyframes xmGift { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-5px) rotate(-1deg); } }
+
+/* ── Capa del carrusel: guirnalda de luces, nieve, esferas y neblina de nieve abajo ── */
+.xm-hero-deco { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
+.xm-lights { position: absolute; left: -2%; right: -2%; top: 0; height: clamp(46px, 7vw, 76px); }
+.xm-lights svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.xm-lights path { fill: none; stroke: #1d2a1f; stroke-width: 2.2; }
+.xm-bulb {
+  position: absolute; width: 9px; height: 13px; margin-left: -4.5px; margin-top: 1px;
+  border-radius: 50% 50% 46% 46% / 40% 40% 60% 60%;
+  background: var(--c); box-shadow: 0 0 6px 2px var(--c), 0 0 18px 4px var(--g);
+  animation: xmTwinkle 2.4s ease-in-out var(--d) infinite;
+}
+.xm-bulb::before { content: ''; position: absolute; left: 1.5px; right: 1.5px; top: -4px; height: 5px; border-radius: 2px; background: #2f3a31; }
+.xm-b-r { --c: #ff4d4d; --g: rgba(255,60,60,.55); }
+.xm-b-g { --c: #45e39b; --g: rgba(60,220,150,.5); }
+.xm-b-y { --c: #ffd36b; --g: rgba(255,200,90,.55); }
+.xm-b-w { --c: #fff3d1; --g: rgba(255,240,200,.5); }
+@keyframes xmTwinkle { 0%, 100% { opacity: 1; filter: brightness(1.15); } 45% { opacity: .35; filter: brightness(.7); } 60% { opacity: 1; } }
+.xm-snow { position: absolute; inset: 0; }
+.xm-snow i, #xmSnowLayer i {
+  position: absolute; top: -12px; left: var(--x); width: var(--s); height: var(--s); border-radius: 50%;
+  background: #fff; opacity: var(--o); filter: blur(.4px); box-shadow: 0 0 6px rgba(255,255,255,.6);
+  animation: xmFall var(--t) linear var(--d) infinite;
+}
+@keyframes xmFall {
+  0%   { transform: translate(0, 0); }
+  50%  { transform: translate(var(--sx), 55vh); }
+  100% { transform: translate(0, 112vh); }
+}
+.xm-drift {
+  position: absolute; left: -10%; right: -10%; bottom: -40px; height: 130px;
+  background:
+    radial-gradient(ellipse 30% 60% at 15% 100%, rgba(255,255,255,.14), transparent 70%),
+    radial-gradient(ellipse 34% 66% at 52% 100%, rgba(255,255,255,.10), transparent 70%),
+    radial-gradient(ellipse 30% 58% at 88% 100%, rgba(255,255,255,.13), transparent 70%);
+  filter: blur(6px);
+}
+/* Esferas colgando (solo celular, donde no está la mascota) */
+.xm-baubles { display: none; }
+@media (max-width: 720px) {
+  .xm-baubles { display: block; position: absolute; right: 6px; top: 0; width: 130px; height: 200px; }
+  .xm-bauble { position: absolute; top: 0; width: 1px; background: linear-gradient(rgba(232,196,110,.2), rgba(232,196,110,.7)); transform-origin: top center; animation: xmSwing 4.5s ease-in-out infinite; }
+  .xm-bauble i {
+    position: absolute; left: 50%; bottom: 0; width: var(--bs); height: var(--bs); margin-left: calc(var(--bs) / -2); transform: translateY(100%);
+    border-radius: 50%; background: radial-gradient(circle at 32% 30%, #fff 0 6%, var(--bc) 22%, var(--bd) 100%);
+    box-shadow: 0 6px 14px rgba(0,0,0,.5), 0 0 16px var(--bg);
+  }
+  .xm-bauble i::before { content: ''; position: absolute; left: 50%; top: -5px; width: 9px; height: 6px; margin-left: -4.5px; border-radius: 2px; background: linear-gradient(#f7e2a4, #b8892f); }
+  .xm-bauble-1 { left: 22px;  height: 64px;  --bs: 30px; --bc: #e3263c; --bd: #7e0b17; --bg: rgba(227,38,60,.4); }
+  .xm-bauble-2 { left: 66px;  height: 104px; --bs: 36px; --bc: #e8c46e; --bd: #8a6119; --bg: rgba(232,196,110,.45); animation-delay: -1.6s; }
+  .xm-bauble-3 { left: 108px; height: 48px;  --bs: 24px; --bc: #1fa46a; --bd: #0b4a31; --bg: rgba(31,164,106,.4); animation-delay: -3s; }
+  @keyframes xmSwing { 0%, 100% { transform: rotate(5deg); } 50% { transform: rotate(-5deg); } }
+}
+
+/* ── Nieve suave en toda la página ── */
+#xmSnowLayer { position: fixed; inset: 0; z-index: 150; overflow: hidden; pointer-events: none; }
+#xmSnowLayer i { opacity: calc(var(--o) * .7); }
+body.pd-open #xmSnowLayer { display: none; }
+
+/* ── Selección "Regalos de Navidad" ── */
+body[data-campaign="navidad"] .seasonal-picks {
+  position: relative;
+  background:
+    radial-gradient(ellipse 50% 100% at 90% 0%, rgba(212,24,44,.14) 0%, transparent 62%),
+    radial-gradient(ellipse 55% 100% at 8% 100%, rgba(18,133,90,.14) 0%, transparent 62%);
+  border-top: 1px solid rgba(232,196,110,.14);
+  border-bottom: 1px solid rgba(232,196,110,.14);
+}
+body[data-campaign="navidad"] .seasonal-picks .combos-eyebrow { color: #fff; background: linear-gradient(90deg, rgba(212,24,44,.5), rgba(18,133,90,.45)); border-color: rgba(232,196,110,.5); }
+body[data-campaign="navidad"] .seasonal-picks .combos-title em { color: var(--xm-au); }
+body[data-campaign="navidad"] .seasonal-picks .pd-mini-card { position: relative; }
+body[data-campaign="navidad"] .seasonal-picks .pd-mini-card::after {
+  content: '🎁'; position: absolute; top: 8px; right: 8px; font-size: .95rem; line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
+}
+body[data-campaign="navidad"] .seasonal-picks .pd-mini-card:hover { border-color: rgba(212,24,44,.6); box-shadow: 0 12px 28px rgba(0,0,0,.5), 0 0 22px rgba(212,24,44,.18); }
+body[data-campaign="navidad"] .seasonal-picks-all { color: var(--xm-aul); border-color: rgba(232,196,110,.5); }
+body[data-campaign="navidad"] .seasonal-picks-all:hover { background: var(--xm-r); border-color: var(--xm-r); color: #fff; }
+
+/* ── Detalles en el resto de la página ── */
+body[data-campaign="navidad"] .scroll-progress-line { background: linear-gradient(90deg, var(--xm-g), var(--xm-au), var(--xm-r)); }
+body[data-campaign="navidad"] .cart-count { background: var(--xm-r); color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  .xm-hat, .xm-gift, .xm-bulb, .xm-bauble { animation: none; }
+  .xm-snow { display: none; }
+}
+body[data-campaign="navidad"] .carousel-dots .dot.active { background: var(--xm-r); }

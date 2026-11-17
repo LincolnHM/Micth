@@ -35,10 +35,29 @@
     },
     'navidad': {
       label: 'Navidad',
-      ribbon: 'Especial navideño: perfumes para regalar 🎄',
+      ribbon: 'Perfumes y combos para regalar',
+      ribbonIcon: '🎄',
       headline: 'Temporada Navideña',
       subtitle: 'Encuentra el regalo perfecto con ediciones para compartir en familia.',
-      artClass: 'seasonal-art-navidad'
+      artClass: 'seasonal-art-navidad',
+      decor: 'navidad',
+      slide: {
+        tag: 'ESPECIAL DE NAVIDAD',
+        titleHtml: 'Este año, regala<br>un perfume <em class="c-gold">inolvidable.</em>',
+        subtitle: 'Decants y combos listos para regalar: el detalle perfecto para mamá, papá, tu pareja o tu amigo secreto.',
+        cta: { text: 'Ver ideas de regalo', href: '#catalogo', scrollTo: 'seasonalPicks' },
+        theme: 'slide-campaign'
+      },
+      picks: {
+        eyebrow: '🎄 Regalos de Navidad',
+        titleHtml: 'Ideas para <em>regalar</em> esta Navidad',
+        subtitle: 'Aromas cálidos, dulces y especiados del catálogo, perfectos para sorprender.',
+        cta: 'Ver todo el catálogo',
+        occasion: null,          // sin filtro de momento: de día y de noche
+        linkText: 'Ver regalos →',
+        // acordes "navideños" (sin tildes): vainilla, canela, ámbar, dulces…
+        words: ['vainill', 'canela', 'especiad', 'ambar', 'dulce', 'gourmand', 'caramel', 'chocolat', 'cacao', 'miel', 'amielad', 'tonka', 'cafe', 'almendr', 'calid', 'praline', 'ron']
+      }
     },
     'fiestas-patrias': {
       label: 'Fiestas Patrias',
@@ -203,12 +222,15 @@
     ribbon.appendChild(el('span', '·', 'seasonal-ribbon-text'));
     ribbon.appendChild(el('span', cfg.ribbon, 'seasonal-ribbon-text'));
     if (cfg.picks) {
-      const link = el('button', 'Ver selección →');
+      const link = el('button', cfg.picks.linkText || 'Ver selección →');
       link.type = 'button';
       link.className = 'seasonal-ribbon-link';
       link.addEventListener('click', () => {
-        if (typeof openCatalogWith === 'function') openCatalogWith({ occasion: cfg.picks.occasion });
-        else location.href = '/?momento=' + cfg.picks.occasion + '#catalogo';   // desde Nosotros o Contacto
+        // Sin momento (Navidad): baja a la selección si está a la vista en el Inicio
+        const picks = document.getElementById('seasonalPicks');
+        if (!cfg.picks.occasion && picks && picks.offsetParent) { picks.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+        if (typeof openCatalogWith === 'function') openCatalogWith({ occasion: cfg.picks.occasion || 'all' });
+        else location.href = cfg.picks.occasion ? '/?momento=' + cfg.picks.occasion + '#catalogo' : '/#catalogo';   // desde Nosotros o Contacto
       });
       ribbon.appendChild(link);
     }
@@ -224,7 +246,7 @@
     const all  = (typeof _allProducts !== 'undefined' && _allProducts) || [];
     const dark = text => cfg.words.some(w => normalizeStr(text).includes(w));   // normalizeStr: sin tildes (catalog-view.js)
     return all
-      .filter(p => p.type !== 'entero' && p.occasion === cfg.occasion && (p.imageUrl || '').startsWith('/')
+      .filter(p => p.type !== 'entero' && (!cfg.occasion || p.occasion === cfg.occasion) && (p.imageUrl || '').startsWith('/')
                 && productIsPurchasable(p) && productMinPrice(p) > 0)
       .map(p => ({
         p,
@@ -267,7 +289,7 @@
         </div>
       </div>`;
     bindMiniCards(section);
-    section.querySelector('.seasonal-picks-all').addEventListener('click', () => openCatalogWith({ occasion: cfg.occasion }));
+    section.querySelector('.seasonal-picks-all').addEventListener('click', () => openCatalogWith({ occasion: cfg.occasion || 'all' }));
     // Aparece debajo del carrusel cuando el catálogo ya cargó: sin que la página salte
     revealKeepingPlace(() => carousel.insertAdjacentElement('afterend', section));
   }
@@ -357,7 +379,74 @@
     return `<svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" aria-hidden="true"><path d="${d}"/></svg>`;
   }
 
+  // ── Navidad: luces que titilan, nieve, gorro y regalo para la mascota ──
+  const XM_HAT_SVG = '<svg viewBox="0 0 130 104" aria-hidden="true"><defs><linearGradient id="xmHatRed" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5a5f"/><stop offset=".5" stop-color="#d4182c"/><stop offset="1" stop-color="#7e0b17"/></linearGradient><radialGradient id="xmFur" cx="45%" cy="35%" r="70%"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e6e2dc"/></radialGradient></defs><path fill="url(#xmHatRed)" d="M14 80C20 46 44 16 80 10c18-3 32 6 36 22 2 8 0 16-4 22-2-10-8-18-17-20 6 14 9 30 9 46z"/><path fill="#000" opacity=".14" d="M80 10c18-3 32 6 36 22 2 8 0 16-4 22-2-10-8-18-17-20C90 24 84 16 80 10z"/><circle cx="112" cy="58" r="11" fill="url(#xmFur)"/><rect x="4" y="72" width="112" height="24" rx="12" fill="url(#xmFur)"/><path fill="none" stroke="#cfc8bf" stroke-width="2" stroke-linecap="round" opacity=".7" d="M18 84h4m10 3h4m12-4h4m12 3h4m12-3h4m12 4h4"/></svg>';
+  const XM_GIFT_SVG = '<svg viewBox="0 0 120 112" aria-hidden="true"><defs><linearGradient id="xmBox" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e3263c"/><stop offset="1" stop-color="#8f0d1d"/></linearGradient><linearGradient id="xmRib" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b8892f"/><stop offset=".5" stop-color="#f7e2a4"/><stop offset="1" stop-color="#c9973a"/></linearGradient></defs><rect x="14" y="50" width="92" height="58" rx="6" fill="url(#xmBox)"/><rect x="8" y="36" width="104" height="20" rx="5" fill="#c4182d"/><rect x="52" y="36" width="16" height="72" fill="url(#xmRib)"/><rect x="8" y="42" width="104" height="8" fill="url(#xmRib)" opacity=".9"/><path fill="url(#xmRib)" d="M60 38C46 18 24 16 26 28c2 10 20 10 34 10zm0 0c14-20 36-22 34-10-2 10-20 10-34 10z"/><circle cx="60" cy="37" r="6" fill="#f7e2a4"/></svg>';
+  const XM_COLORS = ['r', 'g', 'y', 'w', 'r', 'y', 'g', 'w'];
+
+  // Guirnalda: cable colgando en 4 curvas y focos de colores sobre él
+  function xmLightsHtml(swags = 4, perSwag = 5) {
+    const w = 100 / swags;
+    let path = 'M0 2';
+    for (let i = 0; i < swags; i++) path += `Q${(i * w + w / 2).toFixed(2)} 22 ${((i + 1) * w).toFixed(2)} 2`;
+    let bulbs = '', n = 0;
+    for (let i = 0; i < swags; i++) {
+      for (let k = 1; k <= perSwag; k++) {
+        const t = k / (perSwag + 1);
+        const x = i * w + t * w;
+        const y = 2 + 40 * t * (1 - t);                 // punto sobre la curva (de 0 a 20)
+        bulbs += `<i class="xm-bulb xm-b-${XM_COLORS[n % XM_COLORS.length]}" style="left:${x.toFixed(2)}%;top:${(y / 20 * 100).toFixed(1)}%;--d:${((n * .37) % 2.4).toFixed(2)}s"></i>`;
+        n++;
+      }
+    }
+    return `<div class="xm-lights"><svg viewBox="0 0 100 20" preserveAspectRatio="none"><path d="${path}" vector-effect="non-scaling-stroke"/></svg>${bulbs}</div>`;
+  }
+
+  // Copos: cada uno con su tamaño, velocidad y vaivén
+  function xmFlakesHtml(count) {
+    let html = '';
+    for (let i = 0; i < count; i++) {
+      const r = (a, b) => (a + Math.random() * (b - a)).toFixed(2);
+      html += `<i style="--x:${r(0, 100)}%;--s:${r(2, 6)}px;--t:${r(9, 18)}s;--d:-${r(0, 18)}s;--o:${r(.35, .9)};--sx:${r(-30, 30)}px"></i>`;
+    }
+    return html;
+  }
+
   const CAMPAIGN_DECOR = {
+    navidad: {
+      mount() {
+        const hero = document.getElementById('carouselWrapper');
+        if (hero) {
+          const deco = document.createElement('div');
+          deco.className = 'xm-hero-deco';
+          deco.setAttribute('aria-hidden', 'true');
+          deco.innerHTML = `
+            ${xmLightsHtml()}
+            <div class="xm-snow">${xmFlakesHtml(36)}</div>
+            <div class="xm-baubles"><span class="xm-bauble xm-bauble-1"><i></i></span><span class="xm-bauble xm-bauble-2"><i></i></span><span class="xm-bauble xm-bauble-3"><i></i></span></div>
+            <div class="xm-drift"></div>`;
+          hero.appendChild(deco);
+          const mascot = hero.querySelector('.hero-mascot');
+          if (mascot) {
+            const extra = document.createElement('div');
+            extra.className = 'xm-mascot-deco';
+            extra.innerHTML = `<div class="xm-hat">${XM_HAT_SVG}</div><div class="xm-gift">${XM_GIFT_SVG}</div>`;
+            mascot.appendChild(extra);
+          }
+        }
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        // Nieve suave en toda la página (pocos copos, detrás de lo que se toca)
+        const layer = document.createElement('div');
+        layer.id = 'xmSnowLayer';
+        layer.setAttribute('aria-hidden', 'true');
+        layer.innerHTML = xmFlakesHtml(18);
+        document.body.appendChild(layer);
+      },
+      unmount() {
+        document.querySelectorAll('.xm-hero-deco, .xm-mascot-deco, #xmSnowLayer').forEach(el => el.remove());
+      }
+    },
+
     halloween: {
       _timer: null,
 
