@@ -213,7 +213,7 @@ function pcRender() {
   const date  = new Date().toLocaleDateString('es-PE', { month: 'long', year: 'numeric' });
   const cover = `
     <div class="cover">
-      <img src="../../imgGato/gato-removebg-preview.png" alt="">
+      <img src="../../imgGato/gato-micht-720.webp" alt="">
       <div class="cover-brand">
         <strong>Micht <span>Decants</span></strong>
         <small>Perfumería Árabe &amp; Diseñador</small>

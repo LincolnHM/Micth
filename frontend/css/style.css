@@ -1009,7 +1009,7 @@ html.pl-skip .page-loader { display: none; }
 .badge-type { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .2rem .6rem; border-radius: 50px; }
 .badge-arabe  { background: rgba(107,43,255,.2); color: var(--gold); border: 1px solid rgba(107,43,255,.35); }
 .badge-dis    { background: rgba(255,255,255,.07); color: var(--text2); border: 1px solid rgba(255,255,255,.12); }
-.badge-nicho  { background: rgba(251,191,36,.14); color: #fbbf24; border: 1px solid rgba(251,191,36,.38); }
+.badge-nicho  { background: rgba(185,174,216,.14); color: #d6cfec; border: 1px solid rgba(185,174,216,.4); }
 .badge-entero { background: rgba(107,43,255,.15); color: var(--gold); border: 1px solid rgba(107,43,255,.3); }
 .badge-featured { font-size: .6rem; font-weight: 700; padding: .18rem .55rem; border-radius: 50px; background: rgba(107,43,255,.12); color: var(--gold); border: 1px solid rgba(107,43,255,.25); }
 
@@ -5276,7 +5276,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 .slide-3 {
   background:
     radial-gradient(ellipse at 48% 75%, rgba(107,43,255,.1) 0%, transparent 52%),
-    radial-gradient(ellipse at 78% 12%, rgba(175,115,35,.08) 0%, transparent 48%),
+    radial-gradient(ellipse at 78% 12%, rgba(107,43,255,.08) 0%, transparent 48%),
     var(--black);
 }
 
@@ -6330,8 +6330,8 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 /* ─── Banner promocional de descuento ────────────────────────────────────────── */
 .promo-banner {
   width: 100%;
-  background: linear-gradient(90deg, #1a1200 0%, #2a1f00 40%, #1a1200 100%);
-  border-bottom: 1px solid rgba(107,43,255,.25);
+  background: linear-gradient(90deg, #120b24 0%, #1d1238 50%, #120b24 100%);
+  border-bottom: 1px solid rgba(107,43,255,.3);
   padding: .55rem 1rem;
   position: relative;
   animation: promoBannerIn .4s ease;
@@ -6354,13 +6354,13 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 }
 .promo-banner-text {
   font-size: .82rem;
-  color: #e0c87a;
+  color: var(--text);
   margin: 0;
   font-family: Inter, sans-serif;
   line-height: 1.3;
 }
 .promo-banner-text strong {
-  color: var(--gold);
+  color: var(--gold-l);
   font-weight: 700;
 }
 .promo-banner-cta {
@@ -6377,7 +6377,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   transition: background .15s, transform .1s;
   white-space: nowrap;
 }
-.promo-banner-cta:hover { background: #e0c050; transform: scale(1.03); }
+.promo-banner-cta:hover { background: var(--gold-l); transform: scale(1.03); }
 .promo-banner-close {
   position: absolute;
   right: .75rem;
@@ -6544,7 +6544,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   cursor: pointer;
   transition: background .15s;
 }
-.hud-save-btn:hover { background: #e0c050; }
+.hud-save-btn:hover { background: var(--gold-l); }
 .hud-save-btn:disabled { opacity: .6; cursor: not-allowed; }
 
 /* Panel contraseña en móvil */
@@ -6612,7 +6612,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   cursor: pointer;
   transition: background .15s;
 }
-.history-empty-cta:hover { background: #e0c050; }
+.history-empty-cta:hover { background: var(--gold-l); }
 
 /* ── Cookie Banner ─────────────────────────────────────────────────────────── */
 .cookie-banner {
@@ -6658,7 +6658,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   text-decoration: underline;
   white-space: nowrap;
 }
-.cookie-link:hover { color: #e0c050; }
+.cookie-link:hover { color: var(--gold-l); }
 .cookie-banner-actions {
   display: flex;
   gap: .5rem;
@@ -6678,7 +6678,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   background: var(--gold);
   color: #12100e;
 }
-.cookie-btn-accept:hover { background: #e0c050; }
+.cookie-btn-accept:hover { background: var(--gold-l); }
 .cookie-btn-reject {
   background: transparent;
   color: var(--text2);
@@ -7778,7 +7778,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   align-items: center;
   justify-content: center;
   padding: 3px;
-  background: linear-gradient(135deg, #6b2bff 0%, #aa7c11 40%, #fff4d6 70%, #4f17d1 100%) border-box;
+  background: linear-gradient(135deg, #6b2bff 0%, #9a6bff 40%, #ece8f6 70%, #4f17d1 100%) border-box;
   border: 2px solid transparent;
   box-shadow: 0 4px 12px rgba(107, 43, 255, 0.15);
   transition: all 0.25s cubic-bezier(.22,1,.36,1);
@@ -8410,7 +8410,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   border-radius: 20px;
   align-self: flex-start;
 }
-.match-perfect { background: rgba(255,215,0,.13);  color: #f0c14b; border: 1px solid rgba(255,215,0,.28);  }
+.match-perfect { background: rgba(107,43,255,.16);  color: #c3b2ff; border: 1px solid rgba(154,107,255,.4);  }
 .match-high    { background: rgba(155,124,244,.12); color: #b39ddb; border: 1px solid rgba(155,124,244,.25);}
 .match-good    { background: rgba(70,205,160,.11);  color: #80cbc4; border: 1px solid rgba(70,205,160,.22); }
 .match-low     { background: rgba(120,120,120,.1);  color: var(--text2); border: 1px solid var(--border); }
@@ -10678,9 +10678,9 @@ body[data-campaign="navidad"] .carousel-dots .dot.active { background: var(--xm-
 
 /* ════════════════════════════════════════════════════════
    NOSOTROS (rediseño) — frontend/nosotros/index.html
-   Morado de la marca con acentos champán; íconos de línea.
+   Ultra Violeta con acentos Gris Porcelana; íconos de línea.
    ════════════════════════════════════════════════════════ */
-:root { --ab-au: #e8c46e; --ab-aul: #f7e2a4; }
+:root { --ab-au: #c9bfe6; --ab-aul: #ece8f6; }   /* antes dorado: ahora Gris Porcelana */
 .ab-eyebrow {
   display: inline-flex; align-items: center; gap: .5rem; margin-bottom: 1rem;
   font-size: .68rem; font-weight: 600; letter-spacing: .26em; text-transform: uppercase; color: var(--ab-au);
@@ -10706,8 +10706,8 @@ body[data-campaign="navidad"] .carousel-dots .dot.active { background: var(--xm-
 }
 .ab-btn-primary { background: linear-gradient(135deg, var(--gold), var(--gold-l)); color: #fff; box-shadow: 0 10px 30px rgba(107,43,255,.35); }
 .ab-btn-primary:hover { transform: translateY(-3px); box-shadow: 0 16px 38px rgba(107,43,255,.5); color: #fff; }
-.ab-btn-ghost { border: 1px solid rgba(232,196,110,.45); color: var(--ab-aul); background: rgba(232,196,110,.04); }
-.ab-btn-ghost:hover { border-color: var(--ab-au); background: rgba(232,196,110,.1); color: #fff; transform: translateY(-3px); }
+.ab-btn-ghost { border: 1px solid rgba(185,174,216,.45); color: var(--ab-aul); background: rgba(185,174,216,.04); }
+.ab-btn-ghost:hover { border-color: var(--ab-au); background: rgba(185,174,216,.1); color: #fff; transform: translateY(-3px); }
 .ab-btn-wa { background: #25d366; color: #fff; box-shadow: 0 10px 28px rgba(37,211,102,.3); }
 .ab-btn-wa:hover { background: #1ebe5d; color: #fff; transform: translateY(-3px); box-shadow: 0 16px 36px rgba(37,211,102,.42); }
 
@@ -10715,16 +10715,16 @@ body[data-campaign="navidad"] .carousel-dots .dot.active { background: var(--xm-
 .ab-hero { position: relative; overflow: hidden; padding: clamp(3rem, 7vw, 5.5rem) 0 clamp(2.5rem, 5vw, 4rem); }
 .ab-hero::before {
   content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: radial-gradient(ellipse 45% 70% at 78% 45%, rgba(107,43,255,.22), transparent 65%), radial-gradient(ellipse 35% 50% at 10% 20%, rgba(232,196,110,.06), transparent 70%);
+  background: radial-gradient(ellipse 45% 70% at 78% 45%, rgba(107,43,255,.22), transparent 65%), radial-gradient(ellipse 35% 50% at 10% 20%, rgba(185,174,216,.06), transparent 70%);
 }
 .ab-hero-grid { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); gap: clamp(2rem, 5vw, 4rem); align-items: center; }
 .ab-title { font-family: var(--font-serif); font-size: clamp(2.3rem, 5.4vw, 4rem); line-height: 1.08; color: var(--white); font-weight: 700; letter-spacing: -.01em; }
 .ab-lead { margin: 1.4rem 0 2rem; max-width: 560px; color: var(--text2); font-size: 1rem; line-height: 1.8; }
 .ab-lead strong { color: var(--text); }
 .ab-hero-art { position: relative; aspect-ratio: 1; max-width: 460px; width: 100%; justify-self: center; display: grid; place-items: center; }
-.ab-halo { position: absolute; inset: 8%; border-radius: 50%; background: radial-gradient(circle at 45% 40%, rgba(232,196,110,.16), rgba(107,43,255,.28) 45%, transparent 70%); filter: blur(4px); animation: abPulse 6s ease-in-out infinite; }
-.ab-orbit { position: absolute; inset: 2%; border-radius: 50%; border: 1px dashed rgba(232,196,110,.25); animation: abSpin 40s linear infinite; }
-.ab-orbit i { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--ab-au); box-shadow: 0 0 12px rgba(232,196,110,.8); }
+.ab-halo { position: absolute; inset: 8%; border-radius: 50%; background: radial-gradient(circle at 45% 40%, rgba(185,174,216,.16), rgba(107,43,255,.28) 45%, transparent 70%); filter: blur(4px); animation: abPulse 6s ease-in-out infinite; }
+.ab-orbit { position: absolute; inset: 2%; border-radius: 50%; border: 1px dashed rgba(185,174,216,.25); animation: abSpin 40s linear infinite; }
+.ab-orbit i { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--ab-au); box-shadow: 0 0 12px rgba(185,174,216,.8); }
 .ab-orbit i:nth-child(1) { top: -4px; left: 50%; }
 .ab-orbit i:nth-child(2) { bottom: 14%; left: 4%; background: var(--gold-l); box-shadow: 0 0 12px rgba(154,107,255,.8); }
 .ab-orbit i:nth-child(3) { top: 30%; right: -4px; width: 6px; height: 6px; }
@@ -10748,7 +10748,7 @@ body[data-campaign="navidad"] .carousel-dots .dot.active { background: var(--xm-
 .ab-stats-band { padding: 0 0 clamp(1rem, 3vw, 2rem); }
 .ab-stats {
   display: grid; grid-template-columns: repeat(4, 1fr); border-radius: 20px; overflow: hidden;
-  background: linear-gradient(135deg, rgba(107,43,255,.12), rgba(232,196,110,.05)); border: 1px solid rgba(255,255,255,.08);
+  background: linear-gradient(135deg, rgba(107,43,255,.12), rgba(185,174,216,.05)); border: 1px solid rgba(255,255,255,.08);
 }
 .ab-stat { display: flex; flex-direction: column; align-items: center; gap: .35rem; padding: 1.5rem 1rem; text-align: center; }
 .ab-stat + .ab-stat { border-left: 1px solid rgba(255,255,255,.07); }
@@ -10759,13 +10759,13 @@ body[data-campaign="navidad"] .carousel-dots .dot.active { background: var(--xm-
 .ab-steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(1rem, 2.5vw, 1.8rem); position: relative; }
 .ab-steps::before {
   content: ''; position: absolute; left: 16%; right: 16%; top: 54px; height: 1px; z-index: 0;
-  background: linear-gradient(90deg, transparent, rgba(232,196,110,.4), rgba(154,107,255,.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(185,174,216,.4), rgba(154,107,255,.4), transparent);
 }
 .ab-step { position: relative; z-index: 1; text-align: center; padding: 0 .5rem; }
 .ab-step-num { display: block; font-family: var(--font-serif); font-size: .85rem; letter-spacing: .2em; color: var(--ab-au); margin-bottom: .6rem; }
 .ab-step-icon {
   width: 76px; height: 76px; margin: 0 auto 1.2rem; border-radius: 50%; display: grid; place-items: center; color: var(--ab-aul);
-  background: radial-gradient(circle at 35% 30%, rgba(107,43,255,.45), #120f18 70%); border: 1px solid rgba(232,196,110,.35);
+  background: radial-gradient(circle at 35% 30%, rgba(107,43,255,.45), #120f18 70%); border: 1px solid rgba(185,174,216,.35);
   box-shadow: 0 0 0 6px rgba(10,10,12,1), 0 10px 30px rgba(107,43,255,.25);
 }
 .ab-step-icon svg { width: 32px; height: 32px; }
@@ -10777,12 +10777,12 @@ body[data-campaign="navidad"] .carousel-dots .dot.active { background: var(--xm-
 .ab-mv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem, 2.5vw, 1.6rem); }
 .ab-mv-card {
   position: relative; overflow: hidden; padding: clamp(1.6rem, 3vw, 2.4rem); border-radius: 22px;
-  background: linear-gradient(160deg, #15121c, #0d0c10) padding-box, linear-gradient(140deg, rgba(154,107,255,.6), rgba(232,196,110,.35) 50%, rgba(255,255,255,.05)) border-box;
+  background: linear-gradient(160deg, #15121c, #0d0c10) padding-box, linear-gradient(140deg, rgba(154,107,255,.6), rgba(185,174,216,.35) 50%, rgba(255,255,255,.05)) border-box;
   border: 1px solid transparent; transition: transform .3s ease, box-shadow .3s ease;
 }
 .ab-mv-card::after {
   content: '\201C'; position: absolute; right: 1.2rem; top: -.6rem; font-family: var(--font-serif); font-size: 8rem; line-height: 1;
-  color: rgba(232,196,110,.07); pointer-events: none;
+  color: rgba(185,174,216,.07); pointer-events: none;
 }
 .ab-mv-card:hover { transform: translateY(-4px); box-shadow: 0 20px 44px rgba(0,0,0,.5), 0 0 30px rgba(107,43,255,.15); }
 .ab-mv-top { display: flex; align-items: center; gap: .8rem; margin-bottom: 1.1rem; }
@@ -10798,8 +10798,8 @@ body[data-campaign="navidad"] .carousel-dots .dot.active { background: var(--xm-
   position: relative; padding: 1.6rem 1.3rem 1.5rem; border-radius: 18px; background: rgba(255,255,255,.025); border: 1px solid var(--border-l);
   transition: transform .3s ease, border-color .3s ease, background .3s ease;
 }
-.ab-value:hover { transform: translateY(-5px); border-color: rgba(232,196,110,.35); background: rgba(107,43,255,.07); }
-.ab-value-num { position: absolute; top: 1.2rem; right: 1.2rem; font-family: var(--font-serif); font-size: .8rem; color: rgba(232,196,110,.5); letter-spacing: .1em; }
+.ab-value:hover { transform: translateY(-5px); border-color: rgba(185,174,216,.35); background: rgba(107,43,255,.07); }
+.ab-value-num { position: absolute; top: 1.2rem; right: 1.2rem; font-family: var(--font-serif); font-size: .8rem; color: rgba(185,174,216,.5); letter-spacing: .1em; }
 .ab-value-icon { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; margin-bottom: 1.1rem; color: var(--ab-aul); background: radial-gradient(circle at 35% 30%, rgba(107,43,255,.4), rgba(107,43,255,.08)); border: 1px solid rgba(154,107,255,.35); }
 .ab-value-icon svg { width: 24px; height: 24px; }
 .ab-value h3 { font-family: var(--font-serif); font-size: 1.08rem; color: var(--white); margin-bottom: .45rem; }
@@ -10822,7 +10822,7 @@ body[data-campaign="navidad"] .carousel-dots .dot.active { background: var(--xm-
   padding: clamp(2rem, 4.5vw, 3.4rem); border-radius: 28px;
   background:
     radial-gradient(ellipse 60% 90% at 85% 50%, rgba(107,43,255,.32), transparent 65%),
-    radial-gradient(ellipse 40% 60% at 0% 0%, rgba(232,196,110,.08), transparent 70%),
+    radial-gradient(ellipse 40% 60% at 0% 0%, rgba(185,174,216,.08), transparent 70%),
     linear-gradient(140deg, #16121d, #0c0b0f);
   border: 1px solid rgba(154,107,255,.3); box-shadow: 0 30px 60px rgba(0,0,0,.45);
 }
@@ -10846,7 +10846,7 @@ body[data-campaign="navidad"] .carousel-dots .dot.active { background: var(--xm-
   .ab-stat:nth-child(n+3) { border-top: 1px solid rgba(255,255,255,.07); }
   .ab-steps { grid-template-columns: 1fr; gap: 2rem; }
   .ab-steps::before { display: none; }
-  .ab-step:not(:last-child)::after { content: ''; display: block; width: 1px; height: 30px; margin: 1.4rem auto 0; background: linear-gradient(180deg, rgba(232,196,110,.5), rgba(154,107,255,.2)); }
+  .ab-step:not(:last-child)::after { content: ''; display: block; width: 1px; height: 30px; margin: 1.4rem auto 0; background: linear-gradient(180deg, rgba(185,174,216,.5), rgba(154,107,255,.2)); }
   .ab-mv-grid { grid-template-columns: 1fr; }
   .ab-cta-card { grid-template-columns: 1fr; text-align: center; }
   .ab-cta-copy p { margin-left: auto; margin-right: auto; }

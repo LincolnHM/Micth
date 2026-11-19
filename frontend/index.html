@@ -207,7 +207,7 @@
   <link rel="icon" type="image/png" href="imgGato/icons/icon-192.png">
   <link rel="apple-touch-icon" href="imgGato/icons/icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261119-0153">
+  <link rel="stylesheet" href="css/style.css?v=20261119-0220">
   <!-- La pantalla de carga solo se muestra la primera vez en la sesión; en las
        siguientes visitas (volver de Nosotros, recargar) no hace esperar. -->
   <script>try { if (sessionStorage.getItem('micht_loader_seen')) document.documentElement.classList.add('pl-skip'); } catch (e) {}</script>
@@ -269,7 +269,7 @@
   <div id="pageLoader" class="page-loader" role="status" aria-live="polite" aria-label="Cargando Micht Decants">
     <div class="pl-glow" aria-hidden="true"></div>
     <div class="pl-content">
-      <img src="imgGato/gato-removebg-preview.png" alt="" class="pl-mascot" aria-hidden="true">
+      <img src="imgGato/gato-micht-360.webp" alt="" class="pl-mascot" aria-hidden="true">
       <p class="pl-wordmark">Micht<span> Decants</span></p>
       <div class="pl-bar"><div class="pl-bar-fill"></div></div>
       <p class="pl-caption">Preparando tu experiencia</p>
@@ -485,7 +485,7 @@
       <div class="carousel-progress-bar" id="carouselProgressBar"></div>
     </div>
     <div class="hero-mascot" aria-hidden="true">
-      <img src="imgGato/gato-removebg-preview.png" alt="Mascota MICHT" class="mascot-img">
+      <img src="imgGato/gato-micht-720.webp" srcset="imgGato/gato-micht-360.webp 360w, imgGato/gato-micht-720.webp 720w" sizes="(max-width: 900px) 220px, 340px" width="720" height="740" alt="Mascota MICHT: gato con corona y perfume" class="mascot-img">
     </div>
   </section>
 
@@ -1506,39 +1506,39 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con el panel admin) — el orden importa -->
-  <script src="js/shared/data-core.js?v=20261119-0153"></script>
-  <script src="js/shared/catalog.js?v=20261119-0153"></script>
-  <script src="js/shared/data.js?v=20261119-0153"></script>
-  <script src="js/shared/supabase-config.js?v=20261119-0153"></script>
-  <script src="js/shared/cloud-orders.js?v=20261119-0153"></script>
-  <script src="js/shared/cloud-gallery.js?v=20261119-0153"></script>
-  <script src="js/shared/cloud-products.js?v=20261119-0153"></script>
-  <script src="js/shared/slugs.js?v=20261119-0153"></script>
-  <script src="js/shared/cloud-combos.js?v=20261119-0153"></script>
+  <script src="js/shared/data-core.js?v=20261119-0220"></script>
+  <script src="js/shared/catalog.js?v=20261119-0220"></script>
+  <script src="js/shared/data.js?v=20261119-0220"></script>
+  <script src="js/shared/supabase-config.js?v=20261119-0220"></script>
+  <script src="js/shared/cloud-orders.js?v=20261119-0220"></script>
+  <script src="js/shared/cloud-gallery.js?v=20261119-0220"></script>
+  <script src="js/shared/cloud-products.js?v=20261119-0220"></script>
+  <script src="js/shared/slugs.js?v=20261119-0220"></script>
+  <script src="js/shared/cloud-combos.js?v=20261119-0220"></script>
   <!-- Tienda -->
-  <script src="js/store/announcement.js?v=20261119-0153"></script>
-  <script src="js/store/seasonal-theme.js?v=20261119-0153"></script>
-  <script src="js/store/carousel.js?v=20261119-0153"></script>
-  <script src="js/store/cart.js?v=20261119-0153"></script>
-  <script src="js/store/catalog-view.js?v=20261119-0153"></script>
-  <script src="js/store/new-arrivals.js?v=20261119-0153"></script>
-  <script src="js/store/auto-carousel.js?v=20261119-0153"></script>
-  <script src="js/store/coming-soon.js?v=20261119-0153"></script>
-  <script src="js/store/filters-ui.js?v=20261119-0153"></script>
-  <script src="js/store/combos-carousel.js?v=20261119-0153"></script>
-  <script src="js/store/faq.js?v=20261119-0153"></script>
-  <script src="js/store/product-detail.js?v=20261119-0153"></script>
-  <script src="js/store/combo-detail.js?v=20261119-0153"></script>
-  <script src="js/store/store-view.js?v=20261119-0153"></script>
-  <script src="js/store/init.js?v=20261119-0153"></script>
-  <script src="js/store/gallery.js?v=20261119-0153"></script>
-  <script src="js/store/scent-finder.js?v=20261119-0153"></script>
-  <script src="js/store/checkout.js?v=20261119-0153"></script>
-  <script src="js/store/customer-auth.js?v=20261119-0153"></script>
-  <script src="js/store/club.js?v=20261119-0153"></script>
-  <script src="js/store/chatbot.js?v=20261119-0153"></script>
-  <script src="js/store/animations.js?v=20261119-0153"></script>
-  <script src="js/store/gsap-animations.js?v=20261119-0153"></script>
+  <script src="js/store/announcement.js?v=20261119-0220"></script>
+  <script src="js/store/seasonal-theme.js?v=20261119-0220"></script>
+  <script src="js/store/carousel.js?v=20261119-0220"></script>
+  <script src="js/store/cart.js?v=20261119-0220"></script>
+  <script src="js/store/catalog-view.js?v=20261119-0220"></script>
+  <script src="js/store/new-arrivals.js?v=20261119-0220"></script>
+  <script src="js/store/auto-carousel.js?v=20261119-0220"></script>
+  <script src="js/store/coming-soon.js?v=20261119-0220"></script>
+  <script src="js/store/filters-ui.js?v=20261119-0220"></script>
+  <script src="js/store/combos-carousel.js?v=20261119-0220"></script>
+  <script src="js/store/faq.js?v=20261119-0220"></script>
+  <script src="js/store/product-detail.js?v=20261119-0220"></script>
+  <script src="js/store/combo-detail.js?v=20261119-0220"></script>
+  <script src="js/store/store-view.js?v=20261119-0220"></script>
+  <script src="js/store/init.js?v=20261119-0220"></script>
+  <script src="js/store/gallery.js?v=20261119-0220"></script>
+  <script src="js/store/scent-finder.js?v=20261119-0220"></script>
+  <script src="js/store/checkout.js?v=20261119-0220"></script>
+  <script src="js/store/customer-auth.js?v=20261119-0220"></script>
+  <script src="js/store/club.js?v=20261119-0220"></script>
+  <script src="js/store/chatbot.js?v=20261119-0220"></script>
+  <script src="js/store/animations.js?v=20261119-0220"></script>
+  <script src="js/store/gsap-animations.js?v=20261119-0220"></script>
   <script>
     // ── Mobile menu toggle ───────────────────────────────────
     (function () {

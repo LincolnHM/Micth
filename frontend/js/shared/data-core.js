@@ -61,7 +61,7 @@ function buildProductImage(product) {
       <circle cx="604" cy="206" r="112" fill="#ffffff" fill-opacity="0.05"/>
       <circle cx="580" cy="720" r="150" fill="${glow}" fill-opacity="0.08"/>
 
-      <text x="54" y="92" fill="#f6e6b5" fill-opacity="0.92" font-family="Inter, Arial, sans-serif" font-size="26" letter-spacing="3">MICHT DECANTS</text>
+      <text x="54" y="92" fill="#ece8f6" fill-opacity="0.92" font-family="Inter, Arial, sans-serif" font-size="26" letter-spacing="3">MICHT DECANTS</text>
       <text x="54" y="136" fill="#ffffff" fill-opacity="0.74" font-family="Inter, Arial, sans-serif" font-size="18" letter-spacing="2">${escapeXml(label)}</text>
 
       <g transform="translate(140 180)">
@@ -70,14 +70,14 @@ function buildProductImage(product) {
         <rect x="108" y="88" width="204" height="68" rx="24" fill="#ffffff" fill-opacity="0.16"/>
         <rect x="132" y="150" width="156" height="228" rx="28" fill="#0f0f0f" fill-opacity="0.18"/>
         <ellipse cx="210" cy="606" rx="142" ry="22" fill="#000000" fill-opacity="0.24"/>
-        <rect x="160" y="-42" width="100" height="56" rx="16" fill="#e7d29a"/>
-        <rect x="176" y="-72" width="68" height="42" rx="10" fill="#f4e1aa"/>
+        <rect x="160" y="-42" width="100" height="56" rx="16" fill="#b9aed8"/>
+        <rect x="176" y="-72" width="68" height="42" rx="10" fill="#d6cfec"/>
         <path d="M172 176h76c16 0 28 12 28 28v136c0 16-12 28-28 28h-76c-16 0-28-12-28-28V204c0-16 12-28 28-28z" fill="#ffffff" fill-opacity="0.10"/>
         <path d="M164 176h92c12 0 22 10 22 22v158c0 12-10 22-22 22h-92c-12 0-22-10-22-22V198c0-12 10-22 22-22z" fill="#ffffff" fill-opacity="0.06"/>
       </g>
 
-      <text x="360" y="720" text-anchor="middle" fill="#fff6df" font-family="Playfair Display, Georgia, serif" font-size="56" font-weight="700">${escapeXml(product.name)}</text>
-      <text x="360" y="772" text-anchor="middle" fill="#f6e6b5" fill-opacity="0.94" font-family="Inter, Arial, sans-serif" font-size="24" letter-spacing="2">${escapeXml(product.brand)}</text>
+      <text x="360" y="720" text-anchor="middle" fill="#f3f0fa" font-family="Playfair Display, Georgia, serif" font-size="56" font-weight="700">${escapeXml(product.name)}</text>
+      <text x="360" y="772" text-anchor="middle" fill="#ece8f6" fill-opacity="0.94" font-family="Inter, Arial, sans-serif" font-size="24" letter-spacing="2">${escapeXml(product.brand)}</text>
       <text x="360" y="824" text-anchor="middle" fill="#ffffff" fill-opacity="0.64" font-family="Inter, Arial, sans-serif" font-size="18" letter-spacing="1.8">${escapeXml(product.olfFamily || '')}</text>
     </svg>`;
 
