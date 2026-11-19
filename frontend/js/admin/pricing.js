@@ -160,7 +160,7 @@ async function renderPreciosSection() {
     return `
     <div class="admin-card precios-product-row" data-id="${p.id}"
          style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:1rem;align-items:start;padding:1rem 1.1rem;margin-bottom:.5rem;transition:border-color .2s"
-         onmouseenter="this.style.borderColor='rgba(124,79,176,.25)'" onmouseleave="this.style.borderColor=''">
+         onmouseenter="this.style.borderColor='rgba(107,43,255,.25)'" onmouseleave="this.style.borderColor=''">
 
       <!-- Col 1: Perfume info -->
       <div style="display:flex;gap:.75rem;align-items:flex-start;min-width:0">
@@ -190,8 +190,8 @@ async function renderPreciosSection() {
                  onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border-l)'">
         </div>
         <button class="btn-save-cost" data-id="${p.id}"
-                style="font-size:.72rem;padding:.3rem .8rem;background:rgba(124,79,176,.12);color:var(--gold-d);border:1px solid rgba(124,79,176,.3);border-radius:var(--r);cursor:pointer;font-weight:700;white-space:nowrap;transition:background .15s"
-                onmouseover="this.style.background='rgba(124,79,176,.24)'" onmouseout="this.style.background='rgba(124,79,176,.12)'">
+                style="font-size:.72rem;padding:.3rem .8rem;background:rgba(107,43,255,.12);color:var(--gold-d);border:1px solid rgba(107,43,255,.3);border-radius:var(--r);cursor:pointer;font-weight:700;white-space:nowrap;transition:background .15s"
+                onmouseover="this.style.background='rgba(107,43,255,.24)'" onmouseout="this.style.background='rgba(107,43,255,.12)'">
           Guardar costo
         </button>
         ${isEntero && !hasCost ? '' : !isEntero && p.bottleTotalMl > 0 && hasCost ? `<div style="font-size:.68rem;color:var(--text3);text-align:right">S/${(costPrice/p.bottleTotalMl).toFixed(3)}/ml</div>` : ''}

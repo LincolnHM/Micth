@@ -674,12 +674,12 @@ async function openOrderDetail(id) {
     <div>
       <label style="font-size:.74rem;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.4rem">📌 Notas internas (solo tú las ves)</label>
       <textarea id="adminNoteInput" rows="2" maxlength="400"
-        style="width:100%;padding:.5rem .75rem;background:var(--bg);border:1px solid rgba(124,79,176,.3);border-radius:var(--r);color:var(--text);font-size:.82rem;resize:vertical;box-sizing:border-box;font-family:Inter,sans-serif;line-height:1.4;outline:none;transition:border-color .2s"
-        onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='rgba(124,79,176,.3)'"
+        style="width:100%;padding:.5rem .75rem;background:var(--bg);border:1px solid rgba(107,43,255,.3);border-radius:var(--r);color:var(--text);font-size:.82rem;resize:vertical;box-sizing:border-box;font-family:Inter,sans-serif;line-height:1.4;outline:none;transition:border-color .2s"
+        onfocus="this.style.borderColor='var(--gold-d)'" onblur="this.style.borderColor='rgba(107,43,255,.3)'"
         placeholder="Ej: cliente frecuente, coordinar hora de recojo, etc.">${sanitize(getAdminNote(order.id))}</textarea>
       <button id="saveAdminNoteBtn" data-id="${escapeAttr(order.id)}"
-        style="margin-top:.4rem;padding:.35rem .9rem;background:rgba(124,79,176,.12);color:var(--gold-d);border:1px solid rgba(124,79,176,.3);border-radius:var(--r);font-size:.75rem;font-weight:700;cursor:pointer;transition:background .15s"
-        onmouseover="this.style.background='rgba(124,79,176,.22)'" onmouseout="this.style.background='rgba(124,79,176,.12)'">
+        style="margin-top:.4rem;padding:.35rem .9rem;background:rgba(107,43,255,.12);color:var(--gold-d);border:1px solid rgba(107,43,255,.3);border-radius:var(--r);font-size:.75rem;font-weight:700;cursor:pointer;transition:background .15s"
+        onmouseover="this.style.background='rgba(107,43,255,.22)'" onmouseout="this.style.background='rgba(107,43,255,.12)'">
         Guardar nota
       </button>
     </div>

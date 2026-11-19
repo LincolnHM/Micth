@@ -290,8 +290,10 @@
       </div>`;
     bindMiniCards(section);
     section.querySelector('.seasonal-picks-all').addEventListener('click', () => openCatalogWith({ occasion: cfg.occasion || 'all' }));
-    // Aparece debajo del carrusel cuando el catálogo ya cargó: sin que la página salte
-    revealKeepingPlace(() => carousel.insertAdjacentElement('afterend', section));
+    // Aparece debajo del carrusel y del Club MICHT (que va pegado al carrusel)
+    // cuando el catálogo ya cargó: sin que la página salte
+    const anchor = document.getElementById('clubHome') || carousel;
+    revealKeepingPlace(() => anchor.insertAdjacentElement('afterend', section));
   }
 
   document.addEventListener('catalogLoaded', () => { if (_picksCampaign) renderPicks(_picksCampaign); });

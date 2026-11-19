@@ -15,7 +15,7 @@ function showConfirmModal(message, onOk, onCancel) {
   const box = document.createElement('div');
   box.style.cssText = [
     'background:#1a1a1a',
-    'border:1px solid #7c4fb0',
+    'border:1px solid #6b2bff',
     'border-radius:10px',
     'padding:1.5rem 1.75rem',
     'max-width:420px;width:100%',
@@ -29,7 +29,7 @@ function showConfirmModal(message, onOk, onCancel) {
 
   const title = document.createElement('h3');
   title.textContent = 'Confirmar acción';
-  title.style.cssText = 'margin:0;font-size:1rem;color:#7c4fb0;font-weight:700';
+  title.style.cssText = 'margin:0;font-size:1rem;color:#6b2bff;font-weight:700';
 
   const closeBtn = document.createElement('button');
   closeBtn.textContent = '✕';
@@ -58,7 +58,7 @@ function showConfirmModal(message, onOk, onCancel) {
   btnOk.textContent = 'Confirmar';
   btnOk.style.cssText = [
     'padding:.55rem 1.25rem;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:700',
-    'background:#7c4fb0;border:1px solid #7c4fb0;color:#fff'
+    'background:#6b2bff;border:1px solid #6b2bff;color:#fff'
   ].join(';');
 
   footer.appendChild(btnCan);

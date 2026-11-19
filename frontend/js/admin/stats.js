@@ -44,8 +44,8 @@ function _drawTrendChart(id, months) {
   }));
 
   const grad = ctx.createLinearGradient(0, padT, 0, padT + cH);
-  grad.addColorStop(0, 'rgba(124,79,176,.35)');
-  grad.addColorStop(1, 'rgba(124,79,176,0)');
+  grad.addColorStop(0, 'rgba(107,43,255,.35)');
+  grad.addColorStop(1, 'rgba(107,43,255,0)');
   ctx.beginPath();
   ctx.moveTo(pts[0].x, padT + cH);
   pts.forEach(p => ctx.lineTo(p.x, p.y));
@@ -56,16 +56,16 @@ function _drawTrendChart(id, months) {
   // Line
   ctx.beginPath();
   pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-  ctx.strokeStyle = '#7c4fb0'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.strokeStyle = '#6b2bff'; ctx.lineWidth = 2; ctx.stroke();
 
   // Dots + labels
   pts.forEach((p, i) => {
     ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
-    ctx.fillStyle = '#7c4fb0'; ctx.fill();
+    ctx.fillStyle = '#6b2bff'; ctx.fill();
     ctx.fillStyle = '#888'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
     ctx.fillText(months[i].label, p.x, H - 5);
     if (months[i].rev > 0) {
-      ctx.fillStyle = '#7c4fb0'; ctx.font = 'bold 8px sans-serif';
+      ctx.fillStyle = '#6b2bff'; ctx.font = 'bold 8px sans-serif';
       ctx.fillText(`${months[i].rev.toFixed(0)}`, p.x, p.y - 7);
     }
   });
@@ -108,7 +108,7 @@ function _drawPayDonut(id, nEfect, nYape, nSin, total) {
 
   // Center text
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#7c4fb0'; ctx.font = `bold ${size * .15}px sans-serif`;
+  ctx.fillStyle = '#6b2bff'; ctx.font = `bold ${size * .15}px sans-serif`;
   ctx.fillText(total, cx, cy - 7);
   ctx.fillStyle = '#888'; ctx.font = `${size * .09}px sans-serif`;
   ctx.fillText('pagados', cx, cy + 9);
@@ -123,7 +123,7 @@ function _drawTopHBar(id, items) {
   const maxV  = items[0]?.qty || 1;
   const padL  = 120, padR = 48;
   const barW  = W - padL - padR;
-  const GOLD  = '#7c4fb0';
+  const GOLD  = '#6b2bff';
   const DARK  = '#2e2e2e';
 
   items.forEach((item, i) => {

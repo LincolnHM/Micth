@@ -7,6 +7,13 @@
 
 let _allCombos = null;
 
+// En el Inicio el carrusel muestra hasta 5 combos; si hay más aparece el botón
+// "Ver todos los combos", que lleva a /combos/ (la misma tienda con la vista
+// "combos": todos en una grilla). Las tarjetas de más se dibujan igual y el CSS
+// las oculta en el Inicio, así cambiar de vista no obliga a redibujar.
+const COMBOS_HOME_MAX = 5;
+const isCombosView = () => document.documentElement.dataset.view === 'combos';
+
 function _comboCardPricingHtml(combo, products, size) {
   const { before } = comboSizeInfo(combo, products, size);
   const price = parseFloat(combo.prices?.[size]) || 0;
@@ -65,7 +72,7 @@ async function renderCombos(preload = null) {
   combos = combos.filter(c => c.active);
   _allCombos = combos;
 
-  if (!combos.length) { section.style.display = 'none'; return; }
+  if (!combos.length) { _combosEmpty(section, grid); return; }
 
   const products = _allProducts || Products.getAll();
   const prodLookup = {};
@@ -77,10 +84,10 @@ async function renderCombos(preload = null) {
     return { combo, items, tiers };
   }).filter(d => d.items.length >= 2 && d.tiers.length);
 
-  if (!cardsData.length) { section.style.display = 'none'; return; }
+  if (!cardsData.length) { _combosEmpty(section, grid); return; }
   const wasHidden = section.style.display === 'none';
 
-  grid.innerHTML = cardsData.map(({ combo, items, tiers }) => {
+  grid.innerHTML = cardsData.map(({ combo, items, tiers }, idx) => {
     const firstSize = tiers[0].size;
 
     // Foto propia del combo (subida por el admin) tiene prioridad; si no hay,
@@ -108,7 +115,7 @@ async function renderCombos(preload = null) {
       </button>`).join('');
 
     return `
-      <article class="combo-card" data-combo-id="${combo.id}" data-selected-size="${firstSize}" role="listitem">
+      <article class="combo-card${idx >= COMBOS_HOME_MAX ? ' combo-card-extra' : ''}" data-combo-id="${combo.id}" data-selected-size="${firstSize}" role="listitem">
         <div class="combo-card-ribbon"></div>
         <div class="combo-card-badge">Combo</div>
         ${bannerHtml}
@@ -127,7 +134,10 @@ async function renderCombos(preload = null) {
   }).join('');
 
   cardsData.forEach(({ combo }) => updateComboCardPricing(combo, products));
+  section.classList.remove('combos-is-empty');
+  _combosAllBtn(cardsData.length);
   if (wasHidden) revealKeepingPlace(() => { section.style.display = ''; });
+  _combosCarousel?.sync();
 
   grid.querySelectorAll('.combo-size-select-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -154,21 +164,40 @@ async function renderCombos(preload = null) {
   });
 }
 
-// Flechas del carrusel de combos — desplazan el track una tarjeta a la vez.
-// Se enganchan una sola vez: el contenedor #combosGrid no se reemplaza entre
+// Sin combos activos: en el Inicio la sección se oculta; en /combos/ se avisa
+function _combosEmpty(section, grid) {
+  _combosAllBtn(0);
+  if (isCombosView()) {
+    grid.innerHTML = '<p class="combos-empty">Por ahora no hay combos activos. Vuelve pronto o mira el <a href="/#catalogo">catálogo</a>.</p>';
+    section.classList.add('combos-is-empty');
+    section.style.display = '';
+  } else {
+    section.style.display = 'none';
+  }
+}
+
+// "Ver todos los combos (N)": solo si hay más de los que entran en el Inicio
+function _combosAllBtn(total) {
+  const wrap = document.getElementById('combosAllWrap');
+  const btn  = document.getElementById('combosAllBtn');
+  if (!wrap || !btn) return;
+  wrap.hidden = total <= COMBOS_HOME_MAX;
+  btn.textContent = `Ver todos los combos (${total}) →`;
+}
+
+// Carrusel de combos: avanza solo, con flechas y con el dedo (auto-carousel.js).
+// Se engancha una sola vez: el contenedor #combosGrid no se reemplaza entre
 // renders, solo su contenido interno.
+let _combosCarousel = null;
 function initCombosCarousel() {
   const track = document.getElementById('combosGrid');
-  const prev  = document.getElementById('combosPrev');
-  const next  = document.getElementById('combosNext');
-  if (!track || !prev || !next) return;
-
-  const scrollByCard = dir => {
-    const card = track.querySelector('.combo-card');
-    const amount = card ? card.getBoundingClientRect().width + 18 : track.clientWidth * 0.8;
-    track.scrollBy({ left: dir * amount, behavior: 'smooth' });
-  };
-
-  prev.addEventListener('click', () => scrollByCard(-1));
-  next.addEventListener('click', () => scrollByCard(1));
+  if (!track || typeof attachAutoCarousel !== 'function') return;
+  _combosCarousel = attachAutoCarousel(track, {
+    prev: document.getElementById('combosPrev'),
+    next: document.getElementById('combosNext'),
+    card: '.combo-card:not(.combo-card-extra)',
+    interval: 4500,
+  });
+  // En /combos/ es una grilla (sin carrusel); al volver al Inicio, se vuelve a medir
+  document.addEventListener('storeviewchange', () => requestAnimationFrame(() => _combosCarousel?.sync()));
 }

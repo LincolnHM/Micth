@@ -171,7 +171,7 @@
       start: 'top top',
       end: 'bottom bottom',
       onUpdate: self => {
-        const glow = self.progress > 0.05 ? '0 0 6px rgba(124,79,176,.5)' : 'none';
+        const glow = self.progress > 0.05 ? '0 0 6px rgba(107,43,255,.5)' : 'none';
         progressEl.style.boxShadow = glow;
       },
     });

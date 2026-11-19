@@ -52,7 +52,7 @@ async function renderDashboard() {
     <!-- KPIs -->
     <div class="dash-kpi-grid">
       <div class="dash-kpi">
-        <div class="dash-kpi-icon" style="background:rgba(124,79,176,.12);color:var(--gold)">📦</div>
+        <div class="dash-kpi-icon" style="background:rgba(107,43,255,.12);color:var(--gold)">📦</div>
         <div class="dash-kpi-body">
           <div class="dash-kpi-val">${todayOrds.length}</div>
           <div class="dash-kpi-lbl">Pedidos hoy</div>

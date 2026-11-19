@@ -12,12 +12,11 @@ function comingSoonWaUrl(p) {
   return `https://wa.me/51917452643?text=${encodeURIComponent(text)}`;
 }
 
-// Flechas solo si las tarjetas no entran en el ancho (en el celular se desliza)
+// Carrusel: avanza solo, con flechas y con el dedo (auto-carousel.js). Las
+// flechas se ocultan solas si las tarjetas entran todas en el ancho.
+let _soonCarousel = null;
 function _soonSyncArrows() {
-  const track = document.getElementById('soonTrack');
-  if (!track) return;
-  const overflow = track.scrollWidth > track.clientWidth + 4;
-  ['soonPrev', 'soonNext'].forEach(id => { const b = document.getElementById(id); if (b) b.hidden = !overflow; });
+  _soonCarousel?.sync();
 }
 
 function renderComingSoon() {
@@ -57,13 +56,12 @@ function renderComingSoon() {
 
 document.addEventListener('DOMContentLoaded', () => {
   const track = document.getElementById('soonTrack');
-  if (!track) return;
-  const scroll = dir => () => {
-    const card = track.querySelector('.soon-card');
-    const step = card ? card.getBoundingClientRect().width + 16 : 240;
-    track.scrollBy({ left: dir * step * 2, behavior: 'smooth' });
-  };
-  document.getElementById('soonPrev')?.addEventListener('click', scroll(-1));
-  document.getElementById('soonNext')?.addEventListener('click', scroll(1));
-  window.addEventListener('resize', _soonSyncArrows);
+  if (!track || typeof attachAutoCarousel !== 'function') return;
+  _soonCarousel = attachAutoCarousel(track, {
+    prev: document.getElementById('soonPrev'),
+    next: document.getElementById('soonNext'),
+    card: '.soon-card',
+    interval: 3800,
+  });
+  document.addEventListener('storeviewchange', () => requestAnimationFrame(_soonSyncArrows));
 });
