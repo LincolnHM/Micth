@@ -1,10 +1,13 @@
-// ─── MICHT Decants · Pestañas Inicio / Catálogo ───────────────────────────────
-// La tienda es una sola página con dos pestañas:
-//   · Inicio   (/)           carrusel, combos, próximamente, accesos al catálogo,
-//                            cómo comprar, galería y contacto
+// ─── MICHT Decants · Pestañas Inicio / Catálogo / Combos ─────────────────────
+// La tienda es una sola página con estas pestañas:
+//   · Inicio   (/)           carrusel, club, combos, próximamente, accesos al
+//                            catálogo, cómo comprar, galería y contacto
 //   · Catálogo (/#catalogo)  buscador, filtros y todos los perfumes. Con filtros
 //                            es /?tipo=arabe#catalogo (los links de antes, como
 //                            /?tipo=arabe sin #catalogo, también lo abren)
+//   · Combos   (/combos/)    todos los combos en una grilla. Es una copia de la
+//                            tienda que genera tools/build-product-pages.mjs; en
+//                            el Inicio solo entran 5 (combos-carousel.js)
 // Lo de cada pestaña lleva la clase .view-inicio o .view-catalogo y el atributo
 // data-view de <html> decide cuál se ve. La pestaña inicial la pone un script
 // del <head> antes de pintar (para que no parpadee), con la misma regla que
@@ -18,11 +21,19 @@ const _SV_CATALOG_KEYS = ['tipo', 'para', 'momento', 'aroma', 'orden', 'q', 'fav
 function storeViewFromUrl() {
   if (location.hash === '#catalogo' || location.pathname.startsWith('/perfume/')) return 'catalogo';
   const q = new URLSearchParams(location.search);
-  return _SV_CATALOG_KEYS.some(k => q.has(k)) ? 'catalogo' : 'inicio';
+  if (_SV_CATALOG_KEYS.some(k => q.has(k))) return 'catalogo';
+  return location.pathname.startsWith('/combos') ? 'combos' : 'inicio';
 }
 
+const _SV_VIEWS = ['inicio', 'catalogo', 'combos'];
 function currentStoreView() {
-  return document.documentElement.dataset.view === 'catalogo' ? 'catalogo' : 'inicio';
+  const v = document.documentElement.dataset.view;
+  return _SV_VIEWS.includes(v) ? v : 'inicio';
+}
+
+function _svUrl(view) {
+  if (view === 'catalogo') return catalogUrl();
+  return view === 'combos' ? '/combos/' : '/';
 }
 
 // Muestra una pestaña (sin tocar el historial) y marca el link del menú
@@ -36,6 +47,8 @@ function applyStoreView(view) {
   });
   // Las animaciones al bajar (GSAP) miden posiciones que cambian con la pestaña
   if (changed && window.ScrollTrigger) requestAnimationFrame(() => ScrollTrigger.refresh());
+  // Los carruseles (auto-carousel.js) vuelven a medir: en otra pestaña miden 0
+  if (changed) document.dispatchEvent(new CustomEvent('storeviewchange', { detail: view }));
 }
 
 function _svPush(view, y = window.scrollY) {
@@ -43,7 +56,7 @@ function _svPush(view, y = window.scrollY) {
     // Dónde estaba el cliente en la pestaña que deja: "atrás" lo devuelve ahí
     history.replaceState({ ...(history.state || {}), y }, '');
     history.scrollRestoration = 'manual';
-    history.pushState({ view }, '', view === 'catalogo' ? catalogUrl() : '/');
+    history.pushState({ view }, '', _svUrl(view));
   } catch (_) {}
 }
 

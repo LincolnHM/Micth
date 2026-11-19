@@ -11,7 +11,7 @@ async function exportCatalogPDF() {
   const win = window.open('', '_blank', 'width=920,height=760');
   if (!win) { showToast('Activa las ventanas emergentes para exportar el PDF.'); if (btn) { btn.disabled = false; btn.style.opacity = ''; } if (label) { label.textContent = 'Exportar PDF'; } return; }
   win.document.open();
-  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Generando catálogo…</title><style>body{background:#0a0a0a;color:#7c4fb0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-size:1.1rem;letter-spacing:.1em}</style></head><body>Generando catálogo…</body></html>');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Generando catálogo…</title><style>body{background:#0a0a0a;color:#6b2bff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-size:1.1rem;letter-spacing:.1em}</style></head><body>Generando catálogo…</body></html>');
 
   try {
     // Los de "Próximamente" aún no se venden: fuera del PDF
@@ -206,7 +206,7 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 
 /* Barra acción */
 .pbar{position:sticky;top:0;z-index:200;background:#1a1005;padding:9px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.pbar-btn{background:#7c4fb0;color:#fff;border:none;border-radius:6px;padding:7px 20px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px}
+.pbar-btn{background:#6b2bff;color:#fff;border:none;border-radius:6px;padding:7px 20px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.4px}
 .pbar-btn:hover{background:#a87fd0}
 .pbar-hint{color:#aaa;font-size:10px;font-family:sans-serif}
 
@@ -214,16 +214,16 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 .wrap{max-width:780px;margin:0 auto;padding:12px 16px 20px}
 
 /* Cabecera */
-.dh{text-align:center;padding-bottom:10px;margin-bottom:12px;border-bottom:2px solid #7c4fb0}
+.dh{text-align:center;padding-bottom:10px;margin-bottom:12px;border-bottom:2px solid #6b2bff}
 .logo{font-size:20pt;font-weight:900;letter-spacing:2px}
-.logo span{color:#7c4fb0}
+.logo span{color:#6b2bff}
 .sub{font-size:7pt;letter-spacing:3px;text-transform:uppercase;color:#888;margin-top:2px}
 .meta{display:flex;justify-content:center;gap:16px;margin-top:6px;font-size:7pt;color:#666;font-family:sans-serif}
-.meta b{color:#7c4fb0}
+.meta b{color:#6b2bff}
 
 /* Sección */
 .section{margin-bottom:10px}
-.sec-title{display:flex;align-items:center;gap:8px;font-size:9.5pt;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1a1005;border-bottom:1.5px solid #7c4fb0;padding-bottom:4px;margin-bottom:8px}
+.sec-title{display:flex;align-items:center;gap:8px;font-size:9.5pt;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1a1005;border-bottom:1.5px solid #6b2bff;padding-bottom:4px;margin-bottom:8px}
 .sec-count{margin-left:auto;font-size:7pt;font-weight:400;color:#aaa;text-transform:none;letter-spacing:0;font-family:sans-serif}
 
 /* Grid de 6 por página: 2 columnas × 3 filas de altura fija */
@@ -232,14 +232,14 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 .new-page{page-break-before:always;break-before:page}
 
 /* Tarjeta — altura fija por grid-auto-rows, overflow recortado */
-.card{border:1px solid #dcd4b8;border-radius:10px;padding:12px 14px;background:#fffef9;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;height:100%;box-shadow:inset 0 0 10px rgba(124,79,176,0.03)}
+.card{border:1px solid #dcd4b8;border-radius:10px;padding:12px 14px;background:#fffef9;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;height:100%;box-shadow:inset 0 0 10px rgba(107,43,255,0.03)}
 
 .c-head{display:flex;gap:12px;margin-bottom:8px;align-items:center}
 .c-img-wrap{flex-shrink:0;width:86px;height:86px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:8px;border:1px solid #eae5d8;padding:4px}
 .c-img{max-width:100%;max-height:100%;object-fit:contain;border-radius:4px}
-.c-img-ph{width:86px;height:86px;background:#efe6f7;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22pt;color:#7c4fb0;font-weight:900;font-family:serif}
+.c-img-ph{width:86px;height:86px;background:#efe6f7;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22pt;color:#6b2bff;font-weight:900;font-family:serif}
 .c-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px}
-.c-brand{font-size:8pt;letter-spacing:1px;text-transform:uppercase;color:#8f5fc0;font-weight:700;font-family:sans-serif}
+.c-brand{font-size:8pt;letter-spacing:1px;text-transform:uppercase;color:#8f5cff;font-weight:700;font-family:sans-serif}
 .c-name{font-size:12.5pt;font-weight:800;color:#1a1005;line-height:1.2;font-family:'Georgia',serif;margin:1px 0 3px}
 .c-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
 .badge{font-size:7.2pt;padding:2px 6px;border-radius:20px;font-family:sans-serif;font-weight:600;white-space:nowrap}
@@ -260,14 +260,14 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 
 /* Pie */
 .df{margin-top:15px;padding-top:6px;border-top:1px solid #ddc9ef;text-align:center;font-size:7pt;color:#aaa;font-family:sans-serif}
-.df b{color:#7c4fb0}
+.df b{color:#6b2bff}
 
 @media print{
   .pbar{display:none!important}
   body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   @page{margin:0.4cm 0.6cm;size:A4 portrait}
   .wrap{max-width:100%!important;width:100%!important;margin:0!important;padding:2px 4px 6px!important}
-  .dh{display:flex!important;justify-content:space-between!important;align-items:center!important;padding-bottom:4px!important;margin-bottom:8px!important;border-bottom:1.5px solid #7c4fb0!important;text-align:left!important}
+  .dh{display:flex!important;justify-content:space-between!important;align-items:center!important;padding-bottom:4px!important;margin-bottom:8px!important;border-bottom:1.5px solid #6b2bff!important;text-align:left!important}
   .logo{font-size:16pt!important;font-weight:900!important}
   .sub{display:none!important}
   .meta{margin-top:0!important;font-size:7.2pt!important;gap:12px!important;display:flex!important;flex-direction:row!important}
@@ -280,7 +280,7 @@ body{font-family:'Georgia','Times New Roman',serif;color:#1a1005;background:#fff
 
 <div class="pbar">
   <button class="pbar-btn" onclick="window.print()">🖨&nbsp; Imprimir / Guardar PDF</button>
-  <span class="pbar-hint">Elige <b style="color:#7c4fb0">"Guardar como PDF"</b> como destino · Incluye <b style="color:#7c4fb0">todos</b> los perfumes</span>
+  <span class="pbar-hint">Elige <b style="color:#6b2bff">"Guardar como PDF"</b> como destino · Incluye <b style="color:#6b2bff">todos</b> los perfumes</span>
 </div>
 
 <div class="wrap">

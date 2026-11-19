@@ -143,7 +143,7 @@ async function renderAccountingSection() {
     const isCurrent = m.month === now.getMonth() && year === thisYear;
     const isBest    = m.revenue > 0 && m.month === bestMonth.month;
     return `
-    <tr style="${isCurrent ? 'background:rgba(124,79,176,.06)' : ''}">
+    <tr style="${isCurrent ? 'background:rgba(107,43,255,.06)' : ''}">
       <td>
         <span style="font-weight:${isCurrent ? '700' : '400'};color:${isCurrent ? 'var(--gold)' : 'var(--text)'}">
           ${m.name}${isCurrent ? '&nbsp;<span style="font-size:.66rem;color:var(--gold-d);font-weight:400">(actual)</span>' : ''}
@@ -167,7 +167,7 @@ async function renderAccountingSection() {
       <td style="text-align:center">
         <button class="btn-days-detail" data-month="${m.month}" data-year="${year}"
                 style="font-size:.78rem;padding:.2rem .55rem;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:3px;cursor:pointer;transition:all .15s"
-                onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)';this.style.background='rgba(124,79,176,.08)'"
+                onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)';this.style.background='rgba(107,43,255,.08)'"
                 onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)';this.style.background='transparent'"
                 title="Ver días de ${m.name}">📅</button>
       </td>
@@ -256,7 +256,7 @@ function drawAccountingChart(stats, year) {
     } else {
       const grad = ctx.createLinearGradient(0, y, 0, padT + cH);
       if (isBest) {
-        grad.addColorStop(0, '#7c4fb0');
+        grad.addColorStop(0, '#6b2bff');
         grad.addColorStop(1, '#3d2560');
       } else if (isCurrent) {
         grad.addColorStop(0, '#4da6ff');
@@ -287,7 +287,7 @@ function drawAccountingChart(stats, year) {
     }
 
     // Etiqueta mes
-    ctx.fillStyle = isCurrent ? '#7c4fb0' : '#666';
+    ctx.fillStyle = isCurrent ? '#6b2bff' : '#666';
     ctx.font      = `${isCurrent ? '600 ' : ''}10px Inter, sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText(m.name.slice(0, 3), x + bw / 2, padT + cH + 16);
@@ -465,7 +465,7 @@ function renderDailyView(allOrders, year, month) {
     const isBest  = d.revenue > 0 && d.revenue === bestRev;
     const isToday = isCurrentMonth && d.day === today;
     return `
-    <tr style="${isToday ? 'background:rgba(124,79,176,.06)' : ''}">
+    <tr style="${isToday ? 'background:rgba(107,43,255,.06)' : ''}">
       <td>
         <span style="font-weight:700;color:${isToday ? 'var(--gold)' : 'var(--text)'}">
           ${d.day} de ${monthName}
@@ -551,7 +551,7 @@ function drawDailyChart(dailyStats, year, month) {
     } else {
       const grad = ctx.createLinearGradient(0, y, 0, padT + cH);
       if (isBest) {
-        grad.addColorStop(0, '#7c4fb0'); grad.addColorStop(1, '#3d2560');
+        grad.addColorStop(0, '#6b2bff'); grad.addColorStop(1, '#3d2560');
       } else if (isToday) {
         grad.addColorStop(0, '#4da6ff'); grad.addColorStop(1, '#1a4a7a');
       } else {
@@ -581,7 +581,7 @@ function drawDailyChart(dailyStats, year, month) {
     // Etiqueta día — mostrar todos si hay espacio, si no cada 5
     const showLabel = bw >= 10 || d.day === 1 || d.day % 5 === 0 || d.day === n;
     if (showLabel) {
-      ctx.fillStyle = isToday ? '#7c4fb0' : isBest ? '#7c4fb0' : '#666';
+      ctx.fillStyle = isToday ? '#6b2bff' : isBest ? '#6b2bff' : '#666';
       ctx.font      = `${(isToday || isBest) ? '700 ' : ''}${bw > 12 ? '9' : '8'}px Inter, sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText(`${d.day}`, x + bw / 2, padT + cH + 14);

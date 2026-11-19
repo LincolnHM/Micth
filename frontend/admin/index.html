@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../imgGato/web.png">
-  <link rel="stylesheet" href="../css/style.css?v=20261117-2212">
+  <link rel="stylesheet" href="../css/style.css?v=20261119-0231">
   <style>
     html, body {
       background: #050505 !important;
@@ -154,8 +154,8 @@
       transition: border-color .18s;
     }
     .precios-table-header {
-      background: rgba(124,79,176,.06);
-      border: 1px solid rgba(124,79,176,.12);
+      background: rgba(107,43,255,.06);
+      border: 1px solid rgba(107,43,255,.12);
     }
 
     @media (max-width: 900px) {
@@ -776,7 +776,7 @@
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;flex-wrap:wrap;gap:.5rem">
               <h3 style="font-family:'Playfair Display',serif;color:var(--white);font-size:.95rem;margin:0">Ingresos por Mes (S/)</h3>
               <div style="display:flex;gap:1rem;font-size:.73rem;color:var(--text3)">
-                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#7c4fb0"></span>Mejor mes</span>
+                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#6b2bff"></span>Mejor mes</span>
                 <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#4da6ff"></span>Mes actual</span>
                 <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#5a5a5a"></span>Otros</span>
               </div>
@@ -834,7 +834,7 @@
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;flex-wrap:wrap;gap:.5rem">
               <h3 style="font-family:'Playfair Display',serif;color:var(--white);font-size:.95rem;margin:0">Ingresos por Día (S/)</h3>
               <div style="display:flex;gap:1rem;font-size:.73rem;color:var(--text3)">
-                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#7c4fb0"></span>Mejor día</span>
+                <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#6b2bff"></span>Mejor día</span>
                 <span style="display:flex;align-items:center;gap:.3rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#4da6ff"></span>Hoy</span>
               </div>
             </div>
@@ -1605,7 +1605,7 @@
       </div>
       <button onclick="document.getElementById('newOrderToast').style.display='none'" style="background:none;border:none;color:var(--text3);font-size:1.1rem;cursor:pointer;line-height:1;padding:0 .2rem;flex-shrink:0">×</button>
     </div>
-    <button onclick="document.querySelector('[data-section=orders]').click();document.getElementById('newOrderToast').style.display='none'" style="margin-top:.6rem;width:100%;padding:.4rem;background:rgba(124,79,176,.12);color:var(--gold);border:1px solid rgba(124,79,176,.3);border-radius:6px;font-size:.76rem;font-weight:700;cursor:pointer">Ver pedidos →</button>
+    <button onclick="document.querySelector('[data-section=orders]').click();document.getElementById('newOrderToast').style.display='none'" style="margin-top:.6rem;width:100%;padding:.4rem;background:rgba(107,43,255,.12);color:var(--gold);border:1px solid rgba(107,43,255,.3);border-radius:6px;font-size:.76rem;font-weight:700;cursor:pointer">Ver pedidos →</button>
   </div>
   <style>
     @keyframes slideInRight { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
@@ -1613,38 +1613,38 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.min.js" integrity="sha384-fPWur1rx/DE6YtXP/x0MD6dd90RgnVsz5yX/DIg7CcVAnTBZsENWuIcpvVTM39ti" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con la tienda) — el orden importa -->
-  <script src="../js/shared/data-core.js?v=20261117-2212"></script>
-  <script src="../js/shared/catalog.js?v=20261117-2212"></script>
-  <script src="../js/shared/data.js?v=20261117-2212"></script>
-  <script src="../js/shared/supabase-config.js?v=20261117-2212"></script>
-  <script src="../js/shared/cloud-orders.js?v=20261117-2212"></script>
-  <script src="../js/shared/cloud-gallery.js?v=20261117-2212"></script>
-  <script src="../js/shared/cloud-products.js?v=20261117-2212"></script>
-  <script src="../js/shared/cloud-combos.js?v=20261117-2212"></script>
+  <script src="../js/shared/data-core.js?v=20261119-0231"></script>
+  <script src="../js/shared/catalog.js?v=20261119-0231"></script>
+  <script src="../js/shared/data.js?v=20261119-0231"></script>
+  <script src="../js/shared/supabase-config.js?v=20261119-0231"></script>
+  <script src="../js/shared/cloud-orders.js?v=20261119-0231"></script>
+  <script src="../js/shared/cloud-gallery.js?v=20261119-0231"></script>
+  <script src="../js/shared/cloud-products.js?v=20261119-0231"></script>
+  <script src="../js/shared/cloud-combos.js?v=20261119-0231"></script>
   <!-- Panel admin -->
-  <script src="../js/admin/core.js?v=20261117-2212"></script>
-  <script src="../js/admin/ui.js?v=20261117-2212"></script>
-  <script src="../js/admin/login.js?v=20261117-2212"></script>
-  <script src="../js/admin/nav.js?v=20261117-2212"></script>
-  <script src="../js/admin/dashboard.js?v=20261117-2212"></script>
-  <script src="../js/admin/products.js?v=20261117-2212"></script>
-  <script src="../js/admin/catalog-pdf.js?v=20261117-2212"></script>
-  <script src="../js/admin/orders.js?v=20261117-2212"></script>
-  <script src="../js/admin/order-edit.js?v=20261117-2212"></script>
-  <script src="../js/admin/order-shalom.js?v=20261117-2212"></script>
-  <script src="../js/admin/orders-realtime.js?v=20261117-2212"></script>
-  <script src="../js/admin/combos.js?v=20261117-2212"></script>
-  <script src="../js/admin/site-content.js?v=20261117-2212"></script>
-  <script src="../js/admin/users.js?v=20261117-2212"></script>
-  <script src="../js/admin/accounting.js?v=20261117-2212"></script>
-  <script src="../js/admin/stats.js?v=20261117-2212"></script>
-  <script src="../js/admin/pricing.js?v=20261117-2212"></script>
-  <script src="../js/admin/tools.js?v=20261117-2212"></script>
-  <script src="../js/admin/quote.js?v=20261117-2212"></script>
-  <script src="../js/admin/cash.js?v=20261117-2212"></script>
-  <script src="../js/admin/seller.js?v=20261117-2212"></script>
-  <script src="../js/admin/sellers-admin.js?v=20261117-2212"></script>
-  <script src="../js/admin/workers.js?v=20261117-2212"></script>
-  <script src="../js/admin/club-admin.js?v=20261117-2212"></script>
+  <script src="../js/admin/core.js?v=20261119-0231"></script>
+  <script src="../js/admin/ui.js?v=20261119-0231"></script>
+  <script src="../js/admin/login.js?v=20261119-0231"></script>
+  <script src="../js/admin/nav.js?v=20261119-0231"></script>
+  <script src="../js/admin/dashboard.js?v=20261119-0231"></script>
+  <script src="../js/admin/products.js?v=20261119-0231"></script>
+  <script src="../js/admin/catalog-pdf.js?v=20261119-0231"></script>
+  <script src="../js/admin/orders.js?v=20261119-0231"></script>
+  <script src="../js/admin/order-edit.js?v=20261119-0231"></script>
+  <script src="../js/admin/order-shalom.js?v=20261119-0231"></script>
+  <script src="../js/admin/orders-realtime.js?v=20261119-0231"></script>
+  <script src="../js/admin/combos.js?v=20261119-0231"></script>
+  <script src="../js/admin/site-content.js?v=20261119-0231"></script>
+  <script src="../js/admin/users.js?v=20261119-0231"></script>
+  <script src="../js/admin/accounting.js?v=20261119-0231"></script>
+  <script src="../js/admin/stats.js?v=20261119-0231"></script>
+  <script src="../js/admin/pricing.js?v=20261119-0231"></script>
+  <script src="../js/admin/tools.js?v=20261119-0231"></script>
+  <script src="../js/admin/quote.js?v=20261119-0231"></script>
+  <script src="../js/admin/cash.js?v=20261119-0231"></script>
+  <script src="../js/admin/seller.js?v=20261119-0231"></script>
+  <script src="../js/admin/sellers-admin.js?v=20261119-0231"></script>
+  <script src="../js/admin/workers.js?v=20261119-0231"></script>
+  <script src="../js/admin/club-admin.js?v=20261119-0231"></script>
 </body>
 </html>

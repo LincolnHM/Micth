@@ -49,13 +49,13 @@
       {
         title: "Mascota MICHT 🐾",
         text: "Te presentamos a Michty, nuestro asistente estrella de empaquetado. Supervisa que todas las cajas tengan suficiente amor antes de salir.",
-        img: "imgGato/gato-removebg-preview.png",
+        img: "imgGato/gato-micht-360.webp",
         icon: "🐈"
       },
       {
         title: "Control de Calidad 😂",
         text: "En realidad prefiere dormir dentro de las cajas vacías, ¡pero nos inspira a ofrecer el servicio más cariñoso de todo el país!",
-        img: "imgGato/gato-removebg-preview.png",
+        img: "imgGato/gato-micht-360.webp",
         icon: "💖"
       }
     ]

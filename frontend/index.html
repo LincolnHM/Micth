@@ -5,13 +5,14 @@
   <!-- Rutas relativas siempre desde la raíz: la ficha de un perfume cambia la
        dirección a /perfume/<nombre>/ y sin esto fallarían imágenes como el QR de Yape -->
   <base href="/">
-  <!-- Pestaña inicial (Inicio o Catálogo) antes de pintar, para que no parpadee.
+  <!-- Pestaña inicial (Inicio, Catálogo o Combos) antes de pintar, para que no parpadee.
        Misma regla que storeViewFromUrl() en js/store/store-view.js -->
   <script>
     (function () {
       var cat = location.hash === '#catalogo' || location.pathname.indexOf('/perfume/') === 0 ||
                 /[?&](tipo|para|momento|aroma|orden|q|fav|p|perfume|export)=/.test(location.search);
-      document.documentElement.setAttribute('data-view', cat ? 'catalogo' : 'inicio');
+      var combos = !cat && location.pathname.indexOf('/combos') === 0;
+      document.documentElement.setAttribute('data-view', cat ? 'catalogo' : combos ? 'combos' : 'inicio');
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,7 +32,7 @@
   <meta name="robots"         content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
   <link rel="sitemap" type="application/xml" href="/sitemap.xml">
   <meta name="author"         content="Micht Decants">
-  <meta name="theme-color"    content="#7c4fb0">
+  <meta name="theme-color"    content="#6b2bff">
   <meta name="application-name" content="Micht Decants">
   <link rel="canonical"       href="https://michtdecants.com/">
 
@@ -206,14 +207,14 @@
   <link rel="icon" type="image/png" href="imgGato/icons/icon-192.png">
   <link rel="apple-touch-icon" href="imgGato/icons/icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261117-2212">
+  <link rel="stylesheet" href="css/style.css?v=20261119-0231">
   <!-- La pantalla de carga solo se muestra la primera vez en la sesión; en las
        siguientes visitas (volver de Nosotros, recargar) no hace esperar. -->
   <script>try { if (sessionStorage.getItem('micht_loader_seen')) document.documentElement.classList.add('pl-skip'); } catch (e) {}</script>
   <style>
     /* ── Perfumes Enteros — estilos adicionales ─────────── */
-    .filter-btn-entero { border-color: rgba(124,79,176,.35) !important; }
-    .filter-btn-entero.active { background: rgba(124,79,176,.15) !important; color: var(--gold) !important; border-color: rgba(124,79,176,.6) !important; }
+    .filter-btn-entero { border-color: rgba(107,43,255,.35) !important; }
+    .filter-btn-entero.active { background: rgba(107,43,255,.15) !important; color: var(--gold) !important; border-color: rgba(107,43,255,.6) !important; }
     .product-content-desc {
       font-size: .75rem; font-style: italic;
       color: var(--gold); letter-spacing: .03em;
@@ -235,21 +236,21 @@
     .catalog-banner-entero {
       display: flex; align-items: flex-start; justify-content: space-between;
       gap: 1.5rem; flex-wrap: wrap;
-      background: linear-gradient(135deg, rgba(124,79,176,.08) 0%, rgba(124,79,176,.04) 100%);
-      border: 1px solid rgba(124,79,176,.22);
+      background: linear-gradient(135deg, rgba(107,43,255,.08) 0%, rgba(107,43,255,.04) 100%);
+      border: 1px solid rgba(107,43,255,.22);
       border-radius: 20px; padding: 1.75rem 2rem;
       position: relative; overflow: hidden;
     }
     .catalog-banner-entero::before {
       content: '✦'; position: absolute; right: 1.5rem; top: 1rem;
-      font-size: 5rem; color: rgba(124,79,176,.08); line-height: 1; pointer-events: none;
+      font-size: 5rem; color: rgba(107,43,255,.08); line-height: 1; pointer-events: none;
     }
     .cbe-eyebrow { font-size: .6rem; letter-spacing: .35em; text-transform: uppercase; color: var(--gold); margin-bottom: .5rem; opacity: .8; }
     .cbe-title { font-family: var(--font-serif); font-size: clamp(1.6rem,4vw,2.4rem); font-weight: 700; color: var(--white); line-height: 1.15; margin-bottom: .6rem; }
     .cbe-title span { color: var(--gold); }
     .cbe-sub { font-size: .85rem; color: var(--text2); max-width: 420px; line-height: 1.65; }
     .cbe-tags { display: flex; flex-wrap: wrap; gap: .5rem; align-items: flex-start; padding-top: .25rem; }
-    .cbe-tags span { font-size: .7rem; padding: .28rem .75rem; border-radius: 50px; background: rgba(124,79,176,.1); border: 1px solid rgba(124,79,176,.25); color: var(--gold); letter-spacing: .04em; white-space: nowrap; }
+    .cbe-tags span { font-size: .7rem; padding: .28rem .75rem; border-radius: 50px; background: rgba(107,43,255,.1); border: 1px solid rgba(107,43,255,.25); color: var(--gold); letter-spacing: .04em; white-space: nowrap; }
     @media (max-width: 600px) {
       #catalogBanner { padding: 1.25rem 0 .75rem; }
       .catalog-banner-entero { padding: 1.25rem 1.1rem; flex-direction: column; gap: 1rem; }
@@ -268,7 +269,7 @@
   <div id="pageLoader" class="page-loader" role="status" aria-live="polite" aria-label="Cargando Micht Decants">
     <div class="pl-glow" aria-hidden="true"></div>
     <div class="pl-content">
-      <img src="imgGato/gato-removebg-preview.png" alt="" class="pl-mascot" aria-hidden="true">
+      <img src="imgGato/gato-micht-360.webp" alt="" class="pl-mascot" aria-hidden="true">
       <p class="pl-wordmark">Micht<span> Decants</span></p>
       <div class="pl-bar"><div class="pl-bar-fill"></div></div>
       <p class="pl-caption">Preparando tu experiencia</p>
@@ -321,15 +322,12 @@
   <header class="header header-store">
     <div class="header-inner container">
       <a href="/" class="logo" data-go="inicio" aria-label="Micht Decants — inicio">
-        <div>
-          <h1 class="logo-text">Micht<span> Decants</span></h1>
-          <p class="logo-sub">Perfumería Árabe & Diseñador</p>
-        </div>
+        <h1 class="logo-mark"><img class="logo-img" src="imgGato/logo-micht-360.webp" srcset="imgGato/logo-micht-360.webp 360w, imgGato/logo-micht-640.webp 640w" sizes="104px" width="360" height="192" alt="Micht Decants" fetchpriority="high" decoding="async"></h1>
       </a>
       <nav class="nav" aria-label="Principal">
         <a href="/" data-go="inicio" data-nav-view="inicio">Inicio</a>
         <a href="#catalogo" id="navCatalogLink" data-nav-view="catalogo">Catálogo</a>
-        <a href="#combos" id="navCombosLink">Combos</a>
+        <a href="/combos/" id="navCombosLink" data-nav-view="combos">Combos</a>
         <a href="#catalogo" id="navEnteroLink" class="nav-accent">Perfumes enteros</a>
         <a href="#club" id="navClubLink" class="nav-club" hidden>🐾 Club MICHT</a>
         <a href="nosotros/">Nosotros</a>
@@ -434,7 +432,7 @@
     <nav class="mobile-nav">
       <a href="/" class="mobile-nav-link" data-go="inicio" data-nav-view="inicio">Inicio</a>
       <a href="#catalogo" class="mobile-nav-link" id="mobileCatalogLink" data-nav-view="catalogo">Catálogo</a>
-      <a href="#combos" class="mobile-nav-link" id="mobileCombosLink">Combos</a>
+      <a href="/combos/" class="mobile-nav-link" id="mobileCombosLink" data-nav-view="combos">Combos</a>
       <a href="#como-comprar" class="mobile-nav-link">Cómo comprar</a>
       <a href="#catalogo" class="mobile-nav-link" id="mobileNavEnteroLink" style="color:var(--gold)">✦ Perfumes Enteros</a>
       <a href="#club" class="mobile-nav-link mobile-nav-club" id="mobileNavClubLink" hidden>🐾 Club MICHT</a>
@@ -487,7 +485,28 @@
       <div class="carousel-progress-bar" id="carouselProgressBar"></div>
     </div>
     <div class="hero-mascot" aria-hidden="true">
-      <img src="imgGato/gato-removebg-preview.png" alt="Mascota MICHT" class="mascot-img">
+      <img src="imgGato/gato-micht-720.webp" srcset="imgGato/gato-micht-360.webp 360w, imgGato/gato-micht-720.webp 720w" sizes="(max-width: 900px) 220px, 340px" width="720" height="740" alt="Mascota MICHT: gato con corona y perfume" class="mascot-img">
+    </div>
+  </section>
+
+  <!-- ── Club MICHT: tarjetas de fidelidad (js/store/club.js) ──────────────────
+       Oculta hasta saber que el SQL del Club está corrido. -->
+  <section class="club-home view-inicio" id="clubHome" aria-labelledby="clubHomeTitle" hidden>
+    <div class="container club-home-inner">
+      <div class="club-home-cards" id="clubHomeCards"></div>
+      <div class="club-home-copy">
+        <span class="combos-eyebrow">🐾 Club MICHT</span>
+        <h2 class="combos-title" id="clubHomeTitle">Cada compra suma. <em>Tu pedido 10 va con regalo.</em></h2>
+        <p class="club-home-sub" id="clubHomeSub">Cada pedido pagado suma 1 huellita. Junta 9 y tu <strong>pedido 10 lleva un decant de 5 ml gratis</strong>.</p>
+        <ul class="club-home-tiers">
+          <li class="is-golden"><b>Golden</b><span>Pedidos desde S/ 15 · regalo: 5 ml de cualquier árabe</span></li>
+          <li class="is-black"><b>Black</b><span>Pedidos desde S/ 60 · regalo: 5 ml árabe o diseñador</span></li>
+        </ul>
+        <div class="club-home-actions">
+          <button type="button" class="club-cta" id="clubHomeCta" data-action="register">Crear mi cuenta gratis</button>
+          <button type="button" class="club-link" id="clubHomeMore">¿Cómo funciona?</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -525,8 +544,13 @@
           <button class="combos-arrow combos-arrow-prev" id="combosPrev" aria-label="Combo anterior" type="button">‹</button>
           <div class="combos-track" id="combosGrid" role="list">
             <!-- Renderizado por js/store/combos-carousel.js -->
+            <p class="combos-empty combos-loading">Cargando combos…</p>
           </div>
           <button class="combos-arrow combos-arrow-next" id="combosNext" aria-label="Siguiente combo" type="button">›</button>
+        </div>
+        <!-- Solo si hay más de 5 combos (js/store/combos-carousel.js) -->
+        <div class="combos-all-wrap" id="combosAllWrap" hidden>
+          <a href="/combos/" class="combos-all" id="combosAllBtn">Ver todos los combos →</a>
         </div>
       </div>
     </div>
@@ -585,26 +609,6 @@
     </div>
   </section>
 
-  <!-- ── Club MICHT: tarjetas de fidelidad (js/store/club.js) ──────────────────
-       Oculta hasta saber que el SQL del Club está corrido. -->
-  <section class="club-home view-inicio" id="clubHome" aria-labelledby="clubHomeTitle" hidden>
-    <div class="container club-home-inner">
-      <div class="club-home-cards" id="clubHomeCards"></div>
-      <div class="club-home-copy">
-        <span class="combos-eyebrow">🐾 Club MICHT</span>
-        <h2 class="combos-title" id="clubHomeTitle">Cada compra suma. <em>Tu pedido 10 va con regalo.</em></h2>
-        <p class="club-home-sub" id="clubHomeSub">Cada pedido pagado suma 1 huellita. Junta 9 y tu <strong>pedido 10 lleva un decant de 5 ml gratis</strong>.</p>
-        <ul class="club-home-tiers">
-          <li class="is-golden"><b>Golden</b><span>Pedidos desde S/ 15 · regalo: 5 ml de cualquier árabe</span></li>
-          <li class="is-black"><b>Black</b><span>Pedidos desde S/ 60 · regalo: 5 ml árabe o diseñador</span></li>
-        </ul>
-        <div class="club-home-actions">
-          <button type="button" class="club-cta" id="clubHomeCta" data-action="register">Crear mi cuenta gratis</button>
-          <button type="button" class="club-link" id="clubHomeMore">¿Cómo funciona?</button>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <!-- ── Buscar y filtrar el catálogo ───────────────────────────────────────
        Barra fija: el buscador siempre visible, los tipos como chips y el botón
@@ -899,7 +903,7 @@
 
         <!-- Columna 1: Marca -->
         <div class="footer-brand">
-          <p class="footer-logo">MICHT<span> Decants</span></p>
+          <p class="footer-logo"><img class="footer-logo-img" src="imgGato/logo-micht-640.webp" srcset="imgGato/logo-micht-360.webp 360w, imgGato/logo-micht-640.webp 640w" sizes="210px" width="640" height="342" alt="Micht Decants" loading="lazy" decoding="async"></p>
           <p class="footer-tagline">Perfumería Árabe &amp; Diseñador</p>
           <p class="footer-desc">Decants auténticos desde S/ 12. Fragancias de Lattafa, Afnan, Armaf, Dior, Chanel y más. Envíos a todo el Perú.</p>
         </div>
@@ -910,6 +914,7 @@
           <nav class="footer-nav" aria-label="Footer">
             <a href="#catalogo">Catálogo completo</a>
             <a href="#catalogo" id="footerEnteroLink">Perfumes Enteros</a>
+            <a href="/combos/">Combos</a>
             <a href="#como-comprar">Cómo comprar</a>
             <a href="marcas/">Marcas</a>
             <a href="nosotros/">Nosotros</a>
@@ -1501,38 +1506,39 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con el panel admin) — el orden importa -->
-  <script src="js/shared/data-core.js?v=20261117-2212"></script>
-  <script src="js/shared/catalog.js?v=20261117-2212"></script>
-  <script src="js/shared/data.js?v=20261117-2212"></script>
-  <script src="js/shared/supabase-config.js?v=20261117-2212"></script>
-  <script src="js/shared/cloud-orders.js?v=20261117-2212"></script>
-  <script src="js/shared/cloud-gallery.js?v=20261117-2212"></script>
-  <script src="js/shared/cloud-products.js?v=20261117-2212"></script>
-  <script src="js/shared/slugs.js?v=20261117-2212"></script>
-  <script src="js/shared/cloud-combos.js?v=20261117-2212"></script>
+  <script src="js/shared/data-core.js?v=20261119-0231"></script>
+  <script src="js/shared/catalog.js?v=20261119-0231"></script>
+  <script src="js/shared/data.js?v=20261119-0231"></script>
+  <script src="js/shared/supabase-config.js?v=20261119-0231"></script>
+  <script src="js/shared/cloud-orders.js?v=20261119-0231"></script>
+  <script src="js/shared/cloud-gallery.js?v=20261119-0231"></script>
+  <script src="js/shared/cloud-products.js?v=20261119-0231"></script>
+  <script src="js/shared/slugs.js?v=20261119-0231"></script>
+  <script src="js/shared/cloud-combos.js?v=20261119-0231"></script>
   <!-- Tienda -->
-  <script src="js/store/announcement.js?v=20261117-2212"></script>
-  <script src="js/store/seasonal-theme.js?v=20261117-2212"></script>
-  <script src="js/store/carousel.js?v=20261117-2212"></script>
-  <script src="js/store/cart.js?v=20261117-2212"></script>
-  <script src="js/store/catalog-view.js?v=20261117-2212"></script>
-  <script src="js/store/new-arrivals.js?v=20261117-2212"></script>
-  <script src="js/store/coming-soon.js?v=20261117-2212"></script>
-  <script src="js/store/filters-ui.js?v=20261117-2212"></script>
-  <script src="js/store/combos-carousel.js?v=20261117-2212"></script>
-  <script src="js/store/faq.js?v=20261117-2212"></script>
-  <script src="js/store/product-detail.js?v=20261117-2212"></script>
-  <script src="js/store/combo-detail.js?v=20261117-2212"></script>
-  <script src="js/store/store-view.js?v=20261117-2212"></script>
-  <script src="js/store/init.js?v=20261117-2212"></script>
-  <script src="js/store/gallery.js?v=20261117-2212"></script>
-  <script src="js/store/scent-finder.js?v=20261117-2212"></script>
-  <script src="js/store/checkout.js?v=20261117-2212"></script>
-  <script src="js/store/customer-auth.js?v=20261117-2212"></script>
-  <script src="js/store/club.js?v=20261117-2212"></script>
-  <script src="js/store/chatbot.js?v=20261117-2212"></script>
-  <script src="js/store/animations.js?v=20261117-2212"></script>
-  <script src="js/store/gsap-animations.js?v=20261117-2212"></script>
+  <script src="js/store/announcement.js?v=20261119-0231"></script>
+  <script src="js/store/seasonal-theme.js?v=20261119-0231"></script>
+  <script src="js/store/carousel.js?v=20261119-0231"></script>
+  <script src="js/store/cart.js?v=20261119-0231"></script>
+  <script src="js/store/catalog-view.js?v=20261119-0231"></script>
+  <script src="js/store/new-arrivals.js?v=20261119-0231"></script>
+  <script src="js/store/auto-carousel.js?v=20261119-0231"></script>
+  <script src="js/store/coming-soon.js?v=20261119-0231"></script>
+  <script src="js/store/filters-ui.js?v=20261119-0231"></script>
+  <script src="js/store/combos-carousel.js?v=20261119-0231"></script>
+  <script src="js/store/faq.js?v=20261119-0231"></script>
+  <script src="js/store/product-detail.js?v=20261119-0231"></script>
+  <script src="js/store/combo-detail.js?v=20261119-0231"></script>
+  <script src="js/store/store-view.js?v=20261119-0231"></script>
+  <script src="js/store/init.js?v=20261119-0231"></script>
+  <script src="js/store/gallery.js?v=20261119-0231"></script>
+  <script src="js/store/scent-finder.js?v=20261119-0231"></script>
+  <script src="js/store/checkout.js?v=20261119-0231"></script>
+  <script src="js/store/customer-auth.js?v=20261119-0231"></script>
+  <script src="js/store/club.js?v=20261119-0231"></script>
+  <script src="js/store/chatbot.js?v=20261119-0231"></script>
+  <script src="js/store/animations.js?v=20261119-0231"></script>
+  <script src="js/store/gsap-animations.js?v=20261119-0231"></script>
   <script>
     // ── Mobile menu toggle ───────────────────────────────────
     (function () {

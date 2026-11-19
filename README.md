@@ -29,6 +29,7 @@ Al publicar, `tools/build-product-pages.mjs` lee el catálogo de Supabase y gene
 | `/marca/<marca>/` | "decants de Valentino", "Lattafa Perú" |
 | `/coleccion/<tipo>/` | "decants árabes", "perfumes para mujer decant" |
 | `/marcas/` | índice de marcas y colecciones (enlazado desde el pie de página) |
+| `/combos/` | todos los combos (el Inicio muestra 5 y el botón "Ver todos"). Se genera siempre, aunque Supabase no responda |
 
 Todas van en `sitemap-perfumes.xml`. Perfumes, precios y marcas nuevas del panel salen solos en la siguiente publicación (o en la diaria de las 5 a. m.). Para probarlo sin internet: `PAGES_OFFLINE=1 node tools/build-product-pages.mjs` (usa el catálogo local).
 
@@ -45,10 +46,11 @@ frontend/                       ← lo público (la raíz del sitio)
     shared/   Lo que usan la tienda Y el admin
               data-core.js · catalog.js (catálogo inicial de perfumes) · data.js (APIs locales)
               supabase-config.js (conexión) · cloud-orders / cloud-products / cloud-combos / cloud-gallery
-    store/    Solo la tienda: cart, catalog-view, combos-carousel, product-detail, init, checkout,
+    store/    Solo la tienda: cart, catalog-view, combos-carousel, auto-carousel (carruseles que avanzan solos),
+              product-detail, init, checkout,
               customer-auth, scent-finder, carousel, gallery, announcement, seasonal-theme, animaciones…
     admin/    Solo el panel: un archivo por sección (products, orders, combos, pricing, cash, stats…)
-  imgGato/                      Mascota, logo e íconos de la app
+  imgGato/                      Mascota, logo (logo-micht-360/640.webp, fondo transparente) e íconos de la app
   img PERFUMES/                 Fotos de los decants
   imgPerfumesEnteros/           Fotos de perfumes enteros
   images/                       QR de Yape

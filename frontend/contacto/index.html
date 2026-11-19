@@ -24,7 +24,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../imgGato/icons/icon-192.png">
   <link rel="apple-touch-icon" href="../imgGato/icons/icon-192.png">
-  <link rel="stylesheet" href="../css/style.css?v=20261117-2212">
+  <link rel="stylesheet" href="../css/style.css?v=20261119-0231">
   <style>
     /* ── Página Contacto ─────────────────────────── */
     .contact-page {
@@ -43,7 +43,7 @@
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       width: 800px; height: 500px;
-      background: radial-gradient(ellipse, rgba(124,79,176,.07), transparent 65%);
+      background: radial-gradient(ellipse, rgba(107,43,255,.07), transparent 65%);
       pointer-events: none;
     }
 
@@ -88,25 +88,25 @@
     .cp-card {
       background: rgba(20,20,20,.75);
       backdrop-filter: blur(20px) saturate(160%);
-      border: 1px solid rgba(124,79,176,.18);
+      border: 1px solid rgba(107,43,255,.18);
       border-radius: 20px;
       padding: 2rem 1.5rem;
       text-align: center;
-      box-shadow: 0 0 50px rgba(124,79,176,.05), inset 0 1px 0 rgba(124,79,176,.1);
+      box-shadow: 0 0 50px rgba(107,43,255,.05), inset 0 1px 0 rgba(107,43,255,.1);
       transition: border-color .3s, transform .3s cubic-bezier(.22,1,.36,1);
     }
     /* Hover solo con mouse: en celular el efecto se quedaba "pegado" tras tocar */
     @media (hover: hover) and (pointer: fine) {
       .cp-card:hover {
-        border-color: rgba(124,79,176,.4);
+        border-color: rgba(107,43,255,.4);
         transform: translateY(-6px);
       }
     }
-    .cp-card:active { border-color: rgba(124,79,176,.4); }
+    .cp-card:active { border-color: rgba(107,43,255,.4); }
     .cp-card-icon {
       width: 52px; height: 52px;
-      background: rgba(124,79,176,.1);
-      border: 1px solid rgba(124,79,176,.25);
+      background: rgba(107,43,255,.1);
+      border: 1px solid rgba(107,43,255,.25);
       border-radius: 14px;
       display: flex; align-items: center; justify-content: center;
       margin: 0 auto 1.2rem;
@@ -176,16 +176,16 @@
       background: rgba(20,20,20,.75);
       backdrop-filter: blur(20px) saturate(160%);
       -webkit-backdrop-filter: blur(20px) saturate(160%);
-      border: 1px solid rgba(124,79,176,.22); border-radius: 22px;
+      border: 1px solid rgba(107,43,255,.22); border-radius: 22px;
       overflow: hidden;
-      box-shadow: 0 18px 60px rgba(0,0,0,.35), 0 0 50px rgba(124,79,176,.06), inset 0 1px 0 rgba(124,79,176,.12);
+      box-shadow: 0 18px 60px rgba(0,0,0,.35), 0 0 50px rgba(107,43,255,.06), inset 0 1px 0 rgba(107,43,255,.12);
     }
     .cp-map-info { padding: 2rem 1.75rem; display: flex; flex-direction: column; gap: .35rem; }
     .cp-map-badge {
       align-self: flex-start; display: inline-flex; align-items: center; gap: .4rem;
       font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-l);
       padding: .32rem .7rem; border-radius: 50px;
-      background: rgba(124,79,176,.12); border: 1px solid rgba(124,79,176,.28);
+      background: rgba(107,43,255,.12); border: 1px solid rgba(107,43,255,.28);
       margin-bottom: .6rem;
     }
     .cp-map-badge svg { width: 12px; height: 12px; }
@@ -199,14 +199,14 @@
       min-height: 42px; font: inherit;
       font-size: .78rem; font-weight: 600; color: var(--gold-l); text-decoration: none; cursor: pointer;
       padding: .55rem 1rem; border-radius: 50px;
-      border: 1px solid rgba(124,79,176,.4); background: rgba(124,79,176,.08);
+      border: 1px solid rgba(107,43,255,.4); background: rgba(107,43,255,.08);
       transition: background .2s, border-color .2s, transform .2s;
     }
     .cp-map-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
-    .cp-map-btn:hover { background: rgba(124,79,176,.18); color: var(--gold-l); }
+    .cp-map-btn:hover { background: rgba(107,43,255,.18); color: var(--gold-l); }
     .cp-map-btn:active { transform: scale(.96); }
     .cp-map-btn--primary { background: var(--gold); border-color: var(--gold); color: #fff; }
-    .cp-map-btn--primary:hover { background: #9b72c9; border-color: #9b72c9; color: #fff; }
+    .cp-map-btn--primary:hover { background: #9a6bff; border-color: #9a6bff; color: #fff; }
     .cp-map-btn.is-done { border-color: #25d366; color: #25d366; }
 
     .cp-map-frame { position: relative; min-height: 360px; background: #161616; isolation: isolate; }
@@ -242,7 +242,7 @@
     .cp-map-toolbar {
       position: absolute; top: .75rem; left: .75rem; z-index: 3;
       display: inline-flex; padding: 3px; gap: 2px; border-radius: 50px;
-      background: rgba(12,12,12,.82); border: 1px solid rgba(124,79,176,.3);
+      background: rgba(12,12,12,.82); border: 1px solid rgba(107,43,255,.3);
       backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     }
     .cp-map-toolbar button {
@@ -257,7 +257,7 @@
       display: inline-flex; align-items: center; gap: .35rem;
       font-size: .7rem; font-weight: 600; color: #fff; text-decoration: none;
       padding: .5rem .85rem; min-height: 34px; border-radius: 50px;
-      background: rgba(12,12,12,.82); border: 1px solid rgba(124,79,176,.3);
+      background: rgba(12,12,12,.82); border: 1px solid rgba(107,43,255,.3);
       backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     }
     .cp-map-expand svg { width: 13px; height: 13px; }
@@ -351,16 +351,13 @@
   <header class="header header-store">
     <div class="header-inner container">
       <a href="../" class="logo" aria-label="Micht Decants — inicio">
-        <div>
-          <p class="logo-text">Micht<span> Decants</span></p>
-          <p class="logo-sub">Perfumería Árabe & Diseñador</p>
-        </div>
+        <p class="logo-mark"><img class="logo-img" src="../imgGato/logo-micht-360.webp" srcset="../imgGato/logo-micht-360.webp 360w, ../imgGato/logo-micht-640.webp 640w" sizes="104px" width="360" height="192" alt="Micht Decants" fetchpriority="high" decoding="async"></p>
       </a>
       <!-- Mismo menú que el Inicio (los enlaces llevan a la tienda) -->
       <nav class="nav" aria-label="Principal">
         <a href="../">Inicio</a>
         <a href="../#catalogo">Catálogo</a>
-        <a href="../#combos">Combos</a>
+        <a href="../combos/">Combos</a>
         <a href="../?tipo=entero#catalogo" class="nav-accent">Perfumes enteros</a>
         <a href="../#club" class="nav-club">🐾 Club MICHT</a>
         <a href="../nosotros/">Nosotros</a>
@@ -392,7 +389,7 @@
     <nav class="mobile-nav">
       <a href="../" class="mobile-nav-link">Inicio</a>
       <a href="../#catalogo" class="mobile-nav-link">Catálogo</a>
-      <a href="../#combos" class="mobile-nav-link">Combos</a>
+      <a href="../combos/" class="mobile-nav-link">Combos</a>
       <a href="../#como-comprar" class="mobile-nav-link">Cómo comprar</a>
       <a href="../?tipo=entero#catalogo" class="mobile-nav-link" style="color:var(--gold)">✦ Perfumes Enteros</a>
       <a href="../#club" class="mobile-nav-link mobile-nav-club">🐾 Club MICHT</a>
@@ -562,7 +559,7 @@
       <div class="footer-inner container">
 
         <div class="footer-brand">
-          <p class="footer-logo">MICHT<span> Decants</span></p>
+          <p class="footer-logo"><img class="footer-logo-img" src="../imgGato/logo-micht-640.webp" srcset="../imgGato/logo-micht-360.webp 360w, ../imgGato/logo-micht-640.webp 640w" sizes="210px" width="640" height="342" alt="Micht Decants" loading="lazy" decoding="async"></p>
           <p class="footer-tagline">Perfumería Árabe &amp; Diseñador</p>
           <p class="footer-desc">Decants auténticos desde S/ 12. Fragancias de Lattafa, Afnan, Armaf, Dior, Chanel y más. Envíos a todo el Perú.</p>
         </div>
@@ -572,6 +569,7 @@
           <nav class="footer-nav" aria-label="Footer">
             <a href="../#catalogo">Catálogo completo</a>
             <a href="../?tipo=entero#catalogo">Perfumes Enteros</a>
+            <a href="../combos/">Combos</a>
             <a href="../#como-comprar">Cómo comprar</a>
             <a href="../marcas/">Marcas</a>
             <a href="../nosotros/">Nosotros</a>
@@ -687,8 +685,8 @@
 
   <div class="overlay" id="overlay" aria-hidden="true"></div>
 
-  <script src="../js/store/cart-mini.js?v=20261117-2212"></script>
-  <script src="../js/store/seasonal-theme.js?v=20261117-2212"></script>
+  <script src="../js/store/cart-mini.js?v=20261119-0231"></script>
+  <script src="../js/store/seasonal-theme.js?v=20261119-0231"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
   <script>

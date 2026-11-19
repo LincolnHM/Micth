@@ -5,6 +5,9 @@
 // "Próximamente" no entran; si no queda nada nuevo, la sección se oculta sola.
 
 const NEW_ARRIVALS_MAX = 10;
+// Apagada por ahora (pedido del dueño). Para volver a mostrarla en el Inicio
+// basta con poner true: el HTML (#nuevos) y los estilos siguen en su lugar.
+const NEW_ARRIVALS_ENABLED = false;
 
 // Flechas solo si las tarjetas no entran en el ancho (en el celular se desliza)
 function _newSyncArrows() {
@@ -18,6 +21,7 @@ function renderNewArrivals() {
   const section = document.getElementById('nuevos');
   const track   = document.getElementById('newTrack');
   if (!section || !track) return;
+  if (!NEW_ARRIVALS_ENABLED) { section.hidden = true; track.innerHTML = ''; return; }
   const time = p => new Date(p.date).getTime() || 0;
   const list = (_allProducts || [])
     .filter(p => isNewArrival(p) && productIsPurchasable(p))

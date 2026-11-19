@@ -3,6 +3,7 @@
 //   · frontend/marca/<marca>/       una por marca: "Decants de Valentino en Perú"
 //   · frontend/coleccion/<tipo>/    árabes, diseñador, nicho, enteros, hombre, mujer, unisex
 //   · frontend/marcas/              índice de todas las marcas y colecciones
+//   · frontend/combos/              todos los combos (la tienda en su vista "combos")
 //   · frontend/sitemap-perfumes.xml todas las anteriores, con la foto de cada perfume
 //
 //   Uso:  node tools/build-product-pages.mjs
@@ -38,6 +39,7 @@ const OUT_DIR  = path.join(site, 'perfume');
 const BRAND_DIR = path.join(site, 'marca');
 const COLL_DIR  = path.join(site, 'coleccion');
 const INDEX_DIR = path.join(site, 'marcas');
+const COMBOS_DIR = path.join(site, 'combos');
 const OFFLINE   = process.env.PAGES_OFFLINE === '1';
 const SITEMAP  = path.join(site, 'sitemap-perfumes.xml');
 const SITE_URL = 'https://michtdecants.com';
@@ -61,6 +63,55 @@ function bail(msg) {
   [OUT_DIR, BRAND_DIR, COLL_DIR, INDEX_DIR].forEach(clearDir);
   fs.rmSync(SITEMAP, { force: true });
   process.exit(0);
+}
+
+// ── 0. /combos/: todos los combos ────────────────────────────────────────────
+// Es la tienda (index.html) que se abre en su vista "combos" (store-view.js): en
+// el Inicio el carrusel muestra hasta 5 y el botón "Ver todos los combos" lleva
+// aquí. Los combos se cargan en vivo desde Supabase como en el Inicio, así que
+// esta página no depende del catálogo: se genera siempre, antes de leerlo (si
+// Supabase no responde, /combos/ igual se publica).
+function combosPage(template) {
+  const url = `${SITE_URL}/combos/`;
+  const title = 'Combos de decants — sets de perfumes a precio especial | Micht Decants';
+  const description = 'Combos de decants de MICHT: sets de 2 y 3 perfumes árabes y de diseñador a precio especial, en 2, 3, 5 y 10 ml. Envíos a todo el Perú.';
+  const crumbs = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: SITE_URL + '/' },
+      { '@type': 'ListItem', position: 2, name: 'Combos', item: url },
+    ],
+  };
+  let html = template;
+  if (!/<base href="\/">/.test(html)) html = replaceOnce(html, /<meta charset="UTF-8">/, '<meta charset="UTF-8">\n  <base href="/">', 'meta charset');
+  html = replaceOnce(html, /\n[ \t]*<title>[^<\n]*<\/title>/, `\n  <title>${esc(title)}</title>`, '<title>');
+  html = replaceOnce(html, /<meta name="description"[^>]*>/, `<meta name="description"    content="${esc(description)}">`, 'meta description');
+  html = replaceOnce(html, /<link rel="canonical"[^>]*>/, `<link rel="canonical"       href="${url}">`, 'canonical');
+  html = replaceOnce(html, /<meta property="og:url"[^>]*>/, `<meta property="og:url"         content="${url}">`, 'og:url');
+  html = replaceOnce(html, /<meta property="og:title"[^>]*>/, `<meta property="og:title"       content="${esc(title.replace(/ \| Micht Decants$/, ''))}">`, 'og:title');
+  html = replaceOnce(html, /<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${esc(description)}">`, 'og:description');
+  html = replaceOnce(html, /<meta name="twitter:title"[^>]*>/, `<meta name="twitter:title"       content="${esc(title.replace(/ \| Micht Decants$/, ''))}">`, 'twitter:title');
+  html = replaceOnce(html, /<meta name="twitter:description"[^>]*>/, `<meta name="twitter:description" content="${esc(description)}">`, 'twitter:description');
+  html = html.replace(/\s*<!-- ── Schema[^\n]*\n/g, '\n');
+  html = html.replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/g, '');
+  html = replaceOnce(html, /<\/head>/, `  <script type="application/ld+json">\n${JSON.stringify(crumbs, null, 2)}\n  </script>\n</head>`, '</head>');
+  // Un solo <h1>: el título de los combos (el logo pasa a <p>)
+  html = logoAsP(html);
+  html = replaceOnce(html, /<h2 class="combos-title">([\s\S]*?)<\/h2>/, '<h1 class="combos-title">Combos que <em>ahorran</em> de verdad</h1>', 'título de combos');
+  // La sección se ve desde el inicio (en el Inicio espera a que carguen los combos)
+  html = replaceOnce(html, /<section class="combos-section view-inicio" id="combos" aria-label="Combos de decants" style="display:none">/,
+    '<section class="combos-section view-inicio" id="combos" aria-label="Combos de decants">', 'sección de combos');
+  return html;
+}
+try {
+  const html = combosPage(fs.readFileSync(path.join(site, 'index.html'), 'utf8'));
+  fs.mkdirSync(COMBOS_DIR, { recursive: true });
+  fs.writeFileSync(path.join(COMBOS_DIR, 'index.html'), html);
+  console.log('✓ /combos/');
+} catch (e) {
+  // Sin /combos/ el sitio sigue funcionando: 404.html lleva a los combos del Inicio
+  console.warn(`⚠ build-product-pages: no se pudo generar /combos/ (${e.message})`);
 }
 
 // ── 1. Catálogo real, con la misma lógica de la tienda ───────────────────────
@@ -137,6 +188,13 @@ const template = fs.readFileSync(path.join(site, 'index.html'), 'utf8');
 function replaceOnce(html, re, value, label) {
   if (!re.test(html)) throw new Error(`index.html cambió: no encontré ${label}`);
   return html.replace(re, () => value);   // función: un "$" en el texto no se interpreta
+}
+
+// Un solo <h1> por página: el logo de la tienda (imagen dentro de <h1>) pasa a <p>
+function logoAsP(html) {
+  const re = /<h1 class="logo-mark">([\s\S]*?)<\/h1>/;
+  if (!re.test(html)) throw new Error('index.html cambió: no encontré el logo <h1 class="logo-mark">');
+  return html.replace(re, (_, inner) => `<p class="logo-mark">${inner}</p>`);
 }
 
 // ── Ayudas comunes a todas las páginas ───────────────────────────────────────
@@ -265,7 +323,7 @@ function productPage(p) {
   html = html.replace(/\s*<!-- ── Schema[^\n]*\n/g, '\n');
   html = html.replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/g, '');
   // Un solo <h1> por página, el del perfume (el logo de la tienda pasa a <p>)
-  html = html.replace(/<h1 class="logo-text">([\s\S]*?)<\/h1>/, '<p class="logo-text">$1</p>');
+  html = logoAsP(html);
   const related = products.filter(r => r.id !== p.id && brandSlug(r) === brandSlug(p) && slugs.get(r.id)).slice(0, 8);
   html = replaceOnce(html, /\n[ \t]*<footer class="footer">/, `\n${productSeoBlock(p, related)}\n  <footer class="footer">`, '<footer>');
   const crumbs = breadcrumbLd([['Inicio', SITE_URL + '/'], ['Marcas', SITE_URL + '/marcas/'], [p.brand, `${SITE_URL}/marca/${brandSlug(p)}/`], [p.name, url]]);
@@ -292,6 +350,7 @@ for (const p of products) {
 // Se arman sobre nosotros/index.html para usar el mismo encabezado y pie.
 const shell = fs.readFileSync(path.join(site, 'nosotros', 'index.html'), 'utf8')
   .replace(/(href|src)="\.\.\//g, '$1="/')                       // rutas desde la raíz
+  .replace(/srcset="([^"]*)"/g, (_, v) => `srcset="${v.replace(/(^|,\s*)\.\.\//g, '$1/')}"`)   // (también en srcset: el logo)
   .replace(/ style="color:var\(--gold\)"/g, '');                   // "Nosotros" ya no va resaltado
 
 function shellPage({ url, title, description, image, body, jsonLd }) {
