@@ -10608,6 +10608,13 @@ body[data-campaign="navidad"] .hero-mascot .mascot-img {
 }
 .xm-hat svg { display: block; width: 100%; height: auto; }
 @keyframes xmHat { 0%, 100% { transform: rotate(-12deg); } 50% { transform: rotate(-8deg) translateY(-2px); } }
+/* Mascota con corona (gato-micht): el gorro va sobre la corona, sin tapar los lentes */
+.hero-mascot .xm-hat {
+  left: 41%; top: -8%; width: 36%;
+  transform: rotate(14deg); transform-origin: 40% 90%;
+  animation-name: xmHatCrown;
+}
+@keyframes xmHatCrown { 0%, 100% { transform: rotate(14deg); } 50% { transform: rotate(18deg) translateY(-2px); } }
 
 /* ── Capa del carrusel: guirnalda de luces, nieve, esferas y neblina de nieve abajo ── */
 .xm-hero-deco { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
