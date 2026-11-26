@@ -490,6 +490,7 @@ function openPdModal(productId, { fromHistory = false } = {}) {
     sizesRow.querySelectorAll('.pd-size-card').forEach(c => c.classList.toggle('active', c.dataset.size === size));
     const before = sizeBeforePrice(p, size, price);
     priceRow.innerHTML = `${before ? `<s class="pd-price-before">S/ ${before}</s> ` : ''}<strong class="pd-price-main">S/ ${price}</strong>`
+      + (isEntero ? '' : ` <span class="pd-price-size">${sanitize(size)}</span>`)
       + (before ? ` <span class="pd-price-off">-${Math.round((1 - price / before) * 100)}%</span>` : '');
     _pdUpdateTotals();
   };
@@ -530,6 +531,11 @@ function openPdModal(productId, { fromHistory = false } = {}) {
   sizesRow.querySelectorAll('.pd-size-card:not([disabled])').forEach(card => {
     card.addEventListener('click', () => selectSize(card.dataset.size, parseFloat(card.dataset.price)));
   });
+  // Sin tamaños (entero con precio a consultar): no dejar el título "Elige tu tamaño" solo,
+  // y en el celular la foto ocupa todo el ancho
+  const noSizes = !sizesRow.children.length;
+  document.getElementById('pdSizeSection').hidden = noSizes;
+  document.getElementById('pdModal').classList.toggle('pd-no-sizes', noSizes);
 
   // ── Descripción ──────────────────────────────────────────
   document.getElementById('pdDesc').textContent = p.description || '';

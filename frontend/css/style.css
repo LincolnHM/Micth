@@ -6395,10 +6395,15 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 }
 .promo-banner-close:hover { color: var(--gold); }
 
+/* Celular: una sola franja baja (texto a la izquierda, botón y × a la derecha)
+   en vez de tres renglones que empujaban la página hacia abajo */
 @media (max-width: 500px) {
-  .promo-banner-inner { gap: .5rem; flex-wrap: wrap; justify-content: center; }
-  .promo-banner-close { position: static; transform: none; margin-left: .25rem; }
-  .promo-banner-text  { text-align: center; font-size: .78rem; }
+  .promo-banner { padding: .45rem .55rem .45rem .85rem; }
+  .promo-banner-inner { gap: .55rem; justify-content: space-between; }
+  .promo-banner-icon  { display: none; }
+  .promo-banner-text  { flex: 1; min-width: 0; text-align: left; font-size: .72rem; line-height: 1.32; }
+  .promo-banner-cta   { padding: .34rem .7rem; font-size: .68rem; }
+  .promo-banner-close { position: static; transform: none; margin: 0 -.15rem 0 -.3rem; padding: .2rem .3rem; }
 }
 
 /* ─── Dropdown menú de usuario (desktop) ─────────────────────────────────────── */
@@ -9126,6 +9131,82 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   .pd-actions .pd-cart-btn { padding: .9rem .7rem; font-size: .76rem; letter-spacing: .03em; }
   .pd-actions .pd-cart-btn svg { display: none; }
   .pd-buy-btn { padding: .9rem .7rem; font-size: .78rem; letter-spacing: .04em; }
+}
+
+/* Talla que corresponde al precio grande ("S/ 30 · 5ml") */
+.pd-price-size {
+  font-size: .78rem; font-weight: 600; letter-spacing: .04em;
+  color: var(--text2);
+}
+.pd-price-size::before { content: '· '; color: var(--text3); }
+
+/* ── Ficha en el celular: la foto y los precios lado a lado ──────────────
+   Arriba la marca, el nombre y el precio. Debajo, la foto a la izquierda y
+   los tamaños (cada uno con su precio) a la derecha: el cliente ve todos los
+   precios sin bajar. Las dos columnas de la PC (.pd-left-col / .pd-right-col)
+   se "abren" con display: contents y sus piezas van en una sola grilla. */
+@media (max-width: 767px) {
+  #pdModal .pd-layout {
+    grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
+    column-gap: .85rem; row-gap: 1rem;
+    padding: 1.1rem 1rem 2.5rem;
+  }
+  #pdModal .pd-left-col,
+  #pdModal .pd-hero-img-wrap,
+  #pdModal .pd-right-col { display: contents; }
+  #pdModal .pd-right-col > *,
+  #pdModal .pd-dupe-card { grid-column: 1 / -1; min-width: 0; }
+
+  /* Filas 1 a 4: marca, nombre, tipo · familia · momento y precio */
+  #pdModal .pd-breadcrumb { grid-row: 1; font-size: .64rem; letter-spacing: .16em; color: var(--taupe); }
+  #pdModal .pd-breadcrumb > :not(#pdBreadBrand) { display: none; }   /* "Catálogo" ya está en la barra de arriba */
+  #pdModal .pd-product-name { grid-row: 2; font-size: 1.6rem; line-height: 1.12; margin-top: -.45rem; }
+  #pdModal .pd-product-subtitle { grid-row: 3; font-size: .74rem; margin-top: -.6rem; }
+  #pdModal .pd-price-row { grid-row: 4; margin-top: -.35rem; }
+  #pdModal .pd-price-main { font-size: 1.75rem; }
+
+  /* Fila 5: foto | tamaños con precio */
+  #pdModal .pd-hero-img,
+  #pdModal .pd-img-ph {
+    grid-column: 1; grid-row: 5; align-self: stretch;
+    width: 100%; height: 100%; min-height: 190px; max-height: none;
+    border-radius: var(--r-lg);
+    background: radial-gradient(closest-side, rgba(107,43,255,.2), rgba(107,43,255,.06) 60%, transparent);
+  }
+  #pdModal .pd-hero-img { object-fit: contain; filter: drop-shadow(0 12px 22px rgba(0,0,0,.45)); }
+  #pdModal .pd-hero-img:hover { transform: none; }
+  #pdModal .pd-img-ph { opacity: 1; }
+  #pdModal .pd-img-ph svg { width: 56px; height: 84px; opacity: .25; }
+  /* Sin tamaños que elegir: la foto ocupa todo el ancho */
+  #pdModal.pd-no-sizes .pd-hero-img,
+  #pdModal.pd-no-sizes .pd-img-ph { grid-column: 1 / -1; height: 240px; min-height: 0; }
+
+  #pdModal .pd-size-section {
+    grid-column: 2; grid-row: 5; align-self: center;
+    gap: .5rem; padding: 0;
+    background: none; border: 0; border-radius: 0;
+  }
+  #pdModal .pd-size-section .pd-notes-section-title { margin: 0; }
+  #pdModal .pd-size-cards { grid-template-columns: 1fr; gap: .45rem; padding-top: 0; }
+  /* Cada tamaño en una fila: "5ml / 90 sprays" a la izquierda, el precio a la derecha */
+  #pdModal .pd-size-card {
+    display: grid; grid-template-columns: 1fr auto;
+    grid-template-areas: "ml price" "note before";
+    align-items: center; column-gap: .5rem; row-gap: .05rem;
+    padding: .5rem .7rem; text-align: left; border-radius: 12px;
+  }
+  #pdModal .pd-size-ml     { grid-area: ml; font-size: .84rem; }
+  #pdModal .pd-size-price  { grid-area: price; justify-self: end; font-size: .98rem; white-space: nowrap; }
+  #pdModal .pd-size-note   { grid-area: note; font-size: .6rem; }
+  #pdModal .pd-size-before { grid-area: before; justify-self: end; margin: 0; font-size: .64rem; }
+  #pdModal .pd-size-badge  { top: -.5rem; left: auto; right: .55rem; transform: none; font-size: .46rem; padding: .1rem .35rem; }
+
+  /* Debajo, a todo el ancho: "Se parece a", alternativas y la descripción */
+  #pdModal .pd-dupe-card { order: -2; max-width: none; }
+  #pdModal .pd-alt-hint  { order: -1; margin-top: 0; justify-self: start; }
+
+  /* Barra fija de compra: de borde a borde con el nuevo margen */
+  #pdModal .pd-actions { margin: 0 -1rem; padding: .7rem 1rem calc(.7rem + env(safe-area-inset-bottom, 0px)); }
 }
 
 /* ── Ficha de combo (js/store/combo-detail.js) ──────────── */
