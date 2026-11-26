@@ -4900,18 +4900,19 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   letter-spacing: .03em;
   display: inline-flex;
   align-items: center;
-  gap: .5rem;
   transition: color .2s, transform .2s;
   width: fit-content;
 }
+/* La rayita del hover no ocupa lugar si no se ve: antes los enlaces quedaban
+   corridos a la derecha del título "Explorar" */
 .footer-nav a::before {
   content: '';
   display: inline-block;
-  width: 5px;
+  width: 0;
   height: 1px;
   background: var(--gold);
   opacity: 0;
-  transition: opacity .2s, width .2s;
+  transition: opacity .2s, width .2s, margin .2s;
 }
 .footer-nav a:hover {
   color: var(--white);
@@ -4920,6 +4921,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 .footer-nav a:hover::before {
   opacity: 1;
   width: 8px;
+  margin-right: .45rem;
 }
 
 /* Botón WhatsApp del footer */
@@ -5049,11 +5051,25 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   .footer-desc { max-width: 100%; }
 }
 
+/* Celular: la marca arriba y, debajo, "Explorar" a la izquierda con
+   "Contáctanos" y "Síguenos" a la derecha (antes iba todo en una sola columna) */
 @media (max-width: 560px) {
-  .footer-inner { grid-template-columns: 1fr; gap: 2rem; }
-  .footer-body { padding: 2.25rem 1.25rem 2rem; }
-  .footer-social-list { justify-content: flex-start; }
-  .footer-bottom-inner { flex-direction: column; text-align: center; }
+  .footer-inner { grid-template-columns: auto minmax(0, 1fr); column-gap: 1.4rem; row-gap: 1.75rem; }
+  .footer-body { padding: 2.25rem .25rem 2rem; }   /* el .container ya pone el margen lateral */
+  .footer-desc { font-size: .78rem; line-height: 1.65; }
+  .footer-col-title { margin-bottom: .9rem; }
+  .footer-nav { gap: .62rem; }
+  .footer-wa-btn { max-width: 100%; padding: .5rem .9rem; font-size: .75rem; gap: .4rem; margin-bottom: 1.4rem; }
+  .footer-social-list { justify-content: flex-start; flex-wrap: wrap; gap: 8px 6px; }
+  .footer-social-list .social-item { margin: 0; }
+  .footer .footer-social-list .social-item a { width: 38px !important; height: 38px !important; border-radius: 12px !important; }
+  .footer-social-list .social-item a svg { width: 18px; height: 18px; }
+  /* espacio abajo para que el botón flotante de WhatsApp no tape "Todos los derechos reservados" */
+  .footer-bottom-inner { flex-direction: column; text-align: center; padding-bottom: calc(1.1rem + 66px + env(safe-area-inset-bottom, 0px)); }
+}
+/* Celulares muy angostos: no entra lado a lado, una sola columna */
+@media (max-width: 340px) {
+  .footer-inner { grid-template-columns: 1fr; }
 }
 
 /* ── Separadores degradados header ↔ contenido ↔ footer ─ */
