@@ -4854,11 +4854,11 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--white);
-  margin-bottom: .35rem;
+  margin-bottom: .85rem;
   letter-spacing: .01em;
 }
 .footer-logo span { color: var(--gold); }
-.footer-logo-img { display: block; width: 210px; max-width: 70%; height: auto; margin-left: -6px; }
+.footer-logo-img { display: block; width: 210px; max-width: 70%; height: auto; }
 @media (max-width: 600px) { .footer-logo-img { width: 180px; } }
 
 .footer-tagline {
@@ -4950,25 +4950,67 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   box-shadow: 0 6px 20px rgba(37,211,102,.15);
 }
 
-/* Ubicación */
+/* Ubicación: enlace a la página de Contacto (ahí está el mapa) */
 .footer-location {
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  font-size: .76rem;
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  width: fit-content;
+  font-size: .8rem;
+  line-height: 1.35;
   color: var(--text2);
-  margin-bottom: .9rem;
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  transition: color .2s;
 }
-.footer-location svg { flex-shrink: 0; opacity: .5; }
+.footer-location svg { flex-shrink: 0; margin-top: .05rem; color: var(--gold-l); }
+.footer-location small { display: block; margin-top: .15rem; font-size: .7rem; color: var(--gold-l); }
+.footer-location:hover { color: var(--white); }
 
-/* Label "Síguenos" */
+/* Pago seguro (columna de la marca) */
+.footer-pay { margin-top: 1.5rem; }
+.footer-pay .footer-col-title { margin-bottom: .7rem; }
+.footer-pay-row { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem .75rem; }
+.footer-pay-chip {
+  display: inline-flex; align-items: center;
+  padding: .32rem .85rem; border-radius: 8px;
+  font-size: .82rem; font-weight: 800; letter-spacing: .01em;
+  color: #fff; background: #742284;   /* morado de Yape */
+  box-shadow: 0 4px 14px rgba(116,34,132,.35);
+}
+.footer-pay-note { font-size: .74rem; color: var(--text2); }
+
+/* Invitación a crear cuenta, arriba de las columnas */
+.footer-club-wrap { max-width: 1100px; margin: 0 auto 2.75rem; }
+.footer-club {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  gap: .9rem 1.5rem;
+  padding: 1.1rem 1.4rem;
+  border: 1px solid rgba(107,43,255,.35); border-radius: var(--r-lg);
+  background: linear-gradient(100deg, rgba(107,43,255,.18), rgba(107,43,255,.05) 65%, rgba(107,43,255,.02));
+}
+.footer-club-text { margin: 0; font-size: .88rem; line-height: 1.5; color: var(--text); }
+.footer-club-text strong { color: var(--white); font-weight: 700; margin-right: .2rem; }
+.footer-club-text b { color: var(--gold-l); font-weight: 800; }
+.footer-club-name { color: var(--club-gold); font-weight: 600; }   /* el Club conserva su dorado */
+.footer-club-btn {
+  flex-shrink: 0;
+  padding: .62rem 1.3rem; border-radius: 50px;
+  font-size: .8rem; font-weight: 700; letter-spacing: .02em;
+  color: #fff; background: var(--gold); text-decoration: none;
+  transition: background .2s, transform .2s, box-shadow .2s;
+}
+.footer-club-btn:hover { background: var(--gold-l); transform: translateY(-1px); box-shadow: 0 8px 22px rgba(107,43,255,.3); }
+
+/* "Síguenos": mismo estilo que "Explorar" y "Contáctanos" */
 .footer-social-label {
-  font-size: .58rem;
-  letter-spacing: .22em;
+  font-size: .6rem;
+  letter-spacing: .28em;
   text-transform: uppercase;
-  color: var(--text2);
-  opacity: .65;
-  margin-bottom: .6rem;
+  color: var(--taupe);
+  opacity: .9;
+  font-weight: 600;
+  margin-bottom: .75rem;
 }
 
 /* Social list dentro del footer — overrides */
@@ -5031,18 +5073,6 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   color: var(--text3);
 }
 
-.footer-admin-link {
-  display: inline-flex;
-  align-items: center;
-  gap: .35rem;
-  color: var(--text3);
-  text-decoration: none;
-  font-size: .69rem;
-  letter-spacing: .07em;
-  opacity: .45;
-  transition: opacity .2s;
-}
-.footer-admin-link:hover { opacity: .85; color: var(--text2); }
 
 /* ── Responsive footer ───────────────────────────────────── */
 @media (max-width: 900px) {
@@ -5059,13 +5089,18 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   .footer-desc { font-size: .78rem; line-height: 1.65; }
   .footer-col-title { margin-bottom: .9rem; }
   .footer-nav { gap: .62rem; }
-  .footer-wa-btn { max-width: 100%; padding: .5rem .9rem; font-size: .75rem; gap: .4rem; margin-bottom: 1.4rem; }
+  .footer-wa-btn { max-width: 100%; padding: .5rem .9rem; font-size: .75rem; gap: .4rem; margin-bottom: 1rem; }
+  .footer-club-wrap { margin-bottom: 2rem; }
+  .footer-club { padding: 1rem 1.05rem; }
+  .footer-club-text { font-size: .82rem; }
+  .footer-club-btn { width: 100%; text-align: center; }
+  .footer-pay { margin-top: 1.25rem; }
   .footer-social-list { justify-content: flex-start; flex-wrap: wrap; gap: 8px 6px; }
   .footer-social-list .social-item { margin: 0; }
   .footer .footer-social-list .social-item a { width: 38px !important; height: 38px !important; border-radius: 12px !important; }
   .footer-social-list .social-item a svg { width: 18px; height: 18px; }
   /* espacio abajo para que el botón flotante de WhatsApp no tape "Todos los derechos reservados" */
-  .footer-bottom-inner { flex-direction: column; text-align: center; padding-bottom: calc(1.1rem + 66px + env(safe-area-inset-bottom, 0px)); }
+  .footer-bottom-inner { justify-content: center; text-align: center; padding-bottom: calc(1.1rem + 66px + env(safe-area-inset-bottom, 0px)); }
 }
 /* Celulares muy angostos: no entra lado a lado, una sola columna */
 @media (max-width: 340px) {
@@ -5440,8 +5475,8 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   height: 40px !important;
   border-radius: 14px !important;
   background: rgba(20,20,20,.92) !important;
-  border: 1px solid rgba(107,43,255,.18) !important;
-  color: rgba(107,43,255,.8) !important;
+  border: 1px solid rgba(185,174,216,.18) !important;
+  color: var(--porcelain) !important;
   box-shadow: 0 2px 12px rgba(0,0,0,.4) !important;
 }
 .footer-social-list .social-item a:hover {

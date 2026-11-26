@@ -318,7 +318,18 @@ const UserAuth = {
     if (typeof Club !== 'undefined') Club.onAuthChange();
   },
 
+  // Invitación del pie de página: solo para quien aún no tiene cuenta. Va
+  // antes del banner porque este se corta si el cliente lo cerró.
+  _updateFooterClub() {
+    const box = document.getElementById('footerClub');
+    if (!box) return;
+    box.hidden = this.isLoggedIn();
+    const extra = document.getElementById('footerClubExtra');
+    if (extra) extra.hidden = !(typeof Club !== 'undefined' && Club.enabled);
+  },
+
   _updatePromoBanner() {
+    this._updateFooterClub();
     const banner  = document.getElementById('promoBanner');
     const text    = document.getElementById('promoBannerText');
     const cta     = document.getElementById('promoBannerCta');
@@ -868,6 +879,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('authBackToLogin')?.addEventListener('click', e => {
     e.preventDefault(); AuthModals._switchForgot(false);
+  });
+
+  // ── Pie de página: "Crear cuenta gratis" abre el registro aquí mismo ──────
+  // (en Nosotros / Contacto el enlace lleva a /#registro, que hace lo mismo)
+  document.getElementById('footerClubCta')?.addEventListener('click', e => {
+    e.preventDefault();
+    AuthModals.openRegister();
   });
 
   // ── Banner promocional ────────────────────────────────────────────────────

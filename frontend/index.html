@@ -207,7 +207,7 @@
   <link rel="icon" type="image/png" href="imgGato/icons/icon-192.png">
   <link rel="apple-touch-icon" href="imgGato/icons/icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261126-1649">
+  <link rel="stylesheet" href="css/style.css?v=20261126-1657">
   <!-- La pantalla de carga solo se muestra la primera vez en la sesión; en las
        siguientes visitas (volver de Nosotros, recargar) no hace esperar. -->
   <script>try { if (sessionStorage.getItem('micht_loader_seen')) document.documentElement.classList.add('pl-skip'); } catch (e) {}</script>
@@ -899,6 +899,14 @@
 
     <!-- Cuerpo principal del footer -->
     <div class="footer-body">
+      <!-- Invitación a crear cuenta (en la tienda se oculta si el cliente ya tiene cuenta) -->
+      <div class="footer-club-wrap container" id="footerClub">
+        <div class="footer-club">
+          <p class="footer-club-text"><strong>¿Primera compra?</strong> Crea tu cuenta gratis y llévate <b>10% OFF</b><span id="footerClubExtra" hidden> y tu tarjeta <span class="footer-club-name">Club MICHT</span> 🐾</span></p>
+          <a class="footer-club-btn" id="footerClubCta" href="/#registro">Crear cuenta gratis</a>
+        </div>
+      </div>
+
       <div class="footer-inner container">
 
         <!-- Columna 1: Marca -->
@@ -906,6 +914,13 @@
           <p class="footer-logo"><img class="footer-logo-img" src="imgGato/logo-micht-640.webp" srcset="imgGato/logo-micht-360.webp 360w, imgGato/logo-micht-640.webp 640w" sizes="210px" width="640" height="342" alt="Micht Decants" loading="lazy" decoding="async"></p>
           <p class="footer-tagline">Perfumería Árabe &amp; Diseñador</p>
           <p class="footer-desc">Decants auténticos desde S/ 12. Fragancias de Lattafa, Afnan, Armaf, Dior, Chanel y más. Envíos a todo el Perú.</p>
+          <div class="footer-pay">
+            <p class="footer-col-title">Pago seguro</p>
+            <div class="footer-pay-row">
+              <span class="footer-pay-chip">Yape</span>
+              <span class="footer-pay-note">Confirmamos tu pago por WhatsApp</span>
+            </div>
+          </div>
         </div>
 
         <!-- Columna 2: Navegación -->
@@ -918,7 +933,6 @@
             <a href="#como-comprar">Cómo comprar</a>
             <a href="marcas/">Marcas</a>
             <a href="nosotros/">Nosotros</a>
-            <a href="contacto/">Contacto</a>
           </nav>
         </div>
 
@@ -929,15 +943,12 @@
             <svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
             Pedir por WhatsApp
           </a>
+          <a class="footer-location" href="contacto/">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            <span>Soritor, San Martín<small>Ver en el mapa →</small></span>
+          </a>
           <p class="footer-social-label">Síguenos</p>
           <ul class="social-list footer-social-list">
-            <li class="social-item">
-              <a data-social="whatsapp" href="https://wa.me/51917452643" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
-                <div class="filled"></div>
-                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-              </a>
-              <div class="social-tooltip">WhatsApp</div>
-            </li>
             <li class="social-item">
               <a data-social="facebook" href="https://www.facebook.com/profile.php?id=100082908725647" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                 <div class="filled"></div>
@@ -969,10 +980,6 @@
     <div class="footer-bottom">
       <div class="footer-bottom-inner container">
         <p>© 2026 MICHT Decants · Todos los derechos reservados</p>
-        <a href="admin/" class="footer-admin-link" aria-label="Panel Administrador">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="12" height="12" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-          Panel Administrador
-        </a>
       </div>
     </div>
 
@@ -1506,39 +1513,39 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con el panel admin) — el orden importa -->
-  <script src="js/shared/data-core.js?v=20261126-1649"></script>
-  <script src="js/shared/catalog.js?v=20261126-1649"></script>
-  <script src="js/shared/data.js?v=20261126-1649"></script>
-  <script src="js/shared/supabase-config.js?v=20261126-1649"></script>
-  <script src="js/shared/cloud-orders.js?v=20261126-1649"></script>
-  <script src="js/shared/cloud-gallery.js?v=20261126-1649"></script>
-  <script src="js/shared/cloud-products.js?v=20261126-1649"></script>
-  <script src="js/shared/slugs.js?v=20261126-1649"></script>
-  <script src="js/shared/cloud-combos.js?v=20261126-1649"></script>
+  <script src="js/shared/data-core.js?v=20261126-1657"></script>
+  <script src="js/shared/catalog.js?v=20261126-1657"></script>
+  <script src="js/shared/data.js?v=20261126-1657"></script>
+  <script src="js/shared/supabase-config.js?v=20261126-1657"></script>
+  <script src="js/shared/cloud-orders.js?v=20261126-1657"></script>
+  <script src="js/shared/cloud-gallery.js?v=20261126-1657"></script>
+  <script src="js/shared/cloud-products.js?v=20261126-1657"></script>
+  <script src="js/shared/slugs.js?v=20261126-1657"></script>
+  <script src="js/shared/cloud-combos.js?v=20261126-1657"></script>
   <!-- Tienda -->
-  <script src="js/store/announcement.js?v=20261126-1649"></script>
-  <script src="js/store/seasonal-theme.js?v=20261126-1649"></script>
-  <script src="js/store/carousel.js?v=20261126-1649"></script>
-  <script src="js/store/cart.js?v=20261126-1649"></script>
-  <script src="js/store/catalog-view.js?v=20261126-1649"></script>
-  <script src="js/store/new-arrivals.js?v=20261126-1649"></script>
-  <script src="js/store/auto-carousel.js?v=20261126-1649"></script>
-  <script src="js/store/coming-soon.js?v=20261126-1649"></script>
-  <script src="js/store/filters-ui.js?v=20261126-1649"></script>
-  <script src="js/store/combos-carousel.js?v=20261126-1649"></script>
-  <script src="js/store/faq.js?v=20261126-1649"></script>
-  <script src="js/store/product-detail.js?v=20261126-1649"></script>
-  <script src="js/store/combo-detail.js?v=20261126-1649"></script>
-  <script src="js/store/store-view.js?v=20261126-1649"></script>
-  <script src="js/store/init.js?v=20261126-1649"></script>
-  <script src="js/store/gallery.js?v=20261126-1649"></script>
-  <script src="js/store/scent-finder.js?v=20261126-1649"></script>
-  <script src="js/store/checkout.js?v=20261126-1649"></script>
-  <script src="js/store/customer-auth.js?v=20261126-1649"></script>
-  <script src="js/store/club.js?v=20261126-1649"></script>
-  <script src="js/store/chatbot.js?v=20261126-1649"></script>
-  <script src="js/store/animations.js?v=20261126-1649"></script>
-  <script src="js/store/gsap-animations.js?v=20261126-1649"></script>
+  <script src="js/store/announcement.js?v=20261126-1657"></script>
+  <script src="js/store/seasonal-theme.js?v=20261126-1657"></script>
+  <script src="js/store/carousel.js?v=20261126-1657"></script>
+  <script src="js/store/cart.js?v=20261126-1657"></script>
+  <script src="js/store/catalog-view.js?v=20261126-1657"></script>
+  <script src="js/store/new-arrivals.js?v=20261126-1657"></script>
+  <script src="js/store/auto-carousel.js?v=20261126-1657"></script>
+  <script src="js/store/coming-soon.js?v=20261126-1657"></script>
+  <script src="js/store/filters-ui.js?v=20261126-1657"></script>
+  <script src="js/store/combos-carousel.js?v=20261126-1657"></script>
+  <script src="js/store/faq.js?v=20261126-1657"></script>
+  <script src="js/store/product-detail.js?v=20261126-1657"></script>
+  <script src="js/store/combo-detail.js?v=20261126-1657"></script>
+  <script src="js/store/store-view.js?v=20261126-1657"></script>
+  <script src="js/store/init.js?v=20261126-1657"></script>
+  <script src="js/store/gallery.js?v=20261126-1657"></script>
+  <script src="js/store/scent-finder.js?v=20261126-1657"></script>
+  <script src="js/store/checkout.js?v=20261126-1657"></script>
+  <script src="js/store/customer-auth.js?v=20261126-1657"></script>
+  <script src="js/store/club.js?v=20261126-1657"></script>
+  <script src="js/store/chatbot.js?v=20261126-1657"></script>
+  <script src="js/store/animations.js?v=20261126-1657"></script>
+  <script src="js/store/gsap-animations.js?v=20261126-1657"></script>
   <script>
     // ── Mobile menu toggle ───────────────────────────────────
     (function () {
