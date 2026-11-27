@@ -141,7 +141,7 @@ function shalomMissing(order, data, phone) {
 
 function shalomMessage(order, data) {
   const first = (order.customerName || '').trim().split(/\s+/)[0] || '';
-  const where = [order.shalomOffice, [order.department, order.province].filter(Boolean).join(' / ')].filter(Boolean).join(' — ');
+  const where = [order.shalomOffice, [order.department, order.province, order.city].filter(Boolean).join(' / ')].filter(Boolean).join(' — ');
   const lines = [
     `Hola${first ? ' ' + first : ''} 👋`,
     '¡Tu pedido de MICHT Perfumes ya fue enviado por Shalom! 📦',
@@ -160,7 +160,8 @@ function shalomMessage(order, data) {
   return lines.join('\n');
 }
 
-const shalomWhatsappUrl = (phone, text) => `https://wa.me/51${peruMobile(phone)}?text=${encodeURIComponent(text)}`;
+// api.whatsapp.com y no wa.me: al redirigir, wa.me puede convertir los emojis en «�»
+const shalomWhatsappUrl = (phone, text) => `https://api.whatsapp.com/send?phone=51${peruMobile(phone)}&text=${encodeURIComponent(text)}`;
 
 // Botón de la lista de pedidos (solo pedidos de envío)
 function shalomRowButtonHtml(order) {
@@ -189,7 +190,7 @@ async function openShalomDialog(orderId, { onDone = null } = {}) {
   const notified = data?.notifiedAt
     ? new Date(data.notifiedAt).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
     : '';
-  const where = [order.shalomOffice, [order.department, order.province].filter(Boolean).join(' / ')].filter(Boolean).join(' — ');
+  const where = [order.shalomOffice, [order.department, order.province, order.city].filter(Boolean).join(' / ')].filter(Boolean).join(' — ');
   const field = (key, label, value, ph) => `
       <div class="shdlg-field">
         <label for="shdlg-${key}">${label}</label>

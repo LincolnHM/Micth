@@ -30,6 +30,14 @@ const PERU_GEO = {
 
 const WHATSAPP_NUMBER = '51917452643';
 
+// «Creed Aventus» y no «Creed – Creed Aventus» cuando el nombre ya trae la marca
+// (también «Bleu de Chanel Parfum», no «Chanel Bleu de Chanel Parfum»)
+function perfumeLabel(brand, name) {
+  brand = (brand || '').trim(); name = (name || '').trim();
+  if (!brand) return name;
+  return name.toLowerCase().includes(brand.toLowerCase()) ? name : `${brand} ${name}`;
+}
+
 // ─── Reglas de validación ─────────────────────────────────────────────────────
 
 const _rules = {
@@ -62,6 +70,12 @@ const _rules = {
   },
   province(v) {
     if (!v) return 'Selecciona tu provincia.';
+    return null;
+  },
+  city(v) {
+    v = v.trim();
+    if (v.length < 3) return 'Escribe tu ciudad o distrito (ej: Wanchaq).';
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s'.-]+$/.test(v)) return 'La ciudad solo debe contener letras.';
     return null;
   },
   shalom(v) {
@@ -295,7 +309,7 @@ const Checkout = {
       <ul class="order-list">
         ${Cart.items.map(i => `
           <li>
-            <span>${sanitize(i.brand)} – ${sanitize(i.productName)} (${sanitize(i.size)}) × ${i.quantity}${i.isCombo && i.comboComposition ? `<br><small style="color:var(--text3)">Incluye: ${sanitize(i.comboComposition)}</small>` : ''}</span>
+            <span>${sanitize(i.isCombo ? `${i.brand} – ${i.productName}` : perfumeLabel(i.brand, i.productName))} (${sanitize(i.size)}) × ${i.quantity}${i.isCombo && i.comboComposition ? `<br><small style="color:var(--text3)">Incluye: ${sanitize(i.comboComposition)}</small>` : ''}</span>
             <span>S/ ${(i.price * i.quantity).toFixed(2)}</span>
           </li>
         `).join('')}
@@ -331,69 +345,67 @@ const Checkout = {
       provinces.map(p => `<option value="${escapeAttr(p)}">${p}</option>`).join('');
   },
 
+  // Mensaje que el cliente nos manda por WhatsApp. Formato de WhatsApp:
+  // *negrita*, _cursiva_. Pocos emojis y solo en los títulos.
   buildWhatsAppMessage(orderId) {
-    const lines      = ['🛍️ *NUEVO PEDIDO – MICHT Perfumes*'];
-    if (orderId) lines.push(`*N° de pedido:* ${orderId}`);
-    lines.push('');
-    const base       = Cart.total();
-    const hasDisc    = typeof UserAuth !== 'undefined' && UserAuth.hasFirstDiscount();
-    const effective  = this._effectiveTotal();
+    const money     = n => `S/ ${n.toFixed(2)}`;
+    const base      = Cart.total();
+    const hasDisc   = typeof UserAuth !== 'undefined' && UserAuth.hasFirstDiscount();
+    const effective = this._effectiveTotal();
+    const val       = id => document.getElementById(id).value.trim();
 
-    lines.push('*Productos:*');
+    const lines = ['🛍️ *NUEVO PEDIDO · MICHT Perfumes*'];
+    if (orderId) lines.push(`Pedido N° *${orderId}*`);
+
+    lines.push('', '*PRODUCTOS*');
     Cart.items.forEach(i => {
-      lines.push(`  • ${i.brand} – ${i.productName} (${i.size}) × ${i.quantity} = S/ ${(i.price * i.quantity).toFixed(2)}`);
-      if (i.isCombo && i.comboComposition) {
-        lines.push(`      ↳ Incluye: ${i.comboComposition}`);
+      const name = i.isCombo ? i.productName : perfumeLabel(i.brand, i.productName);
+      lines.push(`• ${name} · ${i.size} × ${i.quantity} — ${money(i.price * i.quantity)}`);
+      if (i.isCombo) {
+        const inc = (i.comboItems || []).map(ci => perfumeLabel(ci.brand, ci.name)).filter(Boolean).join(', ') || i.comboComposition;
+        if (inc) lines.push(`   _Incluye: ${inc}_`);
       }
     });
     if (this._gift) {
       const g = this._gift;
-      lines.push(`  • 🎁 ${g.brand} – ${g.name} (5ml) × 1 = GRATIS _(Regalo Club MICHT ${g.tier === 'black' ? 'Black' : 'Golden'})_`);
+      lines.push(`• ${perfumeLabel(g.brand, g.name)} · 5ml × 1 — GRATIS`);
+      lines.push(`   _Regalo Club MICHT ${g.tier === 'black' ? 'Black' : 'Golden'}_`);
     }
 
+    lines.push('');
     if (hasDisc) {
-      const profile = UserAuth.getProfile();
-      lines.push(`\n~~Subtotal: S/ ${base.toFixed(2)}~~`);
-      lines.push(`🎁 *Descuento 10% primera compra* (DNI: ${profile?.dni || ''}): -S/ ${(base - effective).toFixed(2)}`);
-      lines.push(`\n*TOTAL A PAGAR: S/ ${effective.toFixed(2)}*`);
-    } else {
-      lines.push(`\n*Total: S/ ${base.toFixed(2)}*`);
+      const dni = UserAuth.getProfile()?.dni || '';
+      lines.push(`Subtotal: ${money(base)}`);
+      lines.push(`Descuento 10% primera compra${dni ? ` (DNI ${dni})` : ''}: -${money(base - effective)}`);
     }
+    lines.push(`*TOTAL A PAGAR: ${money(effective)}*`);
 
-    lines.push('\n💸 *Método de pago:* Yape ✅');
-    lines.push('_(Por favor 📸 envíanos una captura de pantalla de tu pago Yape para confirmar el pedido)_');
+    lines.push('', '💳 *PAGO*', 'Yape — te envío la captura del pago en el siguiente mensaje.');
 
+    lines.push('');
     if (this.deliveryType === 'pickup') {
-      const pickupName = document.getElementById('pickupNameInput').value.trim();
-      lines.push(`\n📍 *Tipo de entrega:* Recojo en tienda (${STORE_ADDRESS})`);
-      if (pickupName) lines.push(`*Nombre:* ${pickupName}`);
+      lines.push('📍 *ENTREGA: Recojo en tienda*');
+      lines.push(`• Tienda: ${STORE_ADDRESS}`);
+      if (val('pickupNameInput')) lines.push(`• Recoge: ${val('pickupNameInput')}`);
     } else if (this.deliveryType === 'delivery') {
-      const val = id => document.getElementById(id).value.trim();
-      lines.push('\n🛵 *Tipo de entrega:* Delivery en Soritor (gratis)');
-      lines.push(`  • Nombre: ${val('delivNameInput')}`);
-      lines.push(`  • Celular: ${val('delivPhoneInput')}`);
-      lines.push(`  • Dirección: ${val('delivAddressInput')}`);
-      if (val('delivRefInput')) lines.push(`  • Referencia: ${val('delivRefInput')}`);
+      lines.push('🛵 *ENTREGA: Delivery gratis en Soritor*');
+      lines.push(`• Nombre: ${val('delivNameInput')}`);
+      lines.push(`• Celular: ${val('delivPhoneInput')}`);
+      lines.push(`• Dirección: ${val('delivAddressInput')}`);
+      if (val('delivRefInput')) lines.push(`• Referencia: ${val('delivRefInput')}`);
     } else {
-      const dni        = document.getElementById('dniInput').value.trim();
-      const name       = document.getElementById('nameInput').value.trim();
-      const phone      = document.getElementById('phoneInput').value.trim();
-      const department = document.getElementById('departmentSelect').value;
-      const province   = document.getElementById('provinceSelect').value;
-      const shalom     = document.getElementById('shalomInput').value.trim();
-
-      lines.push('\n📦 *Tipo de entrega:* Envío a Provincia (Shalom)');
-      lines.push('\n*Datos del destinatario:*');
-      lines.push(`  • Nombre: ${name}`);
-      lines.push(`  • DNI: ${dni}`);
-      lines.push(`  • Teléfono: ${phone}`);
-      lines.push(`  • Departamento: ${department}`);
-      lines.push(`  • Provincia: ${province}`);
-      lines.push(`  • Agencia Shalom: ${shalom}`);
-      lines.push('_(El flete lo pago al recoger en la agencia Shalom)_');
+      lines.push('📦 *ENTREGA: Envío a provincia por Shalom*');
+      lines.push(`• Nombre: ${val('nameInput')}`);
+      lines.push(`• DNI: ${val('dniInput')}`);
+      lines.push(`• Celular: ${val('phoneInput')}`);
+      lines.push(`• Departamento: ${val('departmentSelect')}`);
+      lines.push(`• Provincia: ${val('provinceSelect')}`);
+      lines.push(`• Ciudad: ${val('cityInput')}`);
+      lines.push(`• Agencia: ${val('shalomInput')}`);
+      lines.push('_El flete lo pago al recoger en la agencia._');
     }
 
-    lines.push('\n_Mensaje enviado desde michtdecants.com_');
+    lines.push('', '_Enviado desde michtdecants.com_');
     return lines.join('\n');
   },
 
@@ -404,6 +416,7 @@ const Checkout = {
       ['phoneInput',       _rules.phone,      () => document.getElementById('phoneInput').value],
       ['departmentSelect', _rules.department, () => document.getElementById('departmentSelect').value],
       ['provinceSelect',   _rules.province,   () => document.getElementById('provinceSelect').value],
+      ['cityInput',        _rules.city,       () => document.getElementById('cityInput').value],
       ['shalomInput',      _rules.shalom,     () => document.getElementById('shalomInput').value],
     ];
     let ok = true;
@@ -479,6 +492,7 @@ const Checkout = {
       deliveryType:  'envio',
       department:    val('departmentSelect'),
       province:      val('provinceSelect'),
+      city:          val('cityInput'),
       shalomOffice:  val('shalomInput')
     } : type === 'delivery' ? {
       customerName:  val('delivNameInput'),
@@ -522,7 +536,9 @@ const Checkout = {
 
     // Abrir WhatsApp — función SÍNCRONA para preservar el gesto del usuario en móvil
     const message = encodeURIComponent(this.buildWhatsAppMessage(orderId));
-    const url     = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+    // api.whatsapp.com y no wa.me: al redirigir, wa.me puede convertir los
+    // emojis del texto en «�»
+    const url     = `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${message}`;
     // OJO: sin "noopener" en la lista de opciones — con él window.open devuelve SIEMPRE
     // null y la línea de abajo navegaba TAMBIÉN esta pestaña a WhatsApp (dos pestañas en
     // PC; en el celular la tienda se iba al fondo mientras aún se guardaba el pedido).
@@ -717,6 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dniInput:        'dni',
     nameInput:       'name',
     phoneInput:      'phone',
+    cityInput:       'city',
     shalomInput:     'shalom',
     delivNameInput:    'name',
     delivPhoneInput:   'phone',

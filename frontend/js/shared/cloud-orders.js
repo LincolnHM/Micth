@@ -105,7 +105,22 @@ function _deliveryTypeFromRow(row) {
   return /^DELIVERY SORITOR/.test(row.notes || '') ? 'delivery' : 'recojo';
 }
 
+// La ciudad del envío Shalom se guarda en la misma columna que la provincia
+// («Cusco · Wanchaq»), así no hace falta agregar una columna a la base.
+// Ningún nombre de provincia lleva « · »; la columna admite 60 letras.
+const _CITY_SEP = ' · ';
+function _splitProvince(v) {
+  const i = v.indexOf(_CITY_SEP);
+  return i < 0 ? [v, ''] : [v.slice(0, i), v.slice(i + _CITY_SEP.length)];
+}
+function _joinProvince(province, city) {
+  province = (province || '').trim(); city = (city || '').trim();
+  if (!city) return province;
+  return province + _CITY_SEP + city.slice(0, Math.max(0, 60 - province.length - _CITY_SEP.length));
+}
+
 function orderFromDB(row) {
+  const [province, city] = _splitProvince(_str(row.province, 80));
   return {
     id:            _str(row.id, 80),
     customerName:  _str(row.customer_name, 200),
@@ -113,7 +128,8 @@ function orderFromDB(row) {
     customerDni:   _str(row.customer_dni, 20),
     deliveryType:  _deliveryTypeFromRow(row),
     department:    _str(row.department, 80),
-    province:      _str(row.province, 80),
+    province,
+    city,
     shalomOffice:  _str(row.shalom_office, 300),
     notes:         _str(row.notes, 600),
     items:         _cleanOrderItems(row.items),
@@ -142,7 +158,7 @@ function orderToDB(order) {
     customer_dni:   order.customerDni   || '',
     delivery_type:  order.deliveryType  || 'recojo',
     department:     order.department    || '',
-    province:       order.province      || '',
+    province:       _joinProvince(order.province, order.city),
     shalom_office:  order.shalomOffice  || '',
     notes:          order.notes         || '',
     items:          order.items         || [],
