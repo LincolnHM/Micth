@@ -549,8 +549,15 @@ function _showOrderSuccessModal(order) {
     modal.className = 'order-success-modal';
     modal.innerHTML = `
       <div class="os-backdrop"></div>
+      <div class="os-confetti" aria-hidden="true"></div>
       <div class="os-box">
-        <div class="os-icon">✅</div>
+        <div class="os-anim" aria-hidden="true">
+          <span class="os-ring"></span>
+          <svg class="os-check" viewBox="0 0 52 52">
+            <circle class="os-check-circle" cx="26" cy="26" r="24"/>
+            <path class="os-check-mark" d="M15.5 27.2l7 7 14.5-15.4"/>
+          </svg>
+        </div>
         <h3 class="os-title">¡Pedido enviado!</h3>
         <p class="os-order-id">N° de pedido <strong id="osOrderId"></strong></p>
         <p class="os-sub">Tu pedido fue enviado por WhatsApp. Te confirmaremos en breve.</p>
@@ -580,6 +587,58 @@ function _showOrderSuccessModal(order) {
     if (typeof Club !== 'undefined') Club.bindSuccess(clubEl);
   }
   modal.classList.add('open');
+  _osCelebrate(modal);
+  // En el celular el cliente se va a WhatsApp apenas toca "Ya pagué": la
+  // animación se repite una vez cuando vuelve a la tienda, para que la vea
+  const replay = () => {
+    if (document.hidden) return;
+    document.removeEventListener('visibilitychange', replay);
+    if (modal.classList.contains('open')) _osCelebrate(modal);
+  };
+  document.removeEventListener('visibilitychange', modal._osReplay || replay);
+  modal._osReplay = replay;
+  setTimeout(() => document.addEventListener('visibilitychange', replay), 0);
+  setTimeout(() => document.removeEventListener('visibilitychange', replay), 10 * 60 * 1000);
+}
+
+// ─── Animación de "¡Pedido enviado!" ──────────────────────────────────────────
+// Círculo violeta que se dibuja, check, un pulso de luz y confeti con los
+// colores de la tienda. Con "reducir movimiento" el CSS la deja quieta.
+const _OS_COLORS = ['#6b2bff', '#9a6bff', '#c3b2ff', '#b9aed8', '#ffffff'];
+
+function _osCelebrate(modal) {
+  const box = modal.querySelector('.os-box');
+  if (!box || document.hidden) return;
+  box.classList.remove('os-play');
+  void box.offsetWidth;            // reiniciar las animaciones
+  box.classList.add('os-play');
+
+  // El confeti va fuera de la caja (que puede deslizarse y lo recortaría),
+  // ubicado sobre el check cuando la caja ya terminó de aparecer
+  const layer = modal.querySelector('.os-confetti');
+  if (!layer || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  clearTimeout(layer._start);
+  layer._start = setTimeout(() => {
+    const a = box.querySelector('.os-anim').getBoundingClientRect();
+    layer.style.left = `${a.left + a.width / 2}px`;
+    layer.style.top  = `${a.top + a.height / 2}px`;
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    layer.innerHTML = Array.from({ length: 34 }, (_, i) => {
+      const ang  = rnd(-160, -20) * Math.PI / 180;   // hacia arriba, en abanico
+      const dist = rnd(70, 170);
+      const kind = i % 5 === 0 ? 'os-cf-star' : i % 2 ? 'os-cf-bar' : 'os-cf-dot';
+      const st = [
+        `--x:${Math.round(Math.cos(ang) * dist)}px`, `--y:${Math.round(Math.sin(ang) * dist)}px`,
+        `--fall:${Math.round(rnd(150, 260))}px`, `--r:${Math.round(rnd(-540, 540))}deg`,
+        `--d:${Math.round(rnd(0, 140))}ms`, `--t:${Math.round(rnd(1300, 1900))}ms`,
+        `--c:${_OS_COLORS[i % _OS_COLORS.length]}`
+      ].join(';');
+      return `<i class="os-cf ${kind}" style="${st}">${kind === 'os-cf-star' ? '✦' : ''}</i>`;
+    }).join('');
+    clearTimeout(layer._t);
+    layer._t = setTimeout(() => { layer.innerHTML = ''; }, 2600);
+    try { navigator.vibrate?.([16, 40, 16]); } catch (_) {}
+  }, 340);
 }
 
 // ─── Inicialización del checkout ──────────────────────────────────────────────

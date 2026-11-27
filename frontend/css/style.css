@@ -4868,8 +4868,12 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
    ════════════════════════════════════════════════════════ */
 
 /* Resetear estilos viejos del footer */
+/* Fondo con un degradado suave (un poco más claro y violeta arriba, negro
+   abajo) para que se note dónde termina la página */
 .footer {
-  background: #000;
+  background:
+    radial-gradient(ellipse 75% 240px at 50% 0%, rgba(107,43,255,.17), transparent 72%),
+    linear-gradient(180deg, #120e1d 0%, #0a0810 38%, #000 100%);
   border-top: none;
   padding: 0;
   text-align: left;
@@ -4880,6 +4884,7 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 /* Línea decorativa dorada en la parte superior */
 .footer-glow-line {
   height: 1px;
+  box-shadow: 0 0 18px 1px rgba(107,43,255,.35);
   background: linear-gradient(90deg,
     transparent 0%,
     rgba(107,43,255,.2) 15%,
@@ -5710,7 +5715,81 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
   box-shadow: 0 0 80px rgba(0,0,0,.8), 0 0 40px rgba(107,43,255,.06);
   animation: alertIn .3s cubic-bezier(.22,1,.36,1);
 }
-.os-icon { font-size: 2.8rem; margin-bottom: .7rem; line-height: 1; }
+/* ── Animación de "¡Pedido enviado!" (checkout.js → _osCelebrate) ── */
+.os-box { max-height: calc(100dvh - 2rem); overflow-y: auto; overflow-x: hidden; }
+.os-anim { position: relative; width: 76px; height: 76px; margin: .1rem auto 1rem; }
+.os-check { position: relative; z-index: 1; width: 100%; height: 100%; display: block; overflow: visible; }
+.os-check-circle {
+  fill: rgba(107,43,255,0); stroke: var(--gold-l); stroke-width: 2.5;
+  stroke-dasharray: 151; stroke-dashoffset: 0;
+}
+.os-check-mark {
+  fill: none; stroke: #fff; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 36; stroke-dashoffset: 0;
+}
+/* Pulso de luz que se expande detrás del check */
+.os-ring {
+  position: absolute; inset: 0; border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(154,107,255,.55);
+  opacity: 0;
+}
+.os-play .os-check-circle {
+  animation: osCircleDraw .55s cubic-bezier(.65,0,.45,1) .1s both,
+             osCircleFill .35s ease .6s forwards;
+}
+.os-play .os-check-mark { animation: osCheckDraw .35s cubic-bezier(.65,0,.45,1) .62s both; }
+.os-play .os-check { animation: osPop .45s cubic-bezier(.34,1.56,.64,1) .58s both; }
+.os-play .os-ring  { animation: osRing 1s ease-out .62s both; }
+@keyframes osCircleDraw { from { stroke-dashoffset: 151; } to { stroke-dashoffset: 0; } }
+@keyframes osCircleFill { to { fill: var(--gold); stroke: var(--gold); } }
+@keyframes osCheckDraw  { 0% { stroke-dashoffset: 36; opacity: 0; } 1% { opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 1; } }
+@keyframes osPop  { 0% { transform: scale(1); } 45% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes osRing { 0% { opacity: 1; box-shadow: 0 0 0 0 rgba(154,107,255,.55); } 100% { opacity: 0; box-shadow: 0 0 0 26px rgba(154,107,255,0); } }
+.os-box.os-play::before {   /* resplandor violeta suave detrás del check */
+  content: ''; position: absolute; left: 50%; top: 1.2rem; width: 220px; height: 160px;
+  transform: translateX(-50%); pointer-events: none;
+  background: radial-gradient(closest-side, rgba(107,43,255,.28), transparent);
+  animation: osGlow 1.6s ease .5s both;
+}
+@keyframes osGlow { 0% { opacity: 0; } 35% { opacity: 1; } 100% { opacity: .55; } }
+
+/* Textos y resumen entran de a uno */
+.os-play > .os-title, .os-play > .os-order-id, .os-play > .os-sub,
+.os-play > .os-summary, .os-play > #osClub, .os-play > .os-actions {
+  animation: osUp .45s cubic-bezier(.22,1,.36,1) both;
+}
+.os-play > .os-title    { animation-delay: .75s; }
+.os-play > .os-order-id { animation-delay: .82s; }
+.os-play > .os-sub      { animation-delay: .88s; }
+.os-play > .os-summary  { animation-delay: .95s; }
+.os-play > #osClub      { animation-delay: 1.02s; }
+.os-play > .os-actions  { animation-delay: 1.08s; }
+@keyframes osUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* Confeti: sale del check en abanico y cae */
+.os-confetti { position: fixed; left: 50%; top: 30%; width: 0; height: 0; z-index: 2; pointer-events: none; }
+.os-cf {
+  position: absolute; left: 0; top: 0; display: block;
+  color: var(--c); background: var(--c);
+  opacity: 0;
+  animation: osConfetti var(--t) cubic-bezier(.2,.7,.4,1) calc(.28s + var(--d)) forwards;   /* se agrega a los .34 s: sale con el check */
+}
+.os-cf-dot  { width: 7px; height: 7px; border-radius: 50%; }
+.os-cf-bar  { width: 4px; height: 10px; border-radius: 2px; }
+.os-cf-star { background: none; font-size: 13px; line-height: 1; font-style: normal; }
+@keyframes osConfetti {
+  0%   { opacity: 0; transform: translate(0, 0) rotate(0) scale(.4); }
+  10%  { opacity: 0; }   /* aparecen ya fuera del círculo */
+  16%  { opacity: 1; }
+  40%  { opacity: 1; transform: translate(var(--x), var(--y)) rotate(calc(var(--r) * .5)) scale(1); }
+  100% { opacity: 0; transform: translate(calc(var(--x) * 1.25), calc(var(--y) + var(--fall))) rotate(var(--r)) scale(.9); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .os-confetti, .os-ring, .os-box.os-play::before { display: none; }
+  .os-play .os-check-circle, .os-play .os-check-mark, .os-play .os-check,
+  .os-play > * { animation: none !important; }
+  .os-check-circle { fill: var(--gold); stroke: var(--gold); }
+}
 .os-title { font-family: var(--font-serif); color: var(--white); font-size: 1.35rem; margin-bottom: .4rem; }
 .os-sub { font-size: .83rem; color: var(--text2); margin-bottom: 1.2rem; line-height: 1.55; }
 .os-order-id { font-size: .78rem; color: var(--text2); margin-bottom: .5rem; letter-spacing: .02em; }
