@@ -78,7 +78,8 @@ function deliveryBadgeHtml(order) {
   const info = deliveryInfo(type);
   const word = { envio: 'Envío', recojo: 'Recojo', delivery: 'Delivery' }[type];
   const sub  = type === 'envio'
-    ? ['Shalom', [order.department, order.province].filter(Boolean).join(' / ')].filter(Boolean).join(' · ')
+    ? ['Shalom', order.city ? `${order.city} (${order.department || order.province})`
+                            : [order.department, order.province].filter(Boolean).join(' / ')].filter(Boolean).join(' · ')
     : type === 'delivery' ? 'Soritor' : 'En tienda';
   return `<span class="delivery-badge delivery-${type}">
       <span class="delivery-badge-icon" aria-hidden="true">${info.icon}</span>
@@ -627,6 +628,7 @@ async function openOrderDetail(id) {
     ` : ''}
     ${order.deliveryType === 'envio' ? `
     <div class="order-detail-row"><span class="lbl">Dpto / Prov</span><span class="val">${sanitize(order.department || '')} / ${sanitize(order.province || '')}</span></div>
+    ${order.city ? `<div class="order-detail-row"><span class="lbl">Ciudad</span><span class="val">${sanitize(order.city)}</span></div>` : ''}
     <div class="order-detail-row"><span class="lbl">Agencia Shalom</span><span class="val">${sanitize(order.shalomOffice || '—')}</span></div>
     <div class="order-detail-row"><span class="lbl">Orden Shalom</span><span class="val">${shalom
       ? `N° ${sanitize(shalom.number || '—')} · Código ${sanitize(shalom.code || '—')} · Clave ${sanitize(shalom.password || '—')}`
@@ -1250,6 +1252,7 @@ async function openShippingLabel(orderId) {
       <div class="sl-section">
         <div class="sl-label">DESTINO</div>
         <div class="sl-value sl-name">${sanitize(order.department || '')}${order.province ? ` — ${sanitize(order.province)}` : ''}</div>
+        ${order.city ? `<div class="sl-value">Ciudad: ${sanitize(order.city)}</div>` : ''}
         ${order.shalomOffice ? `<div class="sl-value">Agencia Shalom: ${sanitize(order.shalomOffice)}</div>` : ''}
       </div>
       <div class="sl-divider"></div>
