@@ -19,11 +19,11 @@ const now = new Date();
 const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
 
 // Páginas HTML: las de frontend/, las de sus carpetas de primer nivel (admin/,
-// nosotros/, contacto/) y el catálogo para imprimir (admin/catalogo/)
+// nosotros/, contacto/, guia/) y el catálogo para imprimir (admin/catalogo/)
 const pages = [];
 for (const entry of fs.readdirSync(site, { withFileTypes: true })) {
   if (entry.isFile() && entry.name.endsWith('.html')) pages.push(path.join(site, entry.name));
-  if (entry.isDirectory() && ['admin', 'nosotros', 'contacto'].includes(entry.name)) {
+  if (entry.isDirectory() && ['admin', 'nosotros', 'contacto', 'guia'].includes(entry.name)) {
     const idx = path.join(site, entry.name, 'index.html');
     if (fs.existsSync(idx)) pages.push(idx);
   }

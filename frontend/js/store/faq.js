@@ -44,7 +44,12 @@ const STORE_FAQ = [
   {
     key: 'parecido',
     q: '¿Qué significa "Se parece a"?',
-    a: 'Son perfumes árabes con un aroma parecido a un perfume famoso de diseñador o nicho, a un precio más accesible. Busca el perfume famoso que te gusta y te mostramos cuáles se le parecen.'
+    a: 'Son perfumes árabes con un aroma parecido a un perfume famoso de diseñador o nicho, a un precio más accesible. Busca el perfume famoso que te gusta y te mostramos cuáles se le parecen. <a href="/guia/#dupe">Qué es un dupe →</a>'
+  },
+  {
+    key: 'duracion',
+    q: '¿Por qué un perfume dura distinto en cada persona?',
+    a: 'Porque cada piel es distinta: el pH, si es seca o grasa, el clima y hasta las notas del perfume cambian cuánto dura y cómo huele. Además, tu nariz se acostumbra y deja de sentirlo aunque los demás sí lo noten. <a href="/guia/#duracion">Lee la guía completa →</a>'
   },
   {
     key: 'descuento',
