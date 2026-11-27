@@ -105,7 +105,9 @@ async function renderCombos(preload = null) {
 
     const itemsChips = items.map(pid => {
       const p = prodLookup[pid];
-      return `<span class="combo-card-item-chip">${sanitize(p.brand)} ${sanitize(p.name)}</span>`;
+      // "Creed Aventus" ya trae la marca: no repetirla ("Creed Creed Aventus")
+      const label = p.name.toLowerCase().startsWith(p.brand.toLowerCase()) ? p.name : `${p.brand} ${p.name}`;
+      return `<span class="combo-card-item-chip">${sanitize(label)}</span>`;
     }).join('');
 
     const sizesHtml = tiers.map(t => `
