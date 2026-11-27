@@ -1669,6 +1669,62 @@ html:not([data-view="catalogo"]) .view-catalogo { display: none !important; }
 }
 .checkout-adult-note strong { color: #ffca28; }
 
+/* Delivery: aviso «solo dentro de Soritor» y mapa de la tienda (hay clientes
+   de otras regiones que elegían delivery por error) */
+.deliv-alert {
+  display: flex; flex-direction: column; gap: .45rem;
+  padding: .9rem 1rem; border-radius: var(--r);
+  background: rgba(255,179,0,.09); border: 1px solid rgba(255,179,0,.45);
+  box-shadow: inset 3px 0 0 #ffb300;
+}
+.deliv-alert-head { display: flex; align-items: center; gap: .5rem; }
+.deliv-alert-icon { width: 20px; height: 20px; color: #ffca28; flex-shrink: 0; }
+.deliv-alert-title { font-size: .9rem; font-weight: 700; color: #ffca28; line-height: 1.35; }
+.deliv-alert-text { font-size: .8rem; line-height: 1.55; color: var(--text2); }
+.deliv-alert-text strong { color: var(--white); }
+.deliv-alert-btn {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: .45rem;
+  margin-top: .15rem; min-height: 40px; padding: .5rem .95rem;
+  font: inherit; font-size: .78rem; font-weight: 600; text-align: left; line-height: 1.35;
+  color: var(--white); background: rgba(107,43,255,.16);
+  border: 1px solid rgba(107,43,255,.5); border-radius: 50px; cursor: pointer;
+  transition: background .2s, border-color .2s, transform .15s;
+}
+.deliv-alert-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.deliv-alert-btn:hover { background: rgba(107,43,255,.28); border-color: var(--gold); }
+.deliv-alert-btn:active { transform: scale(.97); }
+
+.deliv-map { border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; background: var(--card); }
+.deliv-map-frame { position: relative; height: 190px; background: #161616; isolation: isolate; }
+.deliv-map-frame iframe {
+  position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block;
+  opacity: 0; transition: opacity .5s ease;
+  /* mapa oscuro, a juego con la tienda (igual que en Contacto) */
+  filter: invert(.9) hue-rotate(180deg) saturate(.85) brightness(.95) contrast(.95);
+}
+.deliv-map.is-loaded iframe { opacity: 1; }
+.deliv-map-skel {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem;
+  font-size: .74rem; color: var(--text3);
+  background: linear-gradient(110deg, #161616 30%, #1f1a27 50%, #161616 70%);
+  background-size: 250% 100%;
+  animation: delivMapShimmer 1.6s linear infinite;
+}
+.deliv-map-skel svg { width: 26px; height: 26px; color: var(--gold-l); }
+.deliv-map.is-loaded .deliv-map-skel { animation: none; visibility: hidden; }
+@keyframes delivMapShimmer { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+.deliv-map-caption {
+  display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+  padding: .6rem .85rem; border-top: 1px solid var(--border);
+  font-size: .74rem; line-height: 1.45; color: var(--text2);
+}
+.deliv-map-caption strong { color: var(--white); }
+.deliv-map-caption a { flex-shrink: 0; font-weight: 600; color: var(--gold-l); }
+.deliv-map-caption a:hover { text-decoration: underline; }
+.deliv-note { font-size: .76rem; line-height: 1.5; color: var(--text3); }
+@media (prefers-reduced-motion: reduce) { .deliv-map-skel { animation: none; } }
+
 .shipping-form { display: flex; flex-direction: column; gap: .8rem; }
 .form-group { display: flex; flex-direction: column; gap: .3rem; }
 .form-group label { font-size: .75rem; color: var(--text2); font-weight: 500; letter-spacing: .04em; }

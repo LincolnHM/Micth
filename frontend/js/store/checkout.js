@@ -205,6 +205,7 @@ const Checkout = {
   // Muestra u oculta los datos de cada forma de entrega
   applyDeliveryType(value) {
     this.deliveryType = value;
+    if (value === 'delivery') this._loadDeliveryMap();
     document.getElementById('pickupForm').classList.toggle('hidden', value !== 'pickup');
     const forms = { delivery: 'deliveryForm', shipping: 'shippingForm' };
     Object.entries(forms).forEach(([type, id]) => {
@@ -220,6 +221,18 @@ const Checkout = {
         }, 60);
       }
     });
+  },
+
+  // Mapa de la tienda en el aviso «solo Soritor»: se carga recién al elegir
+  // delivery, para no pedirle el mapa a Google en cada visita
+  _loadDeliveryMap() {
+    const box   = document.getElementById('delivMap');
+    const frame = box?.querySelector('iframe');
+    if (!frame || frame.src) return;
+    const done = () => box.classList.add('is-loaded');
+    frame.addEventListener('load', done, { once: true });
+    setTimeout(done, 6000);           // por si el evento load no llega
+    frame.src = frame.dataset.src;
   },
 
   // El delivery solo se habilita si el carrito cumple el mínimo
@@ -711,6 +724,13 @@ document.addEventListener('DOMContentLoaded', () => {
       radio.checked = true;
       Checkout.applyDeliveryType(radio.value);
     });
+  });
+
+  // Aviso del delivery: «No estoy en Soritor» pasa a envío por Shalom
+  document.getElementById('delivToShalomBtn')?.addEventListener('click', () => {
+    const radio = document.querySelector('input[name="deliveryType"][value="shipping"]');
+    radio.checked = true;
+    Checkout.applyDeliveryType('shipping');
   });
 
   document.getElementById('departmentSelect').addEventListener('change', function () {

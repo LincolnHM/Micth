@@ -207,7 +207,7 @@
   <link rel="icon" type="image/png" href="imgGato/icons/icon-192.png">
   <link rel="apple-touch-icon" href="imgGato/icons/icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261127-1604">
+  <link rel="stylesheet" href="css/style.css?v=20261127-2219">
   <!-- La pantalla de carga solo se muestra la primera vez en la sesión; en las
        siguientes visitas (volver de Nosotros, recargar) no hace esperar. -->
   <script>try { if (sessionStorage.getItem('micht_loader_seen')) document.documentElement.classList.add('pl-skip'); } catch (e) {}</script>
@@ -1040,7 +1040,7 @@
             </label>
             <label class="option-card" id="deliveryOptionCard">
               <input type="radio" name="deliveryType" value="delivery">
-              <div class="option-content"><span class="option-icon">🛵</span><span>Delivery en Soritor <small class="option-sub option-sub-free">Gratis</small></span></div>
+              <div class="option-content"><span class="option-icon">🛵</span><span>Delivery solo en Soritor <small class="option-sub option-sub-free">Gratis</small></span></div>
             </label>
             <p class="delivery-hint" id="deliveryHint" hidden></p>
             <label class="option-card">
@@ -1066,13 +1066,34 @@
           </div>
 
           <form class="shipping-form hidden" id="deliveryForm" novalidate>
-            <div class="checkout-info-box">
-              <span class="cib-icon" aria-hidden="true">🛵</span>
-              <div>
-                <p class="cib-title">Delivery gratis dentro de Soritor</p>
-                <p class="cib-text">Te llevamos tu pedido a casa. Coordinamos la hora por WhatsApp.</p>
+            <!-- Aviso: hay clientes de otras regiones que eligen delivery por error -->
+            <div class="deliv-alert" role="note">
+              <div class="deliv-alert-head">
+                <svg class="deliv-alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18.5A2 2 0 0 0 3.5 21.5h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                <p class="deliv-alert-title">El delivery es solo dentro de Soritor</p>
+              </div>
+              <p class="deliv-alert-text">Nuestra tienda está en <strong>Soritor, San Martín</strong> (mira el mapa). Si vives en otra ciudad o región, tu pedido va por <strong>Envío por Shalom</strong>.</p>
+              <button type="button" class="deliv-alert-btn" id="delivToShalomBtn">
+                No estoy en Soritor: elegir Shalom
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+            <div class="deliv-map" id="delivMap">
+              <div class="deliv-map-frame">
+                <div class="deliv-map-skel" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 1112 6.5a2.5 2.5 0 010 5z"/></svg>
+                  Cargando mapa…
+                </div>
+                <iframe data-src="https://maps.google.com/maps?q=-6.1374824,-77.09955&amp;hl=es&amp;z=15&amp;output=embed"
+                        title="Mapa: tienda MICHT en Jr. Las Flores N°620, Soritor — San Martín"
+                        referrerpolicy="no-referrer-when-downgrade"></iframe>
+              </div>
+              <div class="deliv-map-caption">
+                <span><strong>Tienda MICHT</strong> · Jr. Las Flores N°620, Soritor — San Martín</span>
+                <a href="https://maps.google.com/maps?q=-6.1374824,-77.09955" target="_blank" rel="noopener noreferrer">Ampliar →</a>
               </div>
             </div>
+            <p class="deliv-note">Te lo llevamos gratis a tu casa en Soritor. Coordinamos la hora por WhatsApp.</p>
             <h4>¿A dónde lo llevamos?</h4>
             <div class="form-group">
               <label for="delivNameInput">Nombre completo *</label>
@@ -1519,39 +1540,39 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
   <!-- Datos y conexión a Supabase (compartidos con el panel admin) — el orden importa -->
-  <script src="js/shared/data-core.js?v=20261127-1604"></script>
-  <script src="js/shared/catalog.js?v=20261127-1604"></script>
-  <script src="js/shared/data.js?v=20261127-1604"></script>
-  <script src="js/shared/supabase-config.js?v=20261127-1604"></script>
-  <script src="js/shared/cloud-orders.js?v=20261127-1604"></script>
-  <script src="js/shared/cloud-gallery.js?v=20261127-1604"></script>
-  <script src="js/shared/cloud-products.js?v=20261127-1604"></script>
-  <script src="js/shared/slugs.js?v=20261127-1604"></script>
-  <script src="js/shared/cloud-combos.js?v=20261127-1604"></script>
+  <script src="js/shared/data-core.js?v=20261127-2219"></script>
+  <script src="js/shared/catalog.js?v=20261127-2219"></script>
+  <script src="js/shared/data.js?v=20261127-2219"></script>
+  <script src="js/shared/supabase-config.js?v=20261127-2219"></script>
+  <script src="js/shared/cloud-orders.js?v=20261127-2219"></script>
+  <script src="js/shared/cloud-gallery.js?v=20261127-2219"></script>
+  <script src="js/shared/cloud-products.js?v=20261127-2219"></script>
+  <script src="js/shared/slugs.js?v=20261127-2219"></script>
+  <script src="js/shared/cloud-combos.js?v=20261127-2219"></script>
   <!-- Tienda -->
-  <script src="js/store/announcement.js?v=20261127-1604"></script>
-  <script src="js/store/seasonal-theme.js?v=20261127-1604"></script>
-  <script src="js/store/carousel.js?v=20261127-1604"></script>
-  <script src="js/store/cart.js?v=20261127-1604"></script>
-  <script src="js/store/catalog-view.js?v=20261127-1604"></script>
-  <script src="js/store/new-arrivals.js?v=20261127-1604"></script>
-  <script src="js/store/auto-carousel.js?v=20261127-1604"></script>
-  <script src="js/store/coming-soon.js?v=20261127-1604"></script>
-  <script src="js/store/filters-ui.js?v=20261127-1604"></script>
-  <script src="js/store/combos-carousel.js?v=20261127-1604"></script>
-  <script src="js/store/faq.js?v=20261127-1604"></script>
-  <script src="js/store/product-detail.js?v=20261127-1604"></script>
-  <script src="js/store/combo-detail.js?v=20261127-1604"></script>
-  <script src="js/store/store-view.js?v=20261127-1604"></script>
-  <script src="js/store/init.js?v=20261127-1604"></script>
-  <script src="js/store/gallery.js?v=20261127-1604"></script>
-  <script src="js/store/scent-finder.js?v=20261127-1604"></script>
-  <script src="js/store/checkout.js?v=20261127-1604"></script>
-  <script src="js/store/customer-auth.js?v=20261127-1604"></script>
-  <script src="js/store/club.js?v=20261127-1604"></script>
-  <script src="js/store/chatbot.js?v=20261127-1604"></script>
-  <script src="js/store/animations.js?v=20261127-1604"></script>
-  <script src="js/store/gsap-animations.js?v=20261127-1604"></script>
+  <script src="js/store/announcement.js?v=20261127-2219"></script>
+  <script src="js/store/seasonal-theme.js?v=20261127-2219"></script>
+  <script src="js/store/carousel.js?v=20261127-2219"></script>
+  <script src="js/store/cart.js?v=20261127-2219"></script>
+  <script src="js/store/catalog-view.js?v=20261127-2219"></script>
+  <script src="js/store/new-arrivals.js?v=20261127-2219"></script>
+  <script src="js/store/auto-carousel.js?v=20261127-2219"></script>
+  <script src="js/store/coming-soon.js?v=20261127-2219"></script>
+  <script src="js/store/filters-ui.js?v=20261127-2219"></script>
+  <script src="js/store/combos-carousel.js?v=20261127-2219"></script>
+  <script src="js/store/faq.js?v=20261127-2219"></script>
+  <script src="js/store/product-detail.js?v=20261127-2219"></script>
+  <script src="js/store/combo-detail.js?v=20261127-2219"></script>
+  <script src="js/store/store-view.js?v=20261127-2219"></script>
+  <script src="js/store/init.js?v=20261127-2219"></script>
+  <script src="js/store/gallery.js?v=20261127-2219"></script>
+  <script src="js/store/scent-finder.js?v=20261127-2219"></script>
+  <script src="js/store/checkout.js?v=20261127-2219"></script>
+  <script src="js/store/customer-auth.js?v=20261127-2219"></script>
+  <script src="js/store/club.js?v=20261127-2219"></script>
+  <script src="js/store/chatbot.js?v=20261127-2219"></script>
+  <script src="js/store/animations.js?v=20261127-2219"></script>
+  <script src="js/store/gsap-animations.js?v=20261127-2219"></script>
   <script>
     // ── Mobile menu toggle ───────────────────────────────────
     (function () {
