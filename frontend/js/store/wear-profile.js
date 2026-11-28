@@ -1,5 +1,8 @@
 // ─── «Cuándo usarlo»: estación y momento del día de cada perfume ──────────────
-// No usa votos de nadie: se calcula con los datos del propio perfume.
+// No usa votos de nadie.
+//   0. Si el perfume está en wear-data.js (análisis hecho perfume por perfume),
+//      se usan esos datos, con su texto «para qué va» y sus ocasiones.
+//   Si no (un perfume nuevo), se calcula con los datos del propio perfume:
 //   1. Cada acorde (con su %) suma puntos a invierno, primavera, verano, otoño,
 //      día y noche según la tabla WEAR_RULES: los cítricos, acuáticos y verdes
 //      van al calor y al día; la vainilla, el ámbar, el oud y lo especiado
@@ -46,8 +49,16 @@ function _wearVector(name) {
 }
 
 // Devuelve { invierno, primavera, verano, otono, dia, noche } entre 0 y 1, o
-// null si el perfume no tiene acordes ni momento marcado.
+// null si el perfume no tiene acordes ni momento marcado. Con análisis propio
+// trae además { curated: true, uses: [...], about: '...' }.
 function wearProfile(p) {
+  const known = typeof wearLookup === 'function' ? wearLookup(p) : null;
+  if (known) {
+    const [seasons, time, uses, about] = known;
+    const out = { hasSeasons: true, curated: true, uses: uses || [], about: about || '' };
+    [...seasons, ...time].forEach((v, i) => { out[WEAR_KEYS[i]] = Math.max(.01, v / 100); });
+    return out;
+  }
   const accords = (Array.isArray(p?.accords) ? p.accords : []).filter(a => a && a.name);
   const occ = WEAR_OCCASION[p?.occasion];
   if (!accords.length && !occ) return null;
@@ -87,6 +98,14 @@ const WEAR_ITEMS = [
 
 function _wearWord(rel) {
   return rel >= .9 ? 'Ideal' : rel >= .72 ? 'Muy bien' : rel >= .5 ? 'Bien' : 'Poco';
+}
+
+// «Para qué va»: texto y ocasiones (solo perfumes con análisis propio)
+function wearAboutHtml(prof) {
+  if (!prof.curated) return '';
+  const chips = prof.uses.filter(u => typeof WEAR_USES !== 'undefined' && WEAR_USES[u])
+    .map(u => `<span class="pd-wear-chip">${WEAR_USES[u]}</span>`).join('');
+  return `${prof.about ? `<p class="pd-wear-about">${sanitize(prof.about)}</p>` : ''}${chips ? `<div class="pd-wear-uses"><span class="pd-wear-uses-lbl">Va bien para</span>${chips}</div>` : ''}`;
 }
 
 // Frase corta: «Ideal en otoño e invierno, de noche»

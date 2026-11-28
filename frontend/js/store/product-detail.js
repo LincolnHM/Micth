@@ -184,7 +184,8 @@ function _createPdModal() {
             <p class="pd-notes-section-title">CUÁNDO USARLO</p>
             <p id="pdWearSummary" class="pd-wear-summary"></p>
             <div id="pdWearGrid" class="pd-wear-grid"></div>
-            <p class="pd-wear-note">Según sus acordes y el momento del perfume. <a href="/guia/#dia-noche">¿Cómo elegir?</a></p>
+            <div id="pdWearAbout"></div>
+            <p class="pd-wear-note"><span id="pdWearBasis">Según sus acordes y el momento del perfume.</span> <a href="/guia/#dia-noche">¿Cómo elegir?</a></p>
           </div>
 
           <!-- Acordes principales — estilo Fragrantica, siempre visibles -->
@@ -551,6 +552,10 @@ function openPdModal(productId, { fromHistory = false } = {}) {
     const grid = document.getElementById('pdWearGrid');
     grid.innerHTML = wearGridHtml(wear);
     grid.classList.toggle('only-time', !wear.hasSeasons);
+    document.getElementById('pdWearAbout').innerHTML = wearAboutHtml(wear);
+    document.getElementById('pdWearBasis').textContent = wear.curated
+      ? 'Análisis MICHT según sus notas, su estilo y su perfume de referencia.'
+      : 'Según sus acordes y el momento del perfume.';
     occSection.style.display = 'flex';
   } else {
     occSection.style.display = 'none';
