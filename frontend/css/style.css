@@ -4377,22 +4377,51 @@ body:has(.mobile-menu.open) .wa-float { opacity: 0; pointer-events: none; }
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
 }
-/* ── Momento ideal de uso — Día / Noche ───────────────────── */
+/* ── Cuándo usarlo: estaciones y día / noche (wear-profile.js) ─ */
 .pd-occasion-section { display: flex; flex-direction: column; gap: .65rem; }
-
-.pd-occasion-badge {
-  display: flex; align-items: center; gap: .7rem;
-  padding: .8rem 1.1rem;
-  border-radius: var(--r-lg);
-  background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.07);
-  border-left-width: 3px;
-  font-size: .84rem; font-weight: 600; color: var(--text);
+.pd-wear-summary { margin-top: -.2rem; font-size: .9rem; font-weight: 600; color: var(--white); }
+.pd-wear-grid {
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .35rem;
+  padding: .95rem .6rem .85rem; border-radius: var(--r-lg);
+  background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07);
 }
-.pd-occasion-icon { font-size: 1.15rem; line-height: 1; flex-shrink: 0; }
-.pd-occ-dia   { border-left-color: #d9a441; background: rgba(217,164,65,.08); }
-.pd-occ-noche { border-left-color: #6f5fc0; background: rgba(111,95,192,.1); }
-.pd-occ-ambas { border-left-color: #c98a4b; background: linear-gradient(90deg, rgba(217,164,65,.09), rgba(111,95,192,.09)); }
+.pd-wear-grid.only-time { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pd-wear-item { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: .3rem; text-align: center; color: var(--text3); }
+/* Línea que separa las estaciones del día / noche */
+.pd-wear-grid:not(.only-time) .pd-wear-item:nth-child(5)::before {
+  content: ''; position: absolute; left: -.2rem; top: .2rem; bottom: .2rem; width: 1px; background: rgba(255,255,255,.08);
+}
+.pd-wear-icon { width: 26px; height: 26px; color: var(--text3); transition: color .2s; }
+.pd-wear-item.is-top .pd-wear-icon { color: var(--wc); }
+.pd-wear-label { font-size: .7rem; font-weight: 500; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.pd-wear-item.is-top .pd-wear-label { color: var(--white); font-weight: 600; }
+.pd-wear-bar { width: 100%; height: 5px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; }
+.pd-wear-bar i { display: block; height: 100%; border-radius: inherit; background: var(--wc); opacity: .85; }
+.pd-wear-word { font-size: .64rem; font-weight: 600; letter-spacing: .02em; color: var(--wc); opacity: .9; white-space: nowrap; }
+.pd-wear-about { font-size: .86rem; line-height: 1.65; color: var(--text2); }
+.pd-wear-uses { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-top: .65rem; }
+.pd-wear-uses-lbl { margin-right: .15rem; font-size: .7rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text3); }
+.pd-wear-chip {
+  padding: .28rem .7rem; border-radius: 50px; font-size: .76rem; font-weight: 500; color: var(--white);
+  background: rgba(107,43,255,.14); border: 1px solid rgba(154,107,255,.35);
+}
+.pd-wear-note { font-size: .72rem; color: var(--text3); }
+.pd-wear-note a { color: var(--gold-l); font-weight: 600; }
+.pd-wear-note a:hover { text-decoration: underline; }
+.pd-wear-item.is-low .pd-wear-word { color: var(--text3); }
+.pd-wear-item.is-low .pd-wear-bar i { opacity: .5; }
+@media (max-width: 480px) {
+  .pd-wear-grid { padding: .9rem .45rem .8rem; gap: .25rem; }
+  .pd-wear-label { font-size: .62rem; }
+  .pd-wear-word { font-size: .6rem; }
+}
+/* Muy angosto: estaciones arriba, día y noche abajo */
+@media (max-width: 360px) {
+  .pd-wear-grid:not(.only-time) { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: .9rem; }
+  .pd-wear-grid:not(.only-time) .pd-wear-item.is-time { grid-column: span 2; }
+  .pd-wear-grid:not(.only-time) .pd-wear-item:nth-child(5)::before { display: none; }
+  .pd-wear-label { font-size: .66rem; }
+}
 
 /* ── Acordes principales — estilo Fragrantica ────────────── */
 .pd-accords-section { display: flex; flex-direction: column; gap: .65rem; }
@@ -9301,6 +9330,8 @@ mark.srch-sug-hl { background: none; color: var(--gold); font-weight: 700; }
 .faq-item summary:hover { color: var(--gold-l); }
 .faq-answer p { font-size: .8rem; color: var(--text2); line-height: 1.7; padding: 0 .15rem 1rem; }
 .faq-answer strong { color: var(--text); font-weight: 600; }
+.faq-answer a { color: var(--gold-l); font-weight: 600; white-space: nowrap; }
+.faq-answer a:hover { text-decoration: underline; }
 
 .faq-block { max-width: 760px; margin: 2.75rem auto 0; }
 .faq-block-title {
@@ -11207,3 +11238,196 @@ body[data-campaign="navidad"] .carousel-dots .dot.active { background: var(--xm-
 .header-store .floating-cart-btn:hover { color: var(--gold-l); background: rgba(107,43,255,.1); border: 0; box-shadow: none; }
 .header-store .floating-cart-btn svg { width: 22px; height: 22px; }
 .header-store .floating-cart-btn .cart-count { top: 1px; right: 0; width: 17px; height: 17px; font-size: .6rem; }
+
+/* ════════════════════════════════════════════════════════
+   GUÍA DEL PERFUME — frontend/guia/index.html
+   Usa la base de Nosotros (.ab-*); aquí solo lo propio de la guía.
+   ════════════════════════════════════════════════════════ */
+.gd-hero { text-align: center; padding-bottom: clamp(1.5rem, 4vw, 2.5rem); }
+.gd-hero::before { background: radial-gradient(ellipse 60% 70% at 50% 25%, rgba(107,43,255,.2), transparent 65%); }
+.gd-hero-inner { max-width: 860px; display: flex; flex-direction: column; align-items: center; }
+.gd-hero .ab-eyebrow::after { content: ''; width: 26px; height: 1px; background: linear-gradient(90deg, var(--ab-au), transparent); }
+.gd-hero .ab-lead { margin-left: auto; margin-right: auto; }
+.gd-hero .ab-actions { justify-content: center; }
+
+/* Índice de temas */
+.gd-toc { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .6rem; width: 100%; margin-top: clamp(2rem, 4vw, 2.75rem); }
+.gd-toc a {
+  display: flex; align-items: center; gap: .65rem; padding: .8rem .95rem; border-radius: 14px;
+  border: 1px solid var(--border); background: rgba(255,255,255,.02);
+  color: var(--text); font-size: .85rem; font-weight: 500; line-height: 1.35; text-align: left; text-decoration: none;
+  transition: border-color .2s, background .2s, transform .2s;
+}
+.gd-toc a span { font-family: var(--font-serif); font-size: .8rem; letter-spacing: .08em; color: var(--gold-l); }
+.gd-toc a:hover { border-color: rgba(154,107,255,.5); background: rgba(107,43,255,.08); color: var(--white); transform: translateY(-2px); }
+
+/* Partes */
+.gd-section { padding: clamp(2.75rem, 6vw, 4.5rem) 0; border-top: 1px solid rgba(255,255,255,.05); scroll-margin-top: 76px; }
+.container.gd-wrap { max-width: 960px; }
+.gd-head { display: flex; align-items: center; gap: .9rem; margin-bottom: 1rem; }
+.gd-num {
+  flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  font-family: var(--font-serif); font-size: .88rem; letter-spacing: .1em; color: var(--ab-aul);
+  background: radial-gradient(circle at 35% 30%, rgba(107,43,255,.38), rgba(107,43,255,.06)); border: 1px solid rgba(154,107,255,.38);
+}
+.gd-head h2 { flex: 1; min-width: 0; font-family: var(--font-serif); font-size: clamp(1.45rem, 3.4vw, 2.2rem); line-height: 1.2; color: var(--white); font-weight: 700; }
+.gd-head h2 em {
+  font-style: italic; padding-right: .08em;
+  background: linear-gradient(90deg, var(--gold-l), var(--ab-au)); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.gd-link {
+  flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  border: 1px solid var(--border); background: transparent; color: var(--text2);
+  transition: color .2s, border-color .2s, background .2s;
+}
+.gd-link svg { width: 17px; height: 17px; }
+.gd-link:hover { color: var(--white); border-color: rgba(154,107,255,.5); background: rgba(107,43,255,.12); }
+.gd-lead { max-width: 740px; margin-bottom: 1.6rem; color: var(--text2); font-size: 1rem; line-height: 1.8; }
+.gd-lead strong { color: var(--text); }
+.gd-subtitle { margin: 2.1rem 0 .85rem; font-size: .7rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--ab-au); }
+
+/* Tarjetas */
+.gd-grid { display: grid; gap: clamp(.75rem, 2vw, 1.1rem); }
+.gd-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.gd-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.gd-card {
+  position: relative; padding: 1.3rem 1.25rem; border-radius: 18px;
+  background: linear-gradient(160deg, rgba(255,255,255,.035), rgba(255,255,255,.01)); border: 1px solid rgba(255,255,255,.07);
+}
+.gd-card-icon {
+  width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; margin-bottom: .9rem;
+  color: var(--ab-aul); background: rgba(107,43,255,.2); border: 1px solid rgba(154,107,255,.35);
+}
+.gd-card-icon svg { width: 21px; height: 21px; }
+.gd-card h3 { margin-bottom: .4rem; font-family: var(--font-serif); font-size: 1.08rem; color: var(--white); }
+.gd-card p { color: var(--text2); font-size: .88rem; line-height: 1.7; }
+.gd-card p strong { color: var(--text); }
+
+/* Ejemplos de dupes */
+.gd-dupes { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
+.gd-dupe {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: .7rem;
+  height: 100%; padding: .9rem 1rem; border-radius: 14px; border: 1px solid var(--border); background: var(--card);
+  color: inherit; text-decoration: none; transition: border-color .2s, transform .2s;
+}
+.gd-dupe:hover { border-color: rgba(154,107,255,.5); transform: translateY(-2px); }
+.gd-dupe b { display: block; font-size: .9rem; font-weight: 600; line-height: 1.3; color: var(--white); }
+.gd-dupe small { display: block; margin-top: .15rem; font-size: .72rem; color: var(--text3); }
+.gd-dupe-arrow { display: flex; flex-direction: column; align-items: center; gap: .1rem; font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: var(--gold-l); white-space: nowrap; }
+.gd-dupe-arrow svg { width: 18px; height: 18px; }
+.gd-dupe-orig { text-align: right; }
+
+/* Consejo */
+.gd-tip {
+  display: flex; gap: .75rem; align-items: flex-start; margin-top: 1.4rem; padding: 1rem 1.15rem; border-radius: 14px;
+  background: rgba(107,43,255,.08); border: 1px solid rgba(107,43,255,.28); color: var(--text2); font-size: .88rem; line-height: 1.65;
+}
+.gd-tip strong { color: var(--white); }
+.gd-tip a { color: var(--gold-l); font-weight: 600; }
+.gd-tip-icon { flex-shrink: 0; width: 22px; height: 22px; margin-top: .05rem; color: var(--gold-l); }
+
+/* Tres datos en fila (duración/proyección/estela, salida/corazón/fondo) */
+.gd-measure { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; }
+.gd-measure > div { padding: 1.05rem 1rem; border-radius: 14px; border: 1px dashed rgba(185,174,216,.28); text-align: center; }
+.gd-measure b { display: block; margin-bottom: .3rem; font-family: var(--font-serif); font-size: 1.05rem; color: var(--white); }
+.gd-measure span { font-size: .8rem; line-height: 1.55; color: var(--text2); }
+
+/* Árabe / diseñador / nicho */
+.gd-type { padding-top: 1.4rem; }
+.gd-type-tag {
+  display: inline-block; margin-bottom: .75rem; padding: .3rem .85rem; border-radius: 50px;
+  font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--white); background: linear-gradient(135deg, var(--gold), var(--gold-l));
+}
+.gd-type-price { position: absolute; top: 1.55rem; right: 1.25rem; font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ab-au); }
+.gd-type ul { list-style: none; padding: 0; margin: .85rem 0 0; display: flex; flex-direction: column; gap: .45rem; }
+.gd-type li { display: flex; gap: .5rem; font-size: .85rem; line-height: 1.55; color: var(--text2); }
+.gd-type li::before { content: '✦'; flex-shrink: 0; margin-top: .15rem; font-size: .65rem; color: var(--gold-l); }
+.gd-type p.gd-type-brands { margin-top: 1rem; padding-top: .8rem; border-top: 1px solid rgba(255,255,255,.06); font-size: .76rem; color: var(--text3); }
+
+/* Tamaños de decant */
+.gd-sizes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .6rem; }
+.gd-size { padding: 1rem .5rem; border-radius: 16px; border: 1px solid var(--border); background: var(--card); text-align: center; }
+.gd-size b { display: block; font-family: var(--font-serif); font-size: 1.35rem; color: var(--white); }
+.gd-size span { display: block; margin-top: .2rem; font-size: .74rem; color: var(--text2); }
+.gd-size em { display: block; margin-top: .45rem; font-style: normal; font-size: .8rem; font-weight: 600; color: var(--gold-l); }
+
+/* Pasos para aplicarlo */
+.gd-steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; counter-reset: gd-step; }
+.gd-step { display: flex; gap: .9rem; padding: 1.1rem 1.15rem; border-radius: 16px; border: 1px solid var(--border); background: var(--card); }
+.gd-step::before {
+  counter-increment: gd-step; content: counter(gd-step);
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  font-family: var(--font-serif); font-size: .9rem; font-weight: 700; color: #fff;
+  background: linear-gradient(135deg, var(--gold), var(--gold-l));
+}
+.gd-step h3 { margin-bottom: .25rem; font-size: .95rem; font-weight: 600; color: var(--white); }
+.gd-step p { font-size: .86rem; line-height: 1.6; color: var(--text2); }
+
+/* De día o de noche */
+.gd-dn { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(.8rem, 2vw, 1.2rem); }
+.gd-dn-card {
+  position: relative; overflow: hidden; display: flex; flex-direction: column;
+  padding: 1.4rem 1.3rem 1.3rem; border-radius: 20px; border: 1px solid rgba(255,255,255,.08);
+}
+.gd-dn-day {
+  background: radial-gradient(ellipse 80% 55% at 100% 0%, rgba(255,196,64,.13), transparent 70%), linear-gradient(160deg, rgba(255,255,255,.035), rgba(255,255,255,.01));
+  border-color: rgba(255,196,64,.22);
+}
+.gd-dn-night {
+  background: radial-gradient(ellipse 80% 55% at 100% 0%, rgba(107,43,255,.24), transparent 70%), linear-gradient(160deg, rgba(255,255,255,.035), rgba(255,255,255,.01));
+  border-color: rgba(154,107,255,.3);
+}
+.gd-dn-top { display: flex; align-items: center; gap: .85rem; margin-bottom: 1rem; }
+.gd-dn-icon { flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; }
+.gd-dn-icon svg { width: 25px; height: 25px; }
+.gd-dn-day .gd-dn-icon   { color: #ffd166; background: rgba(255,196,64,.14); border: 1px solid rgba(255,196,64,.4); }
+.gd-dn-night .gd-dn-icon { color: var(--ab-aul); background: rgba(107,43,255,.25); border: 1px solid rgba(154,107,255,.45); }
+.gd-dn-top h3 { font-family: var(--font-serif); font-size: 1.4rem; line-height: 1.15; color: var(--white); }
+.gd-dn-fams { margin-top: .25rem; font-size: .76rem; line-height: 1.5; color: var(--text3); }
+.gd-dn-day .gd-dn-fams   { color: #e8c77a; }
+.gd-dn-night .gd-dn-fams { color: var(--ab-au); }
+.gd-dn-why { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .6rem; }
+.gd-dn-why li { font-size: .86rem; line-height: 1.65; color: var(--text2); }
+.gd-dn-why strong { color: var(--white); }
+.gd-dn-for { margin-top: .85rem; font-size: .82rem; color: var(--text2); }
+.gd-dn-for b { color: var(--white); font-weight: 600; }
+.gd-dn-more { align-self: flex-start; margin-top: auto; padding-top: 1.1rem; font-size: .82rem; font-weight: 600; color: var(--gold-l); text-decoration: none; }
+.gd-dn-day .gd-dn-more { color: #ffd166; }
+.gd-dn-more:hover { text-decoration: underline; }
+
+/* Según la ocasión */
+.gd-occ { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; }
+.gd-occ li { display: flex; gap: .75rem; align-items: flex-start; padding: .9rem 1rem; border-radius: 14px; border: 1px solid var(--border); background: var(--card); }
+.gd-occ-icon { flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; color: var(--ab-aul); background: rgba(107,43,255,.18); border: 1px solid rgba(154,107,255,.3); }
+.gd-occ-icon svg { width: 18px; height: 18px; }
+.gd-occ b { display: block; margin-bottom: .15rem; font-size: .88rem; font-weight: 600; color: var(--white); }
+.gd-occ span:not(.gd-occ-icon) { display: block; font-size: .8rem; line-height: 1.5; color: var(--text2); }
+
+/* Aviso «Enlace copiado» */
+.gd-toast {
+  position: fixed; left: 50%; bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)); z-index: 500;
+  padding: .7rem 1.15rem; border-radius: 50px; background: #1d1726; border: 1px solid rgba(154,107,255,.45);
+  color: var(--white); font-size: .85rem; box-shadow: 0 12px 30px rgba(0,0,0,.45);
+  opacity: 0; transform: translate(-50%, 16px); pointer-events: none; transition: opacity .25s, transform .25s;
+}
+.gd-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (max-width: 860px) {
+  .gd-occ { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .gd-grid-3, .gd-grid-2, .gd-dupes, .gd-steps, .gd-dn, .gd-occ { grid-template-columns: 1fr; }
+  /* En el celular, ícono al lado del título: tarjetas más bajas */
+  .gd-card:has(> .gd-card-icon) { display: grid; grid-template-columns: 42px minmax(0, 1fr); column-gap: .9rem; padding: 1.1rem 1.05rem; }
+  .gd-card:has(> .gd-card-icon) .gd-card-icon { grid-row: span 2; margin-bottom: 0; }
+  .gd-card:has(> .gd-card-icon) h3 { margin: .55rem 0 .35rem; }
+  .gd-sizes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .gd-toc { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .gd-measure { grid-template-columns: 1fr; }
+  .gd-toc a { padding: .7rem .75rem; font-size: .8rem; }
+  .gd-head { gap: .7rem; }
+  .gd-num { width: 38px; height: 38px; font-size: .8rem; }
+}

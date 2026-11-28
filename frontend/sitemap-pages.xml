@@ -25,6 +25,14 @@
     <priority>0.7</priority>
   </url>
 
+  <!-- Guía del perfume -->
+  <url>
+    <loc>https://michtdecants.com/guia/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
   <!-- Contacto -->
   <url>
     <loc>https://michtdecants.com/contacto/</loc>

@@ -35,6 +35,7 @@ Cada archivo se pega completo en **Supabase → SQL Editor → Run**. Van en ord
 | `2026-11-02-vendedoras.sql` | **Vendedoras.** Acceso limitado al panel: registran sus ventas (precio del catálogo, sin descuentos, quedan "Pagado" y descuentan stock), ven solo sus pedidos, el stock y cuánto deben entregarte; pueden anular una venta suya mientras no la toques. Pide antes `validar-pedidos`, `pagos-por-pedido` y `stock-entero`. Para agregar una (crea su cuenta con correo y contraseña): `SELECT crear_vendedora('correo', 'contraseña', 'Nombre');` — volver a correrla le cambia la contraseña. Probado en PostgreSQL 16. |
 | `2026-11-03-trabajadores.sql` | **Trabajadores.** Para la sección Trabajadores del panel: teléfono y meta del mes de cada trabajadora, ver su correo y último ingreso, agregar trabajadoras y cambiarles la contraseña desde el panel (solo la administradora), y la base rechaza ventas de una trabajadora pausada. Pide antes `2026-11-02-vendedoras.sql`. Probado en PostgreSQL 16. |
 | `2026-11-04-club-micht.sql` | **Club MICHT (tarjetas Golden y Black).** Cada pedido pagado de la página hecho por un cliente con su sesión iniciada suma 1 huellita (S/ 15–59.99 → Golden, desde S/ 60 → Black; máximo 1 por día; +1 de bienvenida en su primera compra). Con 9, su pedido 10 lleva un 5 ml gratis que la base revisa y agrega a S/ 0 (Golden: árabe; Black: árabe o diseñador, sin nicho, L'Immensité ni Sauvage Elixir). Al cancelar un pedido sus huellitas se quitan solas. Pide antes `validar-pedidos`. Sin este archivo, la tienda y el panel esconden el Club. Probado en PostgreSQL 16. |
+| `2026-11-28-notas-corregidas.sql` | **Notas reales de 25 perfumes** (Khamrah, Eclaire, Delilah, 9PM, la línea Hawas, Nitro, Bharara King y otros): salida, corazón, fondo y familia olfativa, revisadas con la marca, tiendas y bases de perfumes. Incluye los frascos enteros y sets. La descripción solo se cambia si sigue igual a la original (si la editaste en el panel, no se toca). No toca precios ni stock. Probado en PostgreSQL 16. |
 
 ## Qué correr ahora (2026-09-23), en este orden
 
@@ -62,3 +63,7 @@ Con el paso 1 **ya no necesitas** desplegar la Edge Function ni correr `2026-08-
 ## Cómo saber si uno ya está aplicado
 
 En SQL Editor: `select column_name from information_schema.columns where table_name = 'productos';` muestra las columnas que tiene la tabla. Si al guardar en el panel aparece un error que menciona `PGRST204` o "columna", falta correr el SQL de esa columna.
+
+## Nuevo (2026-11-28)
+
+10. `2026-11-28-notas-corregidas.sql` → corrige las notas de 25 perfumes que no coincidían con el perfume real. Al final muestra la lista para que confirmes los cambios. La ficha de cada perfume se actualiza al instante; las páginas de cada perfume para Google, en la siguiente publicación.
