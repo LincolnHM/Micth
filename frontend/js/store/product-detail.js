@@ -179,10 +179,12 @@ function _createPdModal() {
           <!-- Confianza -->
           ${PD_TRUST_HTML}
 
-          <!-- Momento ideal de uso — Día / Noche -->
-          <div id="pdOccasionSection" class="pd-occasion-section">
-            <p class="pd-notes-section-title">MOMENTO IDEAL</p>
-            <div id="pdOccasionBadge" class="pd-occasion-badge"></div>
+          <!-- Cuándo usarlo: estaciones y día / noche (wear-profile.js) -->
+          <div id="pdOccasionSection" class="pd-occasion-section pd-wear">
+            <p class="pd-notes-section-title">CUÁNDO USARLO</p>
+            <p id="pdWearSummary" class="pd-wear-summary"></p>
+            <div id="pdWearGrid" class="pd-wear-grid"></div>
+            <p class="pd-wear-note">Según sus acordes y el momento del perfume. <a href="/guia/#dia-noche">¿Cómo elegir?</a></p>
           </div>
 
           <!-- Acordes principales — estilo Fragrantica, siempre visibles -->
@@ -541,20 +543,16 @@ function openPdModal(productId, { fromHistory = false } = {}) {
   document.getElementById('pdDesc').textContent = p.description || '';
 
   // ── Momento ideal de uso (Día / Noche) ───────────────────
-  const OCCASION_INFO = {
-    dia:   { icon: '☀️',  cls: 'pd-occ-dia',   text: 'Ideal para el día' },
-    noche: { icon: '🌙',  cls: 'pd-occ-noche', text: 'Ideal para la noche' },
-    ambas: { icon: '☀️🌙', cls: 'pd-occ-ambas', text: 'Ideal para el día y la noche' }
-  };
+  // ── Cuándo usarlo (estaciones + día/noche, calculado en wear-profile.js) ──
   const occSection = document.getElementById('pdOccasionSection');
-  const occBadge   = document.getElementById('pdOccasionBadge');
-  const occInfo    = OCCASION_INFO[p.occasion];
-  if (occInfo) {
-    occBadge.className = `pd-occasion-badge ${occInfo.cls}`;
-    occBadge.innerHTML = `<span class="pd-occasion-icon">${occInfo.icon}</span><span class="pd-occasion-text">${occInfo.text}</span>`;
-    occSection.style.display = 'block';
+  const wear = typeof wearProfile === 'function' ? wearProfile(p) : null;
+  if (wear) {
+    document.getElementById('pdWearSummary').textContent = wearSummary(wear);
+    const grid = document.getElementById('pdWearGrid');
+    grid.innerHTML = wearGridHtml(wear);
+    grid.classList.toggle('only-time', !wear.hasSeasons);
+    occSection.style.display = 'flex';
   } else {
-    occBadge.innerHTML = '';
     occSection.style.display = 'none';
   }
 

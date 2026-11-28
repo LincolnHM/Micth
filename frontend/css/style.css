@@ -4377,22 +4377,44 @@ body:has(.mobile-menu.open) .wa-float { opacity: 0; pointer-events: none; }
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
 }
-/* ── Momento ideal de uso — Día / Noche ───────────────────── */
+/* ── Cuándo usarlo: estaciones y día / noche (wear-profile.js) ─ */
 .pd-occasion-section { display: flex; flex-direction: column; gap: .65rem; }
-
-.pd-occasion-badge {
-  display: flex; align-items: center; gap: .7rem;
-  padding: .8rem 1.1rem;
-  border-radius: var(--r-lg);
-  background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.07);
-  border-left-width: 3px;
-  font-size: .84rem; font-weight: 600; color: var(--text);
+.pd-wear-summary { margin-top: -.2rem; font-size: .9rem; font-weight: 600; color: var(--white); }
+.pd-wear-grid {
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .35rem;
+  padding: .95rem .6rem .85rem; border-radius: var(--r-lg);
+  background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07);
 }
-.pd-occasion-icon { font-size: 1.15rem; line-height: 1; flex-shrink: 0; }
-.pd-occ-dia   { border-left-color: #d9a441; background: rgba(217,164,65,.08); }
-.pd-occ-noche { border-left-color: #6f5fc0; background: rgba(111,95,192,.1); }
-.pd-occ-ambas { border-left-color: #c98a4b; background: linear-gradient(90deg, rgba(217,164,65,.09), rgba(111,95,192,.09)); }
+.pd-wear-grid.only-time { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pd-wear-item { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: .3rem; text-align: center; color: var(--text3); }
+/* Línea que separa las estaciones del día / noche */
+.pd-wear-grid:not(.only-time) .pd-wear-item:nth-child(5)::before {
+  content: ''; position: absolute; left: -.2rem; top: .2rem; bottom: .2rem; width: 1px; background: rgba(255,255,255,.08);
+}
+.pd-wear-icon { width: 26px; height: 26px; color: var(--text3); transition: color .2s; }
+.pd-wear-item.is-top .pd-wear-icon { color: var(--wc); }
+.pd-wear-label { font-size: .7rem; font-weight: 500; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.pd-wear-item.is-top .pd-wear-label { color: var(--white); font-weight: 600; }
+.pd-wear-bar { width: 100%; height: 5px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; }
+.pd-wear-bar i { display: block; height: 100%; border-radius: inherit; background: var(--wc); opacity: .85; }
+.pd-wear-word { font-size: .64rem; font-weight: 600; letter-spacing: .02em; color: var(--wc); opacity: .9; white-space: nowrap; }
+.pd-wear-note { font-size: .72rem; color: var(--text3); }
+.pd-wear-note a { color: var(--gold-l); font-weight: 600; }
+.pd-wear-note a:hover { text-decoration: underline; }
+.pd-wear-item.is-low .pd-wear-word { color: var(--text3); }
+.pd-wear-item.is-low .pd-wear-bar i { opacity: .5; }
+@media (max-width: 480px) {
+  .pd-wear-grid { padding: .9rem .45rem .8rem; gap: .25rem; }
+  .pd-wear-label { font-size: .62rem; }
+  .pd-wear-word { font-size: .6rem; }
+}
+/* Muy angosto: estaciones arriba, día y noche abajo */
+@media (max-width: 360px) {
+  .pd-wear-grid:not(.only-time) { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: .9rem; }
+  .pd-wear-grid:not(.only-time) .pd-wear-item.is-time { grid-column: span 2; }
+  .pd-wear-grid:not(.only-time) .pd-wear-item:nth-child(5)::before { display: none; }
+  .pd-wear-label { font-size: .66rem; }
+}
 
 /* ── Acordes principales — estilo Fragrantica ────────────── */
 .pd-accords-section { display: flex; flex-direction: column; gap: .65rem; }
@@ -11363,17 +11385,7 @@ body[data-campaign="navidad"] .carousel-dots .dot.active { background: var(--xm-
 .gd-dn-why strong { color: var(--white); }
 .gd-dn-for { margin-top: .85rem; font-size: .82rem; color: var(--text2); }
 .gd-dn-for b { color: var(--white); font-weight: 600; }
-.gd-dn-label { margin: 1.15rem 0 .55rem; font-size: .66rem; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--text3); }
-.gd-picks { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
-.gd-picks a {
-  display: block; height: 100%; padding: .6rem .75rem; border-radius: 12px;
-  border: 1px solid var(--border); background: rgba(0,0,0,.25); text-decoration: none;
-  transition: border-color .2s, transform .2s, background .2s;
-}
-.gd-picks a:hover { border-color: rgba(154,107,255,.55); background: rgba(107,43,255,.08); transform: translateY(-2px); }
-.gd-picks b { display: block; font-size: .84rem; font-weight: 600; line-height: 1.3; color: var(--white); }
-.gd-picks small { display: block; margin-top: .12rem; font-size: .7rem; line-height: 1.35; color: var(--text3); }
-.gd-dn-more { align-self: flex-start; margin-top: 1rem; font-size: .82rem; font-weight: 600; color: var(--gold-l); text-decoration: none; }
+.gd-dn-more { align-self: flex-start; margin-top: auto; padding-top: 1.1rem; font-size: .82rem; font-weight: 600; color: var(--gold-l); text-decoration: none; }
 .gd-dn-day .gd-dn-more { color: #ffd166; }
 .gd-dn-more:hover { text-decoration: underline; }
 
